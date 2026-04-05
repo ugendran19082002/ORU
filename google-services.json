@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "434760021849",
+    "project_id": "thanigo-7c13b",
+    "storage_bucket": "thanigo-7c13b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:434760021849:android:dc420b208469306053fe48",
+        "android_client_info": {
+          "package_name": "com.thannigo.ThanniGo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAeG1uLeoC3qTzfHbr3VA5sa-sg3-upXkM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,29 +1,39 @@
-import { Link } from 'expo-router';
-import { StyleSheet } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 
 export default function ModalScreen() {
+  const router = useRouter();
+
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">This is a modal</ThemedText>
-      <Link href="/" dismissTo style={styles.link}>
-        <ThemedText type="link">Go to home screen</ThemedText>
-      </Link>
-    </ThemedView>
+    <View className="flex-1 items-center justify-center bg-white/90 p-6">
+      <StatusBar style="dark" />
+      <Card variant="elevated" className="w-full max-w-sm p-8 items-center bg-white">
+        <View className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-6">
+          <Ionicons name="notifications" size={40} color="#005d90" />
+        </View>
+        <Text className="text-2xl font-black text-slate-900 mb-2">Thannigo</Text>
+        <Text className="text-slate-500 font-medium text-center mb-8">
+          Stay hydrated! Would you like to enable notifications for delivery updates?
+        </Text>
+        <View className="w-full gap-3">
+          <Button 
+            title="Enable Now" 
+            variant="primary" 
+            onPress={() => router.back()} 
+          />
+          <Button 
+            title="Maybe Later" 
+            variant="secondary" 
+            onPress={() => router.back()} 
+          />
+        </View>
+      </Card>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
-  },
-});

@@ -1,0 +1,296 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  RefreshControl,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { Logo } from '@/components/ui/Logo';
+
+const ORDERS = [
+  {
+    id: 'THN-8821',
+    shop: 'Aqua Crystal Pure',
+    items: '2x 20L Mineral Water',
+    date: 'Today, 10:30 AM',
+    amount: '₹90',
+    status: 'Out for Delivery',
+    statusColor: '#006878',
+    statusBg: '#e0f7fa',
+    progress: 0.65,
+    isActive: true,
+  },
+  {
+    id: 'THN-8810',
+    shop: 'Blue Drop Waters',
+    items: '3x 20L Mineral Water',
+    date: 'Yesterday, 3:15 PM',
+    amount: '₹135',
+    status: 'Delivered',
+    statusColor: '#005d90',
+    statusBg: '#e3f2fd',
+    progress: 1.0,
+    isActive: false,
+  },
+  {
+    id: 'THN-8800',
+    shop: 'H2O Wellness',
+    items: '1x 20L Copper-Ionized',
+    date: 'Apr 2, 11:00 AM',
+    amount: '₹40',
+    status: 'Delivered',
+    statusColor: '#005d90',
+    statusBg: '#e3f2fd',
+    progress: 1.0,
+    isActive: false,
+  },
+  {
+    id: 'THN-8791',
+    shop: 'Aqua Crystal Pure',
+    items: '4x 20L Alkaline Water',
+    date: 'Mar 28, 9:00 AM',
+    amount: '₹180',
+    status: 'Cancelled',
+    statusColor: '#ba1a1a',
+    statusBg: '#ffdad6',
+    progress: 0,
+    isActive: false,
+  },
+];
+
+function OrderCard({ order, onTrack, onReorder }: {
+  order: typeof ORDERS[0];
+  onTrack: () => void;
+  onReorder: () => void;
+}) {
+  return (
+    <View style={styles.orderCard}>
+      {/* Top Row */}
+      <View style={styles.orderTop}>
+        <View style={styles.orderIconWrap}>
+          <Ionicons name="water" size={20} color="#005d90" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.orderId}>#{order.id}</Text>
+          <Text style={styles.orderShop}>{order.shop}</Text>
+        </View>
+        <View style={[styles.statusBadge, { backgroundColor: order.statusBg }]}>
+          <Text style={[styles.statusText, { color: order.statusColor }]}>{order.status}</Text>
+        </View>
+      </View>
+
+      {/* Details */}
+      <View style={styles.orderDetails}>
+        <Text style={styles.orderItems}>{order.items}</Text>
+        <View style={styles.orderMeta}>
+          <Ionicons name="time-outline" size={12} color="#707881" />
+          <Text style={styles.orderDate}>{order.date}</Text>
+          <Text style={styles.orderAmount}>{order.amount}</Text>
+        </View>
+      </View>
+
+      {/* Progress bar for active */}
+      {order.progress > 0 && order.progress < 1 && (
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${order.progress * 100}%` as any }]} />
+        </View>
+      )}
+
+      {/* Actions */}
+      <View style={styles.orderActions}>
+        {order.isActive ? (
+          <TouchableOpacity style={styles.trackBtn} onPress={onTrack}>
+            <Ionicons name="navigate-outline" size={15} color="#005d90" />
+            <Text style={styles.trackBtnText}>Track Order</Text>
+          </TouchableOpacity>
+        ) : order.status === 'Delivered' ? (
+          <TouchableOpacity style={styles.trackBtn} onPress={onReorder}>
+            <Ionicons name="refresh-outline" size={15} color="#005d90" />
+            <Text style={styles.trackBtnText}>Reorder</Text>
+          </TouchableOpacity>
+        ) : null}
+        <TouchableOpacity style={styles.supportBtn}>
+          <Ionicons name="chatbubble-outline" size={15} color="#707881" />
+          <Text style={styles.supportBtnText}>Support</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+export default function OrdersScreen() {
+  const router = useRouter();
+  const [tab, setTab] = useState<'active' | 'past'>('active');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    // Simulate a network request
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  }, []);
+
+  const filtered = tab === 'active' ? ORDERS.filter((o) => o.isActive) : ORDERS.filter((o) => !o.isActive);
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar style="dark" />
+
+      {/* HEADER */}
+      <View style={styles.header}>
+        <View style={styles.brandRow}>
+          <Logo size="md" />
+          <Text style={styles.brandName}>ThanniGo</Text>
+        </View>
+        <TouchableOpacity style={styles.iconBtn}>
+          <Ionicons name="notifications-outline" size={22} color="#005d90" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.titleRow}>
+        <Text style={styles.screenTitle}>My Orders</Text>
+        <Text style={styles.screenSubtitle}>{ORDERS.length} total orders</Text>
+      </View>
+
+      {/* TOGGLE */}
+      <View style={styles.toggle}>
+        <TouchableOpacity
+          style={[styles.toggleBtn, tab === 'active' && styles.toggleBtnActive]}
+          onPress={() => setTab('active')}
+        >
+          <Text style={[styles.toggleText, tab === 'active' && styles.toggleTextActive]}>
+            Active
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.toggleBtn, tab === 'past' && styles.toggleBtnActive]}
+          onPress={() => setTab('past')}
+        >
+          <Text style={[styles.toggleText, tab === 'past' && styles.toggleTextActive]}>
+            Past Orders
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
+      >
+        {filtered.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="receipt-outline" size={56} color="#bfc7d1" />
+            <Text style={styles.emptyTitle}>No orders here</Text>
+            <Text style={styles.emptySubtitle}>Your {tab} orders will appear here</Text>
+          </View>
+        ) : (
+          filtered.map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              onTrack={() => router.push('/order/tracking')}
+              onReorder={() => router.push(`/order/${order.id}`)}
+            />
+          ))
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f7f9ff' },
+
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+  },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
+  iconBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#f1f4f9',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  titleRow: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 8 },
+  screenTitle: { fontSize: 30, fontWeight: '900', color: '#005d90', letterSpacing: -0.5 },
+  screenSubtitle: { fontSize: 13, color: '#707881', marginTop: 3 },
+
+  toggle: {
+    flexDirection: 'row',
+    marginHorizontal: 24,
+    marginBottom: 20,
+    backgroundColor: '#ebeef4',
+    borderRadius: 16,
+    padding: 4,
+  },
+  toggleBtn: {
+    flex: 1, borderRadius: 13,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  toggleBtnActive: { backgroundColor: 'white', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 1 },
+  toggleText: { fontSize: 14, fontWeight: '600', color: '#707881' },
+  toggleTextActive: { color: '#005d90', fontWeight: '800' },
+
+  // Order Card
+  orderCard: {
+    backgroundColor: 'white',
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#003a5c',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  orderTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
+  orderIconWrap: {
+    width: 44, height: 44, borderRadius: 14,
+    backgroundColor: '#e0f0ff',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  orderId: { fontSize: 12, fontWeight: '700', color: '#005d90', textTransform: 'uppercase', letterSpacing: 1 },
+  orderShop: { fontSize: 16, fontWeight: '800', color: '#181c20', marginTop: 1 },
+  statusBadge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' },
+  statusText: { fontSize: 11, fontWeight: '700' },
+
+  orderDetails: { marginBottom: 12 },
+  orderItems: { fontSize: 14, color: '#404850', fontWeight: '500', marginBottom: 6 },
+  orderMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  orderDate: { fontSize: 12, color: '#707881', flex: 1 },
+  orderAmount: { fontSize: 15, fontWeight: '900', color: '#181c20' },
+
+  progressTrack: {
+    height: 6, backgroundColor: '#e0e2e8', borderRadius: 3, overflow: 'hidden', marginBottom: 14,
+  },
+  progressFill: { height: '100%', backgroundColor: '#006878', borderRadius: 3 },
+
+  orderActions: { flexDirection: 'row', gap: 10, borderTopWidth: 1, borderTopColor: '#f1f4f9', paddingTop: 14 },
+  trackBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: '#e0f0ff', borderRadius: 14, paddingVertical: 11,
+  },
+  trackBtnText: { color: '#005d90', fontWeight: '700', fontSize: 13 },
+  supportBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: '#f1f4f9', borderRadius: 14, paddingVertical: 11, paddingHorizontal: 16,
+  },
+  supportBtnText: { color: '#707881', fontWeight: '600', fontSize: 13 },
+
+  emptyState: { alignItems: 'center', paddingTop: 60, gap: 10 },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#404850' },
+  emptySubtitle: { fontSize: 13, color: '#707881' },
+});
