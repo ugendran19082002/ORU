@@ -25,7 +25,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { generateShopId } from "@/utils/idGenerator";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /**
  * PRODUCTION DEBUG HELPER: Validate coordinates before use
@@ -99,6 +102,21 @@ export default function ShopProfileScreen() {
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [shopId, setShopId] = useState<string>("");
+
+  useEffect(() => {
+    const loadShopId = async () => {
+      const savedId = await AsyncStorage.getItem("shop_unique_id");
+      if (savedId) {
+        setShopId(savedId);
+      } else {
+        const newId = generateShopId();
+        await AsyncStorage.setItem("shop_unique_id", newId);
+        setShopId(newId);
+      }
+    };
+    loadShopId();
+  }, []);
 
   const performSearch = async (query: string) => {
     console.log("=== [SHOP WAY 1: SEARCH START] ===");
@@ -394,19 +412,37 @@ export default function ShopProfileScreen() {
           <Text style={styles.pageTitle}>Shop Profile</Text>
 
           {/* PROFILE BANNER */}
-          <View style={styles.bannerContainer}>
-            <Image
-              source={{ uri: "https://picsum.photos/seed/shopbanner/800/400" }}
-              style={styles.bannerImg}
-            />
-            <View style={styles.bannerOverlay} />
-            <View style={styles.avatarWrap}>
-              <Ionicons name="storefront" size={32} color="#005d90" />
+          <LinearGradient
+            colors={["#005d90", "#0077b6"]}
+            style={styles.profileCard}
+          >
+            {/* Background Decoration */}
+            <View style={styles.profileDecor}>
+              <Ionicons
+                name="storefront"
+                size={140}
+                color="rgba(255,255,255,0.06)"
+              />
             </View>
-            <TouchableOpacity style={styles.uploadBtn}>
-              <Ionicons name="camera" size={16} color="white" />
-            </TouchableOpacity>
-          </View>
+
+            <View style={styles.profileHeader}>
+              <View style={styles.avatarWrap}>
+                <View style={styles.avatar}>
+                  <Ionicons name="storefront" size={32} color="#005d90" />
+                </View>
+                <TouchableOpacity style={styles.editAvatarBtn}>
+                  <Ionicons name="camera" size={14} color="white" />
+                </TouchableOpacity>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.profileName}>{shopName || "New Shop"}</Text>
+                <View style={styles.idBadge}>
+                  <Text style={styles.idBadgeText}>SHOP ID: </Text>
+                  <Text style={styles.idBadgeVal}>{shopId || "---"}</Text>
+                </View>
+              </View>
+            </View>
+          </LinearGradient>
 
           {/* SHOP INFO */}
           <Text style={styles.sectionTitle}>Business Details</Text>
@@ -784,66 +820,62 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     marginTop: 10,
     marginBottom: 20,
+    paddingHorizontal: 20,
   },
 
-  bannerContainer: {
-    width: "100%",
-    height: 160,
+  profileCard: {
+    marginHorizontal: 20,
     borderRadius: 24,
-    marginBottom: 40,
-    position: "relative",
+    padding: 24,
+    marginBottom: 32,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowColor: "#005d90",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
   },
-  bannerImg: { width: "100%", height: "100%" },
-  bannerOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,30,50,0.2)",
-  },
-  avatarWrap: {
-    position: "absolute",
-    bottom: -20,
-    left: 20,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  profileDecor: { position: "absolute", right: -20, top: -20 },
+  profileHeader: { flexDirection: "row", alignItems: "center", gap: 16 },
+  avatarWrap: { position: "relative" },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: "white",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 4,
-    borderColor: "#f7f9ff",
   },
-  uploadBtn: {
+  editAvatarBtn: {
     position: "absolute",
-    top: 16,
-    right: 16,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#005d90",
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "white",
   },
+  profileName: { color: "white", fontSize: 20, fontWeight: "900", marginBottom: 4 },
+  idBadge: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.15)", alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  idBadgeText: { color: "rgba(255,255,255,0.7)", fontSize: 9, fontWeight: "700", letterSpacing: 0.5 },
+  idBadgeVal: { color: "white", fontSize: 10, fontWeight: "800", letterSpacing: 1 },
 
   sectionTitle: {
     fontSize: 18,
     fontWeight: "800",
     color: "#181c20",
     marginBottom: 12,
-    marginLeft: 4,
+    marginLeft: 24,
   },
   card: {
     backgroundColor: "white",
     borderRadius: 20,
     padding: 20,
+    marginHorizontal: 20,
     marginBottom: 24,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -906,6 +938,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 16,
     alignItems: "center",
+    marginHorizontal: 20,
     marginTop: 10,
     shadowColor: "#005d90",
     shadowOffset: { width: 0, height: 4 },
@@ -944,20 +977,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 5,
     elevation: 4,
-  },
-  liveMapText: {
-    position: "absolute",
-    bottom: 12,
-    left: 12,
-    color: "#005d90", // More visible color for shop profile
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1,
-    backgroundColor: "rgba(255,255,255,0.85)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    overflow: "hidden",
   },
   mapActionText: { color: "#005d90", fontWeight: "800", fontSize: 12 },
 

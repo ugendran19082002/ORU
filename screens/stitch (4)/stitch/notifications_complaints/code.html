@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thannigo Shop Notifications</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#006a61",
+                    "primary-container": "#0077be",
+                    "primary-fixed-dim": "#9acbff",
+                    "secondary-fixed": "#86f5e6",
+                    "tertiary-fixed": "#b1f0d0",
+                    "on-background": "#181c20",
+                    "on-tertiary-container": "#e8fff0",
+                    "surface-container-high": "#e6e8ee",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#eceef3",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-container": "#437e64",
+                    "on-secondary-fixed-variant": "#005049",
+                    "surface-container-highest": "#e0e2e8",
+                    "outline-variant": "#c0c7d2",
+                    "on-primary-fixed-variant": "#004a79",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-fixed": "#002114",
+                    "tertiary": "#28654c",
+                    "primary": "#005e97",
+                    "secondary-fixed-dim": "#68d9ca",
+                    "primary-fixed": "#cfe5ff",
+                    "secondary-container": "#83f2e3",
+                    "error": "#ba1a1a",
+                    "inverse-surface": "#2d3135",
+                    "surface-container-low": "#f2f3f9",
+                    "surface": "#f7f9ff",
+                    "outline": "#707882",
+                    "inverse-primary": "#9acbff",
+                    "surface-tint": "#00629e",
+                    "on-secondary-container": "#006f65",
+                    "on-error-container": "#93000a",
+                    "background": "#f7f9ff",
+                    "on-surface-variant": "#404751",
+                    "tertiary-fixed-dim": "#96d4b5",
+                    "surface-variant": "#e0e2e8",
+                    "on-primary-container": "#f7f9ff",
+                    "on-secondary-fixed": "#00201c",
+                    "on-error": "#ffffff",
+                    "surface-dim": "#d8dadf",
+                    "surface-bright": "#f7f9ff",
+                    "on-surface": "#181c20",
+                    "inverse-on-surface": "#eff1f6",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed": "#001d34",
+                    "on-tertiary-fixed-variant": "#105139"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .tonal-shift { background-color: var(--tw-bg-opacity); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#1A2340] backdrop-blur-md flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-white cursor-pointer">menu</span>
+<h1 class="text-white font-bold tracking-tight text-xl font-headline">Notifications</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-white/80 text-sm font-medium hover:text-white transition-colors">Mark All Read</button>
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-white font-bold border-2 border-white/20">
+<span class="text-xs">AP</span>
+</div>
+</div>
+</header>
+<main class="pt-24 px-4 max-w-2xl mx-auto space-y-6">
+<!-- Live Alerts Section -->
+<section class="space-y-3">
+<div class="flex items-center justify-between px-2">
+<h2 class="text-sm font-bold uppercase tracking-wider text-on-surface-variant">Urgent Alerts</h2>
+<span class="bg-error text-white text-[10px] px-2 py-0.5 rounded-full font-bold">3 NEW</span>
+</div>
+<!-- Complaint Notification -->
+<div class="bg-[#FFF0F0] border-l-4 border-error p-4 rounded-xl shadow-sm flex items-start gap-4">
+<div class="bg-error/10 p-2 rounded-lg">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">report</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-error text-sm">NEW COMPLAINT - Sneha R.</h3>
+<span class="text-[10px] text-on-surface-variant font-medium">2m ago</span>
+</div>
+<p class="text-sm text-on-surface-variant mt-1">Water quality issue reported for Order #8821. Customer requested immediate callback.</p>
+<div class="mt-3 flex items-center gap-2">
+<button class="text-error font-bold text-sm flex items-center gap-1 hover:underline">
+                            Resolve <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- New Order Notification -->
+<div class="bg-surface-container-lowest border-l-4 border-[#FFB000] p-4 rounded-xl shadow-sm flex items-start gap-4">
+<div class="bg-[#FFB000]/10 p-2 rounded-lg">
+<span class="material-symbols-outlined text-[#FFB000]" style="font-variation-settings: 'FILL' 1;">shopping_cart</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-on-surface text-sm">New Order - ₹90 COD</h3>
+<span class="text-[10px] text-on-surface-variant font-medium">15m ago</span>
+</div>
+<p class="text-sm text-on-surface-variant mt-1">2x 20L Cans for Vikas Enclave, Block C. Delivery expected by 5:00 PM.</p>
+</div>
+</div>
+<!-- Payment Received Notification -->
+<div class="bg-surface-container-lowest border-l-4 border-secondary p-4 rounded-xl shadow-sm flex items-start gap-4">
+<div class="bg-secondary/10 p-2 rounded-lg">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-on-surface text-sm">UPI Received - ₹90</h3>
+<span class="text-[10px] text-on-surface-variant font-medium">1h ago</span>
+</div>
+<p class="text-sm text-on-surface-variant mt-1">Payment verified for Order #8815. Credited to shop wallet.</p>
+</div>
+</div>
+</section>
+<!-- Complaint Management Section -->
+<section class="space-y-4 pt-4 border-t border-outline-variant/20">
+<div class="flex items-center justify-between px-2">
+<h2 class="text-lg font-bold font-headline text-on-surface">Complaint Management</h2>
+</div>
+<!-- Segmented Control Filters -->
+<div class="bg-surface-container-low p-1 rounded-xl flex gap-1">
+<button class="flex-1 py-2 rounded-lg bg-surface-container-lowest text-primary font-bold text-sm shadow-sm">Open</button>
+<button class="flex-1 py-2 rounded-lg text-on-surface-variant font-medium text-sm hover:bg-surface-container-high transition-colors">Resolved</button>
+</div>
+<!-- Complaint Card 1 -->
+<div class="bg-surface-container-lowest rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgba(24,28,32,0.04)]">
+<div class="flex justify-between items-start">
+<div class="flex gap-3">
+<img alt="Customer Avatar" class="w-12 h-12 rounded-full object-cover" data-alt="Close-up portrait of a customer Sneha with a soft neutral background and natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBa8_t4rOAP58W9ZRsLreyU8nZX_ZRD-T_B6pNfXpLLpEBvn1gXhKylHx0sjpnZ24x6vXsEtoVUknJzSeeXnwhxwftYqCZQ6nKH58T1dKIsHjNUSo5Bd5LvCqEi-jLRqd_9Dbruizm-NQB8VnqIgo9qzIFiS-Um_ATGLdVvB2tqpRO5wLMUfwiju_JqJYasPd64S7S28b6ET9TNqmMaXxkkYqe7LqwvOBSYhR2eE1_G6Q7ZztOuLTiXaVmNbxvpB-1Ha3jhDPTG1w0"/>
+<div>
+<h4 class="font-bold text-on-surface">Sneha R.</h4>
+<p class="text-xs text-on-surface-variant">ID: #C-9902 • 10:30 AM</p>
+</div>
+</div>
+<span class="bg-error-container text-on-error-container text-[10px] px-2 py-1 rounded font-bold uppercase">Critical</span>
+</div>
+<div class="bg-surface-container-low p-3 rounded-xl">
+<p class="text-sm text-on-surface italic">"The seal was broken when I received the can. I want a replacement immediately."</p>
+</div>
+<div class="flex gap-3">
+<button class="flex-1 bg-primary text-white py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">Process Replacement</button>
+<button class="px-4 border-2 border-outline-variant/30 rounded-xl flex items-center justify-center hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">call</span>
+</button>
+</div>
+</div>
+<!-- Complaint Card 2 -->
+<div class="bg-surface-container-lowest rounded-2xl p-5 space-y-4 shadow-[0_4px_20px_rgba(24,28,32,0.04)]">
+<div class="flex justify-between items-start">
+<div class="flex gap-3">
+<img alt="Customer Avatar" class="w-12 h-12 rounded-full object-cover" data-alt="Professional headshot of a male customer in a bright office environment with soft bokeh background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7cGaTHfkP76BsIBbQJLQqcYati3dGleStBhzFbz3Xjda5EBVA_9fc3CESSnypMTqLCvEX0ofL3ao92ngHWNGzqtpsxeF1r7Dz79lmSANJNwiA62MRhlfQrq7JKm8A-4sjH__zwecuSv37HbjDUCkGR8847O4pfVejAr1KyNVc4_pA6plyX2OKL60TGXZqHoTFsYeqq3iRJSo2tmJpYU6ND3eiaM6wIVtmJMnEiE8_ccN9KBN6zDQhoBqlnpiFzQRQRUpIcHi2NnQ"/>
+<div>
+<h4 class="font-bold text-on-surface">Rahul Sharma</h4>
+<p class="text-xs text-on-surface-variant">ID: #C-9895 • Yesterday</p>
+</div>
+</div>
+<span class="bg-surface-container-high text-on-surface-variant text-[10px] px-2 py-1 rounded font-bold uppercase">Standard</span>
+</div>
+<p class="text-sm text-on-surface">Delayed delivery complaint. The rider arrived 2 hours late than scheduled time slot.</p>
+<div class="flex gap-3">
+<button class="flex-1 border-2 border-primary text-primary py-3 rounded-xl font-bold text-sm hover:bg-primary/5 transition-colors">Mark Resolved</button>
+<button class="px-4 border-2 border-outline-variant/30 rounded-xl flex items-center justify-center hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">more_horiz</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 bg-[#f7f9ff]/80 backdrop-blur-md flex justify-around items-center px-4 py-3 pb-safe shadow-[0_12px_32px_rgba(24,28,32,0.06)] md:hidden">
+<div class="flex flex-col items-center justify-center text-[#181c20]/50 font-medium">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-[10px] font-label mt-1">Earnings</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20]/50 font-medium">
+<span class="material-symbols-outlined">insights</span>
+<span class="text-[10px] font-label mt-1">Analytics</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#0077BE] font-bold scale-110">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<span class="text-[10px] font-label mt-1">Alerts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20]/50 font-medium">
+<span class="material-symbols-outlined">emergency_home</span>
+<span class="text-[10px] font-label mt-1">SOS</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20]/50 font-medium">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-label mt-1">Settings</span>
+</div>
+</nav>
+</body></html>

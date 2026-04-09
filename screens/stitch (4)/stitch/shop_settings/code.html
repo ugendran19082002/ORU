@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Shop Settings - Thannigo</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#006a61",
+                        "primary-container": "#0077be",
+                        "primary-fixed-dim": "#9acbff",
+                        "secondary-fixed": "#86f5e6",
+                        "tertiary-fixed": "#b1f0d0",
+                        "on-background": "#181c20",
+                        "on-tertiary-container": "#e8fff0",
+                        "surface-container-high": "#e6e8ee",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#eceef3",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-container": "#437e64",
+                        "on-secondary-fixed-variant": "#005049",
+                        "surface-container-highest": "#e0e2e8",
+                        "outline-variant": "#c0c7d2",
+                        "on-primary-fixed-variant": "#004a79",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#002114",
+                        "tertiary": "#28654c",
+                        "primary": "#005e97",
+                        "secondary-fixed-dim": "#68d9ca",
+                        "primary-fixed": "#cfe5ff",
+                        "secondary-container": "#83f2e3",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#2d3135",
+                        "surface-container-low": "#f2f3f9",
+                        "surface": "#f7f9ff",
+                        "outline": "#707882",
+                        "inverse-primary": "#9acbff",
+                        "surface-tint": "#00629e",
+                        "on-secondary-container": "#006f65",
+                        "on-error-container": "#93000a",
+                        "background": "#f7f9ff",
+                        "on-surface-variant": "#404751",
+                        "tertiary-fixed-dim": "#96d4b5",
+                        "surface-variant": "#e0e2e8",
+                        "on-primary-container": "#f7f9ff",
+                        "on-secondary-fixed": "#00201c",
+                        "on-error": "#ffffff",
+                        "surface-dim": "#d8dadf",
+                        "surface-bright": "#f7f9ff",
+                        "on-surface": "#181c20",
+                        "inverse-on-surface": "#eff1f6",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#001d34",
+                        "on-tertiary-fixed-variant": "#105139"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface min-h-screen pb-24">
+<!-- TopAppBar -->
+<nav class="fixed top-0 w-full z-50 bg-[#1A2340] backdrop-blur-md flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-white cursor-pointer" data-icon="menu">menu</span>
+<h1 class="text-xl font-bold text-white tracking-tight">Shop Settings</h1>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container">
+<img alt="Admin Profile" class="w-full h-full object-cover" data-alt="Professional headshot of a smiling store manager in a clean white shirt, corporate office background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIvjRGD5mxGqsNtJDPAkyMzM_g4LSN3hmH7xpvpqjrltmN9ECEdmo-Yhbu6UqEXqOhQwuev2zSi6Xp4gunSznaMemzZf3i_6FsYhbP3Hw9j7t1n1on30_MJ9_E9qEpTxcQtP-k9c477_wtL5i9pTffs5nyo34d9HO6BNXWNJU67xQd5Cf2tdCMtrYhgD9YaC5CSaiIQQHNQ0beqIRODWI4dLy_rAnRAmNn4wb4ueQ0tqV_HfnyDVJSbg0xq4Pub72ECKLJHSuMv00"/>
+</div>
+</div>
+</nav>
+<main class="pt-24 px-6 max-w-4xl mx-auto space-y-8">
+<!-- Shop Profile Card (Bento Style) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="md:col-span-3 bg-surface-container-lowest rounded-xl p-6 flex flex-col md:flex-row items-center gap-6 shadow-[0_12px_32px_rgba(24,28,32,0.06)] relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+                        VERIFIED
+                    </span>
+</div>
+<div class="w-24 h-24 rounded-2xl overflow-hidden ring-4 ring-surface-container-low shrink-0">
+<img alt="Shop Logo" class="w-full h-full object-cover" data-alt="Modern logo of a water purification company featuring crystal clear water droplets and professional branding" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfJnD5DYsfBElRmNu09bpFXgToggFY288gtwtmLlIhsYgws5OVRDkUU6lFrtXNnunNq7DzIFunsCwB8sPLUjPmqTP4ICKIBFkCRARhZpgkARDnZuljMO4d0B_SNCMcATto7gDAIrjm7-rXm8Q3gUZJcvk4ByoA1MFQnAxQihPhvSEBTniQ0eb-1TqNslPZoi5CooUEDQvweC0dvSpwgfdhIk0xq-3ffemTJ02BohMtf5HZMJDMA68ZMfLbAVqrZJyQ3Wxb6AGldXw"/>
+</div>
+<div class="text-center md:text-left space-y-1">
+<h2 class="text-2xl font-extrabold text-on-surface tracking-tight">Aqua Crystal Pure</h2>
+<p class="text-on-surface-variant text-sm font-medium">Premium Mineral Water Supplier</p>
+<div class="flex flex-wrap justify-center md:justify-start gap-2 pt-2">
+<span class="bg-surface-container px-3 py-1 rounded-lg text-xs font-semibold text-primary">ID: 8829</span>
+<span class="bg-primary-fixed text-on-primary-fixed-variant px-3 py-1 rounded-lg text-xs font-semibold">Premium Tier</span>
+</div>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Working Hours -->
+<section class="space-y-4">
+<div class="flex items-center gap-2 px-1">
+<span class="material-symbols-outlined text-primary" data-icon="schedule">schedule</span>
+<h3 class="text-lg font-bold">Working Hours</h3>
+</div>
+<div class="bg-surface-container-low rounded-xl p-5 space-y-4">
+<div class="flex items-center justify-between">
+<span class="font-bold text-sm">Mon - Fri</span>
+<div class="flex items-center gap-3">
+<input class="bg-surface-container-lowest border-none rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-primary" type="time" value="06:00"/>
+<span class="text-outline">to</span>
+<input class="bg-surface-container-lowest border-none rounded-lg text-sm px-3 py-2 focus:ring-2 focus:ring-primary" type="time" value="22:00"/>
+</div>
+</div>
+<div class="flex items-center justify-between opacity-60">
+<span class="font-medium text-sm text-outline">Sat - Sun</span>
+<button class="text-primary text-xs font-bold px-4 py-2 bg-surface-container rounded-lg">Closed</button>
+</div>
+</div>
+</section>
+<!-- Product & Pricing -->
+<section class="space-y-4">
+<div class="flex items-center gap-2 px-1">
+<span class="material-symbols-outlined text-primary" data-icon="inventory_2">inventory_2</span>
+<h3 class="text-lg font-bold">Product &amp; Pricing</h3>
+</div>
+<div class="bg-surface-container-low rounded-xl p-5 space-y-3">
+<div class="grid grid-cols-3 gap-3">
+<div class="bg-surface-container-lowest p-3 rounded-xl space-y-2 border border-outline-variant/10">
+<p class="text-[10px] font-bold text-outline uppercase tracking-wider">20 Liters</p>
+<div class="relative">
+<span class="absolute left-2 top-1/2 -translate-y-1/2 text-primary font-bold">₹</span>
+<input class="w-full pl-6 pr-2 py-1 bg-transparent border-none focus:ring-0 text-xl font-bold text-primary-container" type="text" value="65"/>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-3 rounded-xl space-y-2 border border-outline-variant/10">
+<p class="text-[10px] font-bold text-outline uppercase tracking-wider">10 Liters</p>
+<div class="relative">
+<span class="absolute left-2 top-1/2 -translate-y-1/2 text-primary font-bold">₹</span>
+<input class="w-full pl-6 pr-2 py-1 bg-transparent border-none focus:ring-0 text-xl font-bold text-primary-container" type="text" value="40"/>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-3 rounded-xl space-y-2 border border-outline-variant/10">
+<p class="text-[10px] font-bold text-outline uppercase tracking-wider">5 Liters</p>
+<div class="relative">
+<span class="absolute left-2 top-1/2 -translate-y-1/2 text-primary font-bold">₹</span>
+<input class="w-full pl-6 pr-2 py-1 bg-transparent border-none focus:ring-0 text-xl font-bold text-primary-container" type="text" value="25"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Delivery Settings -->
+<section class="space-y-4">
+<div class="flex items-center gap-2 px-1">
+<span class="material-symbols-outlined text-primary" data-icon="local_shipping">local_shipping</span>
+<h3 class="text-lg font-bold">Delivery Settings</h3>
+</div>
+<div class="bg-surface-container-low rounded-xl p-5 space-y-6">
+<div class="space-y-3">
+<div class="flex justify-between items-center">
+<label class="text-sm font-semibold">Delivery Radius</label>
+<span class="text-primary font-bold">3 km</span>
+</div>
+<input class="w-full h-2 bg-surface-container-high rounded-full appearance-none accent-primary cursor-pointer" max="10" min="1" type="range" value="3"/>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-lowest rounded-xl">
+<div class="space-y-0.5">
+<p class="text-sm font-semibold">Flat Charge</p>
+<p class="text-xs text-on-surface-variant">Applied to every order</p>
+</div>
+<div class="text-right">
+<span class="text-lg font-bold text-primary-container">₹10</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Documents & Compliance -->
+<section class="space-y-4">
+<div class="flex items-center gap-2 px-1">
+<span class="material-symbols-outlined text-primary" data-icon="description">description</span>
+<h3 class="text-lg font-bold">Documents</h3>
+</div>
+<div class="bg-surface-container-low rounded-xl p-5">
+<div class="flex flex-col gap-3">
+<div class="flex items-center justify-between p-3 bg-surface-container-lowest rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" data-icon="task_alt">task_alt</span>
+</div>
+<div>
+<p class="text-sm font-bold">FSSAI Certificate</p>
+<p class="text-[10px] text-tertiary font-bold tracking-tight">VERIFIED &amp; UPLOADED</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline cursor-pointer" data-icon="visibility">visibility</span>
+</div>
+<div class="flex items-center justify-between p-3 bg-white/40 border border-dashed border-outline-variant rounded-xl cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-outline" data-icon="add_circle">add_circle</span>
+</div>
+<p class="text-sm font-medium text-outline">Upload GST Details</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Staff Management -->
+<section class="space-y-4">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="group">group</span>
+<h3 class="text-lg font-bold">Staff Management</h3>
+</div>
+<button class="bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                    Add Staff
+                </button>
+</div>
+<div class="bg-surface-container-low rounded-xl overflow-hidden">
+<div class="p-2 space-y-2">
+<div class="flex items-center justify-between bg-surface-container-lowest p-3 rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold">RK</div>
+<div>
+<p class="text-sm font-bold">Rajesh Kumar</p>
+<p class="text-[10px] text-on-surface-variant font-medium">Head Delivery Partner</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant cursor-pointer" data-icon="more_vert">more_vert</span>
+</div>
+<div class="flex items-center justify-between bg-surface-container-lowest p-3 rounded-xl">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-container font-bold">AM</div>
+<div>
+<p class="text-sm font-bold">Amit Mishra</p>
+<p class="text-[10px] text-on-surface-variant font-medium">In-store Operator</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant cursor-pointer" data-icon="more_vert">more_vert</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Save Button -->
+<div class="pt-6">
+<button class="w-full bg-gradient-to-br from-primary to-primary-container text-on-primary py-4 rounded-xl font-bold text-lg shadow-[0_12px_32px_rgba(0,119,190,0.2)] hover:scale-[0.98] transition-transform">
+                Save All Changes
+            </button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 bg-[#f7f9ff]/80 dark:bg-[#1A2340]/80 backdrop-blur-md flex justify-around items-center px-4 py-3 pb-safe w-full shadow-[0_12px_32px_rgba(24,28,32,0.06)]">
+<div class="flex flex-col items-center justify-center text-[#181c20]/50 dark:text-white/50 transition-opacity hover:opacity-80 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="font-['Inter'] text-[10px] font-medium">Earnings</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20]/50 dark:text-white/50 transition-opacity hover:opacity-80 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+<span class="font-['Inter'] text-[10px] font-medium">Analytics</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20]/50 dark:text-white/50 transition-opacity hover:opacity-80 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-['Inter'] text-[10px] font-medium">Alerts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20]/50 dark:text-white/50 transition-opacity hover:opacity-80 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="emergency_home">emergency_home</span>
+<span class="font-['Inter'] text-[10px] font-medium">SOS</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#0077BE] dark:text-[#0077BE] font-bold scale-110 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="settings" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-['Inter'] text-[10px] font-medium">Settings</span>
+</div>
+</nav>
+</body></html>

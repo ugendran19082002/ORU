@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#005e97",
+                        "on-secondary-container": "#006f65",
+                        "surface": "#f7f9ff",
+                        "secondary": "#006a61",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed": "#86f5e6",
+                        "on-background": "#181c20",
+                        "inverse-on-surface": "#eff1f6",
+                        "on-tertiary-fixed-variant": "#105139",
+                        "surface-container-low": "#f2f3f9",
+                        "on-tertiary": "#ffffff",
+                        "secondary-container": "#83f2e3",
+                        "on-tertiary-container": "#e8fff0",
+                        "on-primary": "#ffffff",
+                        "background": "#f7f9ff",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#9acbff",
+                        "tertiary-container": "#437e64",
+                        "surface-dim": "#d8dadf",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#e0e2e8",
+                        "on-tertiary-fixed": "#002114",
+                        "on-surface": "#181c20",
+                        "secondary-fixed-dim": "#68d9ca",
+                        "primary-fixed": "#cfe5ff",
+                        "on-primary-container": "#f7f9ff",
+                        "surface-container-highest": "#e0e2e8",
+                        "on-secondary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#001d34",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#9acbff",
+                        "outline": "#707882",
+                        "on-secondary-fixed-variant": "#005049",
+                        "on-primary-fixed-variant": "#004a79",
+                        "on-secondary-fixed": "#00201c",
+                        "inverse-surface": "#2d3135",
+                        "on-surface-variant": "#404751",
+                        "tertiary-fixed-dim": "#96d4b5",
+                        "tertiary": "#28654c",
+                        "outline-variant": "#c0c7d2",
+                        "primary-container": "#0077be",
+                        "surface-container": "#eceef3",
+                        "tertiary-fixed": "#b1f0d0",
+                        "surface-bright": "#f7f9ff",
+                        "surface-container-high": "#e6e8ee",
+                        "surface-tint": "#00629e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .primary-gradient {
+            background: linear-gradient(135deg, #005e97 0%, #0077be 100%);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- Top Bar -->
+<header class="fixed top-0 w-full z-50 bg-[#f7f9ff]/80 backdrop-blur-md flex justify-between items-center px-6 py-4">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary cursor-pointer">arrow_back</span>
+<h1 class="font-headline font-bold tracking-tight text-xl text-on-surface">New Manual Order</h1>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">person</span>
+</div>
+</header>
+<main class="pt-20 pb-32 px-5 max-w-[390px] mx-auto space-y-8">
+<!-- Customer Section -->
+<section class="space-y-4">
+<div class="flex justify-between items-end">
+<h2 class="font-headline font-bold text-lg px-1">Customer</h2>
+<button class="text-primary font-semibold text-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">add</span> New Customer
+                </button>
+</div>
+<div class="relative group">
+<div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">search</span>
+</div>
+<input class="w-full h-[52px] pl-12 pr-4 bg-surface-container-high rounded-xl border-none focus:ring-1.5 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/60" placeholder="Search by name or phone" type="text"/>
+</div>
+</section>
+<!-- Order Items Section (Asymmetric Bento Style) -->
+<section class="space-y-4">
+<h2 class="font-headline font-bold text-lg px-1">Select Items</h2>
+<div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+<span class="px-5 py-2 bg-primary-container text-on-primary-container rounded-full font-label text-sm font-semibold whitespace-nowrap">Groceries</span>
+<span class="px-5 py-2 bg-surface-container-high text-on-surface-variant rounded-full font-label text-sm font-medium whitespace-nowrap">Dairy</span>
+<span class="px-5 py-2 bg-surface-container-high text-on-surface-variant rounded-full font-label text-sm font-medium whitespace-nowrap">Pharmacy</span>
+<span class="px-5 py-2 bg-surface-container-high text-on-surface-variant rounded-full font-label text-sm font-medium whitespace-nowrap">Household</span>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<!-- Item Card 1 -->
+<div class="bg-surface-container-lowest p-3 rounded-xl border-b-4 border-surface-container-low">
+<div class="aspect-square bg-surface-container rounded-lg mb-3 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Fresh organic tomatoes in a clean white basket on a bright kitchen counter with natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDud0VgmYVIiDFAfeV3DB8RwRSV-jirzv_qs-2RkH8Yc0xLbgWm3zG3R69lK7wzJpa9L1yZM9NNsVNln93GHjaDiS3Jlt3idJ3HIQolF31PdDLUj2Ykvr7LbNQfdvvzDjNpb7s3X9otGbAnewrCe_8YmI54psdBaMcuOIlTQsiK26ua9uUOWV7Qbc2tKUM2Ky01FxQv0d8DigsYVgzXEGU5mnY5E453yCD-neNAugrP4xT0vghcJC0dUHG3a6bFWL7pmfxGeVlXasg"/>
+</div>
+<p class="font-bold text-sm leading-tight mb-1">Organic Tomatoes</p>
+<p class="text-primary-container font-bold text-lg">₹45.00</p>
+<div class="flex items-center justify-between mt-3 bg-surface-container-low rounded-lg p-1">
+<button class="w-8 h-8 flex items-center justify-center text-primary"><span class="material-symbols-outlined text-sm">remove</span></button>
+<span class="font-bold text-sm">2</span>
+<button class="w-8 h-8 flex items-center justify-center text-primary"><span class="material-symbols-outlined text-sm">add</span></button>
+</div>
+</div>
+<!-- Item Card 2 -->
+<div class="bg-surface-container-lowest p-3 rounded-xl border-b-4 border-surface-container-low">
+<div class="aspect-square bg-surface-container rounded-lg mb-3 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Glass bottle of farm fresh milk with condensation on a light blue pastel background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrRtWqTbL3w6jJs5jSkVyc7ZB4v64B0YTrQwmyy-RVW29e2wfhP7007L2El4eMYYF5g3tknkPo7PXHPqr2-BFtqP_1MCbeJ97yYF-LzO3IZvLOcvnpzAX1dgt0FbpZ7Mvqy8cRd86Rj5N0KRn_pya-ue7IfSegb2LHBj36_7dezs_gehyLkYsdoJITmQhGaVZkYANoRgR9VGyQ42rB2wYtcvXmszqij7iccs6RM0xEzvp-uITPf7uzgCBsZV3FpYeCvHkIv-3dEwE"/>
+</div>
+<p class="font-bold text-sm leading-tight mb-1">Fresh Farm Milk</p>
+<p class="text-primary-container font-bold text-lg">₹28.00</p>
+<div class="flex items-center justify-center mt-3 bg-primary-container text-on-primary-container rounded-lg h-9 font-semibold text-xs">
+                        ADD ITEM
+                    </div>
+</div>
+</div>
+</section>
+<!-- Delivery Section -->
+<section class="space-y-4">
+<h2 class="font-headline font-bold text-lg px-1">Delivery Details</h2>
+<div class="bg-surface-container-low p-1.5 rounded-xl flex gap-1">
+<button class="flex-1 py-2.5 bg-surface-container-lowest text-primary font-bold text-sm rounded-lg shadow-sm">Instant</button>
+<button class="flex-1 py-2.5 text-on-surface-variant font-medium text-sm rounded-lg">Schedule</button>
+</div>
+<div class="relative">
+<div class="absolute top-4 left-4">
+<span class="material-symbols-outlined text-outline">location_on</span>
+</div>
+<textarea class="w-full pl-12 pr-4 py-4 bg-surface-container-high rounded-xl border-none focus:ring-1.5 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/60 resize-none font-body text-sm" placeholder="Enter delivery address" rows="3">Block 12, Silver Oaks Residency, Whitefield, Bangalore</textarea>
+</div>
+</section>
+<!-- Payment Chips -->
+<section class="space-y-4">
+<h2 class="font-headline font-bold text-lg px-1">Payment Method</h2>
+<div class="flex gap-3 overflow-x-auto no-scrollbar">
+<div class="flex-shrink-0 flex flex-col items-center gap-2 p-4 min-w-[90px] bg-surface-container-lowest border-2 border-primary rounded-xl">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-label text-xs font-bold text-primary uppercase tracking-wider">COD</span>
+</div>
+<div class="flex-shrink-0 flex flex-col items-center gap-2 p-4 min-w-[90px] bg-surface-container-lowest rounded-xl">
+<span class="material-symbols-outlined text-on-surface-variant">qr_code_2</span>
+<span class="font-label text-xs font-medium text-on-surface-variant uppercase tracking-wider">UPI</span>
+</div>
+<div class="flex-shrink-0 flex flex-col items-center gap-2 p-4 min-w-[90px] bg-surface-container-lowest rounded-xl">
+<span class="material-symbols-outlined text-on-surface-variant">account_balance_wallet</span>
+<span class="font-label text-xs font-medium text-on-surface-variant uppercase tracking-wider">Wallet</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Action & Nav -->
+<div class="fixed bottom-0 w-full z-50 bg-[#f7f9ff]/80 backdrop-blur-md">
+<div class="px-6 py-4 flex items-center justify-between gap-6 border-b border-surface-container">
+<div class="flex flex-col">
+<span class="text-[10px] uppercase font-bold text-outline tracking-widest">Total Amount</span>
+<span class="text-primary-container text-2xl font-black">₹118.00</span>
+</div>
+<button class="primary-gradient text-on-primary h-[52px] px-8 rounded-xl font-headline font-bold text-sm shadow-[0_12px_32px_rgba(24,28,32,0.06)] active:scale-95 transition-transform">
+                Create Order
+            </button>
+</div>
+<!-- Bottom Nav -->
+<nav class="flex justify-around items-center px-4 py-3 pb-safe-area">
+<div class="flex flex-col items-center justify-center text-[#181c20]/50 font-medium hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-xl">payments</span>
+<span class="font-['Inter'] text-[10px] mt-1">Earnings</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20]/50 font-medium hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-xl">insights</span>
+<span class="font-['Inter'] text-[10px] mt-1">Analytics</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#0077BE] font-bold scale-110">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+<span class="font-['Inter'] text-[10px] mt-1">New Order</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20]/50 font-medium hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-xl">notifications</span>
+<span class="font-['Inter'] text-[10px] mt-1">Alerts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20]/50 font-medium hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-xl">settings</span>
+<span class="font-['Inter'] text-[10px] mt-1">Settings</span>
+</div>
+</nav>
+</div>
+<!-- Hidden spacer for bottom area -->
+<div class="h-40"></div>
+</body></html>

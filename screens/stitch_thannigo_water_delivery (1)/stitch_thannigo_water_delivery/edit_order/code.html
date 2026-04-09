@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#d8dadf",
+                        "primary-fixed-dim": "#9acbff",
+                        "on-surface-variant": "#404751",
+                        "on-error-container": "#93000a",
+                        "surface": "#f7f9ff",
+                        "surface-tint": "#00629e",
+                        "surface-container-highest": "#e0e2e8",
+                        "on-secondary-fixed-variant": "#005049",
+                        "on-secondary-fixed": "#00201c",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#437e64",
+                        "on-primary-fixed": "#001d34",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#b1f0d0",
+                        "on-surface": "#181c20",
+                        "primary": "#005e97",
+                        "inverse-on-surface": "#eff1f6",
+                        "outline-variant": "#c0c7d2",
+                        "inverse-surface": "#2d3135",
+                        "secondary-container": "#83f2e3",
+                        "on-tertiary-fixed": "#002114",
+                        "tertiary": "#28654c",
+                        "on-primary": "#ffffff",
+                        "primary-fixed": "#cfe5ff",
+                        "outline": "#707882",
+                        "surface-bright": "#f7f9ff",
+                        "surface-variant": "#e0e2e8",
+                        "surface-container": "#eceef3",
+                        "on-tertiary-fixed-variant": "#105139",
+                        "primary-container": "#0077be",
+                        "on-tertiary-container": "#e8fff0",
+                        "secondary-fixed": "#86f5e6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#004a79",
+                        "on-background": "#181c20",
+                        "secondary-fixed-dim": "#68d9ca",
+                        "tertiary-fixed-dim": "#96d4b5",
+                        "background": "#f7f9ff",
+                        "surface-container-low": "#f2f3f9",
+                        "on-tertiary": "#ffffff",
+                        "secondary": "#006a61",
+                        "inverse-primary": "#9acbff",
+                        "surface-container-high": "#e6e8ee",
+                        "on-error": "#ffffff",
+                        "on-primary-container": "#f7f9ff",
+                        "on-secondary-container": "#006f65"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- Top App Bar (Modified for Edit context) -->
+<header class="bg-white/70 backdrop-blur-xl sticky top-0 z-50 shadow-[0_12px_32px_rgba(0,119,190,0.08)] px-6 py-4 flex flex-col gap-1">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary cursor-pointer">arrow_back</span>
+<h1 class="text-lg font-bold text-blue-700 tracking-tight">Edit Order #TH-8847</h1>
+</div>
+<div class="flex items-center gap-1 px-3 py-1 bg-[#FFF3E0] rounded-full">
+<span class="material-symbols-outlined text-[#FF9800] text-sm" style="font-variation-settings: 'FILL' 1;">timer</span>
+<span class="text-[12px] font-bold text-[#FF9800]">3:45</span>
+</div>
+</div>
+</header>
+<main class="max-w-[390px] mx-auto p-4 space-y-4">
+<!-- Status Banner -->
+<div class="bg-[#FFF3E0] border border-[#FF9800] rounded-xl p-4 flex gap-3">
+<span class="material-symbols-outlined text-[#FF9800]">info</span>
+<div class="flex flex-col">
+<p class="text-sm font-semibold text-[#FF9800]">Edit window: available until shop accepts your order.</p>
+<p class="text-xs text-[#FF9800]/80 mt-1">After acceptance, changes are locked.</p>
+</div>
+</div>
+<!-- Section A: Items -->
+<section class="bg-surface-container-lowest rounded-[14px] p-4 shadow-sm">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-sm font-bold uppercase tracking-wider text-on-surface-variant">Order Items</h2>
+<span class="text-primary font-bold text-sm">₹90.00 → ₹135.00</span>
+</div>
+<div class="flex items-center gap-4 py-2">
+<div class="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="water_full">water_full</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-bold">20L Mineral Water Can</p>
+<p class="text-xs text-on-surface-variant">Premium Hydration</p>
+</div>
+<div class="flex items-center gap-3 bg-surface-container-low rounded-lg px-2 py-1">
+<button class="w-6 h-6 flex items-center justify-center text-primary font-bold transition-all active:scale-90">-</button>
+<span class="text-sm font-bold w-4 text-center">3</span>
+<button class="w-6 h-6 flex items-center justify-center text-primary font-bold transition-all active:scale-90">+</button>
+</div>
+</div>
+<button class="w-full mt-4 flex items-center justify-center gap-2 py-3 border border-dashed border-outline-variant rounded-xl text-primary font-semibold text-sm hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+                Add Another Product
+            </button>
+</section>
+<!-- Section B: Delivery Address -->
+<section class="bg-surface-container-lowest rounded-[14px] p-4 shadow-sm space-y-3">
+<div class="flex justify-between items-center">
+<h2 class="text-sm font-bold uppercase tracking-wider text-on-surface-variant">Delivery Address</h2>
+<button class="text-primary font-bold text-xs flex items-center gap-1">
+                    Change <span class="material-symbols-outlined text-sm" data-icon="location_on">location_on</span>
+</button>
+</div>
+<div class="flex gap-3 items-start">
+<span class="material-symbols-outlined text-outline mt-0.5">home</span>
+<div>
+<p class="text-sm font-bold">Home</p>
+<p class="text-xs text-on-surface-variant leading-relaxed">Skyline Apartments, B-402, 4th Floor, Jubilee Hills, Hyderabad - 500033</p>
+</div>
+</div>
+</section>
+<!-- Section C: Delivery Time -->
+<section class="bg-surface-container-lowest rounded-[14px] p-4 shadow-sm space-y-4">
+<div class="flex justify-between items-center">
+<h2 class="text-sm font-bold uppercase tracking-wider text-on-surface-variant">Delivery Time</h2>
+<button class="text-primary font-bold text-xs flex items-center gap-1">
+                    Change Time <span class="material-symbols-outlined text-sm" data-icon="schedule">schedule</span>
+</button>
+</div>
+<div class="flex gap-2">
+<div class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-primary text-white rounded-xl shadow-md transition-all active:scale-95">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="text-xs font-bold">Instant (ASAP)</span>
+</div>
+<div class="flex-1 flex items-center justify-center gap-2 py-2.5 bg-surface-container-low text-on-surface-variant rounded-xl transition-all active:scale-95">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+<span class="text-xs font-bold">Scheduled</span>
+</div>
+</div>
+</section>
+<!-- Section D: Delivery Note -->
+<section class="bg-surface-container-lowest rounded-[14px] p-4 shadow-sm space-y-2">
+<h2 class="text-sm font-bold uppercase tracking-wider text-on-surface-variant">Delivery Note</h2>
+<textarea class="w-full bg-surface-container-low border-none rounded-xl text-sm text-on-surface focus:ring-2 focus:ring-primary h-20 p-3 placeholder:text-outline-variant resize-none" placeholder="Add instructions for delivery partner...">Please leave the cans near the door and ring the bell twice.</textarea>
+</section>
+<!-- Price Diff Banner -->
+<div class="bg-[#EEF7FF] border border-primary/20 rounded-xl p-4 flex gap-3">
+<span class="material-symbols-outlined text-primary">payments</span>
+<div>
+<p class="text-sm font-bold text-primary">Price updated: ₹90 → ₹135</p>
+<p class="text-[13px] text-on-surface-variant">Your payment will be adjusted accordingly.</p>
+</div>
+</div>
+</main>
+<!-- Fixed Action Footer -->
+<footer class="fixed bottom-0 left-0 right-0 p-6 bg-white/90 backdrop-blur-md border-t border-surface-container shadow-[0_-10px_30px_rgba(0,0,0,0.03)] space-y-4">
+<button class="w-full h-[52px] bg-primary-container text-white font-bold rounded-[14px] shadow-lg shadow-primary/20 transition-all active:scale-95 hover:brightness-110">
+            Save Changes
+        </button>
+<button class="w-full text-on-surface-variant font-semibold text-sm transition-all active:opacity-60">
+            Cancel
+        </button>
+</footer>
+</body></html>

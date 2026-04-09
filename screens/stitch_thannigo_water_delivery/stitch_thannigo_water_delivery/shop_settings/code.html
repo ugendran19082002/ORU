@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Shop Settings | Vendor Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#f2f3f9",
+                    "on-secondary-fixed": "#00201c",
+                    "primary-fixed-dim": "#9acbff",
+                    "on-surface-variant": "#404751",
+                    "error": "#ba1a1a",
+                    "inverse-on-surface": "#eff1f6",
+                    "secondary-container": "#83f2e3",
+                    "on-tertiary-container": "#e8fff0",
+                    "on-background": "#181c20",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#9acbff",
+                    "on-secondary-fixed-variant": "#005049",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#105139",
+                    "surface-tint": "#00629e",
+                    "surface-bright": "#f7f9ff",
+                    "primary-fixed": "#cfe5ff",
+                    "on-surface": "#181c20",
+                    "surface-container": "#eceef3",
+                    "on-error-container": "#93000a",
+                    "error-container": "#ffdad6",
+                    "tertiary-fixed": "#b1f0d0",
+                    "outline-variant": "#c0c7d2",
+                    "on-tertiary-fixed": "#002114",
+                    "tertiary-fixed-dim": "#96d4b5",
+                    "tertiary": "#28654c",
+                    "secondary-fixed": "#86f5e6",
+                    "on-secondary-container": "#006f65",
+                    "on-primary-fixed-variant": "#004a79",
+                    "surface": "#f7f9ff",
+                    "on-primary-fixed": "#001d34",
+                    "inverse-surface": "#2d3135",
+                    "primary": "#005e97",
+                    "secondary": "#006a61",
+                    "surface-variant": "#e0e2e8",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-container": "#0077be",
+                    "background": "#f7f9ff",
+                    "outline": "#707882",
+                    "on-secondary": "#ffffff",
+                    "tertiary-container": "#437e64",
+                    "surface-dim": "#d8dadf",
+                    "surface-container-highest": "#e0e2e8",
+                    "surface-container-high": "#e6e8ee",
+                    "on-primary-container": "#f7f9ff",
+                    "secondary-fixed-dim": "#68d9ca"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .font-plus-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-inter { font-family: 'Inter', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary/20">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-slate-50/70 dark:bg-slate-900/70 backdrop-blur-xl flex items-center justify-between px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<button class="text-sky-700 dark:text-sky-400 active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="text-xl font-bold text-sky-900 dark:text-sky-100 font-plus-jakarta tracking-tight">Vendor Portal</h1>
+</div>
+<div class="flex items-center gap-6">
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-medium" href="#">Dashboard</a>
+<a class="text-sky-700 dark:text-sky-400 font-semibold font-plus-jakarta tracking-tight" href="#">Store Settings</a>
+<a class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-medium" href="#">Vendor Profile</a>
+<a class="text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors font-medium" href="#">Support</a>
+</nav>
+<div class="h-10 w-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold shadow-lg overflow-hidden">
+<img alt="Admin Profile" class="w-full h-full object-cover" data-alt="close up of professional store manager wearing a white corporate polo shirt in a bright modern office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBW_8LCxFx_cMl3vJa0xdc2OQ-xgBTmJQQ9tmwIn0_EGDyMYxYtsQN6mWqt0D18yQ4gpn1yvyUda9sxBmaf2MZXk2RPygZABp_Nra9aWR9LzxFYrP2Ef19qOK7fHJpj9GXj-VhwKb3tbG-BplVBHnM_wUFmscvXkIBjhqeBZH4IuZSqINfkQgTOC3ko_JZUQbCRxWo_5bBhM3xMQosbtOAD_Ot0srzAvfbxdeeouJSet2TpyteEUpkyU35IXmXCad_6ltRyUG7YNRmp"/>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-4 md:px-12 max-w-7xl mx-auto">
+<!-- Header Hero Section -->
+<div class="mb-12">
+<div class="relative h-48 md:h-64 rounded-3xl overflow-hidden bg-[#1A2340] flex items-end p-8">
+<div class="absolute inset-0 opacity-40 bg-gradient-to-t from-black/60 to-transparent"></div>
+<img alt="Store Header" class="absolute inset-0 w-full h-full object-cover mix-blend-overlay" data-alt="cinematic close up of clean water splashing into a glass with soft lighting and deep navy blue background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC62CxnvEkJdBDFqFCd4OdIbs4Nvf9KbhYlrnQ3xC4HcnvdfBGEl08xyPj7Gx_PW3kIp40o1IYGxm0w-tgXAbC08BAIzgOu9MORFU5VgVFxacOhhUjunfFp9wp5IMKHQGPCrJloYJ18EpNdI81hrJTrwvw_fcdBXrn724SjYBC5Fdo8gyAdOI3g7qLIxiK3nAQ29cjThnGTmQKZ0O1Km593eCDFFpeIIT_Kda8BQWlZoXvPBYiz80fDq2v4U8r3a9kQclpaurE_7WL2"/>
+<div class="relative z-10 flex flex-col md:flex-row md:items-end gap-6 w-full">
+<div class="h-24 w-24 md:h-32 md:w-32 rounded-2xl bg-surface-container-lowest p-2 shadow-2xl border-4 border-white/10">
+<img alt="Store Logo" class="w-full h-full object-contain rounded-xl" data-alt="minimalist logo for water company with stylized drop in shades of crystal blue and teal on white background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWtp8YT9zziGwIJEpvMPGapo83ESebJ7l4t8vLbUmXkBurg7_Pc6w5x2245Z3YyMbO2gD72E3QR-8cPLu3-gfdKrpkShwQSZUw0R5ydEc9XcCWsy9ttfkvoiaVY0XVQZbIG98g6J0edLQQ3owYgUdMGhbmSazYnq1Nx9grDTaerJbbAQg1mAQvRu_lQFzsnLZtVtYPpQgnhgklJzhMpncuRnYNpF30DQ3N78cuX2UoxZMfnCi1nL2BgmiP_E43h_1LsBE6WsWiOEZQ"/>
+</div>
+<div class="flex-1 pb-2">
+<div class="flex items-center gap-3">
+<h2 class="text-3xl md:text-4xl font-extrabold text-white font-headline tracking-tight">Aqua Crystal Pure</h2>
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="verified" data-weight="fill" style="font-variation-settings: 'FILL' 1;">verified</span>
+                                VERIFIED
+                            </span>
+</div>
+<p class="text-white/70 font-medium mt-1">Premium Drinking Water Supplier</p>
+</div>
+<div class="flex gap-3 pb-2">
+<button class="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-6 py-3 rounded-xl font-semibold transition-all border border-white/10 active:scale-95">Edit Brand</button>
+</div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Left Column: Settings Categories -->
+<div class="lg:col-span-2 space-y-8">
+<!-- Pricing Configuration (Bento Grid Style) -->
+<section class="bg-surface-container-lowest rounded-[2rem] p-8">
+<div class="flex justify-between items-center mb-8">
+<div>
+<h3 class="text-2xl font-bold font-headline text-on-surface">Product Pricing</h3>
+<p class="text-on-surface-variant text-sm">Configure retail prices for standard capacities</p>
+</div>
+<button class="text-primary font-bold text-sm flex items-center gap-2">
+<span class="material-symbols-outlined">history</span> Price History
+                        </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- 20L Card -->
+<div class="bg-surface p-6 rounded-2xl border border-primary/5 group hover:border-primary/20 transition-all">
+<div class="flex items-center justify-between mb-4">
+<span class="bg-primary/10 text-primary p-2 rounded-lg">
+<span class="material-symbols-outlined" data-icon="water_drop">water_drop</span>
+</span>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">20 Liters</span>
+</div>
+<label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-2">Price per unit</label>
+<div class="flex items-center gap-2">
+<span class="text-2xl font-bold text-on-surface">₹</span>
+<input class="w-full bg-transparent border-none focus:ring-0 text-3xl font-black p-0 text-primary" type="number" value="45"/>
+</div>
+</div>
+<!-- 10L Card -->
+<div class="bg-surface p-6 rounded-2xl border border-primary/5 group hover:border-primary/20 transition-all">
+<div class="flex items-center justify-between mb-4">
+<span class="bg-primary/10 text-primary p-2 rounded-lg">
+<span class="material-symbols-outlined" data-icon="opacity">opacity</span>
+</span>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">10 Liters</span>
+</div>
+<label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-2">Price per unit</label>
+<div class="flex items-center gap-2">
+<span class="text-2xl font-bold text-on-surface">₹</span>
+<input class="w-full bg-transparent border-none focus:ring-0 text-3xl font-black p-0 text-primary" type="number" value="25"/>
+</div>
+</div>
+<!-- 5L Card -->
+<div class="bg-surface p-6 rounded-2xl border border-primary/5 group hover:border-primary/20 transition-all">
+<div class="flex items-center justify-between mb-4">
+<span class="bg-primary/10 text-primary p-2 rounded-lg">
+<span class="material-symbols-outlined" data-icon="eco">eco</span>
+</span>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">5 Liters</span>
+</div>
+<label class="block text-[11px] font-bold text-on-surface-variant uppercase mb-2">Price per unit</label>
+<div class="flex items-center gap-2">
+<span class="text-2xl font-bold text-on-surface">₹</span>
+<input class="w-full bg-transparent border-none focus:ring-0 text-3xl font-black p-0 text-primary" type="number" value="15"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Operations & Timing -->
+<section class="bg-surface-container-lowest rounded-[2rem] p-8">
+<h3 class="text-2xl font-bold font-headline text-on-surface mb-8">Working Hours</h3>
+<div class="space-y-6">
+<div class="flex items-center justify-between p-4 rounded-2xl bg-surface">
+<div class="flex items-center gap-4">
+<span class="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center text-primary font-bold">M</span>
+<span class="font-bold text-on-surface">Monday - Friday</span>
+</div>
+<div class="flex items-center gap-3">
+<input class="bg-surface-container-lowest border-none rounded-lg text-sm font-bold focus:ring-2 focus:ring-primary/20 px-3 py-2" type="time" value="08:00"/>
+<span class="text-on-surface-variant font-medium">to</span>
+<input class="bg-surface-container-lowest border-none rounded-lg text-sm font-bold focus:ring-2 focus:ring-primary/20 px-3 py-2" type="time" value="20:00"/>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 rounded-2xl bg-surface">
+<div class="flex items-center gap-4">
+<span class="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center text-primary font-bold">S</span>
+<span class="font-bold text-on-surface">Saturday</span>
+</div>
+<div class="flex items-center gap-3">
+<input class="bg-surface-container-lowest border-none rounded-lg text-sm font-bold focus:ring-2 focus:ring-primary/20 px-3 py-2" type="time" value="09:00"/>
+<span class="text-on-surface-variant font-medium">to</span>
+<input class="bg-surface-container-lowest border-none rounded-lg text-sm font-bold focus:ring-2 focus:ring-primary/20 px-3 py-2" type="time" value="18:00"/>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 rounded-2xl bg-surface opacity-60">
+<div class="flex items-center gap-4">
+<span class="w-12 h-12 rounded-full bg-error-container/20 flex items-center justify-center text-error font-bold">S</span>
+<span class="font-bold text-on-surface">Sunday</span>
+</div>
+<span class="px-4 py-2 bg-error-container/10 text-error rounded-full text-xs font-bold uppercase tracking-widest">Closed</span>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Compliance & Delivery -->
+<div class="space-y-8">
+<!-- Delivery Settings -->
+<section class="bg-surface-container-lowest rounded-[2rem] p-8 shadow-sm">
+<h3 class="text-xl font-bold font-headline text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">local_shipping</span> Delivery Radius
+                    </h3>
+<div class="mb-8">
+<div class="flex justify-between items-center mb-4">
+<span class="text-sm font-bold text-on-surface">Maximum Distance</span>
+<span class="text-lg font-black text-primary">12.5 km</span>
+</div>
+<input class="w-full h-2 bg-surface-container rounded-lg appearance-none cursor-pointer accent-primary" max="50" min="1" type="range" value="12"/>
+<div class="flex justify-between mt-2">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">1km</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">50km</span>
+</div>
+</div>
+<div class="space-y-4 pt-4 border-t border-surface-container">
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium text-on-surface-variant">Min. Order Value</span>
+<span class="font-bold">₹150</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium text-on-surface-variant">Free Delivery Above</span>
+<span class="font-bold">₹500</span>
+</div>
+</div>
+</section>
+<!-- Compliance Card -->
+<section class="bg-surface-container-lowest rounded-[2rem] p-8 shadow-sm relative overflow-hidden">
+<div class="absolute -right-4 -top-4 opacity-5">
+<span class="material-symbols-outlined text-9xl" style="font-size: 140px;">verified_user</span>
+</div>
+<h3 class="text-xl font-bold font-headline text-on-surface mb-6">Compliance</h3>
+<div class="space-y-6">
+<div class="p-5 rounded-2xl bg-secondary-container/10 border border-secondary-container/20">
+<div class="flex items-start justify-between mb-3">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" data-icon="description" style="font-variation-settings: 'FILL' 1;">description</span>
+<div>
+<p class="font-bold text-on-surface leading-none">FSSAI License</p>
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mt-1">Reg: 12821999000432</p>
+</div>
+</div>
+<span class="bg-secondary text-white text-[10px] px-2 py-0.5 rounded font-black">ACTIVE</span>
+</div>
+<p class="text-xs text-on-surface-variant leading-relaxed mb-4">Document verified on Oct 12, 2023. Valid until Oct 2025.</p>
+<button class="w-full py-2.5 bg-surface text-secondary border border-secondary/20 rounded-xl text-xs font-bold hover:bg-secondary/5 transition-colors">View Certificate</button>
+</div>
+<div class="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/10">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant">gavel</span>
+<span class="font-bold text-on-surface">GST Registration</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+</div>
+</div>
+</div>
+</section>
+<button class="w-full bg-gradient-to-br from-primary to-primary-container text-on-primary py-4 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                    Save Changes
+                </button>
+</div>
+</div>
+</main>
+<!-- NavigationDrawer (Mobile Sidebar) -->
+<aside class="hidden lg:flex fixed left-0 top-0 h-full w-72 bg-white dark:bg-slate-950 flex-col p-4 shadow-2xl shadow-sky-900/10 z-[60]">
+<div class="mb-10 px-4 py-2">
+<h2 class="text-lg font-black text-slate-900 dark:text-white font-plus-jakarta">Aquatic Goods Co.</h2>
+<p class="text-xs text-slate-500 font-medium tracking-wide">Verified Vendor • v2.1.0</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-4 text-slate-600 dark:text-slate-400 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-300 rounded-xl font-inter text-sm font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-4 bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 rounded-xl px-4 py-3 font-inter text-sm font-bold" href="#">
+<span class="material-symbols-outlined" data-icon="storefront" style="font-variation-settings: 'FILL' 1;">storefront</span>
+                Store Settings
+            </a>
+<a class="flex items-center gap-4 text-slate-600 dark:text-slate-400 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-300 rounded-xl font-inter text-sm font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="badge">badge</span>
+                Vendor Profile
+            </a>
+<a class="flex items-center gap-4 text-slate-600 dark:text-slate-400 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all duration-300 rounded-xl font-inter text-sm font-medium" href="#">
+<span class="material-symbols-outlined" data-icon="contact_support">contact_support</span>
+                Support
+            </a>
+</nav>
+<div class="mt-auto p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg overflow-hidden bg-slate-200">
+<img alt="Store Manager" class="w-full h-full object-cover" data-alt="professional portrait of a smiling retail store manager in a brightly lit environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiCRHR_ixsuegR1zv3UvRWcWAuVZgpGu5OzZR133IYeb0Ui689-XSGzMYBwGmLOR52dS7GtqGLMKZmaSpwOgEnUo-d5P9GKolFDiWaN9uUncSwzbQvwrVrsGycvtxGxdlhhalS_neMH3vWWGhbCR2ZOLKsGbw0-WwBmMQzj9Xc9c_DqWsBHWN4y9llDG2RaEMVdvK6jLrKFe8e8lmOayGf_eLUyslbEBPTsYqFwIed-bhLHJF3V45EK4G8oWwR9fRS4uvk8zT5JY9M"/>
+</div>
+<div>
+<p class="text-xs font-black text-slate-900 dark:text-white uppercase">Store Manager</p>
+<p class="text-[10px] text-slate-500 font-bold">Aqua Crystal Pure</p>
+</div>
+</div>
+</aside>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center pt-3 pb-8 px-6 bg-white/80 dark:bg-slate-950/80 backdrop-blur-lg shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-[2rem]">
+<a class="flex flex-col items-center text-slate-400 dark:text-slate-600 hover:opacity-80" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="text-[11px] font-semibold uppercase tracking-wider mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center text-sky-600 dark:text-sky-400 after:content-[''] after:w-1 after:h-1 after:bg-sky-600 after:rounded-full after:mt-1" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+<span class="text-[11px] font-semibold uppercase tracking-wider">Shop</span>
+</a>
+<a class="flex flex-col items-center text-slate-400 dark:text-slate-600 hover:opacity-80" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-[11px] font-semibold uppercase tracking-wider mt-1">Profile</span>
+</a>
+<a class="flex flex-col items-center text-slate-400 dark:text-slate-600 hover:opacity-80" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-[11px] font-semibold uppercase tracking-wider mt-1">Settings</span>
+</a>
+</nav>
+</body></html>

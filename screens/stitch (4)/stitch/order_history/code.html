@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=390, height=844, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#006a61",
+                    "secondary-container": "#83f2e3",
+                    "tertiary": "#28654c",
+                    "primary-fixed-dim": "#9acbff",
+                    "outline-variant": "#c0c7d2",
+                    "tertiary-container": "#437e64",
+                    "on-tertiary-fixed": "#002114",
+                    "on-surface": "#181c20",
+                    "surface-container-low": "#f2f3f9",
+                    "primary-container": "#0077be",
+                    "inverse-surface": "#2d3135",
+                    "on-tertiary-container": "#e8fff0",
+                    "on-tertiary": "#ffffff",
+                    "surface-dim": "#d8dadf",
+                    "primary": "#005e97",
+                    "surface-container-high": "#e6e8ee",
+                    "on-primary-fixed": "#001d34",
+                    "outline": "#707882",
+                    "surface-variant": "#e0e2e8",
+                    "on-surface-variant": "#404751",
+                    "inverse-on-surface": "#eff1f6",
+                    "inverse-primary": "#9acbff",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed": "#b1f0d0",
+                    "surface-container-highest": "#e0e2e8",
+                    "surface": "#f7f9ff",
+                    "secondary-fixed-dim": "#68d9ca",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "background": "#f7f9ff",
+                    "on-secondary": "#ffffff",
+                    "on-background": "#181c20",
+                    "error-container": "#ffdad6",
+                    "primary-fixed": "#cfe5ff",
+                    "on-tertiary-fixed-variant": "#105139",
+                    "on-secondary-fixed": "#00201c",
+                    "surface-tint": "#00629e",
+                    "on-secondary-container": "#006f65",
+                    "surface-container": "#eceef3",
+                    "on-primary-fixed-variant": "#004a79",
+                    "surface-bright": "#f7f9ff",
+                    "secondary-fixed": "#86f5e6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-fixed-variant": "#005049",
+                    "tertiary-fixed-dim": "#96d4b5",
+                    "on-primary-container": "#f7f9ff",
+                    "on-error-container": "#93000a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-24">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-[#f7f9ff]/80 backdrop-blur-md flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface">arrow_back</span>
+<h1 class="text-xl font-bold tracking-tight text-[#1A2340]">Order History</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#0077BE]">search</span>
+<span class="material-symbols-outlined text-[#0077BE]">call</span>
+</div>
+</header>
+<main class="pt-20 px-4">
+<!-- Filter Tabs -->
+<div class="flex overflow-x-auto no-scrollbar gap-6 py-2 mb-6 border-b border-surface-container-high">
+<button class="whitespace-nowrap pb-2 text-[#0077BE] font-bold border-b-2 border-[#0077BE]">All Orders</button>
+<button class="whitespace-nowrap pb-2 text-on-surface-variant font-medium opacity-70">Active</button>
+<button class="whitespace-nowrap pb-2 text-on-surface-variant font-medium opacity-70">Completed</button>
+<button class="whitespace-nowrap pb-2 text-on-surface-variant font-medium opacity-70">Cancelled</button>
+</div>
+<div class="flex flex-col gap-5">
+<!-- Active Order -->
+<div class="bg-surface-container-lowest border-l-4 border-[#FF9800] rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)] border-y border-r border-outline-variant/20">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Clear mineral water bottle with fresh bubbles and blue labeling against a clean studio background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDz74U0v0L7xWLQSwckxv307BJsljUPWSTzSK4RlxyrAYkuPTDoIhv4EXWwdjBd87ZBUNkhQeMBKBDMPDC5chvbqTEg-ajaew3cf71Ischdd89xy4typHLjj5iekoJzKs_QaaPnpK8yltMQXV5o83fb9djj-5luHDn-9tS2wsffewloMKnkKI-T1Efmuw0nYpTFu6ykHdPvJde92o7C1vvcAvB_HR7fAWJ1Qewxbp190ngj1Izeu0PP29M-OG1q4AiEhxhuioVb3ps"/>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">Aqua Crystal Pure</h3>
+<p class="text-xs text-on-surface-variant">#TG-20240409-1104</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<div class="flex items-center gap-1.5 px-2 py-1 bg-[#FFF4E5] text-[#FF9800] rounded-full text-[10px] font-bold uppercase tracking-wider">
+<span class="w-1.5 h-1.5 bg-[#FF9800] rounded-full animate-pulse"></span>
+                            Out for delivery
+                        </div>
+</div>
+</div>
+<div class="flex justify-between items-center py-3 border-t border-surface-container">
+<div class="text-sm font-medium text-on-surface-variant">1× 20L Can</div>
+<div class="text-xl font-bold text-[#0077BE]">₹45.00</div>
+</div>
+<button class="w-full h-[52px] bg-gradient-to-tr from-[#005e97] to-[#0077be] text-on-primary rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-primary/10">Track Order</button>
+</div>
+<!-- Completed Order -->
+<div class="bg-surface-container-lowest border border-[#DDE6F5] rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Stack of large 20 liter water dispenser bottles in a bright warehouse with sunlight reflecting off the plastic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCn2NqhpDlX5VSJUopKJPQw5xPuDVMvqeeRYC2E6xsS7evRkztrpQp60O82GeD_2pIzv_kfo_9Hzw-eLkLwfzktfBR8EqFrQkfqnYX775_6ESiQXRQr4MYuHhp93xeI_EB09LnXFsAb33Kzi_CV5-l4LDBKoarPuL9h2pbWRRvdR4Ov0eYu3DeNTntNzl98rL_Wl334dP3r08zBnejp5MbIFciWN3UE3tKgAKxkxlTvvLHFPncfyRGzQLs-C2_Y-_vSwKzgoRHdFvQ"/>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">Aqua Crystal Pure</h3>
+<p class="text-xs text-on-surface-variant">#TG-20240408-0892</p>
+</div>
+</div>
+<div class="px-2 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant rounded-full text-[10px] font-bold uppercase">UPI Paid ✓</div>
+</div>
+<div class="space-y-2 mb-4">
+<div class="flex justify-between text-sm">
+<span class="text-on-surface-variant">2× 20L Can</span>
+<span class="font-bold text-[#0077BE] text-lg">₹90.00</span>
+</div>
+<div class="flex items-center gap-1 text-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                        📅 8 Apr 2024
+                    </div>
+</div>
+<button class="w-full h-[52px] border-2 border-[#0077BE] text-[#0077BE] rounded-xl font-bold transition-all active:scale-95">Order Again</button>
+</div>
+<!-- Cancelled Order -->
+<div class="bg-surface-container-lowest border-l-4 border-[#FF5252] rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)] border-y border-r border-outline-variant/20">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 bg-surface-container-high rounded-lg overflow-hidden flex-shrink-0 grayscale opacity-60">
+<img class="w-full h-full object-cover" data-alt="Minimalist water bottle profile against a soft gray background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPa_E4Nke5JQ_EevbzhPPr3k1xp7RWmfAsFH3BPK50Pu_0Ov7d6F9XN4Yqxv9AJJswM4Es1ElryRAKBJmKsulqBJRBO4qurXadZNU6qBRyznxwJl4nDboDG6A-3EVNZYZyUDGglBqg7kJ1epw-MY5SWxJtuWi-FyyLLGyFLPnUIcRYZJDEEN4jMvjSd9cNGnCn83ejyikHwwFBCGBQVA5-oNhK5RGSjI_9HKWQ6jaQ0Dpb0lQf7AX5o43rfbOOljCbRAFBhjUywvg"/>
+</div>
+<div>
+<h3 class="font-bold text-on-surface opacity-60">Aqua Crystal Pure</h3>
+<p class="text-xs text-on-surface-variant">#TG-20240405-0421</p>
+</div>
+</div>
+<div class="px-2 py-1 bg-error-container text-error rounded-full text-[10px] font-bold uppercase">Cancelled</div>
+</div>
+<p class="text-xs text-error font-medium mb-4 bg-error-container/20 p-2 rounded-lg">Cancelled — Wrong address entered</p>
+<div class="flex justify-between items-center">
+<span class="text-xs text-on-surface-variant">📅 5 Apr 2024</span>
+<span class="text-sm font-bold text-on-surface-variant opacity-60">₹45.00</span>
+</div>
+</div>
+<!-- Another Completed Order (Editorial Style) -->
+<div class="bg-surface-container-lowest border border-[#DDE6F5] rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 bg-surface-container rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Modern water purification system with clean lines and blue glowing indicators" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDD4b0A5fhZj5YozAPW_GGcYBHYULyhYT7JmnJBOG00-7wvqIAeqhSVh2s9W_0hdK0g0teyObIDXfk2LxDvHX5_eAGSXHvgm5DANhINUS2j42GISf5TJmDZj4qbQlW5XAM3ijgGO54Gk43wddAEll4a3swiPyR8Fb8RPrZntcFnfvtaLNeFvRo2EdlK26E-hA0ujONm3CaekbkkTcNPzWB87xfgDsXYdZvHOBI_xIeONIBpWU30XpaQ8TH1k0KpPDiRo9fXYfygKQo"/>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">Premium Alkaline</h3>
+<p class="text-xs text-on-surface-variant">#TG-20240401-0112</p>
+</div>
+</div>
+</div>
+<div class="flex justify-between items-end">
+<div class="space-y-1">
+<div class="text-sm text-on-surface-variant">1× 10L Dispenser</div>
+<div class="text-xs text-on-surface-variant opacity-70">📅 1 Apr 2024</div>
+</div>
+<div class="text-right">
+<div class="text-xl font-bold text-[#0077BE]">₹120.00</div>
+<div class="text-[10px] text-tertiary font-bold">DELIVERED</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full rounded-t-xl z-50 bg-[#f7f9ff]/80 backdrop-blur-md shadow-[0_-12px_32px_rgba(24,28,32,0.06)] border-t-[0.5px] border-slate-200/20 flex justify-around items-center h-20 pb-4 px-2">
+<a class="flex flex-col items-center justify-center text-[#181c20] dark:text-slate-400 opacity-60 hover:bg-[#f2f3f9] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Inter'] text-[12px] font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#181c20] dark:text-slate-400 opacity-60 hover:bg-[#f2f3f9] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-['Inter'] text-[12px] font-medium">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#0077BE] font-bold bg-[#ffffff] rounded-xl px-4 py-1 scale-110 duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="font-['Inter'] text-[12px] font-medium">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#181c20] dark:text-slate-400 opacity-60 hover:bg-[#f2f3f9] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-['Inter'] text-[12px] font-medium">Wallet</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#181c20] dark:text-slate-400 opacity-60 hover:bg-[#f2f3f9] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Inter'] text-[12px] font-medium">Profile</span>
+</a>
+</nav>
+</body></html>

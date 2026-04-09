@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thannigo Customer Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed-dim": "#68d9ca",
+                    "on-secondary": "#ffffff",
+                    "surface": "#f7f9ff",
+                    "on-tertiary-container": "#e8fff0",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed": "#00201c",
+                    "tertiary-fixed-dim": "#96d4b5",
+                    "surface-tint": "#00629e",
+                    "secondary-fixed": "#86f5e6",
+                    "on-error-container": "#93000a",
+                    "on-background": "#181c20",
+                    "on-surface": "#181c20",
+                    "inverse-primary": "#9acbff",
+                    "surface-variant": "#e0e2e8",
+                    "surface-dim": "#d8dadf",
+                    "outline": "#707882",
+                    "on-primary-container": "#f7f9ff",
+                    "surface-container-low": "#f2f3f9",
+                    "secondary": "#006a61",
+                    "on-tertiary-fixed-variant": "#105139",
+                    "on-secondary-fixed-variant": "#005049",
+                    "surface-bright": "#f7f9ff",
+                    "inverse-on-surface": "#eff1f6",
+                    "background": "#f7f9ff",
+                    "surface-container": "#eceef3",
+                    "on-primary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-highest": "#e0e2e8",
+                    "on-secondary-container": "#006f65",
+                    "on-primary-fixed": "#001d34",
+                    "error": "#ba1a1a",
+                    "primary-fixed": "#cfe5ff",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed-variant": "#004a79",
+                    "tertiary": "#28654c",
+                    "primary-fixed-dim": "#9acbff",
+                    "primary-container": "#0077be",
+                    "surface-container-high": "#e6e8ee",
+                    "primary": "#005e97",
+                    "outline-variant": "#c0c7d2",
+                    "tertiary-fixed": "#b1f0d0",
+                    "secondary-container": "#83f2e3",
+                    "inverse-surface": "#2d3135",
+                    "tertiary-container": "#437e64",
+                    "on-tertiary-fixed": "#002114",
+                    "on-surface-variant": "#404751",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "xxl": "1.5rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        }
+      }
+    </script>
+<style>
+      body { background-color: #F4F6FA; font-family: 'Inter', sans-serif; }
+      .headline-font { font-family: 'Plus Jakarta Sans', sans-serif; }
+      .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+      .primary-gradient { background: linear-gradient(135deg, #005e97 0%, #0077be 100%); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#1A2340] dark:bg-[#0d1221] shadow-lg shadow-navy-900/20 backdrop-blur-xl bg-opacity-80">
+<div class="flex items-center justify-between px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<span class="text-sm font-black bg-blue-500 text-white px-2 py-0.5 rounded-md headline-font">SHOP ADMIN</span>
+<div class="flex items-center gap-2 text-blue-400 font-['Plus_Jakarta_Sans'] font-bold tracking-tight">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">water_drop</span>
+<span class="text-white">Thannigo</span>
+</div>
+</div>
+<div class="hidden md:flex items-center gap-6">
+<nav class="flex gap-8">
+<a class="text-white headline-font text-sm font-semibold transition-opacity hover:opacity-80" href="#">Dashboard</a>
+<a class="text-white headline-font text-sm font-semibold transition-opacity hover:opacity-80 underline underline-offset-8 decoration-2 decoration-blue-400" href="#">Customers</a>
+<a class="text-slate-400 headline-font text-sm font-semibold transition-opacity hover:opacity-80" href="#">Inventory</a>
+</nav>
+<div class="flex items-center gap-4 ml-4">
+<div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white">
+<span class="material-symbols-outlined">person</span>
+</div>
+</div>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-4 md:px-8 max-w-7xl mx-auto min-h-screen">
+<!-- Search and Action Bar -->
+<div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="relative flex-grow max-w-xl">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-container-high border-none rounded-xxl focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all text-on-surface" placeholder="Search by name, phone or order ID..." type="text"/>
+</div>
+<button class="primary-gradient text-white px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-transform">
+<span class="material-symbols-outlined">person_add</span>
+                Add New Customer
+            </button>
+</div>
+<!-- Filter Tabs -->
+<div class="flex flex-wrap gap-3 mb-10 overflow-x-auto pb-2">
+<button class="px-6 py-2.5 rounded-full bg-primary-container text-white font-semibold text-sm shadow-md transition-all">All</button>
+<button class="px-6 py-2.5 rounded-full bg-surface-container-lowest text-on-surface-variant border border-outline-variant/20 font-semibold text-sm hover:bg-surface-container-high transition-all">VIP 👑</button>
+<button class="px-6 py-2.5 rounded-full bg-surface-container-lowest text-on-surface-variant border border-outline-variant/20 font-semibold text-sm hover:bg-surface-container-high transition-all">Regular</button>
+<button class="px-6 py-2.5 rounded-full bg-surface-container-lowest text-on-surface-variant border border-outline-variant/20 font-semibold text-sm hover:bg-surface-container-high transition-all">New</button>
+<button class="px-6 py-2.5 rounded-full bg-surface-container-lowest text-on-surface-variant border border-outline-variant/20 font-semibold text-sm hover:bg-surface-container-high transition-all">Lost</button>
+</div>
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Customer List -->
+<div class="lg:col-span-7 space-y-4">
+<h2 class="headline-font text-2xl font-bold mb-6 text-on-surface px-2">Active Customers</h2>
+<!-- Active Customer Item -->
+<div class="group bg-surface-container-lowest p-6 rounded-xxl flex items-center justify-between hover:shadow-xl hover:shadow-navy-900/5 transition-all border-l-4 border-primary">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-xxl bg-primary-fixed flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="portrait of a smiling professional woman in a bright office environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmnjARHOV2AAxhXbcGefPqMeROZfrqkyArTg9wahx4of1n1xmnVw92MCUQ178mDWAD4UUXZAEDendcFWSbrHtKlAMofxgkGMgFnHS1sx6hU52K5ozfjj83Q1Aifv16O6iHZDUTmZStSMvmIDKKv-Nm_coPqItgbLWjQRE0RyneIIXzifiZ4yvdaUjyth2WxvsjxONpy7Ceb9zKbEN0iBa3vNiktqmSYNmuGhxU62Fy-C1SOMOUvt5dBc0or8010qnEYtaX39OjfBg"/>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-lg headline-font">Sneha R.</h3>
+<span class="bg-tertiary-container text-on-tertiary-container text-[10px] px-2 py-0.5 rounded-full font-bold tracking-wider">VIP 👑</span>
+</div>
+<p class="text-on-surface-variant text-sm mt-1">28 orders · <span class="text-primary-container font-bold">₹2,520 spent</span></p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+<!-- Another Customer Item -->
+<div class="group bg-surface-container-lowest p-6 rounded-xxl flex items-center justify-between hover:shadow-xl hover:shadow-navy-900/5 transition-all">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-xxl bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed font-bold">
+                            AR
+                        </div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-lg headline-font">Anish Raj</h3>
+<span class="bg-surface-container-high text-on-surface-variant text-[10px] px-2 py-0.5 rounded-full font-bold tracking-wider uppercase">Regular</span>
+</div>
+<p class="text-on-surface-variant text-sm mt-1">12 orders · <span class="text-primary-container font-bold">₹1,080 spent</span></p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+<!-- Lost Customer Item -->
+<div class="group bg-surface-container-low opacity-80 p-6 rounded-xxl flex items-center justify-between hover:opacity-100 transition-all">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-xxl bg-surface-variant flex items-center justify-center text-outline font-bold">
+                            MK
+                        </div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-bold text-lg headline-font">Manoj Kumar</h3>
+<span class="bg-error-container text-on-error-container text-[10px] px-2 py-0.5 rounded-full font-bold tracking-wider uppercase">Lost</span>
+</div>
+<p class="text-on-surface-variant text-sm mt-1">Last ordered 45 days ago</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</div>
+<!-- Customer Detail Preview -->
+<div class="lg:col-span-5">
+<div class="sticky top-24">
+<div class="bg-surface-container-lowest rounded-xxl p-8 shadow-sm">
+<div class="flex items-start justify-between mb-8">
+<div>
+<h2 class="headline-font text-2xl font-extrabold">Sneha R.</h2>
+<p class="text-on-surface-variant">+91 98765 43210</p>
+</div>
+<button class="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center text-outline hover:text-primary hover:border-primary transition-all">
+<span class="material-symbols-outlined">edit</span>
+</button>
+</div>
+<!-- Deposits Section -->
+<div class="mb-8 p-6 bg-surface-container-low rounded-xl">
+<div class="flex items-center justify-between mb-4">
+<h4 class="headline-font font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container">inventory_2</span>
+                                    Can Deposits
+                                </h4>
+<span class="text-primary-container font-black text-xl">2 Cans</span>
+</div>
+<div class="flex gap-2">
+<div class="h-2 flex-grow bg-primary-container rounded-full"></div>
+<div class="h-2 flex-grow bg-primary-container rounded-full"></div>
+<div class="h-2 flex-grow bg-surface-variant/30 rounded-full"></div>
+<div class="h-2 flex-grow bg-surface-variant/30 rounded-full"></div>
+<div class="h-2 flex-grow bg-surface-variant/30 rounded-full"></div>
+</div>
+<p class="text-xs text-on-surface-variant mt-3 italic">Capacity: 5 cans total</p>
+</div>
+<!-- Notes Section -->
+<div class="mb-8">
+<h4 class="headline-font font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container">note_alt</span>
+                                Merchant Notes
+                            </h4>
+<div class="bg-surface-container-lowest border border-outline-variant/10 p-4 rounded-xl text-sm leading-relaxed text-on-surface-variant">
+                                "Prefers morning deliveries before 8:00 AM. Always leaves the empty can near the main gate. Verified VIP since Jan 2024."
+                            </div>
+</div>
+<!-- Recent Stats Bento -->
+<div class="grid grid-cols-2 gap-4">
+<div class="p-4 bg-secondary-container/10 rounded-xl border border-secondary-container/20">
+<p class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">Lifetime</p>
+<p class="text-xl font-bold headline-font">₹12.4k</p>
+</div>
+<div class="p-4 bg-tertiary-container/10 rounded-xl border border-tertiary-container/20">
+<p class="text-xs font-bold text-tertiary uppercase tracking-wider mb-1">Avg Ticket</p>
+<p class="text-xl font-bold headline-font">₹90</p>
+</div>
+</div>
+<button class="w-full mt-8 py-4 px-6 rounded-xl border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-all">
+                            View Full Order History
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-xl flex justify-around items-center px-4 pb-6 pt-2 rounded-t-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-['Inter'] text-[11px] font-semibold">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#0077BE] dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-xl px-4 py-1.5" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-['Inter'] text-[11px] font-semibold">Customers</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-['Inter'] text-[11px] font-semibold">Inventory</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-['Inter'] text-[11px] font-semibold">Earnings</span>
+</a>
+</nav>
+</body></html>

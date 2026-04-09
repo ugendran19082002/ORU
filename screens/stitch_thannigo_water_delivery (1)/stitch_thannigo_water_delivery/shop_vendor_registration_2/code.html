@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thannigo Vendor Registration</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#86f5e6",
+                        "on-surface": "#181c20",
+                        "secondary-container": "#83f2e3",
+                        "inverse-primary": "#9acbff",
+                        "secondary": "#006a61",
+                        "secondary-fixed-dim": "#68d9ca",
+                        "tertiary-fixed": "#b1f0d0",
+                        "inverse-on-surface": "#eff1f6",
+                        "outline": "#707882",
+                        "primary": "#005e97",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed": "#00201c",
+                        "on-surface-variant": "#404751",
+                        "on-secondary-container": "#006f65",
+                        "background": "#f7f9ff",
+                        "on-tertiary": "#ffffff",
+                        "on-background": "#181c20",
+                        "on-tertiary-fixed-variant": "#105139",
+                        "surface-container-highest": "#e0e2e8",
+                        "surface-container-high": "#e6e8ee",
+                        "on-tertiary-fixed": "#002114",
+                        "on-secondary-fixed-variant": "#005049",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#f7f9ff",
+                        "primary-fixed-dim": "#9acbff",
+                        "tertiary": "#28654c",
+                        "tertiary-container": "#437e64",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#e0e2e8",
+                        "primary-fixed": "#cfe5ff",
+                        "on-primary-fixed": "#001d34",
+                        "surface-container-low": "#f2f3f9",
+                        "primary-container": "#0077be",
+                        "surface-tint": "#00629e",
+                        "surface-container": "#eceef3",
+                        "tertiary-fixed-dim": "#96d4b5",
+                        "surface": "#f7f9ff",
+                        "surface-dim": "#d8dadf",
+                        "inverse-surface": "#2d3135",
+                        "error-container": "#ffdad6",
+                        "outline-variant": "#c0c7d2",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-container": "#e8fff0",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f7f9ff",
+                        "on-primary-fixed-variant": "#004a79"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body text-on-surface antialiased selection:bg-secondary-fixed">
+<!-- TopAppBar -->
+<header class="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl docked full-width top-0 sticky z-50 shadow-sm dark:shadow-none flex justify-between items-center px-6 h-16 w-full max-w-screen-2xl mx-auto">
+<div class="flex items-center gap-4">
+<button class="hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active:scale-95 duration-150 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-500" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-manrope font-bold text-lg tracking-tight text-slate-900 dark:text-white">Vendor Registration</h1>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="close up professional headshot of a friendly business merchant with a clean neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUWZqjknFhQzAWk9zydAxkRv3NCMDEmOpzWMj-4X6viwCftTtj1vfc1bt7FPXSV5T0z2kQvM6Jk2ia7ZkTIHJLomweup9stVfAJuXUuds1l6ZrIdNuYhv7QS7NdGem2BE0X8SyHYXwZkGK18RTbI0GDzMuPViA-0miJrcCpzsjWNMGIzLlEEBJXhyefeIhkzxmvm_rukw6rSu5e1roGj_3G_IDs1ECHrY1cPkGhWo0vIQDk1Pfe-niV_sRLvDgB1DpwEYgpkx5m3mB"/>
+</div>
+</header>
+<main class="max-w-[390px] mx-auto min-h-screen pb-32">
+<!-- Step Progress Bar -->
+<section class="sticky top-16 bg-background/95 backdrop-blur-md pt-4 pb-6 px-6 z-40">
+<div class="flex justify-between items-center relative">
+<!-- Connecting Lines -->
+<div class="absolute top-5 left-8 right-8 h-0.5 bg-slate-200">
+<div class="h-full bg-secondary" style="width: 50%;"></div>
+</div>
+<!-- Step 1: Basic Info (Done) -->
+<div class="relative flex flex-col items-center gap-2 z-10">
+<div class="w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center shadow-lg shadow-secondary/20">
+<span class="material-symbols-outlined text-[20px]" data-icon="check">check</span>
+</div>
+<span class="text-[10px] font-bold text-secondary uppercase tracking-wider">Basic Info</span>
+</div>
+<!-- Step 2: Shop Details (Active) -->
+<div class="relative flex flex-col items-center gap-2 z-10">
+<div class="w-10 h-10 rounded-full bg-primary-container text-white flex items-center justify-center ring-4 ring-primary-container/20">
+<span class="text-sm font-bold">2</span>
+</div>
+<span class="text-[10px] font-bold text-primary-container uppercase tracking-wider">Shop Details</span>
+</div>
+<!-- Step 3: Documents (Pending) -->
+<div class="relative flex flex-col items-center gap-2 z-10">
+<div class="w-10 h-10 rounded-full bg-white border-2 border-slate-300 text-slate-400 flex items-center justify-center">
+<span class="text-sm font-bold">3</span>
+</div>
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Documents</span>
+</div>
+</div>
+</section>
+<section class="px-6 space-y-8 mt-4">
+<!-- Header Section -->
+<div class="space-y-1">
+<h2 class="text-2xl font-extrabold text-[#1A2340] font-headline tracking-tight">Shop Details</h2>
+<p class="text-on-surface-variant text-sm leading-relaxed">Tell us about your physical storefront and services.</p>
+</div>
+<!-- Form Content -->
+<div class="space-y-6">
+<!-- Shop Name -->
+<div class="space-y-2">
+<label class="text-sm font-bold text-on-surface ml-1">Shop Name</label>
+<input class="w-full bg-surface-container-lowest border-outline-variant/30 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-xl px-4 py-3.5 text-on-surface placeholder:text-outline/50 transition-all duration-200 outline-none" placeholder="e.g. Blue Spring Enterprises" type="text"/>
+</div>
+<!-- Shop Type Selection -->
+<div class="space-y-3">
+<label class="text-sm font-bold text-on-surface ml-1">Shop Type</label>
+<div class="flex flex-wrap gap-2">
+<div class="bg-primary-container text-white px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-md shadow-primary/20">
+<span class="material-symbols-outlined text-[18px]" data-icon="water_drop">water_drop</span>
+                            Water Delivery
+                        </div>
+<div class="bg-surface-container-high text-on-surface-variant px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-surface-container-highest transition-colors cursor-pointer">
+                            General Store
+                        </div>
+</div>
+</div>
+<!-- Location Section -->
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<label class="text-sm font-bold text-on-surface ml-1">Shop Address</label>
+<button class="flex items-center gap-1.5 text-primary text-xs font-bold px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="my_location">my_location</span>
+                            Use My Location
+                        </button>
+</div>
+<textarea class="w-full bg-surface-container-lowest border-outline-variant/30 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-xl px-4 py-3.5 text-on-surface placeholder:text-outline/50 transition-all duration-200 outline-none resize-none" placeholder="Plot no, Street name, Landmark..." rows="3"></textarea>
+<!-- Mini Map Preview -->
+<div class="relative w-full h-[120px] rounded-2xl overflow-hidden shadow-inner bg-surface-container">
+<img class="w-full h-full object-cover opacity-80" data-alt="detailed digital map showing Koramangala area in Bangalore with a prominent location pin icon over a central street" data-location="Koramangala, Bangalore" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFqIutdH23x-4W0cTHrIHYHmwkzlJF6HpwWhi7ppN1Qkwu5ips4u563Z-xQl3Kfbyp1On2LPwaEWdm_O_HG42eg15af1NOddyRPyI5DG6Hc6Qj5DFs94f5MpW2k0QAWx3P52cgs_ezu_j6fb6g9TUQCycyYEPSw9m8ermyCRcAq1qryT3av_2i8oglq33-jrBGOB_5OxYsh6fERJ76FhoRxdCfkY0BZeJjDBzbaCfm-v6yLLb00VbXGtSp6fnGgGUuwUi-V2OfAe59"/>
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="relative">
+<span class="material-symbols-outlined text-primary text-4xl" data-icon="location_on" data-weight="fill" style="font-variation-settings: 'FILL' 1;">location_on</span>
+<div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-1.5 bg-black/20 rounded-full blur-[2px]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Water Types -->
+<div class="space-y-3">
+<label class="text-sm font-bold text-on-surface ml-1">Water Types Offered</label>
+<div class="grid grid-cols-2 gap-3">
+<label class="relative flex items-center gap-3 p-4 rounded-xl border-2 border-primary bg-primary/5 cursor-pointer">
+<input checked="" class="hidden" type="checkbox"/>
+<div class="w-5 h-5 rounded-md border-2 border-primary bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[14px] font-bold" data-icon="check">check</span>
+</div>
+<span class="text-sm font-bold text-on-surface">20L Can</span>
+</label>
+<label class="relative flex items-center gap-3 p-4 rounded-xl border border-outline-variant/30 bg-surface-container-lowest cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="hidden" type="checkbox"/>
+<div class="w-5 h-5 rounded-md border-2 border-outline-variant"></div>
+<span class="text-sm font-semibold text-on-surface-variant">10L Can</span>
+</label>
+<label class="relative flex items-center gap-3 p-4 rounded-xl border border-outline-variant/30 bg-surface-container-lowest cursor-pointer hover:bg-surface-container-low transition-colors">
+<input class="hidden" type="checkbox"/>
+<div class="w-5 h-5 rounded-md border-2 border-outline-variant"></div>
+<span class="text-sm font-semibold text-on-surface-variant">5L Bottle</span>
+</label>
+</div>
+</div>
+<!-- Price Field -->
+<div class="space-y-2">
+<label class="text-sm font-bold text-on-surface ml-1">20L Can Price (Standard)</label>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="text-primary font-bold">₹</span>
+</div>
+<input class="w-full bg-surface-container-lowest border-outline-variant/30 focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-xl pl-8 pr-4 py-3.5 text-on-surface font-bold text-lg outline-none" type="number" value="45"/>
+</div>
+</div>
+<!-- Delivery Radius -->
+<div class="space-y-4 pt-2">
+<div class="flex items-center justify-between">
+<label class="text-sm font-bold text-on-surface ml-1">Delivery Radius</label>
+<span class="text-primary font-extrabold text-base px-3 py-1 bg-primary/10 rounded-lg">5 km</span>
+</div>
+<div class="relative px-1">
+<input class="w-full h-2 bg-surface-container-highest rounded-full appearance-none cursor-pointer accent-primary-container" max="15" min="1" type="range" value="5"/>
+<div class="flex justify-between mt-2 text-[10px] font-bold text-outline uppercase tracking-tighter">
+<span>1km</span>
+<span>5km</span>
+<span>10km</span>
+<span>15km</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom CTA Fixed Container -->
+<div class="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-slate-100/50 flex justify-center z-50">
+<button class="w-full max-w-[342px] h-[52px] bg-primary-container text-white font-bold rounded-2xl shadow-[0_12px_32px_rgba(0,119,190,0.15)] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2">
+            Continue to Documents
+            <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</body></html>

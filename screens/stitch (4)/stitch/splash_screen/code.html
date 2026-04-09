@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thannigo Splash</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&amp;family=Plus+Jakarta+Sans:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "inverse-surface": "#2d3135",
+                "tertiary-container": "#437e64",
+                "on-error-container": "#93000a",
+                "on-surface-variant": "#404751",
+                "on-secondary-fixed-variant": "#005049",
+                "primary-fixed-dim": "#9acbff",
+                "on-surface": "#181c20",
+                "on-secondary": "#ffffff",
+                "secondary": "#006a61",
+                "tertiary-fixed-dim": "#96d4b5",
+                "on-primary-fixed-variant": "#004a79",
+                "on-tertiary-fixed-variant": "#105139",
+                "surface-container-low": "#f2f3f9",
+                "surface-container-lowest": "#ffffff",
+                "on-background": "#181c20",
+                "tertiary-fixed": "#b1f0d0",
+                "inverse-primary": "#9acbff",
+                "surface-variant": "#e0e2e8",
+                "error": "#ba1a1a",
+                "tertiary": "#28654c",
+                "on-tertiary-fixed": "#002114",
+                "secondary-fixed-dim": "#68d9ca",
+                "on-secondary-fixed": "#00201c",
+                "on-primary": "#ffffff",
+                "surface-tint": "#00629e",
+                "on-tertiary": "#ffffff",
+                "on-error": "#ffffff",
+                "surface-container-high": "#e6e8ee",
+                "background": "#f7f9ff",
+                "surface-bright": "#f7f9ff",
+                "error-container": "#ffdad6",
+                "secondary-container": "#83f2e3",
+                "outline-variant": "#c0c7d2",
+                "primary-fixed": "#cfe5ff",
+                "on-tertiary-container": "#e8fff0",
+                "surface-container-highest": "#e0e2e8",
+                "inverse-on-surface": "#eff1f6",
+                "outline": "#707882",
+                "on-secondary-container": "#006f65",
+                "primary": "#005e97",
+                "surface-dim": "#d8dadf",
+                "secondary-fixed": "#86f5e6",
+                "surface": "#f7f9ff",
+                "on-primary-fixed": "#001d34",
+                "on-primary-container": "#f7f9ff",
+                "primary-container": "#0077be",
+                "surface-container": "#eceef3"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "fontFamily": {
+                "headline": ["Plus Jakarta Sans"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ripple-ring {
+            border: 2px solid #A0DEBF;
+            opacity: 0.3;
+            border-radius: 50%;
+            position: absolute;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface flex items-center justify-center min-h-screen m-0 p-0 overflow-hidden">
+<!-- Mobile Container (390x844 simulated) -->
+<main class="w-[390px] h-[844px] relative flex flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-[#0077BE] to-[#48BCAE] shadow-2xl">
+<!-- Status Bar -->
+<div class="absolute top-0 w-full px-8 py-3 flex justify-between items-center z-50">
+<span class="text-white text-xs font-bold">9:41</span>
+<div class="flex gap-1.5 items-center">
+<span class="material-symbols-outlined text-[14px] text-white">signal_cellular_4_bar</span>
+<span class="material-symbols-outlined text-[14px] text-white">wifi</span>
+<span class="material-symbols-outlined text-[18px] text-white">battery_full</span>
+</div>
+</div>
+<!-- Ripple Ring Background Elements -->
+<div class="absolute flex items-center justify-center">
+<div class="ripple-ring w-[180px] h-[180px]"></div>
+<div class="ripple-ring w-[260px] h-[260px]"></div>
+<div class="ripple-ring w-[340px] h-[340px]"></div>
+</div>
+<!-- Branding Section -->
+<div class="relative z-10 flex flex-col items-center">
+<!-- Icon Container -->
+<div class="w-24 h-24 mb-6 flex items-center justify-center bg-white/10 backdrop-blur-sm rounded-full">
+<span class="material-symbols-outlined text-[96px] text-white" style="font-variation-settings: 'FILL' 1;">
+                    water_drop
+                </span>
+</div>
+<!-- App Name -->
+<h1 class="font-headline font-extrabold text-[32px] text-white tracking-[2px] leading-none mb-3">
+                Thannigo
+            </h1>
+<!-- Tagline -->
+<p class="font-body text-[14px] text-white/80 tracking-wide">
+                Pure water, delivered fast.
+            </p>
+</div>
+<!-- Loading Indicator -->
+<div class="absolute bottom-16 flex gap-2">
+<div class="w-2 h-2 rounded-full bg-white"></div>
+<div class="w-2 h-2 rounded-full bg-white/60"></div>
+<div class="w-2 h-2 rounded-full bg-white/30"></div>
+</div>
+<!-- Subtle Gradient Texture Overlay -->
+<div class="absolute inset-0 pointer-events-none opacity-20" data-alt="soft blue and teal radial gradient texture providing depth and atmosphere to the background" style="background-image: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.1) 100%)">
+</div>
+</main>
+<!-- Navigation suppression check: This is a Splash screen, so TopAppBar and BottomNavBar are omitted per "Shell Visibility & Relevance" rules. -->
+</body></html>

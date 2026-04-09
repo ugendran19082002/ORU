@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thannigo | Order Summary</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed": "#b1f0d0",
+                    "inverse-primary": "#9acbff",
+                    "surface-variant": "#e0e2e8",
+                    "on-primary-fixed": "#001d34",
+                    "primary-container": "#0077be",
+                    "surface": "#f7f9ff",
+                    "error": "#ba1a1a",
+                    "secondary": "#006a61",
+                    "outline-variant": "#c0c7d2",
+                    "surface-tint": "#00629e",
+                    "on-primary": "#ffffff",
+                    "inverse-surface": "#2d3135",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed-dim": "#68d9ca",
+                    "inverse-on-surface": "#eff1f6",
+                    "surface-container-highest": "#e0e2e8",
+                    "tertiary-fixed-dim": "#96d4b5",
+                    "surface-container": "#eceef3",
+                    "on-surface": "#181c20",
+                    "secondary-fixed": "#86f5e6",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#9acbff",
+                    "on-tertiary-fixed": "#002114",
+                    "surface-dim": "#d8dadf",
+                    "surface-container-high": "#e6e8ee",
+                    "primary": "#005e97",
+                    "on-primary-container": "#f7f9ff",
+                    "on-secondary-fixed": "#00201c",
+                    "primary-fixed": "#cfe5ff",
+                    "surface-container-low": "#f2f3f9",
+                    "surface-bright": "#f7f9ff",
+                    "secondary-container": "#83f2e3",
+                    "on-tertiary-fixed-variant": "#105139",
+                    "on-secondary": "#ffffff",
+                    "background": "#f7f9ff",
+                    "on-error-container": "#93000a",
+                    "outline": "#707882",
+                    "on-surface-variant": "#404751",
+                    "tertiary-container": "#437e64",
+                    "on-tertiary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#005049",
+                    "tertiary": "#28654c",
+                    "on-secondary-container": "#006f65",
+                    "on-primary-fixed-variant": "#004a79",
+                    "on-tertiary-container": "#e8fff0",
+                    "on-background": "#181c20"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- Top Navigation -->
+<header class="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-md">
+<div class="flex items-center justify-between px-6 h-16 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-4">
+<button class="p-2 -ml-2 hover:bg-sky-50 transition-colors rounded-full active:scale-95 duration-150">
+<span class="material-symbols-outlined text-sky-700">arrow_back</span>
+</button>
+<h1 class="text-xl font-extrabold text-sky-700 tracking-tight">Order Summary</h1>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sky-700">help_outline</span>
+</div>
+</div>
+</header>
+<main class="pt-20 px-4 max-w-2xl mx-auto space-y-6">
+<!-- OTP Notice Alert -->
+<div class="bg-[#FFF8E1] border-l-4 border-[#FF9800] rounded-xl p-4 flex items-start gap-4">
+<span class="material-symbols-outlined text-[#FF9800]" style="font-variation-settings: 'FILL' 1;">lock_person</span>
+<div>
+<p class="text-sm font-semibold text-[#855e00]">Secure Delivery OTP</p>
+<p class="text-xs text-[#855e00]/80 mt-0.5">Please provide the OTP to the delivery partner only when you receive your order.</p>
+</div>
+</div>
+<!-- Shop Info Card -->
+<section class="bg-surface-container-lowest rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+<div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+<img alt="Fresh Spring Water Station" class="w-full h-full object-cover" data-alt="Close-up of clean water bottles stacked in a modern shop with bright lighting and a professional atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAl3EmjtYLqEn9xX3XOP0dHXo-vIlJr9UUP-1wsOEjWTB1oU6K5_ANMYBLWdia3Q96er157yuPuJLxjrGIq971xCnmjeZc4gF0CGqMEDVU9_4B4bxzSCfKLEGIG2aVgST7N-fUzjI338xabN2gp-NenFL36LinPABYgv5GSYJouD-_UPpmyud9PrYDDZJJNRzpc3rRrLGFUaqqF5qdAoWL4Md9w3Iz-Aeqkcm31VaFY7GFYo7RG7XxeLQW59UOPe_-kVn4qXH9eDeH"/>
+</div>
+<div class="flex-grow">
+<h2 class="text-lg font-bold text-on-surface">Everest Pure Water</h2>
+<div class="flex items-center gap-2 mt-1">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase">Est. 25-30 min</span>
+<span class="text-xs text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">verified</span> Trusted Shop
+                    </span>
+</div>
+</div>
+</section>
+<!-- Items List -->
+<section class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm">
+<h3 class="text-sm font-extrabold text-on-surface-variant uppercase tracking-widest mb-4">Your Basket</h3>
+<div class="space-y-6">
+<!-- Item 1 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-xs">
+                            2
+                        </div>
+<div>
+<p class="font-bold text-on-surface text-sm">20L Drinking Water Jar</p>
+<p class="text-xs text-on-surface-variant">₹40 / unit</p>
+</div>
+</div>
+<p class="font-bold text-on-surface">₹80</p>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-xs">
+                            1
+                        </div>
+<div>
+<p class="font-bold text-on-surface text-sm">Emergency Seal Pack</p>
+<p class="text-xs text-on-surface-variant">₹5 / unit</p>
+</div>
+</div>
+<p class="font-bold text-on-surface">₹5</p>
+</div>
+</div>
+<!-- Coupon Row -->
+<div class="mt-8 pt-6 border-t border-dashed border-outline-variant/30">
+<div class="bg-surface-container-low rounded-xl p-3 flex items-center justify-between group cursor-pointer hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">sell</span>
+<span class="text-sm font-semibold text-on-surface-variant">Apply Discount Coupon</span>
+</div>
+<button class="text-primary font-extrabold text-xs tracking-widest hover:underline px-2">APPLY</button>
+</div>
+</div>
+</section>
+<!-- Delivery Address Card -->
+<section class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm overflow-hidden">
+<div class="flex justify-between items-start mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">location_on</span>
+<h3 class="text-sm font-extrabold text-on-surface-variant uppercase tracking-widest">Delivery To</h3>
+</div>
+<button class="text-primary text-xs font-bold hover:underline">Change</button>
+</div>
+<div class="pl-7">
+<p class="text-sm font-bold text-on-surface">Home — Rahul Sharma</p>
+<p class="text-xs text-on-surface-variant mt-1 leading-relaxed">
+                    Apt 402, Blue Heights, 12th Cross Road, Indiranagar, Bangalore - 560038
+                </p>
+<div class="mt-4 relative">
+<input class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 text-xs focus:ring-2 focus:ring-primary/20 placeholder:text-outline italic" placeholder="Add delivery instructions (e.g. Leave at gate)" type="text"/>
+</div>
+</div>
+</section>
+<!-- Price Breakdown -->
+<section class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm space-y-3">
+<div class="flex justify-between text-sm">
+<span class="text-on-surface-variant">Subtotal</span>
+<span class="text-on-surface">₹85</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-on-surface-variant">Delivery Fee</span>
+<span class="text-on-surface">₹12</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-on-surface-variant">Platform Fee</span>
+<span class="text-on-surface">₹5</span>
+</div>
+<div class="pt-3 border-t border-outline-variant/20 flex justify-between items-center">
+<span class="font-extrabold text-on-surface">Total Amount</span>
+<span class="text-2xl font-black text-primary-container">₹102</span>
+</div>
+</section>
+<!-- Cancellation Policy -->
+<div class="px-2 py-4">
+<p class="text-[10px] text-on-surface-variant text-center leading-relaxed">
+                Orders once placed cannot be cancelled after the shop accepts it. <br/>
+                Read our <span class="text-primary underline">Cancellation &amp; Refund Policy</span>
+</p>
+</div>
+</main>
+<!-- Sticky CTA Footer -->
+<footer class="fixed bottom-0 w-full bg-white shadow-[0_-8px_24px_rgba(0,119,190,0.06)] px-6 py-5 z-50">
+<div class="max-w-2xl mx-auto flex items-center justify-between gap-4">
+<div class="hidden sm:block">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Total Payable</p>
+<p class="text-lg font-black text-on-surface">₹102</p>
+</div>
+<button class="flex-grow bg-primary-container hover:bg-primary text-on-primary font-extrabold text-sm py-4 rounded-2xl flex items-center justify-center gap-3 active:scale-[0.98] transition-all duration-150 shadow-lg shadow-sky-700/20">
+                Place Order — ₹102
+                <span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+</div>
+</footer>
+<!-- Bottom Nav (Suppressed because focused checkout flow, but script requirement check) -->
+<!-- Note: BottomNavBar is suppressed as per "Shell Visibility & Relevance" rule for transactional pages -->
+</body></html>

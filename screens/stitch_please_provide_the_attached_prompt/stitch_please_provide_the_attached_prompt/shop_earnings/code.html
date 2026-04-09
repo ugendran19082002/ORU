@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Shop Earnings | Thannigo</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@700;800;900&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Syne:wght@700&amp;display=swap" rel="stylesheet"/>
+<!-- Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed-dim": "#96d4b5",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-container": "#437e64",
+                    "on-primary-container": "#f7f9ff",
+                    "on-background": "#181c20",
+                    "surface-tint": "#00629e",
+                    "error": "#ba1a1a",
+                    "background": "#f7f9ff",
+                    "on-tertiary-fixed-variant": "#105139",
+                    "on-surface": "#181c20",
+                    "on-primary": "#ffffff",
+                    "primary-fixed-dim": "#9acbff",
+                    "on-secondary-container": "#006f65",
+                    "on-error-container": "#93000a",
+                    "primary-fixed": "#cfe5ff",
+                    "on-error": "#ffffff",
+                    "secondary-fixed": "#86f5e6",
+                    "secondary-container": "#83f2e3",
+                    "surface-container-highest": "#e0e2e8",
+                    "outline-variant": "#c0c7d2",
+                    "secondary-fixed-dim": "#68d9ca",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-container": "#e8fff0",
+                    "surface": "#f7f9ff",
+                    "on-secondary": "#ffffff",
+                    "surface-dim": "#d8dadf",
+                    "secondary": "#006a61",
+                    "on-primary-fixed": "#001d34",
+                    "primary": "#005e97",
+                    "surface-container": "#eceef3",
+                    "on-secondary-fixed-variant": "#005049",
+                    "on-tertiary-fixed": "#002114",
+                    "on-surface-variant": "#404751",
+                    "tertiary": "#28654c",
+                    "surface-container-low": "#f2f3f9",
+                    "surface-container-high": "#e6e8ee",
+                    "on-secondary-fixed": "#00201c",
+                    "inverse-primary": "#9acbff",
+                    "surface-bright": "#f7f9ff",
+                    "inverse-on-surface": "#eff1f6",
+                    "inverse-surface": "#2d3135",
+                    "primary-container": "#0077be",
+                    "on-primary-fixed-variant": "#004a79",
+                    "surface-variant": "#e0e2e8",
+                    "outline": "#707882",
+                    "error-container": "#ffdad6",
+                    "tertiary-fixed": "#b1f0d0"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Epilogue"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"],
+                    "syne": ["Syne"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar { display: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl shadow-sm shadow-blue-900/5 flex justify-between items-center px-6 h-16">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-blue-600">menu</span>
+<h1 class="font-['Epilogue'] font-bold text-lg text-blue-700">Shop Analytics</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-1 text-slate-500 hover:text-blue-500 transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+<span class="text-[12px] font-bold">Export PDF</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border-2 border-primary-container">
+<img alt="Shop owner profile" class="w-full h-full object-cover" data-alt="close up profile portrait of a smiling Indian merchant wearing a clean professional shirt in a bright shop setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwQRKlZee0IA8STAYTBUPIy0Y5xHs3DOnAk1-RHrC97vNYh4v48eWDC8Pkke7Qj6XOd_d6HNbP0XuNk56PcrlQCa3FW-hrgEtMqZXUVuD9EdFzB1ov-flK-07NUTRDK1VucKmnloetZbfSQ_eC3GEEwPLufHdXDuFxPQNFaIK6ZrcpLzseNWvFXWMukhYO-UzE4jEuTuW_iyRxZ8PsT5xPinoGTbGK6TdVkxlZeQWcRpVWNFXRUB9Pm_Qzb5DMF4OZ1Np1JU4_aeY"/>
+</div>
+</div>
+</header>
+<main class="pt-20 pb-28 px-4 max-w-[390px] mx-auto space-y-6">
+<!-- Period Selector -->
+<nav class="flex justify-between items-center p-1 bg-surface-container-low rounded-full">
+<button class="flex-1 py-2.5 text-center text-[13px] font-bold text-primary border-b-2 border-primary transition-all">Today</button>
+<button class="flex-1 py-2.5 text-center text-[13px] font-semibold text-outline transition-all">This Week</button>
+<button class="flex-1 py-2.5 text-center text-[13px] font-semibold text-outline transition-all">This Month</button>
+</nav>
+<!-- Total Earnings Card -->
+<section class="relative overflow-hidden bg-gradient-to-br from-[#0077BE] to-[#0099CC] rounded-[20px] p-6 text-white shadow-lg shadow-blue-900/10">
+<div class="relative z-10">
+<p class="text-[13px] font-bold opacity-80 tracking-wider">TODAY'S EARNINGS</p>
+<h2 class="font-syne text-[40px] font-bold mt-1">₹1,250</h2>
+<div class="flex items-center gap-2 mt-2 bg-white/10 backdrop-blur-sm w-fit px-3 py-1 rounded-full">
+<span class="material-symbols-outlined text-[16px] text-[#A0DEBF]" style="font-variation-settings: 'FILL' 1;">task_alt</span>
+<span class="text-[#A0DEBF] text-[13px] font-semibold">15 Orders Completed</span>
+</div>
+</div>
+<!-- Decorative abstract shape -->
+<div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+</section>
+<!-- Payment Split Row -->
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-lowest p-4 rounded-2xl shadow-sm space-y-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#48BCAE]">payments</span>
+<span class="text-[12px] font-bold text-outline">UPI</span>
+</div>
+<p class="text-xl font-bold">₹850</p>
+<p class="text-[11px] text-outline font-medium">10 orders</p>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-2xl shadow-sm space-y-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#FF9800]">account_balance_wallet</span>
+<span class="text-[12px] font-bold text-outline">Cash</span>
+</div>
+<p class="text-xl font-bold">₹400</p>
+<p class="text-[11px] text-outline font-medium">5 orders</p>
+</div>
+</div>
+<!-- Pending Payments Card -->
+<section class="bg-[#FFF3E0] border border-[#FF9800]/20 rounded-2xl p-4">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#FF9800]">pending_actions</span>
+<h3 class="text-[#FF9800] text-[14px] font-bold">₹300 Pending from 3 customers</h3>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-center text-[13px]">
+<div class="flex flex-col">
+<span class="font-bold">Rahul Sharma</span>
+<span class="text-[11px] text-outline">2 days overdue</span>
+</div>
+<span class="font-bold">₹100</span>
+</div>
+<div class="flex justify-between items-center text-[13px]">
+<div class="flex flex-col">
+<span class="font-bold">Anita V.</span>
+<span class="text-[11px] text-outline">1 day overdue</span>
+</div>
+<span class="font-bold">₹150</span>
+</div>
+<div class="flex justify-between items-center text-[13px]">
+<div class="flex flex-col">
+<span class="font-bold">Suresh K.</span>
+<span class="text-[11px] text-outline">Today</span>
+</div>
+<span class="font-bold">₹50</span>
+</div>
+</div>
+<button class="w-full mt-4 py-2.5 rounded-xl border-2 border-[#FF9800] text-[#FF9800] text-[13px] font-bold hover:bg-[#FF9800] hover:text-white transition-all">
+                Send Reminder
+            </button>
+</section>
+<!-- Daily Earnings Chart -->
+<section class="bg-surface-container-lowest p-5 rounded-[24px] shadow-sm">
+<h3 class="text-[15px] font-bold mb-6">Weekly Performance</h3>
+<div class="flex items-end justify-between h-40 gap-2 relative">
+<!-- Chart Tooltip (Mock) -->
+<div class="absolute -top-4 left-[14.28%] -translate-x-1/2 bg-[#1A2340] text-white px-2 py-1 rounded text-[10px] font-bold">
+                    Mon: ₹890
+                </div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full bg-primary h-[60%] rounded-t-lg"></div>
+<span class="text-[10px] font-bold text-outline">M</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full bg-[#1A2340] h-[90%] rounded-t-lg"></div>
+<span class="text-[10px] font-bold text-primary">T</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full bg-primary h-[45%] rounded-t-lg"></div>
+<span class="text-[10px] font-bold text-outline">W</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full bg-primary h-[75%] rounded-t-lg"></div>
+<span class="text-[10px] font-bold text-outline">T</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full bg-primary h-[65%] rounded-t-lg"></div>
+<span class="text-[10px] font-bold text-outline">F</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full bg-primary h-[85%] rounded-t-lg"></div>
+<span class="text-[10px] font-bold text-outline">S</span>
+</div>
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="w-full bg-primary h-[30%] rounded-t-lg"></div>
+<span class="text-[10px] font-bold text-outline">S</span>
+</div>
+</div>
+</section>
+<!-- Order Log Table -->
+<section class="bg-surface-container-lowest rounded-[24px] overflow-hidden shadow-sm">
+<div class="px-5 py-4 border-b border-surface-container-high flex justify-between items-center">
+<h3 class="text-[15px] font-bold">Order History</h3>
+<span class="text-[11px] font-bold text-primary">View All</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-[11px]">
+<thead class="bg-surface-container-low text-outline uppercase tracking-wider font-bold">
+<tr>
+<th class="px-4 py-3">Time</th>
+<th class="px-4 py-3">Customer</th>
+<th class="px-4 py-3">Payment</th>
+<th class="px-4 py-3 text-right">Amt</th>
+<th class="px-4 py-3">St</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low">
+<tr class="bg-white">
+<td class="px-4 py-4 whitespace-nowrap">14:20</td>
+<td class="px-4 py-4 font-bold">Vikram Seth</td>
+<td class="px-4 py-4"><span class="material-symbols-outlined text-[16px] text-[#48BCAE]">qr_code_2</span></td>
+<td class="px-4 py-4 font-bold text-right">₹80</td>
+<td class="px-4 py-4"><span class="material-symbols-outlined text-[#48BCAE] text-[18px]" style="font-variation-settings: 'FILL' 1;">check_circle</span></td>
+</tr>
+<tr class="bg-[#F7F9FF]">
+<td class="px-4 py-4 whitespace-nowrap">13:55</td>
+<td class="px-4 py-4 font-bold">Riya Gupta</td>
+<td class="px-4 py-4"><span class="material-symbols-outlined text-[16px] text-[#FF9800]">currency_rupee</span></td>
+<td class="px-4 py-4 font-bold text-right">₹120</td>
+<td class="px-4 py-4"><span class="material-symbols-outlined text-[#FF9800] text-[18px]">monetization_on</span></td>
+</tr>
+<tr class="bg-white">
+<td class="px-4 py-4 whitespace-nowrap">12:10</td>
+<td class="px-4 py-4 font-bold">Aman Malik</td>
+<td class="px-4 py-4"><span class="material-symbols-outlined text-[16px] text-[#FF5252]">history</span></td>
+<td class="px-4 py-4 font-bold text-right">₹60</td>
+<td class="px-4 py-4"><div class="w-2.5 h-2.5 bg-[#FF5252] rounded-full mx-auto"></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- End of Day Summary Card -->
+<section class="bg-[#1A2340] rounded-[24px] p-6 text-white space-y-4">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-[18px] font-bold">End of Day Summary</h3>
+<p class="text-white/60 text-[12px] mt-1">Ready for reconciliation</p>
+</div>
+<span class="material-symbols-outlined text-white/20 text-[40px]">inventory_2</span>
+</div>
+<div class="grid grid-cols-2 gap-4 pt-2">
+<div class="space-y-1">
+<p class="text-white/50 text-[10px] uppercase font-bold tracking-widest">Expected Cash</p>
+<p class="text-[16px] font-bold">₹400.00</p>
+</div>
+<div class="space-y-1">
+<p class="text-white/50 text-[10px] uppercase font-bold tracking-widest">Digital Total</p>
+<p class="text-[16px] font-bold">₹850.00</p>
+</div>
+</div>
+<button class="w-full bg-white text-[#1A2340] py-3.5 rounded-xl font-bold text-[14px] hover:bg-white/90 active:scale-95 transition-all">
+                Mark EOD Complete
+            </button>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-t-3xl shadow-[0_-4px_24px_rgba(0,119,190,0.06)] border-t border-blue-50/50">
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-1.5 hover:text-blue-500 transition-colors">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-semibold">Dashboard</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-2xl px-4 py-1.5">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-semibold">Earnings</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-1.5 hover:text-blue-500 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-semibold">Alerts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-1.5 hover:text-blue-500 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-semibold">Settings</span>
+</div>
+</nav>
+</body></html>

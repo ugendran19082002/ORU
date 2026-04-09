@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#f2f3f9",
+                        "on-secondary-fixed": "#00201c",
+                        "primary-fixed-dim": "#9acbff",
+                        "on-surface-variant": "#404751",
+                        "error": "#ba1a1a",
+                        "inverse-on-surface": "#eff1f6",
+                        "secondary-container": "#83f2e3",
+                        "on-tertiary-container": "#e8fff0",
+                        "on-background": "#181c20",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#9acbff",
+                        "on-secondary-fixed-variant": "#005049",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#105139",
+                        "surface-tint": "#00629e",
+                        "surface-bright": "#f7f9ff",
+                        "primary-fixed": "#cfe5ff",
+                        "on-surface": "#181c20",
+                        "surface-container": "#eceef3",
+                        "on-error-container": "#93000a",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed": "#b1f0d0",
+                        "outline-variant": "#c0c7d2",
+                        "on-tertiary-fixed": "#002114",
+                        "tertiary-fixed-dim": "#96d4b5",
+                        "tertiary": "#28654c",
+                        "secondary-fixed": "#86f5e6",
+                        "on-secondary-container": "#006f65",
+                        "on-primary-fixed-variant": "#004a79",
+                        "surface": "#f7f9ff",
+                        "on-primary-fixed": "#001d34",
+                        "inverse-surface": "#2d3135",
+                        "primary": "#005e97",
+                        "secondary": "#006a61",
+                        "surface-variant": "#e0e2e8",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#0077be",
+                        "background": "#f7f9ff",
+                        "outline": "#707882",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#437e64",
+                        "surface-dim": "#d8dadf",
+                        "surface-container-highest": "#e0e2e8",
+                        "surface-container-high": "#e6e8ee",
+                        "on-primary-container": "#f7f9ff",
+                        "secondary-fixed-dim": "#68d9ca"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .header-gradient {
+            background: linear-gradient(135deg, #0077be 0%, #48bcae 100%);
+        }
+        .glass-header {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-background selection:bg-secondary-container">
+<!-- Top AppBar (from JSON) -->
+<header class="docked full-width top-0 sticky z-40 bg-slate-50/70 backdrop-blur-md flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-highest">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" data-alt="Close-up portrait of a professional man with a kind expression, soft natural side lighting, minimalist editorial aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQGPcHz2MD1dwVnfpQmgbLB214CJpk8M8ro6GIzBq2Rl2YYikWbL_BiBEM6o8McnbuJbmDxJgdPlsplszijzXnFTQgfKX4en7bR9mK3Kmo6cjIevSQOFDzgGNl4PxRjpaAiXSy2yx30-yuZmQ8nrV4X89h_z3sN3j9ATjtHA_PzKTigplax8KmhtNtRkI5fFOH97m8wMt8rokQhRH0Cuy4bfZYWkuhG37oQpTxE9_Lkn8puiel8LCV_mZqoEzx3hgNN7b5tR06eZQo"/>
+</div>
+<span class="text-xl font-extrabold text-sky-800 tracking-tight font-headline">The Fluid Editorial</span>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-sky-50 transition-colors duration-150 active:scale-95">
+<span class="material-symbols-outlined text-sky-700">settings</span>
+</button>
+</header>
+<main class="pb-32">
+<!-- Profile Hero Section -->
+<section class="relative px-6 pt-6 pb-12 overflow-hidden">
+<div class="header-gradient rounded-xl p-8 text-on-primary relative overflow-hidden">
+<!-- Background Decorative Element -->
+<div class="absolute -right-12 -top-12 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+<div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div>
+<h1 class="font-headline font-extrabold text-3xl md:text-4xl tracking-tight mb-2">Alex Sterling</h1>
+<p class="text-on-primary/80 font-medium">Premium Member since 2023</p>
+</div>
+<!-- Stats Grid -->
+<div class="grid grid-cols-3 gap-4 md:gap-8 bg-white/10 backdrop-blur-md p-4 rounded-xl">
+<div class="text-center">
+<p class="text-2xl font-bold font-headline">12</p>
+<p class="text-[10px] uppercase tracking-widest opacity-80">Orders</p>
+</div>
+<div class="text-center px-4 border-x border-white/20">
+<p class="text-2xl font-bold font-headline">$840</p>
+<p class="text-[10px] uppercase tracking-widest opacity-80">Spent</p>
+</div>
+<div class="text-center">
+<div class="flex items-center justify-center gap-1">
+<span class="text-2xl font-bold font-headline">4.8</span>
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<p class="text-[10px] uppercase tracking-widest opacity-80">Rating</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Content Grid (Asymmetric) -->
+<div class="px-6 grid grid-cols-1 md:grid-cols-12 gap-8">
+<!-- Left Column: Saved Addresses -->
+<div class="md:col-span-7 space-y-8">
+<div>
+<h2 class="font-headline font-bold text-2xl mb-6 flex items-center gap-3">
+                        Saved Addresses
+                        <span class="h-[2px] flex-grow bg-surface-container-highest rounded-full"></span>
+</h2>
+<div class="space-y-4">
+<!-- Home Address -->
+<div class="group bg-surface-container-lowest p-6 rounded-xl transition-all duration-300 hover:bg-surface-bright border border-transparent hover:border-outline-variant/15">
+<div class="flex items-start justify-between">
+<div class="flex gap-4">
+<div class="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">home</span>
+</div>
+<div>
+<h3 class="font-bold text-lg">Home</h3>
+<p class="text-on-surface-variant text-sm mt-1">241 Waterlily Way, Apt 4B<br/>Manhattan, NY 10001</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline cursor-pointer hover:text-primary">edit</span>
+</div>
+</div>
+<!-- Office Address -->
+<div class="group bg-surface-container-low p-6 rounded-xl transition-all duration-300 hover:bg-surface-bright border border-transparent hover:border-outline-variant/15">
+<div class="flex items-start justify-between">
+<div class="flex gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary/5 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">work</span>
+</div>
+<div>
+<h3 class="font-bold text-lg">Office</h3>
+<p class="text-on-surface-variant text-sm mt-1">Global Trade Center, Floor 22<br/>Lower Manhattan, NY 10007</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline cursor-pointer hover:text-primary">edit</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Preferences -->
+<div>
+<h2 class="font-headline font-bold text-2xl mb-6 flex items-center gap-3">
+                        Preferences
+                        <span class="h-[2px] flex-grow bg-surface-container-highest rounded-full"></span>
+</h2>
+<div class="bg-surface-container-low rounded-xl overflow-hidden">
+<div class="p-6 flex items-center justify-between border-b border-outline-variant/10">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant">language</span>
+<div>
+<p class="font-semibold">Display Language</p>
+<p class="text-xs text-on-surface-variant">English (US) / Tamil</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-primary text-on-primary">EN</button>
+<button class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition-colors">தமிழ்</button>
+</div>
+</div>
+<div class="p-6 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<div>
+<p class="font-semibold">Hydration Alerts</p>
+<p class="text-xs text-on-surface-variant">Enabled via Push Notifications</p>
+</div>
+</div>
+<div class="w-12 h-6 bg-tertiary-fixed rounded-full relative cursor-pointer">
+<div class="absolute right-1 top-1 w-4 h-4 bg-on-tertiary-fixed rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Account & Support -->
+<div class="md:col-span-5 space-y-8">
+<div class="bg-surface-container-highest p-8 rounded-xl">
+<h2 class="font-headline font-bold text-xl mb-6">Account Actions</h2>
+<div class="space-y-2">
+<!-- Action Items -->
+<a class="flex items-center justify-between p-4 bg-surface rounded-xl hover:bg-primary-fixed transition-colors group" href="#">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">redeem</span>
+<span class="font-medium">Referral Program</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-4 bg-surface rounded-xl hover:bg-primary-fixed transition-colors group" href="#">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">contact_support</span>
+<span class="font-medium">Help &amp; Support</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-4 bg-surface rounded-xl hover:bg-error-container text-error transition-colors group mt-6" href="#">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">logout</span>
+<span class="font-bold">Logout</span>
+</div>
+</a>
+</div>
+</div>
+<!-- Decorative Card -->
+<div class="relative rounded-xl aspect-[4/3] overflow-hidden group">
+<img alt="Pure Refreshment" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="Close up of crystal clear water splashing against a soft blue background with artistic light refraction" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvAcMFA1XaNKom6DLiHXTVYK5ZrGgZfInN7tAioOM7Q8MKbpbEq4MSeA2AE-gqMLUNi-SQDhjwd7CTivpQluDsdVigVHGggQM9YNXPdOc8pXbo9lgeXVr2Bd51y8Ewav6SqPc0JldSIKt0vdB-Jmh-7J7vPKSZN4oxwNJ8BVzABOsY0JxOGtMGDNTPUnXTbirfF6VbmVHotpBv5X-q94EGhilzk4vk6H42Yl4VJz6tnbhLxX8IEl2iZEQoe3FITnnnqCq2CKo1uOMw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent flex flex-col justify-end p-6 text-on-primary">
+<p class="font-headline font-bold text-lg">Pure Fluidity</p>
+<p class="text-sm opacity-90">Every drop is a promise of quality and editorial precision.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation (from JSON) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-slate-50/70 backdrop-blur-xl shadow-2xl dark:shadow-none rounded-t-[1.5rem]">
+<!-- Hydrate -->
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-sky-600 transition-colors" href="#">
+<span class="material-symbols-outlined mb-1">water_drop</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider">Hydrate</span>
+</a>
+<!-- Orders -->
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-sky-600 transition-colors" href="#">
+<span class="material-symbols-outlined mb-1">receipt_long</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider">Orders</span>
+</a>
+<!-- Profile (Active) -->
+<a class="flex flex-col items-center justify-center bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-200 rounded-[1.25rem] px-5 py-2 translate-y-[-2px] transition-transform duration-300" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider">Profile</span>
+</a>
+<!-- Support -->
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2 hover:text-sky-600 transition-colors" href="#">
+<span class="material-symbols-outlined mb-1">help_outline</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider">Support</span>
+</a>
+</nav>
+</body></html>

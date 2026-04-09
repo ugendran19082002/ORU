@@ -1,0 +1,278 @@
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-background": "#181c20",
+                    "inverse-on-surface": "#eff1f6",
+                    "primary-fixed": "#cfe5ff",
+                    "tertiary-container": "#437e64",
+                    "surface": "#f7f9ff",
+                    "secondary-container": "#83f2e3",
+                    "inverse-surface": "#2d3135",
+                    "on-tertiary-fixed": "#002114",
+                    "background": "#f7f9ff",
+                    "tertiary": "#28654c",
+                    "tertiary-fixed": "#b1f0d0",
+                    "on-surface-variant": "#404751",
+                    "on-primary-fixed": "#001d34",
+                    "tertiary-fixed-dim": "#96d4b5",
+                    "surface-container-highest": "#e0e2e8",
+                    "on-tertiary-fixed-variant": "#105139",
+                    "surface-tint": "#00629e",
+                    "surface-container": "#eceef3",
+                    "on-error-container": "#93000a",
+                    "outline-variant": "#c0c7d2",
+                    "outline": "#707882",
+                    "secondary-fixed-dim": "#68d9ca",
+                    "on-tertiary-container": "#e8fff0",
+                    "surface-container-high": "#e6e8ee",
+                    "surface-dim": "#d8dadf",
+                    "secondary": "#006a61",
+                    "surface-variant": "#e0e2e8",
+                    "on-primary": "#ffffff",
+                    "surface-bright": "#f7f9ff",
+                    "surface-container-low": "#f2f3f9",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#005049",
+                    "primary-fixed-dim": "#9acbff",
+                    "on-secondary-fixed": "#00201c",
+                    "on-secondary-container": "#006f65",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-fixed-variant": "#004a79",
+                    "primary-container": "#0077be",
+                    "on-surface": "#181c20",
+                    "error": "#ba1a1a",
+                    "primary": "#005e97",
+                    "secondary-fixed": "#86f5e6",
+                    "inverse-primary": "#9acbff",
+                    "on-secondary": "#ffffff",
+                    "on-primary-container": "#f7f9ff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .step-active { background-color: #0077be; color: white; }
+        .step-complete { background-color: #96d4b5; color: #002114; }
+        .step-inactive { background-color: #e0e2e8; color: #707882; }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            background: #e0e2e8;
+            border-radius: 3px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #0077be;
+            margin-top: -7px;
+            box-shadow: 0 4px 12px rgba(0, 119, 190, 0.2);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased min-h-screen pb-10">
+<!-- Top Navigation Anchor (Manual for flow context) -->
+<header class="fixed top-0 w-full z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-[0_12px_32px_rgba(0,119,190,0.08)] flex justify-between items-center px-6 py-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-container">arrow_back</span>
+<span class="font-headline font-bold text-lg text-on-surface">Registration</span>
+</div>
+<div class="text-primary-container font-extrabold text-xl tracking-tight font-headline">Thannigo</div>
+</header>
+<main class="pt-24 px-6 max-w-[390px] mx-auto">
+<!-- Step Progress Bar -->
+<section class="mb-8">
+<div class="flex items-center justify-between relative px-2">
+<!-- Connector Lines -->
+<div class="absolute top-4 left-10 right-10 h-[2px] bg-surface-container-highest -z-10">
+<div class="h-full bg-primary-container w-1/2"></div>
+</div>
+<!-- Step 1 -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full flex items-center justify-center step-complete shadow-sm">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'wght' 700;">check</span>
+</div>
+<span class="text-[10px] font-bold text-on-tertiary-fixed-variant">Basic Info</span>
+</div>
+<!-- Step 2 -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full flex items-center justify-center step-active shadow-md">
+<span class="text-sm font-bold">2</span>
+</div>
+<span class="text-[10px] font-bold text-primary-container">Shop Details</span>
+</div>
+<!-- Step 3 -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full flex items-center justify-center step-inactive">
+<span class="text-sm font-bold">3</span>
+</div>
+<span class="text-[10px] font-bold text-outline">Documents</span>
+</div>
+</div>
+</section>
+<!-- Form Section -->
+<div class="space-y-6">
+<header>
+<h1 class="text-2xl font-extrabold text-on-surface leading-tight">Complete your shop profile</h1>
+<p class="text-sm text-on-surface-variant mt-1">Tell us more about your business location and offerings.</p>
+</header>
+<!-- Shop Name -->
+<div class="space-y-2">
+<label class="text-xs font-bold uppercase tracking-wider text-outline">Shop Name *</label>
+<input class="w-full h-12 px-4 rounded-xl border-none bg-surface-container-low text-on-surface focus:ring-2 focus:ring-primary-container transition-all placeholder:text-outline/60 font-medium" placeholder="Enter shop name" type="text"/>
+</div>
+<!-- Shop Type Chips -->
+<div class="space-y-3">
+<label class="text-xs font-bold uppercase tracking-wider text-outline">Shop Type</label>
+<div class="flex flex-wrap gap-2">
+<button class="px-4 py-2 rounded-full bg-primary-container text-on-primary text-xs font-bold shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+                        Water Delivery
+                    </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-highest text-on-surface-variant text-xs font-bold hover:bg-surface-container-high transition-colors">
+                        Retail Store
+                    </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-highest text-on-surface-variant text-xs font-bold hover:bg-surface-container-high transition-colors">
+                        Distributor
+                    </button>
+</div>
+</div>
+<!-- Address Section -->
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<label class="text-xs font-bold uppercase tracking-wider text-outline">Shop Address</label>
+<button class="flex items-center gap-1 text-primary-container text-xs font-bold bg-primary-container/10 px-3 py-1.5 rounded-lg border border-primary-container/20">
+<span class="material-symbols-outlined text-[16px]">my_location</span>
+                        Use My Location
+                    </button>
+</div>
+<textarea class="w-full p-4 rounded-xl border-none bg-surface-container-low text-on-surface focus:ring-2 focus:ring-primary-container transition-all placeholder:text-outline/60 font-medium text-sm" placeholder="Manual address entry..." rows="2"></textarea>
+<!-- Map Preview Card -->
+<div class="relative w-full h-[120px] rounded-2xl overflow-hidden shadow-inner bg-surface-container-highest group">
+<img class="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" data-alt="a minimalist flat design map interface showing a pinpoint over a clean suburban grid with soft blue highlights" data-location="Chennai" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNjEYL1b3sx37f2RkW6tEP1GN-Unx9SXodrHGAODoM-RPxhAZSZX5RwQ4IzgXpvAsLCK_MJbJGEz6tOj6Ll_EzF0l573VVHKc6p-UIaHQhDOnvgI0IY0ey1cc-iZD86wGSikWe9KVgzY7_4SJyePEdhtuVgubwJJZwBzxn6w_Ihq_7789j5XItxbNB_4auO1mByF7jLw147E_MKfhBJw9kZCYHwTL3Z15PyXOXQW9zlRFcZFkYgXmvrpXFtnyMNdnBVVtWoHaxJG-h"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center animate-pulse">
+<span class="material-symbols-outlined text-primary-container text-3xl" style="font-variation-settings: 'FILL' 1;">location_on</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Water Types & Pricing -->
+<div class="space-y-4">
+<label class="text-xs font-bold uppercase tracking-wider text-outline">Products &amp; Unit Pricing</label>
+<div class="grid grid-cols-1 gap-3">
+<!-- Unit Row 1 -->
+<div class="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm">
+<div class="w-10 h-10 rounded-lg bg-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container">local_drink</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-bold text-on-surface">20L Can</p>
+<p class="text-[10px] text-outline">Standard Unit</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-outline">₹</span>
+<input class="w-16 h-10 text-center rounded-lg border-none bg-surface-container-low focus:ring-2 focus:ring-primary-container font-bold text-sm" placeholder="45" type="number"/>
+</div>
+</div>
+<!-- Unit Row 2 -->
+<div class="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm opacity-60">
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-on-tertiary-container">water_bottle</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-bold text-on-surface">10L Can</p>
+<p class="text-[10px] text-outline">Optional</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-outline">₹</span>
+<input class="w-16 h-10 text-center rounded-lg border-none bg-surface-container-low focus:ring-2 focus:ring-primary-container font-bold text-sm" placeholder="---" type="number"/>
+</div>
+</div>
+<!-- Unit Row 3 -->
+<div class="flex items-center gap-3 p-3 bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm opacity-60">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-fixed">eco</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-bold text-on-surface">5L Bottle</p>
+<p class="text-[10px] text-outline">Optional</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-outline">₹</span>
+<input class="w-16 h-10 text-center rounded-lg border-none bg-surface-container-low focus:ring-2 focus:ring-primary-container font-bold text-sm" placeholder="---" type="number"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Delivery Radius -->
+<div class="space-y-6 pt-2">
+<div class="flex justify-between items-center">
+<label class="text-xs font-bold uppercase tracking-wider text-outline">Delivery Radius</label>
+<span class="px-3 py-1 bg-primary-container text-white text-xs font-extrabold rounded-full">8 km</span>
+</div>
+<div class="px-1">
+<input class="accent-primary-container cursor-pointer" max="15" min="1" type="range" value="8"/>
+<div class="flex justify-between mt-2 text-[10px] font-bold text-outline">
+<span>1 km</span>
+<span>5 km</span>
+<span>10 km</span>
+<span>15 km</span>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<div class="pt-6">
+<button class="w-full h-[52px] bg-primary-container text-on-primary font-headline font-bold text-base rounded-2xl shadow-[0_12px_32px_rgba(0,119,190,0.15)] active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                    Continue to Documents
+                    <span class="material-symbols-outlined text-xl">arrow_forward</span>
+</button>
+<p class="text-center text-[11px] text-outline mt-4 font-medium px-4">
+                    By continuing, you agree to our <span class="text-primary-container">Vendor Terms of Service</span> and <span class="text-primary-container">Operational Guidelines</span>.
+                </p>
+</div>
+</div>
+</main>
+<!-- Bottom Nav Suppression Check: Transactional Flow (Suppressed) -->
+</body></html>

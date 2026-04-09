@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Plus_Jakarta_Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-background": "#181c20",
+                    "inverse-on-surface": "#eff1f6",
+                    "primary-fixed": "#cfe5ff",
+                    "tertiary-container": "#437e64",
+                    "surface": "#f7f9ff",
+                    "secondary-container": "#83f2e3",
+                    "inverse-surface": "#2d3135",
+                    "on-tertiary-fixed": "#002114",
+                    "background": "#f7f9ff",
+                    "tertiary": "#28654c",
+                    "tertiary-fixed": "#b1f0d0",
+                    "on-surface-variant": "#404751",
+                    "on-primary-fixed": "#001d34",
+                    "tertiary-fixed-dim": "#96d4b5",
+                    "surface-container-highest": "#e0e2e8",
+                    "on-tertiary-fixed-variant": "#105139",
+                    "surface-tint": "#00629e",
+                    "surface-container": "#eceef3",
+                    "on-error-container": "#93000a",
+                    "outline-variant": "#c0c7d2",
+                    "outline": "#707882",
+                    "secondary-fixed-dim": "#68d9ca",
+                    "on-tertiary-container": "#e8fff0",
+                    "surface-container-high": "#e6e8ee",
+                    "surface-dim": "#d8dadf",
+                    "secondary": "#006a61",
+                    "surface-variant": "#e0e2e8",
+                    "on-primary": "#ffffff",
+                    "surface-bright": "#f7f9ff",
+                    "surface-container-low": "#f2f3f9",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#005049",
+                    "primary-fixed-dim": "#9acbff",
+                    "on-secondary-fixed": "#00201c",
+                    "on-secondary-container": "#006f65",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-fixed-variant": "#004a79",
+                    "primary-container": "#0077be",
+                    "on-surface": "#181c20",
+                    "error": "#ba1a1a",
+                    "primary": "#005e97",
+                    "secondary-fixed": "#86f5e6",
+                    "inverse-primary": "#9acbff",
+                    "on-secondary": "#ffffff",
+                    "on-primary-container": "#f7f9ff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "16px",
+                    "xl": "24px",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f7f9ff; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .tonal-shift { background: linear-gradient(180deg, #f7f9ff 0%, #f2f3f9 100%); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-surface antialiased">
+<!-- Top Navigation Anchor (Shared Component Shell) -->
+<header class="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl shadow-[0_12px_32px_rgba(0,119,190,0.08)] flex justify-between items-center px-6 py-4">
+<div class="flex items-center gap-4">
+<button class="active:scale-95 duration-200 p-2 rounded-full hover:bg-slate-100 transition-colors">
+<span class="material-symbols-outlined text-slate-500" data-icon="arrow_back">arrow_back</span>
+</button>
+<div class="flex flex-col">
+<span class="text-on-surface-variant text-[10px] uppercase tracking-wider font-bold">Subscribe</span>
+<h1 class="font-headline font-extrabold text-[#0077BE] text-lg tracking-tight">Aqua Crystal Pure</h1>
+</div>
+</div>
+<div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border-2 border-primary-container/20">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="close-up portrait of a professional smiling man in his 30s with clean minimalist background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5BVRi_Aki2n4PuES-tEAPbDNbUVXGbJQaMzalyp1G32TiWgEoTqFlqDW2EwbmLMvI2fukftHT-fn_rHLlRKxOX1RMq6Uswd-7_g8mXgXpVpV6tEPHVxWbZURVxwoXtFmxYWsslJ5gF5ojS8P33hmAFTjaJkFB7WlAKPRqxgiyk-nf6Sv-7c00ky8j-Ne1jhmoGRzqZdWBh2Cm7ds3lkI7cjwdtoarsvYwW2DLx-KKk8e1vruoX4cSEekqLh0UNSRYVc9KdWkFI76-"/>
+</div>
+</header>
+<main class="pt-24 pb-32 px-5 max-w-[390px] mx-auto min-h-screen">
+<!-- Hero Benefit Card -->
+<section class="mb-8 relative overflow-hidden rounded-xl bg-gradient-to-br from-[#0077BE] to-[#48BCAE] p-6 text-white shadow-lg">
+<div class="relative z-10">
+<span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest mb-3">Subscription Perk</span>
+<h2 class="font-headline font-bold text-2xl leading-tight">💧 Save up to 15% with a subscription</h2>
+<p class="mt-2 text-white/80 text-sm font-medium">Never run out of pure hydration. Managed deliveries at your doorstep.</p>
+</div>
+<!-- Abstract background shape -->
+<div class="absolute -bottom-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+</section>
+<!-- Product Configuration -->
+<section class="mb-8">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline font-bold text-on-surface text-lg">Select Quantity</h3>
+<span class="text-xs font-semibold text-primary">20L Can</span>
+</div>
+<div class="bg-surface-container-low rounded-lg p-4 flex items-center justify-between shadow-sm border border-outline-variant/10">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-white rounded-md flex items-center justify-center shadow-inner">
+<span class="material-symbols-outlined text-[#0077BE]" data-icon="water_drop">water_drop</span>
+</div>
+<div>
+<p class="font-bold text-sm">Large Capacity</p>
+<p class="text-[11px] text-on-surface-variant">₹80 per unit</p>
+</div>
+</div>
+<div class="flex items-center gap-4 bg-white rounded-full px-3 py-1.5 shadow-sm">
+<button class="w-8 h-8 flex items-center justify-center text-[#0077BE] hover:bg-slate-50 rounded-full transition-colors active:scale-90">
+<span class="material-symbols-outlined text-sm" data-icon="remove">remove</span>
+</button>
+<span class="font-bold text-primary w-4 text-center">1</span>
+<button class="w-8 h-8 flex items-center justify-center bg-primary-container text-white rounded-full shadow-md active:scale-90">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Plan Selector -->
+<section class="mb-8">
+<h3 class="font-headline font-bold text-on-surface text-lg mb-4">Delivery Plan</h3>
+<div class="space-y-4">
+<!-- Daily -->
+<div class="bg-surface-container-lowest rounded-lg p-4 border border-[#DDE6F5] flex justify-between items-center transition-all hover:border-primary-container/30">
+<div class="flex items-center gap-4">
+<div class="w-5 h-5 rounded-full border-2 border-outline-variant flex items-center justify-center"></div>
+<div>
+<p class="font-bold text-on-surface">Daily</p>
+<p class="text-xs text-on-surface-variant">Deliveries every morning</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<p class="font-headline font-bold text-primary-container">₹2,400</p>
+<span class="px-2 py-0.5 bg-secondary-fixed text-on-secondary-container text-[10px] font-bold rounded-md">SAVE 5%</span>
+</div>
+</div>
+<!-- Weekly (Selected) -->
+<div class="relative bg-surface-container-lowest rounded-lg p-4 border-2 border-primary-container flex justify-between items-center shadow-md">
+<div class="absolute -top-3 right-4 bg-[#FF9800] text-white text-[10px] font-extrabold px-3 py-1 rounded-full shadow-sm">MOST POPULAR</div>
+<div class="flex items-center gap-4">
+<div class="w-5 h-5 rounded-full border-2 border-primary-container flex items-center justify-center">
+<div class="w-2.5 h-2.5 rounded-full bg-primary-container"></div>
+</div>
+<div>
+<p class="font-bold text-on-surface">Weekly</p>
+<p class="text-xs text-on-surface-variant">2-3 times per week</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<p class="font-headline font-bold text-primary-container">₹2,100</p>
+<span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-md">SAVE 12%</span>
+</div>
+</div>
+<!-- Monthly -->
+<div class="bg-surface-container-lowest rounded-lg p-4 border border-[#DDE6F5] flex justify-between items-center transition-all hover:border-primary-container/30">
+<div class="flex items-center gap-4">
+<div class="w-5 h-5 rounded-full border-2 border-outline-variant flex items-center justify-center"></div>
+<div>
+<p class="font-bold text-on-surface">Monthly</p>
+<p class="text-xs text-on-surface-variant">Bulk replenishment</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<p class="font-headline font-bold text-primary-container">₹1,900</p>
+<span class="px-2 py-0.5 bg-secondary-fixed text-on-secondary-container text-[10px] font-bold rounded-md">SAVE 15%</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Time Slots -->
+<section class="mb-8">
+<h3 class="font-headline font-bold text-on-surface text-lg mb-4">Delivery Time</h3>
+<div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+<button class="flex-shrink-0 flex items-center gap-2 px-4 py-3 bg-primary-container text-white rounded-lg font-bold text-xs shadow-md">
+<span class="material-symbols-outlined text-sm" data-icon="sunny">sunny</span> 6–9 AM
+                </button>
+<button class="flex-shrink-0 flex items-center gap-2 px-4 py-3 bg-white text-slate-500 border border-outline-variant/30 rounded-lg font-bold text-xs">
+<span class="material-symbols-outlined text-sm" data-icon="wb_sunny">wb_sunny</span> 10–1 PM
+                </button>
+<button class="flex-shrink-0 flex items-center gap-2 px-4 py-3 bg-white text-slate-500 border border-outline-variant/30 rounded-lg font-bold text-xs">
+<span class="material-symbols-outlined text-sm" data-icon="bedtime">bedtime</span> 5–8 PM
+                </button>
+</div>
+</section>
+</main>
+<!-- Bottom Action Shell -->
+<footer class="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-2xl px-6 pt-4 pb-8 shadow-[0_-12px_32px_rgba(0,119,190,0.05)] border-t border-slate-100">
+<div class="flex justify-between items-end mb-4">
+<div>
+<p class="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant mb-1">Total Bill</p>
+<h4 class="font-headline font-extrabold text-2xl text-on-surface">Monthly estimate: <span class="text-primary-container">₹2,100</span></h4>
+</div>
+<div class="flex flex-col items-end">
+<span class="text-[10px] font-bold text-tertiary">All Taxes Incl.</span>
+</div>
+</div>
+<button class="w-full h-[52px] bg-primary-container text-white rounded-lg font-headline font-bold text-lg shadow-lg active:scale-[0.98] transition-transform duration-200 flex items-center justify-center gap-3">
+            Start Subscription
+            <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</footer>
+<!-- Bottom Navigation (Shared Component Hidden on Task Focus but maintained for architecture) -->
+<!-- Hidden for this specific transactional journey per prompt rules -->
+</body></html>

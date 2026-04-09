@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Order Confirmed - Thannigo</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed": "#b1f0d0",
+                    "inverse-primary": "#9acbff",
+                    "surface-variant": "#e0e2e8",
+                    "on-primary-fixed": "#001d34",
+                    "primary-container": "#0077be",
+                    "surface": "#f7f9ff",
+                    "error": "#ba1a1a",
+                    "secondary": "#006a61",
+                    "outline-variant": "#c0c7d2",
+                    "surface-tint": "#00629e",
+                    "on-primary": "#ffffff",
+                    "inverse-surface": "#2d3135",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed-dim": "#68d9ca",
+                    "inverse-on-surface": "#eff1f6",
+                    "surface-container-highest": "#e0e2e8",
+                    "tertiary-fixed-dim": "#96d4b5",
+                    "surface-container": "#eceef3",
+                    "on-surface": "#181c20",
+                    "secondary-fixed": "#86f5e6",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#9acbff",
+                    "on-tertiary-fixed": "#002114",
+                    "surface-dim": "#d8dadf",
+                    "surface-container-high": "#e6e8ee",
+                    "primary": "#005e97",
+                    "on-primary-container": "#f7f9ff",
+                    "on-secondary-fixed": "#00201c",
+                    "primary-fixed": "#cfe5ff",
+                    "surface-container-low": "#f2f3f9",
+                    "surface-bright": "#f7f9ff",
+                    "secondary-container": "#83f2e3",
+                    "on-tertiary-fixed-variant": "#105139",
+                    "on-secondary": "#ffffff",
+                    "background": "#f7f9ff",
+                    "on-error-container": "#93000a",
+                    "outline": "#707882",
+                    "on-surface-variant": "#404751",
+                    "tertiary-container": "#437e64",
+                    "on-tertiary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed-variant": "#005049",
+                    "tertiary": "#28654c",
+                    "on-secondary-container": "#006f65",
+                    "on-primary-fixed-variant": "#004a79",
+                    "on-tertiary-container": "#e8fff0",
+                    "on-background": "#181c20"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-confetti-gradient {
+            background: radial-gradient(circle, rgba(0,119,190,0.1) 0%, rgba(247,249,255,0) 70%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+<!-- Success Header Shell (Standalone) -->
+<header class="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-md">
+<div class="flex items-center justify-between px-6 h-16 w-full max-w-7xl mx-auto">
+<span class="text-xl font-extrabold text-sky-700 tracking-tight font-headline">Thannigo</span>
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">close</span>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-4 max-w-2xl mx-auto">
+<!-- Success Animation & Heading -->
+<section class="text-center mb-12 relative">
+<div class="bg-confetti-gradient absolute inset-0 -z-10 pointer-events-none"></div>
+<div class="inline-flex items-center justify-center w-24 h-24 bg-primary-container text-white rounded-full mb-6 shadow-[0_12px_32px_rgba(0,119,190,0.2)]">
+<span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<!-- Decorative Water Droplet Confetti Placeholder -->
+<div class="flex justify-center gap-2 mb-4 opacity-50">
+<span class="material-symbols-outlined text-primary-container text-sm">water_drop</span>
+<span class="material-symbols-outlined text-secondary text-lg">water_drop</span>
+<span class="material-symbols-outlined text-primary text-md">water_drop</span>
+</div>
+<h1 class="text-4xl font-headline font-extrabold text-on-surface tracking-tight mb-2">Order Confirmed! 🎉</h1>
+<p class="text-on-surface-variant font-medium">Your refreshment is being prepared with care.</p>
+</section>
+<!-- OTP Display Card -->
+<section class="mb-8">
+<div class="bg-[#FF9800] rounded-2xl p-6 flex items-center justify-between shadow-lg overflow-hidden relative">
+<div class="absolute -right-4 -top-4 opacity-10">
+<span class="material-symbols-outlined text-9xl">lock_open</span>
+</div>
+<div>
+<p class="text-white/80 font-bold text-xs uppercase tracking-widest mb-1">Delivery OTP</p>
+<h2 class="text-white text-4xl font-headline font-extrabold tracking-widest">4521</h2>
+</div>
+<div class="bg-white/20 backdrop-blur-md p-3 rounded-xl border border-white/30">
+<span class="material-symbols-outlined text-white text-3xl">qr_code_2</span>
+</div>
+</div>
+</section>
+<!-- Status Timeline (Horizontal Tracker) -->
+<section class="mb-10 px-2">
+<div class="flex items-center justify-between relative">
+<div class="absolute top-4 left-0 w-full h-[2px] bg-surface-container-highest -z-10"></div>
+<div class="absolute top-4 left-0 w-1/4 h-[2px] bg-primary-container -z-10"></div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center ring-4 ring-surface">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<span class="text-[10px] font-bold text-primary">Placed</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center ring-4 ring-surface">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">sync</span>
+</div>
+<span class="text-[10px] font-bold text-primary">Accepted</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-outline flex items-center justify-center ring-4 ring-surface">
+<span class="material-symbols-outlined text-sm">water_full</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant">Preparing</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-outline flex items-center justify-center ring-4 ring-surface">
+<span class="material-symbols-outlined text-sm">local_shipping</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant">On Way</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest text-outline flex items-center justify-center ring-4 ring-surface">
+<span class="material-symbols-outlined text-sm">location_on</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant">Delivered</span>
+</div>
+</div>
+</section>
+<!-- Order Info Card -->
+<section class="mb-8">
+<div class="bg-surface-container-lowest rounded-3xl p-8 border border-outline-variant/10 shadow-[0_8px_24px_rgba(0,0,0,0.02)]">
+<div class="flex justify-between items-start mb-8">
+<div>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter block mb-1">Order ID</span>
+<h3 class="text-lg font-headline font-bold text-on-surface">#THG-9982410</h3>
+</div>
+<div class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-4 py-1.5 rounded-full flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">timer</span>
+<span class="text-xs font-bold">ETA: 25 Mins</span>
+</div>
+</div>
+<div class="space-y-6">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">store</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface-variant">Shop Name</p>
+<p class="font-bold text-on-surface">AquaPure Premium Hub</p>
+</div>
+</div>
+<div class="pt-6 border-t border-surface-container-high">
+<p class="text-xs font-bold text-on-surface-variant mb-3">Order Items</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="text-sm font-bold bg-surface-container-high px-2 py-0.5 rounded text-primary">2x</span>
+<span class="text-sm font-medium">20L Purified Water Jar</span>
+</div>
+<span class="text-sm font-bold">₹160.00</span>
+</div>
+</div>
+<div class="pt-6 border-t border-surface-container-high flex justify-between items-end">
+<div>
+<p class="text-xs font-bold text-on-surface-variant mb-1">Payment Status</p>
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="text-sm font-bold">Paid via Wallet</span>
+</div>
+</div>
+<div class="text-right">
+<p class="text-xs font-bold text-on-surface-variant">Total Amount</p>
+<p class="text-2xl font-headline font-extrabold text-primary-container">₹160.00</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Actions -->
+<section class="space-y-4">
+<button class="w-full h-[52px] bg-primary-container text-on-primary rounded-[14px] font-bold text-lg flex items-center justify-center gap-3 active:scale-95 transition-transform shadow-[0_12px_32px_rgba(0,119,190,0.15)]">
+<span class="material-symbols-outlined">explore</span>
+                Track Order
+            </button>
+<button class="w-full h-[52px] bg-white border-2 border-primary/20 text-primary rounded-[14px] font-bold text-lg flex items-center justify-center gap-3 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">chat_bubble</span>
+                WhatsApp Shop
+            </button>
+<div class="text-center pt-4">
+<a class="text-primary font-bold text-sm hover:underline flex items-center justify-center gap-1" href="#">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+                    Back to Home
+                </a>
+</div>
+</section>
+</main>
+<!-- Contextual Footer Suppression: As per rules, we suppress BottomNavBar on transactional/success screens -->
+<!-- But if needed for navigation back, we use a simple anchor -->
+</body></html>

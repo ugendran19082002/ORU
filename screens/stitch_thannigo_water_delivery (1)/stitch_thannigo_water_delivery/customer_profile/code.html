@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thannigo - Customer Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#005e97",
+                        "on-secondary-fixed": "#00201c",
+                        "secondary": "#006a61",
+                        "tertiary-fixed": "#b1f0d0",
+                        "surface": "#f7f9ff",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#28654c",
+                        "on-error": "#ffffff",
+                        "surface-container": "#eceef3",
+                        "inverse-on-surface": "#eff1f6",
+                        "surface-tint": "#00629e",
+                        "background": "#f7f9ff",
+                        "tertiary-fixed-dim": "#96d4b5",
+                        "tertiary-container": "#437e64",
+                        "surface-variant": "#e0e2e8",
+                        "on-surface": "#181c20",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-highest": "#e0e2e8",
+                        "inverse-primary": "#9acbff",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f2f3f9",
+                        "on-surface-variant": "#404751",
+                        "surface-bright": "#f7f9ff",
+                        "on-tertiary-fixed-variant": "#105139",
+                        "error-container": "#ffdad6",
+                        "secondary-fixed": "#86f5e6",
+                        "on-secondary-container": "#006f65",
+                        "outline": "#707882",
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#9acbff",
+                        "on-secondary": "#ffffff",
+                        "on-background": "#181c20",
+                        "secondary-fixed-dim": "#68d9ca",
+                        "primary-fixed": "#cfe5ff",
+                        "on-tertiary-fixed": "#002114",
+                        "on-tertiary-container": "#e8fff0",
+                        "on-primary-fixed-variant": "#004a79",
+                        "outline-variant": "#c0c7d2",
+                        "secondary-container": "#83f2e3",
+                        "on-secondary-fixed-variant": "#005049",
+                        "on-primary-fixed": "#001d34",
+                        "on-primary-container": "#f7f9ff",
+                        "primary-container": "#0077be",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#2d3135",
+                        "surface-container-high": "#e6e8ee",
+                        "surface-dim": "#d8dadf"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- Top App Bar -->
+<header class="fixed top-0 left-0 w-full px-4 h-16 flex items-center justify-between bg-white/70 backdrop-blur-xl z-50 shadow-sm">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-sky-700" data-icon="menu">menu</span>
+<span class="text-xl font-extrabold text-sky-800 tracking-tight">Thannigo</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-[10px] text-white font-bold">
+            UK
+        </div>
+</header>
+<!-- Profile Header Section -->
+<section class="mt-16 pt-8 pb-16 px-6 bg-primary-container relative overflow-hidden">
+<!-- Background Decoration -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+<div class="flex flex-col items-center text-center relative z-10">
+<div class="w-[72px] h-[72px] rounded-full bg-white flex items-center justify-center text-primary-container text-2xl font-extrabold mb-4 shadow-lg border-4 border-white/20">
+                UK
+            </div>
+<h1 class="text-white text-[18px] font-bold tracking-wide">Ugendran K</h1>
+<p class="text-white/80 text-sm font-medium">+91 98765 43210</p>
+</div>
+</section>
+<!-- Stats Row (Overlapping) -->
+<div class="px-4 -mt-8 relative z-20">
+<div class="bg-white rounded-[14px] p-4 flex justify-between items-center shadow-[0_12px_32px_rgba(0,119,190,0.08)]">
+<div class="flex flex-col items-center flex-1">
+<span class="text-primary-container font-bold text-base">48</span>
+<span class="text-on-surface-variant text-[10px] uppercase tracking-wider font-semibold">Orders</span>
+</div>
+<div class="w-px h-8 bg-surface-variant"></div>
+<div class="flex flex-col items-center flex-1">
+<span class="text-[#48BCAE] font-bold text-base">₹2,450</span>
+<span class="text-on-surface-variant text-[10px] uppercase tracking-wider font-semibold">Savings</span>
+</div>
+<div class="w-px h-8 bg-surface-variant"></div>
+<div class="flex flex-col items-center flex-1">
+<span class="text-[#FF9800] font-bold text-base flex items-center gap-0.5">4.8 <span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">star</span></span>
+<span class="text-on-surface-variant text-[10px] uppercase tracking-wider font-semibold">Rating</span>
+</div>
+</div>
+</div>
+<!-- Menu Sections -->
+<main class="px-4 mt-6 space-y-6">
+<!-- Account Section -->
+<section>
+<h2 class="text-on-surface-variant text-xs font-bold uppercase tracking-widest px-2 mb-3">Account</h2>
+<div class="bg-white rounded-[14px] overflow-hidden">
+<div class="flex items-center px-4 py-4 hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-primary p-2 bg-surface rounded-xl mr-4" data-icon="home">home</span>
+<span class="flex-1 font-semibold text-sm">My Addresses</span>
+<span class="material-symbols-outlined text-outline-variant text-lg group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+<div class="flex items-center px-4 py-4 hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-primary p-2 bg-surface rounded-xl mr-4" data-icon="credit_card">credit_card</span>
+<span class="flex-1 font-semibold text-sm">Saved Payment Methods</span>
+<span class="material-symbols-outlined text-outline-variant text-lg group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+<div class="flex items-center px-4 py-4 hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-primary p-2 bg-surface rounded-xl mr-4" data-icon="group">group</span>
+<span class="flex-1 font-semibold text-sm">Family Members</span>
+<span class="material-symbols-outlined text-outline-variant text-lg group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+<div class="flex items-center px-4 py-4 hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-primary p-2 bg-surface rounded-xl mr-4" data-icon="redeem">redeem</span>
+<span class="flex-1 font-semibold text-sm">Referrals</span>
+<span class="material-symbols-outlined text-outline-variant text-lg group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Orders Section -->
+<section>
+<h2 class="text-on-surface-variant text-xs font-bold uppercase tracking-widest px-2 mb-3">Orders</h2>
+<div class="bg-white rounded-[14px] overflow-hidden">
+<div class="flex items-center px-4 py-4 hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-primary p-2 bg-surface rounded-xl mr-4" data-icon="package_2">package_2</span>
+<span class="flex-1 font-semibold text-sm">Order History</span>
+<span class="material-symbols-outlined text-outline-variant text-lg group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+<div class="flex items-center px-4 py-4 hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-primary p-2 bg-surface rounded-xl mr-4" data-icon="sync">sync</span>
+<span class="flex-1 font-semibold text-sm">Subscriptions</span>
+<span class="material-symbols-outlined text-outline-variant text-lg group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+<div class="flex items-center px-4 py-4 hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-primary p-2 bg-surface rounded-xl mr-4" data-icon="bar_chart">bar_chart</span>
+<span class="flex-1 font-semibold text-sm">Usage Analytics</span>
+<span class="material-symbols-outlined text-outline-variant text-lg group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Preferences Section -->
+<section>
+<h2 class="text-on-surface-variant text-xs font-bold uppercase tracking-widest px-2 mb-3">Preferences</h2>
+<div class="bg-white rounded-[14px] overflow-hidden">
+<div class="flex items-center px-4 py-4">
+<span class="material-symbols-outlined text-primary p-2 bg-surface rounded-xl mr-4" data-icon="notifications">notifications</span>
+<span class="flex-1 font-semibold text-sm">Notifications</span>
+<div class="w-10 h-5 bg-primary-container rounded-full relative">
+<div class="absolute right-1 top-1 bg-white w-3 h-3 rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center px-4 py-4">
+<span class="material-symbols-outlined text-primary p-2 bg-surface rounded-xl mr-4" data-icon="language">language</span>
+<span class="flex-1 font-semibold text-sm">Language</span>
+<div class="flex bg-surface rounded-lg p-1 text-[10px] font-bold">
+<span class="bg-primary text-white px-2 py-1 rounded-md">EN</span>
+<span class="text-outline px-2 py-1">தமிழ்</span>
+</div>
+</div>
+<div class="flex items-center px-4 py-4">
+<span class="material-symbols-outlined text-primary p-2 bg-surface rounded-xl mr-4" data-icon="dark_mode">dark_mode</span>
+<span class="flex-1 font-semibold text-sm">Dark Mode</span>
+<div class="w-10 h-5 bg-surface-variant rounded-full relative">
+<div class="absolute left-1 top-1 bg-white w-3 h-3 rounded-full"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Support Section -->
+<section>
+<h2 class="text-on-surface-variant text-xs font-bold uppercase tracking-widest px-2 mb-3">Support</h2>
+<div class="bg-white rounded-[14px] overflow-hidden">
+<div class="flex items-center px-4 py-4 hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-primary p-2 bg-surface rounded-xl mr-4" data-icon="help">help</span>
+<span class="flex-1 font-semibold text-sm">Help &amp; FAQ</span>
+<span class="material-symbols-outlined text-outline-variant text-lg group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+<div class="flex items-center px-4 py-4 hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-primary p-2 bg-surface rounded-xl mr-4" data-icon="call">call</span>
+<span class="flex-1 font-semibold text-sm">Contact Support</span>
+<span class="material-symbols-outlined text-outline-variant text-lg group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+<div class="flex items-center px-4 py-4 hover:bg-surface-container-low transition-colors group">
+<span class="material-symbols-outlined text-error p-2 bg-error-container/30 rounded-xl mr-4" data-icon="report">report</span>
+<span class="flex-1 font-semibold text-sm text-error">Report a Problem</span>
+<span class="material-symbols-outlined text-outline-variant text-lg group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Logout Button -->
+<div class="pt-4 pb-8">
+<button class="w-full h-[52px] border-2 border-[#FF5252] text-[#FF5252] font-bold rounded-[14px] flex items-center justify-center gap-2 hover:bg-[#FF5252]/5 active:scale-95 transition-all">
+<span class="material-symbols-outlined">logout</span>
+                Logout
+            </button>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] rounded-3xl h-20 bg-white/80 backdrop-blur-xl z-50 flex justify-around items-center px-4 shadow-[0_12px_32px_rgba(0,119,190,0.08)]">
+<div class="flex flex-col items-center justify-center text-slate-400 px-5 py-2 hover:bg-slate-50 rounded-2xl transition-colors">
+<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
+<span class="font-jakarta text-[10px] font-semibold">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 px-5 py-2 hover:bg-slate-50 rounded-2xl transition-colors">
+<span class="material-symbols-outlined mb-1" data-icon="receipt_long">receipt_long</span>
+<span class="font-jakarta text-[10px] font-semibold">Orders</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 px-5 py-2 hover:bg-slate-50 rounded-2xl transition-colors">
+<span class="material-symbols-outlined mb-1" data-icon="map">map</span>
+<span class="font-jakarta text-[10px] font-semibold">Tracking</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-sky-100 text-sky-700 rounded-2xl px-5 py-2">
+<span class="material-symbols-outlined mb-1" data-icon="person" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-jakarta text-[10px] font-semibold">Profile</span>
+</div>
+</nav>
+</body></html>

@@ -35,14 +35,17 @@ export default function ShopSettingsScreen() {
   const [category, setCategory] = useState('20L Water Can');
   const [biometricsEnabled, setBiometricsEnabled] = useState(false);
   const [appPin, setAppPin] = useState('');
+  const [shopId, setShopId] = useState<string>('');
 
   // Load saved preferences
   React.useEffect(() => {
     const loadSettings = async () => {
       const savedPin = await AsyncStorage.getItem('shop_app_pin');
       const savedBiometrics = await AsyncStorage.getItem('shop_fingerprint_enabled');
+      const savedId = await AsyncStorage.getItem('shop_unique_id');
       if (savedPin) setAppPin(savedPin);
       if (savedBiometrics === 'true') setBiometricsEnabled(true);
+      if (savedId) setShopId(savedId);
     };
     loadSettings();
   }, []);
@@ -185,15 +188,27 @@ export default function ShopSettingsScreen() {
         {/* SYSTEM ACTIONS */}
         <Text style={styles.sectionHeader}>System</Text>
         <View style={styles.card}>
+          <View style={styles.menuItem}>
+            <Ionicons name="finger-print-outline" size={20} color="#707881" />
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={styles.menuText}>Shop ID (TGID)</Text>
+              <Text style={{ fontSize: 11, color: '#006878', fontWeight: '800', letterSpacing: 0.5 }}>{shopId || '---'}</Text>
+            </View>
+            <View style={styles.verifiedMiniBadge}>
+              <Ionicons name="checkmark-circle" size={14} color="#10b981" />
+              <Text style={styles.verifiedMiniText}>VERIFIED</Text>
+            </View>
+          </View>
+          <View style={styles.divider} />
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="document-text-outline" size={20} color="#707881" />
-            <Text style={styles.menuText}>Terms of Service</Text>
+            <Text style={[styles.menuText, { marginLeft: 12 }]}>Terms of Service</Text>
             <Ionicons name="chevron-forward" size={16} color="#bfc7d1" />
           </TouchableOpacity>
           <View style={styles.divider} />
           <TouchableOpacity style={styles.menuItem}>
             <Ionicons name="help-buoy-outline" size={20} color="#707881" />
-            <Text style={styles.menuText}>Support & Help</Text>
+            <Text style={[styles.menuText, { marginLeft: 12 }]}>Support & Help</Text>
             <Ionicons name="chevron-forward" size={16} color="#bfc7d1" />
           </TouchableOpacity>
         </View>
@@ -268,4 +283,6 @@ const styles = StyleSheet.create({
     borderRadius: 16, paddingVertical: 14, marginTop: 16,
   },
   logoutText: { color: '#ba1a1a', fontWeight: '800', fontSize: 15 },
+  verifiedMiniBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f0fdf4', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: '#d1fae5' },
+  verifiedMiniText: { fontSize: 9, fontWeight: '900', color: '#059669', letterSpacing: 0.5 },
 });

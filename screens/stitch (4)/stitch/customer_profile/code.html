@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thannigo - Customer Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#006a61",
+                        "secondary-container": "#83f2e3",
+                        "tertiary": "#28654c",
+                        "primary-fixed-dim": "#9acbff",
+                        "outline-variant": "#c0c7d2",
+                        "tertiary-container": "#437e64",
+                        "on-tertiary-fixed": "#002114",
+                        "on-surface": "#181c20",
+                        "surface-container-low": "#f2f3f9",
+                        "primary-container": "#0077be",
+                        "inverse-surface": "#2d3135",
+                        "on-tertiary-container": "#e8fff0",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#d8dadf",
+                        "primary": "#005e97",
+                        "surface-container-high": "#e6e8ee",
+                        "on-primary-fixed": "#001d34",
+                        "outline": "#707882",
+                        "surface-variant": "#e0e2e8",
+                        "on-surface-variant": "#404751",
+                        "inverse-on-surface": "#eff1f6",
+                        "inverse-primary": "#9acbff",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#b1f0d0",
+                        "surface-container-highest": "#e0e2e8",
+                        "surface": "#f7f9ff",
+                        "secondary-fixed-dim": "#68d9ca",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "background": "#f7f9ff",
+                        "on-secondary": "#ffffff",
+                        "on-background": "#181c20",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#cfe5ff",
+                        "on-tertiary-fixed-variant": "#105139",
+                        "on-secondary-fixed": "#00201c",
+                        "surface-tint": "#00629e",
+                        "on-secondary-container": "#006f65",
+                        "surface-container": "#eceef3",
+                        "on-primary-fixed-variant": "#004a79",
+                        "surface-bright": "#f7f9ff",
+                        "secondary-fixed": "#86f5e6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#005049",
+                        "tertiary-fixed-dim": "#96d4b5",
+                        "on-primary-container": "#f7f9ff",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .profile-gradient {
+            background: linear-gradient(135deg, #0077BE 0%, #48BCAE 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-24">
+<!-- Top AppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#f7f9ff]/80 backdrop-blur-md flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#0077BE] cursor-pointer hover:opacity-80 transition-opacity active:scale-90 duration-200" data-icon="arrow_back">arrow_back</span>
+<h1 class="font-['Plus_Jakarta_SANS'] font-bold tracking-tight text-on-surface text-xl">Thannigo</h1>
+</div>
+<span class="material-symbols-outlined text-[#0077BE] cursor-pointer hover:opacity-80 transition-opacity active:scale-90 duration-200" data-icon="call">call</span>
+</header>
+<main class="pt-16">
+<!-- Profile Header Card -->
+<section class="profile-gradient pt-8 pb-12 px-6 rounded-b-[2.5rem] relative overflow-hidden shadow-lg">
+<!-- Decorative bleed image -->
+<div class="absolute -right-10 -top-10 opacity-10">
+<img alt="" class="w-40 h-40" data-alt="abstract flowing water ripples with organic curves and soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSS1-yHoCN3cLCzWRBa7nYo6hN5WfKe8Bl2DLNoJqy4VqmZIsUDTnoekC0kiPoWo1zBmjtAjXqOUAi6puR1FhFUPhGFU0ZlAc4B5z3n_F4Ln14iGag3dUr19RPRkjSCn3VEQlRf54euVMy6NRlCNXwVRSTTTBkg1GPbN53LiN7pX6IhaVpfThlOKUmexqj-CnaFs0YX_K_NMNjIkuYfOS5QacDPfo-dnaD4A85vj5PCB1t5d166cpPHdkKI4oANwG63IqIkn_m5Qw"/>
+</div>
+<div class="flex flex-col items-center text-center relative z-10">
+<div class="relative mb-4">
+<img alt="Suresh Rajan" class="w-24 h-24 rounded-full border-4 border-white/30 object-cover shadow-xl" data-alt="professional portrait of a south asian man in his early 30s with a friendly expression, studio lighting, clean background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfiqZmOaKv61ejeBD6meBXpSsYPKq6s9QEI5-dHHMOcZsq-uykMpdlq4N0ZK2ALzlaOh81UPHO46jaXDhahYGhaCTMeEvoKN-nWnSQpKul3a5yNOXD4dBO-3Jvn-AJ8wllN_b4KCIwkbighex_x8JXD-u8E1-oI30M70hsO8b8dLRG0YBtoRgQdJjnH8kGFGmEXJGSrnFICMvc8E9-IJNOzw6pmwvjUJxPHRRFVIA3KVxND04vMneLo3MM0o0bGjoJAl4IMha1O4I"/>
+<div class="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-md">
+<span class="material-symbols-outlined text-[#0077BE] text-sm" data-icon="edit" data-weight="fill" style="font-variation-settings: 'FILL' 1;">edit</span>
+</div>
+</div>
+<h2 class="font-headline text-2xl font-bold text-white mb-1">Suresh Rajan</h2>
+<p class="text-white/80 font-medium mb-6">9876543210</p>
+<div class="flex gap-4 mb-8 w-full justify-center">
+<div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 flex-1 border border-white/10">
+<p class="text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">12 orders</p>
+</div>
+<div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 flex-1 border border-white/10">
+<p class="text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">₹840 spent</p>
+</div>
+<div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 flex-1 border border-white/10">
+<p class="text-white/60 text-xs font-semibold uppercase tracking-wider mb-1">⭐ 4.8 rating</p>
+</div>
+</div>
+<button class="px-8 py-3 border-2 border-white/50 text-white font-bold rounded-xl active:scale-95 transition-all">
+                    Edit Profile
+                </button>
+</div>
+</section>
+<!-- Main Content Area -->
+<div class="px-6 -mt-6">
+<!-- Referral Card -->
+<div class="bg-primary-container rounded-2xl p-5 shadow-lg mb-8 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="card_giftcard" data-weight="fill" style="font-variation-settings: 'FILL' 1;">card_giftcard</span>
+</div>
+<div>
+<p class="text-white font-bold text-lg leading-tight">Refer a Friend</p>
+<p class="text-white/80 text-sm font-medium">Get ₹50 for each invite</p>
+</div>
+</div>
+<button class="bg-white/20 p-2 rounded-lg text-white">
+<span class="material-symbols-outlined" data-icon="share">share</span>
+</button>
+</div>
+<!-- Saved Addresses -->
+<div class="mb-8">
+<div class="flex justify-between items-center mb-4 px-1">
+<h3 class="font-headline text-lg font-bold">Saved Addresses</h3>
+<span class="material-symbols-outlined text-[#0077BE] cursor-pointer" data-icon="add_circle">add_circle</span>
+</div>
+<div class="space-y-3">
+<div class="bg-surface-container-lowest rounded-2xl p-4 flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-surface-container-low rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="home">home</span>
+</div>
+<div>
+<p class="font-bold">Home</p>
+<p class="text-xs text-on-surface-variant">Block 4, Garden City Apartment, Chennai</p>
+</div>
+</div>
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-on-surface-variant/40 text-sm" data-icon="edit">edit</span>
+<span class="material-symbols-outlined text-on-surface-variant/40 text-sm" data-icon="delete">delete</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-2xl p-4 flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-surface-container-low rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="business">business</span>
+</div>
+<div>
+<p class="font-bold">Office</p>
+<p class="text-xs text-on-surface-variant">Prestige Cyber Tower, OMR, Chennai</p>
+</div>
+</div>
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-on-surface-variant/40 text-sm" data-icon="edit">edit</span>
+<span class="material-symbols-outlined text-on-surface-variant/40 text-sm" data-icon="delete">delete</span>
+</div>
+</div>
+<div class="bg-surface-container-low border-2 border-dashed border-outline-variant/30 rounded-2xl p-4 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined text-primary" data-icon="add">add</span>
+<p class="font-bold text-primary text-sm">+ Add New Address</p>
+</div>
+</div>
+</div>
+<!-- Preferences -->
+<div class="mb-8">
+<h3 class="font-headline text-lg font-bold mb-4 px-1">Preferences</h3>
+<div class="bg-surface-container-lowest rounded-2xl divide-y divide-surface-container overflow-hidden">
+<div class="flex items-center justify-between p-4">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="language">language</span>
+<div>
+<p class="font-semibold">Language</p>
+<p class="text-xs text-on-surface-variant">English / தமிழ்</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="flex items-center justify-between p-4">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="notifications">notifications</span>
+<p class="font-semibold">Notifications</p>
+</div>
+<div class="w-10 h-5 bg-primary-container rounded-full relative">
+<div class="absolute right-1 top-1 w-3 h-3 bg-white rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-4">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="payments">payments</span>
+<p class="font-semibold">Default Payment</p>
+</div>
+<p class="text-sm font-bold text-primary">UPI / GPay</p>
+</div>
+</div>
+</div>
+<!-- Account Actions -->
+<div class="mb-8">
+<h3 class="font-headline text-lg font-bold mb-4 px-1">Account</h3>
+<div class="bg-surface-container-lowest rounded-2xl divide-y divide-surface-container overflow-hidden">
+<div class="flex items-center gap-4 p-4">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="help">help</span>
+<p class="font-semibold">Help &amp; Support</p>
+</div>
+<div class="flex items-center gap-4 p-4">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="verified_user">verified_user</span>
+<p class="font-semibold">Privacy Policy</p>
+</div>
+<div class="flex items-center gap-4 p-4 text-[#FF5252]">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<p class="font-bold">Logout</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full rounded-t-xl z-50 bg-[#f7f9ff]/80 backdrop-blur-md border-t-[0.5px] border-slate-200/20 shadow-[0_-12px_32px_rgba(24,28,32,0.06)] flex justify-around items-center h-20 pb-4 px-2">
+<div class="flex flex-col items-center justify-center text-[#181c20] dark:text-slate-400 opacity-60 hover:bg-[#f2f3f9] dark:hover:bg-slate-800 transition-all rounded-xl px-4 py-1">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Inter'] text-[12px] font-medium">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20] dark:text-slate-400 opacity-60 hover:bg-[#f2f3f9] dark:hover:bg-slate-800 transition-all rounded-xl px-4 py-1">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-['Inter'] text-[12px] font-medium">Search</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20] dark:text-slate-400 opacity-60 hover:bg-[#f2f3f9] dark:hover:bg-slate-800 transition-all rounded-xl px-4 py-1">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-['Inter'] text-[12px] font-medium">Orders</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20] dark:text-slate-400 opacity-60 hover:bg-[#f2f3f9] dark:hover:bg-slate-800 transition-all rounded-xl px-4 py-1">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-['Inter'] text-[12px] font-medium">Wallet</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#0077BE] dark:text-[#0077BE] font-bold bg-[#ffffff] dark:bg-slate-800 rounded-xl px-4 py-1 scale-110 duration-300 ease-in-out">
+<span class="material-symbols-outlined" data-icon="person" data-weight="fill" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-['Inter'] text-[12px] font-medium">Profile</span>
+</div>
+</nav>
+</body></html>

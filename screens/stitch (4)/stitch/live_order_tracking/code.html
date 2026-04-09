@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thannigo - Live Order Tracking</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#006a61",
+                        "secondary-container": "#83f2e3",
+                        "tertiary": "#28654c",
+                        "primary-fixed-dim": "#9acbff",
+                        "outline-variant": "#c0c7d2",
+                        "tertiary-container": "#437e64",
+                        "on-tertiary-fixed": "#002114",
+                        "on-surface": "#181c20",
+                        "surface-container-low": "#f2f3f9",
+                        "primary-container": "#0077be",
+                        "inverse-surface": "#2d3135",
+                        "on-tertiary-container": "#e8fff0",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#d8dadf",
+                        "primary": "#005e97",
+                        "surface-container-high": "#e6e8ee",
+                        "on-primary-fixed": "#001d34",
+                        "outline": "#707882",
+                        "surface-variant": "#e0e2e8",
+                        "on-surface-variant": "#404751",
+                        "inverse-on-surface": "#eff1f6",
+                        "inverse-primary": "#9acbff",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#b1f0d0",
+                        "surface-container-highest": "#e0e2e8",
+                        "surface": "#f7f9ff",
+                        "secondary-fixed-dim": "#68d9ca",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "background": "#f7f9ff",
+                        "on-secondary": "#ffffff",
+                        "on-background": "#181c20",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#cfe5ff",
+                        "on-tertiary-fixed-variant": "#105139",
+                        "on-secondary-fixed": "#00201c",
+                        "surface-tint": "#00629e",
+                        "on-secondary-container": "#006f65",
+                        "surface-container": "#eceef3",
+                        "on-primary-fixed-variant": "#004a79",
+                        "surface-bright": "#f7f9ff",
+                        "secondary-fixed": "#86f5e6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#005049",
+                        "tertiary-fixed-dim": "#96d4b5",
+                        "on-primary-container": "#f7f9ff",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .step-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .7; transform: scale(1.1); }
+        }
+        ::-webkit-scrollbar { display: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-fixed">
+<!-- Top Navigation Anchor (Shared Component Mapping) -->
+<header class="fixed top-0 w-full z-50 bg-[#f7f9ff]/80 dark:bg-slate-900/80 backdrop-blur-md flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#0077BE] cursor-pointer">arrow_back</span>
+<h1 class="font-['Plus_Jakarta_SANS'] font-bold tracking-tight text-on-surface text-base">Track Order #TG-20240409-1234</h1>
+</div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-[#0077BE] p-2 bg-primary-fixed/30 rounded-full cursor-pointer hover:opacity-80 transition-opacity active:scale-90 duration-200">call</span>
+</div>
+</header>
+<main class="pt-16 pb-24">
+<!-- Live Map Context Area -->
+<div class="relative w-full h-[280px] bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover grayscale opacity-40" data-alt="Modern abstract simplified map graphic with a delivery route line and blue pins in a minimalist style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFl9Ja0V7RWeY1PACV2aL5FbTWj_qcs78RfnM-b4vV1mH6A4FIq7I7aJ2gaW6Oy6VVVfvV2s7i_E8wjIQfrH97g3ZQZbh9UFTwVJzGpUNhocOz1C6tfs6fbib-otgBhfjOSHHD_TVmmMStrEC9XkLVEhYPogNtcvk5jnLEmkErrMSDxLX6Kb0CEl6HimwkqPPcyIY_KbVS_EZAXkKIC_voLTS4RD4X4v_kYx9HPCkn7zWHqhcFcX5h-MBymiOUHJ4ciMPjRqwqPdY"/>
+<!-- Delivery Tracker Visual -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="relative w-full px-12">
+<div class="h-1 bg-primary/20 w-full rounded-full overflow-hidden">
+<div class="h-full bg-primary-container w-2/3"></div>
+</div>
+<!-- Delivery person pin -->
+<div class="absolute top-1/2 left-2/3 -translate-y-1/2 -translate-x-1/2">
+<div class="bg-primary-container p-1 rounded-full shadow-lg">
+<span class="material-symbols-outlined text-white text-base" style="font-variation-settings: 'FILL' 1;">pedal_bike</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Sticky Status Progress Bar -->
+<section class="sticky top-16 z-40 bg-surface-container-lowest shadow-[0_12px_32px_rgba(24,28,32,0.06)] rounded-b-2xl px-6 py-6 border-t-[0.5px] border-outline-variant/10">
+<div class="flex justify-between items-center relative">
+<!-- Progress Line Background -->
+<div class="absolute top-4 left-0 w-full h-[2px] bg-surface-container-high -z-10 mx-auto px-4"></div>
+<!-- Steps -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-white text-[14px]">
+<span class="material-symbols-outlined text-sm">check</span>
+</div>
+<span class="text-[10px] font-medium text-on-surface-variant">Placed</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-white text-[14px]">
+<span class="material-symbols-outlined text-sm">check</span>
+</div>
+<span class="text-[10px] font-medium text-on-surface-variant">Accepted</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary-container step-pulse flex items-center justify-center text-white text-[14px]">
+<span class="material-symbols-outlined text-sm">sync</span>
+</div>
+<span class="text-[10px] font-bold text-primary-container">Preparing</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant text-[14px]">
+<span class="material-symbols-outlined text-sm">local_shipping</span>
+</div>
+<span class="text-[10px] font-medium text-on-surface-variant opacity-60">Ship</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant text-[14px]">
+<span class="material-symbols-outlined text-sm">inventory_2</span>
+</div>
+<span class="text-[10px] font-medium text-on-surface-variant opacity-60">Delivered</span>
+</div>
+</div>
+<!-- ETA Chip -->
+<div class="mt-6 flex justify-center">
+<div class="bg-[#FF9800] text-white px-4 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span class="font-['Inter'] text-[12px] font-bold">25 min remaining</span>
+</div>
+</div>
+</section>
+<!-- Delivery Person & Order Details Stack -->
+<div class="px-5 mt-6 space-y-6">
+<!-- Delivery Person Card -->
+<div class="bg-surface-container-lowest rounded-2xl p-4 flex items-center justify-between shadow-[0_4px_16px_rgba(24,28,32,0.04)]">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-full overflow-hidden border-2 border-primary-fixed">
+<img class="w-full h-full object-cover" data-alt="Professional delivery person profile headshot with a friendly smile, outdoor lighting, natural background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuATeN0i749tfqbMzCHKWPT-gbYnIyLUVOjGKNcfkYBOgNgxfS2JWX4KMpfmFF4O8nMbqEVpO1kHghV4Yc_5CvpS_P73lEutSJg6aYMwRdU1AnBQFCkrxIpQoQh78QnQNw2x-dXRjBRta-N2ETnCJQiIDvJqS3bOHDxvvloXuEVYOq9TxrN-Ez250gViMg2smUtCc-ZTa9nfd8gHrn4WOky_r1n9RJbIcPsQjOtIkAAjJddNeXdrPWf47yazDY5V6rGgXXHY8r-w7P4"/>
+</div>
+<div>
+<h3 class="font-headline font-bold text-on-surface">Ravi Kumar</h3>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-yellow-500 text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-sm font-medium text-on-surface-variant">4.9</span>
+</div>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="h-10 px-3 border-1.5 border-[#0077BE] text-[#0077BE] rounded-xl flex items-center gap-1.5 hover:bg-primary-fixed/20 transition-colors">
+<span class="material-symbols-outlined text-lg">call</span>
+<span class="text-xs font-bold">Call</span>
+</button>
+<button class="h-10 px-3 border-1.5 border-[#0077BE] text-[#0077BE] rounded-xl flex items-center gap-1.5 hover:bg-primary-fixed/20 transition-colors">
+<span class="material-symbols-outlined text-lg">chat</span>
+<span class="text-xs font-bold">WhatsApp</span>
+</button>
+</div>
+</div>
+<!-- Order Summary Bento -->
+<div class="bg-surface-container-low rounded-2xl p-6 space-y-4">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-[11px] uppercase tracking-wider text-on-surface-variant font-bold">Store Details</p>
+<h4 class="font-headline font-extrabold text-[#0077BE] text-lg mt-1">Aqua Crystal Pure</h4>
+</div>
+<div class="bg-tertiary-fixed px-3 py-1 rounded-full">
+<span class="text-[10px] font-bold text-on-tertiary-fixed">PAID (COD)</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 border-t border-outline-variant/20 pt-4">
+<div>
+<p class="text-[11px] text-on-surface-variant">Items</p>
+<p class="font-bold text-on-surface">2× 20L Can</p>
+</div>
+<div class="text-right">
+<p class="text-[11px] text-on-surface-variant">Total Amount</p>
+<p class="font-['Inter'] font-extrabold text-primary-container text-xl">₹90</p>
+</div>
+</div>
+</div>
+<!-- Timeline Updates -->
+<div class="bg-surface-container-lowest rounded-2xl p-6">
+<h3 class="font-headline font-bold text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container">history_edu</span>
+                    Timeline Updates
+                </h3>
+<div class="space-y-8 relative">
+<!-- Vertical Line -->
+<div class="absolute top-0 bottom-0 left-[11px] w-[2px] bg-surface-container-high"></div>
+<!-- Timeline Item -->
+<div class="relative flex items-start gap-4">
+<div class="w-6 h-6 rounded-full bg-[#48BCAE] border-4 border-white shadow-sm z-10 flex items-center justify-center"></div>
+<div class="flex-1">
+<div class="flex justify-between">
+<p class="text-sm font-bold text-on-surface">Order is out for delivery</p>
+<span class="text-[11px] text-on-surface-variant font-medium">10:34 AM</span>
+</div>
+<p class="text-xs text-on-surface-variant mt-1">Ravi is on his way to your location.</p>
+</div>
+</div>
+<!-- Timeline Item -->
+<div class="relative flex items-start gap-4">
+<div class="w-6 h-6 rounded-full bg-primary-container border-4 border-white shadow-sm z-10 flex items-center justify-center"></div>
+<div class="flex-1">
+<div class="flex justify-between">
+<p class="text-sm font-bold text-on-surface">Preparing your order</p>
+<span class="text-[11px] text-on-surface-variant font-medium">10:15 AM</span>
+</div>
+<p class="text-xs text-on-surface-variant mt-1">Cleaning and filling your 20L cans.</p>
+</div>
+</div>
+<!-- Timeline Item -->
+<div class="relative flex items-start gap-4">
+<div class="w-6 h-6 rounded-full bg-surface-container-high border-4 border-white shadow-sm z-10 flex items-center justify-center"></div>
+<div class="flex-1">
+<div class="flex justify-between">
+<p class="text-sm font-medium text-on-surface-variant">Order Accepted</p>
+<span class="text-[11px] text-on-surface-variant font-medium">10:05 AM</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Help Section -->
+<div class="flex justify-center items-center gap-4 py-4 text-[13px] font-bold text-[#0077BE]">
+<a class="hover:underline" href="#">Report an Issue</a>
+<span class="w-1.5 h-1.5 bg-outline-variant/30 rounded-full"></span>
+<a class="hover:underline" href="#">View Order Details</a>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Anchor (Shared Component Mapping) -->
+<nav class="fixed bottom-0 w-full rounded-t-xl z-50 bg-[#f7f9ff]/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0_-12px_32px_rgba(24,28,32,0.06)] border-t-[0.5px] border-slate-200/20 flex justify-around items-center h-20 pb-4 w-full px-2">
+<div class="flex flex-col items-center justify-center text-[#181c20] dark:text-slate-400 opacity-60 hover:bg-[#f2f3f9] dark:hover:bg-slate-800 transition-colors cursor-pointer px-4 py-1">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Inter'] text-[12px] font-medium mt-1">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20] dark:text-slate-400 opacity-60 hover:bg-[#f2f3f9] dark:hover:bg-slate-800 transition-colors cursor-pointer px-4 py-1">
+<span class="material-symbols-outlined">search</span>
+<span class="font-['Inter'] text-[12px] font-medium mt-1">Search</span>
+</div>
+<!-- Active Tab: Orders (Current Intent) -->
+<div class="flex flex-col items-center justify-center text-[#0077BE] dark:text-[#0077BE] font-bold bg-[#ffffff] dark:bg-slate-800 rounded-xl px-4 py-1 scale-110 duration-300 ease-in-out">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="font-['Inter'] text-[12px] font-medium mt-1">Orders</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20] dark:text-slate-400 opacity-60 hover:bg-[#f2f3f9] dark:hover:bg-slate-800 transition-colors cursor-pointer px-4 py-1">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-['Inter'] text-[12px] font-medium mt-1">Wallet</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#181c20] dark:text-slate-400 opacity-60 hover:bg-[#f2f3f9] dark:hover:bg-slate-800 transition-colors cursor-pointer px-4 py-1">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Inter'] text-[12px] font-medium mt-1">Profile</span>
+</div>
+</nav>
+</body></html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline-variant": "#c0c7d2",
+                    "on-tertiary-fixed-variant": "#105139",
+                    "inverse-primary": "#9acbff",
+                    "on-error": "#ffffff",
+                    "surface-bright": "#f7f9ff",
+                    "surface-container-highest": "#e0e2e8",
+                    "on-secondary-fixed": "#00201c",
+                    "on-primary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "surface-container-high": "#e6e8ee",
+                    "primary-fixed": "#cfe5ff",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "primary": "#005e97",
+                    "tertiary-container": "#437e64",
+                    "secondary-fixed": "#86f5e6",
+                    "tertiary": "#28654c",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary": "#006a61",
+                    "on-tertiary-container": "#e8fff0",
+                    "on-primary-fixed": "#001d34",
+                    "background": "#f7f9ff",
+                    "on-secondary-fixed-variant": "#005049",
+                    "primary-container": "#0077be",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-fixed": "#002114",
+                    "surface-container-low": "#f2f3f9",
+                    "surface": "#f7f9ff",
+                    "primary-fixed-dim": "#9acbff",
+                    "on-surface-variant": "#404751",
+                    "on-primary-fixed-variant": "#004a79",
+                    "on-primary-container": "#f7f9ff",
+                    "inverse-on-surface": "#eff1f6",
+                    "outline": "#707882",
+                    "on-surface": "#181c20",
+                    "secondary-container": "#83f2e3",
+                    "tertiary-fixed-dim": "#96d4b5",
+                    "surface-container": "#eceef3",
+                    "inverse-surface": "#2d3135",
+                    "secondary-fixed-dim": "#68d9ca",
+                    "on-error-container": "#93000a",
+                    "surface-variant": "#e0e2e8",
+                    "surface-dim": "#d8dadf",
+                    "on-secondary-container": "#006f65",
+                    "surface-tint": "#00629e",
+                    "tertiary-fixed": "#b1f0d0",
+                    "on-background": "#181c20"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "1.5rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-[#002136] dark:bg-[#001422] flex justify-between items-center w-full px-6 py-4 h-16 docked full-width top-0 sticky z-50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#0077BE] dark:text-[#4da3ff]">water_drop</span>
+<h1 class="text-white font-headline font-bold tracking-tight text-lg">Inventory</h1>
+</div>
+<button class="flex items-center gap-2 text-white/70 hover:bg-white/10 transition-colors px-3 py-1 rounded-lg">
+<span class="text-sm font-label font-semibold">View Log</span>
+<span class="material-symbols-outlined text-sm">history</span>
+</button>
+</header>
+<main class="px-5 pt-6 space-y-6">
+<!-- Daily Overview Card -->
+<section class="bg-surface-container-lowest rounded-xl p-5 shadow-[0_4px_20px_rgba(0,94,151,0.04)] border border-outline-variant/10">
+<div class="flex justify-between items-center mb-4">
+<span class="text-on-surface-variant text-xs font-bold tracking-widest uppercase">Daily Overview</span>
+<span class="text-on-surface-variant text-xs font-medium">October 24, 2023</span>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<p class="text-on-surface-variant font-medium">Full Cans Available</p>
+<p class="text-[#006a61] font-headline font-bold text-2xl">48</p>
+</div>
+<div class="h-[1px] bg-surface-container"></div>
+<div class="flex items-center justify-between">
+<p class="text-on-surface-variant font-medium">Empty Cans on Hand</p>
+<p class="text-on-surface-variant font-headline font-bold text-2xl">12</p>
+</div>
+</div>
+</section>
+<!-- Product Stock Management -->
+<section class="space-y-4">
+<h2 class="text-on-surface font-headline font-extrabold text-xl tracking-tight px-1">Stock Management</h2>
+<!-- Card 1: 20L Mineral Water -->
+<div class="bg-surface-container-low rounded-xl p-4 space-y-4">
+<div class="flex justify-between items-start">
+<div class="flex gap-4">
+<div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">water_bottle</span>
+</div>
+<div>
+<h3 class="font-headline font-bold text-on-surface">20L Mineral Water Can</h3>
+<p class="text-on-surface-variant text-sm">Main SKU • Refillable</p>
+</div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-bold uppercase tracking-wider text-on-surface-variant">
+<span>Stock Level</span>
+<span>48 / 60 Units</span>
+</div>
+<div class="w-full bg-surface-container-highest h-2.5 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 80%"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant italic">Threshold: 10 cans</p>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center bg-surface-container-highest rounded-lg p-1">
+<button class="w-10 h-10 flex items-center justify-center text-primary font-bold hover:bg-surface-bright rounded-lg transition-colors active:scale-90">-</button>
+<span class="px-4 font-headline font-bold text-on-surface">48</span>
+<button class="w-10 h-10 flex items-center justify-center text-primary font-bold hover:bg-surface-bright rounded-lg transition-colors active:scale-90">+</button>
+</div>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest uppercase">In Stock</span>
+</div>
+</div>
+<!-- Card 2: 10L Can (Low Stock Example) -->
+<div class="bg-surface-container-low rounded-xl p-4 space-y-4">
+<div class="flex justify-between items-start">
+<div class="flex gap-4">
+<div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-3xl">water_bottle</span>
+</div>
+<div>
+<h3 class="font-headline font-bold text-on-surface">10L Mineral Water Can</h3>
+<p class="text-on-surface-variant text-sm">Medium Capacity</p>
+</div>
+</div>
+<span class="bg-error-container text-on-error-container px-2 py-1 rounded text-[10px] font-black uppercase">Low Stock</span>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-bold uppercase tracking-wider text-error">
+<span>Critical Level</span>
+<span>8 / 40 Units</span>
+</div>
+<div class="w-full bg-surface-container-highest h-2.5 rounded-full overflow-hidden">
+<div class="bg-error h-full rounded-full" style="width: 20%"></div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center bg-surface-container-highest rounded-lg p-1">
+<button class="w-10 h-10 flex items-center justify-center text-primary font-bold hover:bg-surface-bright rounded-lg transition-colors">-</button>
+<span class="px-4 font-headline font-bold text-on-surface">08</span>
+<button class="w-10 h-10 flex items-center justify-center text-primary font-bold hover:bg-surface-bright rounded-lg transition-colors">+</button>
+</div>
+<button class="text-primary font-label text-xs font-bold uppercase tracking-widest px-2">Order Now</button>
+</div>
+</div>
+<!-- Card 3: 5L Bottle -->
+<div class="bg-surface-container-low rounded-xl p-4 space-y-4">
+<div class="flex gap-4">
+<div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-3xl">water_drop</span>
+</div>
+<div>
+<h3 class="font-headline font-bold text-on-surface">5L Drinking Water</h3>
+<p class="text-on-surface-variant text-sm">Disposable Bottle</p>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<p class="text-sm text-on-surface-variant font-medium">Available Inventory: <span class="text-on-surface font-bold">124 Units</span></p>
+<div class="flex items-center bg-surface-container-highest rounded-lg p-1 scale-90 origin-right">
+<button class="w-8 h-8 flex items-center justify-center text-primary font-bold">-</button>
+<span class="px-3 font-headline font-bold text-on-surface text-sm">124</span>
+<button class="w-8 h-8 flex items-center justify-center text-primary font-bold">+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Stock Actions -->
+<section class="grid grid-cols-1 gap-3 pt-4">
+<button class="h-[52px] w-full rounded-xl bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">add_business</span>
+                + Add Stock (Supplier Delivery)
+            </button>
+<button class="h-[52px] w-full rounded-xl border-[1.5px] border-error/40 text-error font-headline font-bold text-sm hover:bg-error/5 active:scale-95 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">dangerous</span>
+                Log Damage / Leakage
+            </button>
+</section>
+<!-- End of Day Card -->
+<section class="bg-secondary-container/30 border border-secondary-container/50 rounded-xl p-5 mb-8">
+<div class="flex items-start gap-4">
+<div class="bg-secondary-container p-2 rounded-full">
+<span class="material-symbols-outlined text-on-secondary-container">fact_check</span>
+</div>
+<div>
+<h4 class="text-on-secondary-container font-headline font-bold">End-of-Day Check</h4>
+<p class="text-on-secondary-container/80 text-sm mt-1">Please reconcile empty cans collected today before closing the log.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-white/70 dark:bg-[#181c20]/70 backdrop-blur-md z-50 rounded-t-[1.5rem] shadow-[0_-4px_24px_rgba(0,94,151,0.08)]">
+<a class="flex flex-col items-center justify-center text-[#404751] dark:text-[#c0c7d2] px-5 py-2 hover:bg-[#f7f9ff] dark:hover:bg-[#2a2d35] transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider mt-1">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#404751] dark:text-[#c0c7d2] px-5 py-2 hover:bg-[#f7f9ff] dark:hover:bg-[#2a2d35] transition-all" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider mt-1">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#0077be] text-white rounded-[1.5rem] px-5 py-2 scale-95 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider mt-1">Inventory</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#404751] dark:text-[#c0c7d2] px-5 py-2 hover:bg-[#f7f9ff] dark:hover:bg-[#2a2d35] transition-all" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-['Inter'] text-[11px] font-semibold uppercase tracking-wider mt-1">Earnings</span>
+</a>
+</nav>
+</body></html>
