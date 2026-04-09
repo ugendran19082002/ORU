@@ -1,6 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useCallback } from 'react';
 import { WebView } from 'react-native-webview';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { LEAFLET_CSS, LEAFLET_JS } from './leafletBundle';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -67,7 +68,7 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
           ) {
             onMarkerDragEnd({ latitude: msg.payload.latitude, longitude: msg.payload.longitude });
           }
-        } catch (e) {}
+        } catch {}
       },
       [onMarkerDragEnd]
     );
@@ -76,13 +77,14 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
     const markersJs = markers
       ? JSON.stringify(markers)
       : JSON.stringify([{ latitude, longitude, title, color: '#005d90', iconType: 'pin' }]);
+    const leafletCss = LEAFLET_CSS.replace(/url\(images\/[^\)]+\)/g, 'none');
+    const leafletJs = LEAFLET_JS.replace(/\n\/\/# sourceMappingURL=.*$/, '');
 
     const mapHtml = `<!DOCTYPE html>
 <html>
 <head>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>${leafletCss}</style>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%;width:100%;overflow:hidden;background:#f8fafc}
@@ -106,6 +108,7 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
 </head>
 <body>
 <div id="map"></div>
+<script>${leafletJs}</script>
 <script>
   var MARKERS = ${markersJs};
   var DRAGGABLE = ${draggable ? 'true' : 'false'};
@@ -226,6 +229,7 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
     );
   }
 );
+LeafletMap.displayName = 'LeafletMap';
 
 const styles = StyleSheet.create({
   container: { flex: 1, overflow: 'hidden' },

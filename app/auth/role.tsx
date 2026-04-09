@@ -15,7 +15,7 @@ import { Logo } from '@/components/ui/Logo';
 
 const { width } = Dimensions.get('window');
 
-type Role = 'customer' | 'shop' | 'admin';
+type Role = 'customer' | 'shop' | 'delivery' | 'admin';
 
 const ROLES = [
   {
@@ -35,6 +35,15 @@ const ROLES = [
     accent: '#006878',
     bg: '#e0f7fa',
     features: ['Accept/reject orders', 'Track daily earnings', 'View delivery map'],
+  },
+  {
+    id: 'delivery' as Role,
+    title: 'Delivery',
+    subtitle: 'Complete assigned trips\nwith OTP handoff',
+    icon: 'bicycle-outline' as const,
+    accent: '#0f766e',
+    bg: '#ccfbf1',
+    features: ['View assigned drops', 'Navigate to customers', 'Verify delivery OTP'],
   },
   {
     id: 'admin' as Role,

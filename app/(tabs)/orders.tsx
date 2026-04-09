@@ -12,6 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
+import { useAppState } from '@/hooks/use-app-state';
 
 const ORDERS = [
   {
@@ -126,6 +127,7 @@ function OrderCard({ order, onTrack, onReorder }: {
 
 export default function OrdersScreen() {
   const router = useRouter();
+  const { orders } = useAppState();
   const [tab, setTab] = useState<'active' | 'past'>('active');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -137,7 +139,29 @@ export default function OrdersScreen() {
     }, 1000);
   }, []);
 
-  const filtered = tab === 'active' ? ORDERS.filter((o) => o.isActive) : ORDERS.filter((o) => !o.isActive);
+  const mappedOrders = orders.map((order) => ({
+    id: order.id,
+    shop: order.shopName,
+    items: `${order.quantity}x ${order.itemName}`,
+    date: order.createdAt,
+    amount: `₹${order.total}`,
+    status:
+      order.status === 'out_for_delivery'
+        ? 'Out for Delivery'
+        : order.status === 'delivered'
+          ? 'Delivered'
+          : order.status === 'cancelled'
+            ? 'Cancelled'
+            : order.status === 'accepted'
+              ? 'Accepted'
+              : 'Placed',
+    statusColor: order.status === 'cancelled' ? '#ba1a1a' : order.status === 'delivered' ? '#005d90' : '#006878',
+    statusBg: order.status === 'cancelled' ? '#ffdad6' : order.status === 'delivered' ? '#e3f2fd' : '#e0f7fa',
+    progress: order.status === 'delivered' ? 1 : order.status === 'out_for_delivery' ? 0.75 : order.status === 'accepted' ? 0.45 : 0.15,
+    isActive: !['delivered', 'cancelled'].includes(order.status),
+  }));
+
+  const filtered = tab === 'active' ? mappedOrders.filter((o) => o.isActive) : mappedOrders.filter((o) => !o.isActive);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -156,7 +180,7 @@ export default function OrdersScreen() {
 
       <View style={styles.titleRow}>
         <Text style={styles.screenTitle}>My Orders</Text>
-        <Text style={styles.screenSubtitle}>{ORDERS.length} total orders</Text>
+        <Text style={styles.screenSubtitle}>{mappedOrders.length} total orders</Text>
       </View>
 
       {/* TOGGLE */}
@@ -195,8 +219,8 @@ export default function OrdersScreen() {
             <OrderCard
               key={order.id}
               order={order}
-              onTrack={() => router.push('/order/tracking')}
-              onReorder={() => router.push(`/order/${order.id}`)}
+              onTrack={() => router.push(`/order/tracking?orderId=${order.id}` as any)}
+              onReorder={() => router.push(`/shop/${orders.find((item) => item.id === order.id)?.shopId ?? 'shop-1'}` as any)}
             />
           ))
         )}

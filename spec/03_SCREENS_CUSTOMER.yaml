@@ -1,0 +1,1156 @@
+# ==============================================================================
+# 03.screens-customer.openspec.yaml
+# THANNIGO — All Customer App Screens (P0 + P1 + P2)
+# ==============================================================================
+
+# ==============================================================================
+# AUTH SCREENS (shared with all roles)
+# ==============================================================================
+screen_splash:
+  id: SplashScreen
+  file: src/screens/auth/SplashScreen.tsx
+  priority: P0
+  role: all
+  design:
+    layout: full_screen_centered
+    background:
+      type: linear_gradient
+      colors: ["#0077B6", "#48CAE4"]
+      direction: top_to_bottom
+    elements:
+      - WaterDropSVG: { size: 64, color: "#FFFFFF", animated: drop_fall }
+      - AppName:
+          {
+            text: "Thannigo",
+            size: 32,
+            weight: 700,
+            color: "#FFFFFF",
+            margin_top: 16,
+          }
+      - Tagline:
+          {
+            text: "Pure Water. Delivered Fast.",
+            size: 15,
+            color: "#ADEBF4",
+            margin_top: 8,
+          }
+      - LoadingDots:
+          { color: "#FFFFFF", position: bottom_center, margin_bottom: 80 }
+  behavior:
+    duration: 2000
+    check_token: true
+    navigate_to: Onboarding | CustomerHome | ShopDashboard | AssignedOrders
+
+screen_onboarding:
+  id: OnboardingScreen
+  file: src/screens/auth/OnboardingScreen.tsx
+  priority: P0
+  role: all
+  design:
+    layout: full_screen_pager
+    slides:
+      - slide: 1
+        illustration: "delivery_bike_animation.json" # Lottie
+        bg: "#FFFFFF"
+        title:
+          {
+            text: "Order in 30 Seconds",
+            size: 26,
+            weight: 700,
+            color: "#1A1A2E",
+          }
+        body:
+          {
+            text: "Browse 50+ local water shops and order with one tap",
+            color: "#74777C",
+          }
+      - slide: 2
+        illustration: "map_shops_animation.json"
+        title:
+          {
+            text: "50+ Shops Near You",
+            size: 26,
+            weight: 700,
+            color: "#1A1A2E",
+          }
+        body: { text: "Find verified RO water, mineral water, and more" }
+      - slide: 3
+        illustration: "notification_delivered.json"
+        title:
+          { text: "Track Every Drop", size: 26, weight: 700, color: "#1A1A2E" }
+        body: { text: "Real-time updates from order placed to your doorstep" }
+    controls:
+      skip: { position: top_right, color: "#74777C", size: 14 }
+      dots:
+        {
+          active: { color: "#0077B6", width: 20 },
+          inactive: { color: "#ADEBF4", width: 8 },
+          height: 8,
+        }
+      next_btn: { color: "#0077B6", text: "Next →", height: 52, radius: 12 }
+      get_started_btn: { color: "#0077B6", text: "Get Started", on_last: true }
+  behavior:
+    swipe: horizontal
+    auto_advance: false
+    stored_flag: "onboarding_completed"
+
+screen_phone_login:
+  id: PhoneLoginScreen
+  file: src/screens/auth/PhoneLoginScreen.tsx
+  priority: P0
+  role: all
+  design:
+    background: "#FFFFFF"
+    elements:
+      - BackButton: { position: top_left, color: "#1A1A2E" }
+      - Title:
+          {
+            text: "Enter Mobile Number",
+            size: 24,
+            weight: 700,
+            color: "#1A1A2E",
+            margin_top: 40,
+          }
+      - Subtitle:
+          {
+            text: "We'll send a 6-digit OTP to verify",
+            color: "#74777C",
+            margin_top: 8,
+          }
+      - PhoneInputRow:
+          margin_top: 32
+          prefix_box:
+            {
+              text: "+91",
+              bg: "#E8F4FD",
+              border: "#ADEBF4",
+              width: 64,
+              height: 52,
+              radius: 8,
+            }
+          input:
+            {
+              placeholder: "Enter 10-digit number",
+              border_bottom: "#ADEBF4",
+              height: 52,
+              keyboard: phone_pad,
+            }
+          active_border: "#0077B6"
+      - SendOTPButton:
+          text: "Send OTP"
+          color: "#0077B6"
+          height: 52
+          radius: 12
+          full_width: true
+          margin_top: 32
+          disabled_color: "#ADEBF4"
+          disabled_until: "phone.length === 10"
+      - TermsText:
+          text: "By continuing, you agree to our Terms & Privacy Policy"
+          size: 12
+          color: "#74777C"
+          align: center
+          links: [Terms, Privacy Policy]
+          link_color: "#0077B6"
+
+screen_otp:
+  id: OTPVerificationScreen
+  file: src/screens/auth/OTPVerificationScreen.tsx
+  priority: P0
+  role: all
+  design:
+    background: "#FFFFFF"
+    elements:
+      - BackButton
+      - Title: { text: "Verify OTP", size: 24, weight: 700 }
+      - Subtitle:
+          {
+            text: "Enter the 6-digit code sent to +91 XXXXX XXXXX",
+            color: "#74777C",
+          }
+      - OTPBoxRow:
+          count: 6
+          each:
+            {
+              size: 48,
+              radius: 8,
+              border: "#ADEBF4",
+              active_border: "#0077B6",
+              filled_bg: "#E8F4FD",
+            }
+          gap: 8
+          keyboard: numeric
+          auto_submit: true
+      - ResendRow:
+          timer: { format: "0:{ss}", color: "#74777C" }
+          resend_link:
+            {
+              text: "Resend OTP",
+              color: "#0077B6",
+              visible_after_timer_ends: true,
+            }
+      - VerifyButton:
+          text: "Verify & Continue"
+          color: "#0077B6"
+          height: 52
+          disabled_until: "all 6 filled"
+      - BiometricHint:
+          { text: "or use fingerprint", color: "#74777C", size: 12 }
+
+# ==============================================================================
+# CUSTOMER — P0 SCREENS
+# ==============================================================================
+
+screen_customer_home:
+  id: CustomerHomeScreen
+  file: src/screens/customer/CustomerHomeScreen.tsx
+  priority: P0
+  tab: Home
+  design:
+    background: "#F5F9FF"
+    sections:
+      # Header
+      header:
+        bg: "#FFFFFF"
+        shadow: header
+        height: 56
+        elements:
+          HamburgerMenu: { color: "#74777C", size: 24 }
+          Logo:
+            {
+              text: "Thannigo",
+              color: "#0077B6",
+              size: 18,
+              weight: 700,
+              align: center,
+            }
+          Actions:
+            NotificationBell:
+              {
+                color: "#1A1A2E",
+                badge: true,
+                badge_bg: "#C0392B",
+                badge_text: "#FFFFFF",
+              }
+            CartIcon: { color: "#0077B6", badge: true }
+
+      # Location Bar
+      location_bar:
+        bg: "#E8F4FD"
+        height: 52
+        padding: [0, 16]
+        elements:
+          PinIcon: { color: "#0077B6", size: 18 }
+          LocationText: { size: 14, weight: 600, color: "#1A1A2E" }
+          ChevronDown: { size: 12, color: "#0077B6" }
+          Sublabel: { text: "Deliver here", size: 12, color: "#74777C" }
+
+      # Low Water Reminder (CRITICAL — show when reminder flag set)
+      reminder_banner:
+        condition: "reminderFlag === true"
+        bg: "#E3F2FD"
+        border: { left: 4, color: "#48CAE4" }
+        radius: 12
+        margin: [12, 16]
+        padding: 12
+        elements:
+          WaterCanIcon: { size: 32, color: "#48CAE4" }
+          Text:
+            {
+              text: "Running low on water? Time to reorder!",
+              color: "#0077B6",
+              weight: 600,
+            }
+          ReorderPill:
+            {
+              text: "Reorder",
+              bg: "#0077B6",
+              color: "#FFFFFF",
+              radius: 999,
+              height: 32,
+              padding: [0, 14],
+            }
+        priority: CRITICAL
+
+      # Quick Reorder Card (CRITICAL)
+      reorder_quick_card:
+        condition: "lastOrder !== null"
+        bg: "#FFFFFF"
+        radius: 12
+        shadow: card
+        margin: [0, 16, 8]
+        padding: [12, 16]
+        elements:
+          ShopThumbnail: { size: 40, radius: 8 }
+          QuickOrderText:
+            {
+              label: "Reorder from {shopName}?",
+              sub: "{qty} x {size} · ₹{total}",
+            }
+          ReorderButton:
+            {
+              text: "Order Again",
+              bg: "#0077B6",
+              color: "#FFFFFF",
+              height: 36,
+              radius: 999,
+            }
+        priority: CRITICAL
+
+      # Search Bar
+      search_bar:
+        bg: "#FFFFFF"
+        border: "1px solid #ADEBF4"
+        radius: 24
+        height: 44
+        margin: [0, 16, 8]
+        elements:
+          SearchIcon: { color: "#74777C", size: 18, left: 14 }
+          Input:
+            { placeholder: "Search shops, water types...", color: "#ADEBF4" }
+          FilterIcon: { color: "#0077B6", size: 18, right: 14 }
+
+      # Filter Chips
+      filter_chips:
+        scroll: horizontal
+        show_scrollbar: false
+        padding_horizontal: 16
+        gap: 8
+        items:
+          ["All", "Open Now", "Nearest", "Top Rated", "Price: Low", "Verified"]
+        active_chip: { bg: "#0077B6", text: "#FFFFFF", border: "none" }
+        inactive_chip:
+          { bg: "#FFFFFF", text: "#74777C", border: "1px solid #ADEBF4" }
+        chip_height: 36
+        chip_radius: 999
+
+      # List/Map Toggle
+      view_toggle:
+        type: segmented_control
+        options: [List, Map]
+        active: { bg: "#0077B6", text: "#FFFFFF" }
+        inactive: { bg: "#F5F9FF", text: "#74777C" }
+        margin: [8, 16]
+
+      # Shop List Cards
+      shop_list:
+        type: FlatList
+        item_separator: 8
+        padding: 16
+        pull_to_refresh: true
+        infinite_scroll: true
+        loading_state: skeleton_cards
+        empty_state: "No shops found near you"
+        each_card:
+          bg: "#FFFFFF"
+          radius: 12
+          shadow: card
+          padding: 12
+          height: 100
+          layout: row
+          elements:
+            ShopThumbnail: { size: 64, radius: 8, position: left }
+            Content:
+              OpenClosedBadge:
+                open:
+                  {
+                    bg: "#E8F5E9",
+                    text: "#27AE60",
+                    label: "OPEN",
+                    size: 10,
+                    weight: 700,
+                  }
+                closed:
+                  {
+                    bg: "#FFEBEE",
+                    text: "#C0392B",
+                    label: "CLOSED",
+                    size: 10,
+                    weight: 700,
+                  }
+                position: top_right
+                priority: CRITICAL
+              ShopName: { size: 15, weight: 600, color: "#1A1A2E" }
+              StarRow: { filled: "#F59E0B", count: 5, size: 12 }
+              InfoRow: [delivery_time, distance, base_price]
+              TagPills: { bg: "#E8F4FD", text: "#0077B6", size: 10, radius: 4 }
+            VerifiedBadge:
+              condition: shop.verified
+              bg: "#48CAE4"
+              text: "#0077B6"
+              size: 10
+
+      bottom_nav: customer_tabs
+
+    loading: skeleton_shimmer
+    error_state: retry_button
+
+screen_shop_detail:
+  id: ShopDetailScreen
+  file: src/screens/customer/ShopDetailScreen.tsx
+  priority: P0
+  tab: Home (nested)
+  design:
+    background: "#FFFFFF"
+    sections:
+      hero_image:
+        height: 220
+        type: image_with_gradient
+        gradient: "rgba(0,0,0,0) 40%, rgba(0,0,0,0.55) 100%"
+        overlay_elements:
+          BackButton: { style: white_circle_32, top: 16, left: 16 }
+          ShareButton: { style: white_circle_32, top: 16, right: 52 }
+          FavoriteButton: { style: white_circle_32, top: 16, right: 16 }
+          ShopName:
+            { size: 22, weight: 700, color: "#FFFFFF", bottom: 48, left: 16 }
+          ShopMeta:
+            {
+              stars: true,
+              reviews: true,
+              distance: true,
+              eta: true,
+              color: "#FFFFFF",
+              size: 13,
+              bottom: 28,
+            }
+
+      shop_info_strip:
+        bg: "#FFFFFF"
+        padding: [12, 16]
+        border_bottom: "1px solid #E8ECEF"
+        elements:
+          OpenStatus:
+            {
+              open_color: "#27AE60",
+              closed_color: "#C0392B",
+              size: 14,
+              weight: 600,
+            }
+          CloseTime: { text: "Closes at 9:00 PM", color: "#74777C", size: 12 }
+          CertPills:
+            {
+              items: [RO+UV, Alkaline, Mineral],
+              bg: "#ADEBF4",
+              text: "#0077B6",
+              size: 11,
+            }
+          QualityCert:
+            {
+              icon: verified,
+              color: "#27AE60",
+              text: "Certificate verified",
+              size: 12,
+            }
+
+      product_section:
+        header:
+          { text: "Choose Products", color: "#0077B6", size: 16, weight: 600 }
+        sub_header: { text: "All prices per can", color: "#74777C", size: 12 }
+        each_product_card:
+          bg: "#FFFFFF"
+          border: "1px solid #ADEBF4"
+          radius: 12
+          padding: 12
+          margin_bottom: 10
+          layout: row
+          elements:
+            ProductIllustration: { size: 56, radius: 8 }
+            ProductInfo:
+              Name: { size: 15, weight: 600, color: "#1A1A2E" }
+              Description: { size: 12, color: "#74777C" }
+              AvailabilityBadge:
+                in_stock:
+                  { text: "IN STOCK", color: "#27AE60", size: 11, weight: 700 }
+                out_of_stock:
+                  { text: "OUT OF STOCK", color: "#95A5A6", size: 11 }
+                priority: CRITICAL
+            PriceAndStepper:
+              Price: { size: 18, weight: 700, color: "#C0392B" }
+              Unit: { text: "/can", size: 12, color: "#74777C" }
+              Stepper:
+                minus:
+                  {
+                    size: 32,
+                    border: "#ADEBF4",
+                    radius: 999,
+                    disabled_if: qty_zero,
+                  }
+                count: { size: 18, weight: 600, min_width: 32, align: center }
+                plus: { size: 32, bg: "#0077B6", radius: 999, color: "#FFFFFF" }
+                range: [0, 50]
+
+      delivery_options:
+        bg: "#F5F9FF"
+        border: "1px solid #ADEBF4"
+        radius: 12
+        padding: 14
+        margin: [0, 16, 12]
+        toggle:
+          options: ["Instant (ASAP)", "Schedule"]
+          active: { bg: "#0077B6", text: "#FFFFFF" }
+          inactive: { bg: "#FFFFFF", text: "#74777C" }
+        schedule_picker:
+          date_chips: { next_7_days: true, active: "#0077B6" }
+          time_slots: ["Morning 7-11am", "Afternoon 11-3pm", "Evening 3-8pm"]
+
+      delivery_note:
+        bg: "#F5F9FF"
+        border: "1px solid #ADEBF4"
+        radius: 8
+        padding: 12
+        margin: [0, 16, 12]
+        elements:
+          Icon: { name: note_alt, color: "#74777C" }
+          Input:
+            {
+              placeholder: "Delivery note (gate code, floor, landmark...)",
+              multiline: true,
+              max_chars: 200,
+            }
+
+      price_summary:
+        bg: "#FFFFFF"
+        border_top: "1px solid #E8ECEF"
+        padding: 16
+        rows:
+          - { label: "Items", value: "₹{items_total}" }
+          - { label: "Delivery fee", value: "₹{delivery_fee}" }
+          - { label: "GST (5%)", value: "₹{gst}" }
+          - { separator: true }
+          - {
+              label: "Total",
+              value: "₹{total}",
+              label_weight: 700,
+              value_color: "#0077B6",
+              value_size: 20,
+            }
+
+      cta_bar:
+        bg: "#FFFFFF"
+        border_top: "1px solid #E8ECEF"
+        padding: 16
+        sticky: true
+        elements:
+          ProceedButton:
+            text: "Proceed to Payment — ₹{total}"
+            bg: "#0077B6"
+            color: "#FFFFFF"
+            height: 52
+            radius: 12
+            full_width: true
+            disabled_if: "cart is empty"
+
+screen_payment:
+  id: PaymentScreen
+  file: src/screens/customer/PaymentScreen.tsx
+  priority: P0
+  design:
+    background: "#F5F9FF"
+    sections:
+      header: { title: "Payment", order_summary_pill: true }
+
+      coupon_section:
+        bg: "#FFFFFF"
+        radius: 12
+        padding: 14
+        margin: [0, 16, 12]
+        elements:
+          CouponInput: { placeholder: "Enter coupon code", border: "#ADEBF4" }
+          ApplyButton:
+            {
+              text: "Apply",
+              bg: "#0077B6",
+              color: "#FFFFFF",
+              height: 40,
+              radius: 8,
+            }
+          AppliedBadge:
+            { bg: "#E8F5E9", text: "#27AE60", condition: "coupon_applied" }
+
+      payment_methods:
+        label: "Choose Payment"
+        methods:
+          upi:
+            card: { bg: "#FFFFFF", radius: 12, padding: 14, border: "#ADEBF4" }
+            selected_border: "#0077B6"
+            selected_bg: "#E8F4FD"
+            elements:
+              UPILogo: { size: 24 }
+              Title: "Pay via UPI"
+              UPIInput:
+                {
+                  placeholder: "Enter UPI ID (name@upi)",
+                  border: "#ADEBF4",
+                  active_border: "#0077B6",
+                }
+              AppLogos:
+                {
+                  items: [GPay, PhonePe, Paytm, BHIM],
+                  size: 40,
+                  radius: 8,
+                  gap: 12,
+                }
+
+          cash_on_delivery:
+            card: { bg: "#FFFFFF", radius: 12, padding: 14, border: "#ADEBF4" }
+            elements:
+              CashIcon: { color: "#E67E22", size: 24 }
+              Title: "Cash on Delivery"
+              NoExtraCharge: { bg: "#E8F5E9", text: "#27AE60", size: 11 }
+              Hint:
+                { text: "Keep exact change ready", color: "#74777C", size: 12 }
+
+          wallet:
+            card: { bg: "#FFFFFF", radius: 12, padding: 14, border: "#ADEBF4" }
+            locked_if: "wallet_balance === 0"
+            elements:
+              WalletIcon: { size: 24 }
+              Balance: "Thannigo Wallet: ₹{balance}"
+              AddMoneyLink: { color: "#0077B6", size: 12 }
+
+      price_summary: { same_as: shop_detail.price_summary }
+
+      place_order_cta:
+        text: "Place Order — ₹{total}"
+        bg: "#0077B6"
+        color: "#FFFFFF"
+        height: 52
+        sticky_bottom: true
+        haptic: heavy
+
+screen_order_confirmation:
+  id: OrderConfirmationScreen
+  file: src/screens/customer/OrderConfirmationScreen.tsx
+  priority: P0
+  design:
+    background: "#FFFFFF"
+    layout: centered_scroll
+    elements:
+      SuccessAnimation:
+        type: lottie
+        file: "success_checkmark.json"
+        size: 120
+        auto_play: true
+        loop: false
+      OrderPlaced:
+        {
+          text: "Order Placed!",
+          size: 28,
+          weight: 700,
+          color: "#1A1A2E",
+          margin_top: 16,
+        }
+      OrderID:
+        text: "#TNG-{id}"
+        font: monospace
+        size: 14
+        color: "#74777C"
+        copiable: true
+        copy_icon: true
+
+      # CRITICAL — Delivery OTP Box
+      delivery_otp_box:
+        bg: "#E8F4FD"
+        border: "2px solid #0077B6"
+        radius: 16
+        padding: [20, 24]
+        margin: [24, 16]
+        align: center
+        elements:
+          Label:
+            {
+              text: "YOUR DELIVERY OTP",
+              size: 11,
+              color: "#74777C",
+              weight: 700,
+              letter_spacing: 1,
+            }
+          OTPDisplay:
+            {
+              format: "{d} {d} {d} {d}",
+              size: 44,
+              weight: 700,
+              color: "#0077B6",
+              letter_spacing: 12,
+            }
+          Caption:
+            {
+              text: "Share this OTP only with your delivery person",
+              size: 12,
+              color: "#74777C",
+              italic: true,
+            }
+        priority: CRITICAL
+
+      ETACard:
+        bg: "#F5F9FF"
+        radius: 12
+        padding: 14
+        elements:
+          ClockIcon: { color: "#F59E0B" }
+          ETAText: { text: "Arriving in 25-30 minutes", size: 15, weight: 600 }
+
+      ActionRow:
+        gap: 12
+        TrackOrderButton:
+          { text: "Track Order", style: outlined, color: "#0077B6", flex: 1 }
+        BackHomeButton:
+          { text: "Back to Home", style: filled, color: "#0077B6", flex: 1 }
+
+screen_order_tracking:
+  id: OrderTrackingScreen
+  file: src/screens/customer/OrderTrackingScreen.tsx
+  priority: P0
+  design:
+    background: "#F5F9FF"
+    sections:
+      header:
+        title: "Order #TNG-{id}"
+        right_action:
+          condition: "status in [placed, accepted]"
+          CancelLink: { text: "Cancel Order", color: "#C0392B", size: 14 }
+          priority: CRITICAL
+        edit_address_link:
+          condition: "status === placed"
+          color: "#0077B6"
+          priority: CRITICAL
+
+      status_timeline:
+        type: vertical_steps
+        padding: [16, 16]
+        steps:
+          placed:
+            { icon: check_circle, complete: "#27AE60", label: "Order Placed" }
+          accepted:
+            { icon: check_circle, complete: "#27AE60", label: "Shop Accepted" }
+          preparing:
+            {
+              icon: schedule,
+              active: "#0077B6",
+              label: "Preparing",
+              pulse: true,
+            }
+          out_delivery:
+            {
+              icon: local_shipping,
+              pending: "#ADEBF4",
+              label: "Out for Delivery",
+            }
+          delivered: { icon: home, pending: "#ADEBF4", label: "Delivered" }
+        connector:
+          complete: { style: solid, width: 2, color: "#27AE60" }
+          pending: { style: dashed, width: 1, color: "#ADEBF4" }
+        step_circle:
+          {
+            size: 40,
+            complete_bg: "#27AE60",
+            active_bg: "#0077B6",
+            pending_bg: "#F5F9FF",
+          }
+
+      delivery_person_card:
+        bg: "#FFFFFF"
+        radius: 12
+        shadow: card
+        margin: [0, 16, 12]
+        padding: 14
+        elements:
+          Avatar:
+            {
+              size: 48,
+              round: true,
+              initials_bg: "#E8F4FD",
+              initials_color: "#0077B6",
+            }
+          Info:
+            Name: { size: 15, weight: 600, color: "#1A1A2E" }
+            Role: { text: "Delivery Partner", color: "#74777C", size: 12 }
+            Vehicle: { size: 11, color: "#74777C" }
+          Actions:
+            CallButton:
+              {
+                icon: phone,
+                size: 40,
+                round: true,
+                border: "#27AE60",
+                color: "#27AE60",
+              }
+            WhatsAppButton:
+              {
+                icon: whatsapp,
+                size: 40,
+                round: true,
+                border: "#25D366",
+                color: "#25D366",
+              }
+
+      gps_map_view:
+        condition: "gps_enabled && tier === paid"
+        height: 220
+        map_style: blue_themed
+        elements:
+          CustomerPin: { icon: home, color: "#0077B6" }
+          DeliveryPin: { icon: two_wheeler, color: "#27AE60", animated: true }
+          RoutePolyline: { color: "#0077B6", dash: [8, 4] }
+          ETABadge: { bg: "#0077B6", text: "#FFFFFF", position: top_right }
+
+      order_summary_collapsed:
+        collapsible: true
+        default: collapsed
+        summary: "{qty} items · ₹{total} · {payment_method}"
+
+      cancel_reason_sheet:
+        type: bottom_sheet
+        trigger: cancel_link
+        title: "Why are you cancelling?"
+        options:
+          - "Changed my mind"
+          - "Ordered by mistake"
+          - "Shop taking too long"
+          - "Found better price"
+          - "Other (specify)"
+        mandatory: true
+        confirm_button: { text: "Confirm Cancellation", color: "#C0392B" }
+        priority: CRITICAL
+
+screen_report_issue:
+  id: ReportIssueScreen
+  file: src/screens/customer/ReportIssueScreen.tsx
+  priority: P0
+  design:
+    sections:
+      order_context_strip:
+        bg: "#F5F9FF"
+        padding: [8, 16]
+        text: "Order #{id} · {shopName} · {date}"
+        color: "#74777C"
+        size: 13
+
+      issue_categories:
+        type: grid
+        columns: 2
+        gap: 10
+        padding: 16
+        categories:
+          - {
+              id: late,
+              label: "Late Delivery",
+              icon: schedule,
+              icon_bg: "#FFF3E0",
+              icon_color: "#E67E22",
+            }
+          - {
+              id: wrong,
+              label: "Wrong Order",
+              icon: error_outline,
+              icon_bg: "#E3F2FD",
+              icon_color: "#0077B6",
+            }
+          - {
+              id: quality,
+              label: "Water Quality",
+              icon: water_drop,
+              icon_bg: "#E3F2FD",
+              icon_color: "#48CAE4",
+            }
+          - {
+              id: rude,
+              label: "Rude Delivery",
+              icon: sentiment_dissatisfied,
+              icon_bg: "#FFEBEE",
+              icon_color: "#C0392B",
+            }
+          - {
+              id: leaking,
+              label: "Leaking Can",
+              icon: water,
+              icon_bg: "#E8F4FD",
+              icon_color: "#0096C7",
+            }
+          - {
+              id: overcharged,
+              label: "Overcharged",
+              icon: payments,
+              icon_bg: "#E8F5E9",
+              icon_color: "#27AE60",
+            }
+          - {
+              id: other,
+              label: "Other Issue",
+              icon: edit,
+              icon_bg: "#F5F5F5",
+              icon_color: "#74777C",
+            }
+        card_style:
+          {
+            bg: "#FFFFFF",
+            radius: 12,
+            border: "#ADEBF4",
+            padding: 16,
+            align: center,
+          }
+        selected: { border: "#0077B6", border_width: 2, bg: "#E8F4FD" }
+
+      urgent_help_card:
+        bg: "#FFF3E0"
+        border_left: { width: 4, color: "#E67E22" }
+        radius_right: 12
+        padding: 12
+        margin: [0, 16]
+        elements:
+          Title:
+            {
+              text: "Need immediate help?",
+              size: 14,
+              weight: 600,
+              color: "#E65100",
+            }
+          ButtonRow:
+            ReplacementButton:
+              {
+                text: "Request Replacement",
+                style: outlined,
+                color: "#E67E22",
+                height: 40,
+              }
+            RefundButton:
+              {
+                text: "Request Refund",
+                style: outlined,
+                color: "#0077B6",
+                height: 40,
+              }
+
+      description_input:
+        bg: "#F5F9FF"
+        border: "#ADEBF4"
+        radius: 8
+        min_height: 80
+        margin: [12, 16]
+        placeholder: "Tell us more (optional)"
+
+      photo_upload:
+        dashed_border: "#ADEBF4"
+        radius: 8
+        height: 60
+        margin: [0, 16, 12]
+        icon: camera_alt
+        text: "+ Add Photos"
+
+      submit_cta:
+        text: "Submit Complaint"
+        bg: "#C0392B"
+        height: 48
+        margin: [0, 16]
+        haptic: medium
+
+# ==============================================================================
+# CUSTOMER — P1 SCREENS
+# ==============================================================================
+
+screen_order_history:
+  id: OrderHistoryScreen
+  file: src/screens/customer/OrderHistoryScreen.tsx
+  priority: P1
+  design:
+    sections:
+      filter_chips:
+        { items: [All, Active, This Week, This Month, Delivered, Cancelled] }
+      order_list:
+        each_card:
+          status_badges:
+            delivered: { bg: "#E8F5E9", text: "#27AE60" }
+            active: { bg: "#E3F2FD", text: "#0077B6", pulse: true }
+            cancelled: { bg: "#FFEBEE", text: "#C0392B" }
+          actions:
+            ReorderButton: { color: "#0077B6", pill: true }
+            RateButton: { color: "#F59E0B", condition: unrated }
+            IssueLink: { color: "#C0392B", condition: "delivered < 24h" }
+      rating_sheet:
+        auto_popup: once_after_delivery
+        rows: ["Shop Service", "Delivery Speed", "Water Quality"]
+        star_color: "#F59E0B"
+        star_size: 32
+        quick_tags: [Fast, Friendly, Good Quality, On Time, Clean Cans]
+        submit: { color: "#0077B6" }
+
+screen_wallet:
+  id: WalletScreen
+  file: src/screens/customer/WalletScreen.tsx
+  priority: P1
+  design:
+    sections:
+      hero_card:
+        gradient: ["#27AE60", "#2ECC71"]
+        radius: 16
+        margin: 16
+        padding: 20
+        elements:
+          Label:
+            {
+              text: "THANNIGO WALLET",
+              size: 11,
+              color: "rgba(255,255,255,0.7)",
+              letter_spacing: 1,
+            }
+          Balance: { size: 44, weight: 700, color: "#FFFFFF" }
+          Breakdown:
+            {
+              text: "Available balance",
+              size: 13,
+              color: "rgba(255,255,255,0.8)",
+            }
+          SavingsBadge:
+            { bg: "rgba(255,255,255,0.2)", text: "#FFFFFF", size: 12 }
+          AddMoneyButton:
+            {
+              bg: "#FFFFFF",
+              text_color: "#27AE60",
+              height: 40,
+              radius: 999,
+              right: 20,
+            }
+
+      add_money_sheet:
+        quick_amounts: [50, 100, 200, 500]
+        active_chip: "#0077B6"
+        custom_input: { border_active: "#0077B6" }
+
+      outstanding_dues:
+        condition: "dues > 0"
+        bg: "#FFEBEE"
+        border_left: { width: 4, color: "#C0392B" }
+        PayNowButton: { color: "#C0392B" }
+
+      saved_upi:
+        items: each_upi_row
+        delete_icon: true
+        add_link: { color: "#0077B6" }
+
+      transaction_history:
+        sections: [Today, This Week, Older]
+        credit_icon_color: "#27AE60"
+        debit_icon_color: "#C0392B"
+
+screen_subscriptions:
+  id: SubscriptionsScreen
+  file: src/screens/customer/SubscriptionsScreen.tsx
+  priority: P1
+  tier: Paid
+  design:
+    sections:
+      active_plan_card:
+        gradient: ["#0077B6", "#0096C7"]
+        radius: 16
+        elements:
+          ActiveBadge: { bg: "#27AE60", text: "ACTIVE" }
+          PlanName: { size: 20, weight: 700, color: "#FFFFFF" }
+          PlanDetails: { color: "rgba(255,255,255,0.85)" }
+          Actions: [Pause, Modify, Cancel]
+        paused_variant:
+          gradient: ["#E67E22", "#F39C12"]
+          badge: { bg: "#FFF3E0", text: "#E65100", label: "PAUSED" }
+
+      plan_chooser:
+        cards: [Daily, Weekly (BEST VALUE), Monthly]
+        best_value_border: { width: 2, color: "#0077B6" }
+        best_value_badge: { bg: "#48CAE4", text: "#0077B6" }
+
+      renewal_banner:
+        trigger: "7 days before expiry"
+        bg: "#FFF3E0"
+        border_left: { color: "#E67E22", width: 4 }
+
+screen_referral:
+  id: ReferralLoyaltyScreen
+  file: src/screens/customer/ReferralLoyaltyScreen.tsx
+  priority: P1
+  design:
+    sections:
+      loyalty_hero:
+        gradient: ["#F59E0B", "#F97316"]
+        radius: 16
+        elements:
+          Crown: { icon: emoji_events, size: 32, color: "#FFFFFF" }
+          Points: { size: 44, weight: 700, color: "#FFFFFF" }
+          Equivalent:
+            {
+              text: "= ₹{points_value} discount",
+              color: "rgba(255,255,255,0.85)",
+            }
+          TierProgress:
+            { track_color: "rgba(255,255,255,0.3)", fill_color: "#FFFFFF" }
+
+      referral_code_card:
+        border: { style: dashed, color: "#9C27B0", width: 2 }
+        Code:
+          {
+            font: monospace,
+            size: 20,
+            color: "#9C27B0",
+            bg: "#F3E5F5",
+            copyable: true,
+          }
+        ShareButtons: [WhatsApp, SMS, Copy Link]
+
+      coupon_input:
+        ApplyButton: { bg: "#0077B6" }
+        success_bg: "#E8F5E9"
+
+screen_profile:
+  id: ProfileScreen
+  file: src/screens/customer/ProfileScreen.tsx
+  priority: P0
+  design:
+    sections:
+      avatar_section:
+        Avatar: { size: 80, round: true, edit_overlay: true }
+        Name: { size: 22, weight: 700 }
+        Phone: { size: 14, color: "#74777C" }
+
+      menu_items:
+        - { icon: location_on, label: "Saved Addresses", route: Addresses }
+        - {
+            icon: subscriptions,
+            label: "My Subscriptions",
+            route: Subscriptions,
+          }
+        - { icon: card_giftcard, label: "Referral & Rewards", route: Referral }
+        - { icon: payment, label: "Payment History", route: PaymentHistory }
+        - { icon: notifications, label: "Notifications", route: Notifications }
+        - { icon: language, label: "Language", route: Language }
+        - { icon: help_outline, label: "Help & Support", route: Help }
+        - { icon: settings, label: "Settings", route: Settings }
+        - { icon: logout, label: "Logout", action: logout, color: "#C0392B" }
+
+# ==============================================================================
+# CUSTOMER — P2 SCREENS
+# ==============================================================================
+
+screen_smart_insights:
+  id: SmartInsightsScreen
+  file: src/screens/customer/SmartInsightsScreen.tsx
+  priority: P2
+  tier: Paid
+  note: "AI prediction — requires ML backend"
+  design:
+    sections:
+      usage_chart:
+        type: line_chart
+        x_axis: last_30_days
+        y_axis: cans_per_day
+        line_color: "#0077B6"
+        fill: "#E3F2FD"
+
+      prediction_card:
+        gradient: ["#9C27B0", "#6A1B9A"]
+        elements:
+          Sparkle: { icon: auto_awesome, color: "#FFFFFF" }
+          PredictionText:
+            {
+              text: "You'll run out in ~{n} days",
+              size: 18,
+              weight: 700,
+              color: "#FFFFFF",
+            }
+          QuickOrderButton: { bg: "#FFFFFF", text_color: "#6A1B9A", height: 40 }

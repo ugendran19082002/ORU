@@ -8,8 +8,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
-export default function EditProfileScreen() {
+function EditProfileContent() {
   const router = useRouter();
 
   // Field State
@@ -284,7 +285,7 @@ export default function EditProfileScreen() {
                   <Ionicons name="mail-unread" size={36} color="#0284c7" />
                 </View>
                 <Text style={styles.modalTitle}>Verify Email</Text>
-                <Text style={styles.modalSub}>We've sent a 4-digit secure OTP to{'\n'}<Text style={{ fontWeight: '800', color: '#0f172a' }}>{email}</Text></Text>
+                <Text style={styles.modalSub}>We sent a 4-digit secure OTP to{'\n'}<Text style={{ fontWeight: '800', color: '#0f172a' }}>{email}</Text></Text>
                 
                 <TextInput 
                   style={styles.otpInput}
@@ -367,3 +368,11 @@ const styles = StyleSheet.create({
   toggleThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: 'white', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
   toggleThumbActive: { transform: [{ translateX: 18 }] },
 });
+
+export default function EditProfileScreen() {
+  return (
+    <ErrorBoundary>
+      <EditProfileContent />
+    </ErrorBoundary>
+  );
+}

@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
+import { safeNavigate } from '@/utils/safeNavigation';
 
 const MENU_ITEMS = [
   { icon: 'location-outline' as const, label: 'Saved Addresses', subtitle: '2 saved locations', hasArrow: true },
@@ -54,7 +55,7 @@ export default function ProfileScreen() {
         </View>
         <TouchableOpacity
           style={styles.iconBtn}
-          onPress={() => router.push('/edit-profile' as any)}
+          onPress={() => safeNavigate('/edit-profile')}
           activeOpacity={0.8}
         >
           <Ionicons name="settings-outline" size={22} color="#005d90" />
@@ -80,7 +81,7 @@ export default function ProfileScreen() {
             <View style={styles.avatar}>
               <Ionicons name="person" size={36} color="#005d90" />
             </View>
-            <TouchableOpacity style={styles.editAvatarBtn} onPress={() => router.push('/edit-profile' as any)}>
+            <TouchableOpacity style={styles.editAvatarBtn} onPress={() => safeNavigate('/edit-profile')}>
               <Ionicons name="camera" size={14} color="white" />
             </TouchableOpacity>
           </View>
@@ -105,7 +106,7 @@ export default function ProfileScreen() {
         </LinearGradient>
 
         {/* EDIT PROFILE BUTTON */}
-        <TouchableOpacity style={styles.editProfileBtn} onPress={() => router.push('/edit-profile' as any)}>
+        <TouchableOpacity style={styles.editProfileBtn} onPress={() => safeNavigate('/edit-profile')}>
           <Ionicons name="pencil-outline" size={16} color="#005d90" />
           <Text style={styles.editProfileText}>Edit Profile</Text>
         </TouchableOpacity>
@@ -132,9 +133,9 @@ export default function ProfileScreen() {
                 activeOpacity={0.7}
                 onPress={() => {
                   if (item.label === 'Saved Addresses') {
-                    router.push('/addresses' as any);
+                    safeNavigate('/addresses');
                   } else if (item.label === 'Order History') {
-                    router.push('/(tabs)/orders' as any);
+                    safeNavigate('/(tabs)/orders');
                   } else if (item.label === 'Payment Methods') {
                     Alert.alert('Coming Soon', 'Payment methods management is coming in the next update!');
                   } else if (item.label === 'My Reviews') {

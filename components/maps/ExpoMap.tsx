@@ -155,6 +155,7 @@ export const ExpoMap = forwardRef<any, ExpoMapProps>((props, ref) => {
     </NativeMapView>
   );
 });
+ExpoMap.displayName = 'ExpoMap';
 
 // ─── ExpoMarker ───────────────────────────────────────────────────────────────
 /**

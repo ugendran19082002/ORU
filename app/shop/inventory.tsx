@@ -101,7 +101,7 @@ export default function ShopInventoryScreen() {
           {activeShopItems.length === 0 ? (
             <View style={styles.emptyCard}>
               <Ionicons name="layers-outline" size={32} color="#bfc7d1" />
-              <Text style={styles.emptyText}>No products added yet. Click 'Add Product' to pull from Master list.</Text>
+              <Text style={styles.emptyText}>No products added yet. Tap Add Product to pull from the master list.</Text>
             </View>
           ) : (
             activeShopItems.map((cat) => {

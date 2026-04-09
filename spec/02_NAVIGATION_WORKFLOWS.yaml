@@ -1,0 +1,468 @@
+# ==============================================================================
+# THANNIGO - NAVIGATION & WORKFLOWS SPECIFICATION
+# ==============================================================================
+
+# ==============================================================================
+# APP NAVIGATION STRUCTURE
+# ==============================================================================
+
+navigation:
+  root:
+    initial_route: "Auth"
+    structure:
+      - AuthStack:
+          screens:
+            - Splash
+            - Onboarding
+            - PhoneLogin
+            - OTP
+            - RoleSelection
+      
+      - CustomerStack:
+          tabs:
+            - Home:
+                stack:
+                  - CustomerHome
+                  - ShopDetail
+                  - Cart
+                  - Checkout
+            - Orders:
+                stack:
+                  - OrderHistory
+                  - OrderDetail
+                  - OrderTracking
+            - Notifications
+            - Profile:
+                stack:
+                  - ProfileScreen
+                  - Addresses
+                  - UPIList
+                  - Settings
+      
+      - ShopStack:
+          tabs:
+            - Dashboard:
+                stack:
+                  - ShopDashboard
+                  - OrderDetail
+                  - CustomerProfile
+            - Inventory:
+                stack:
+                  - InventoryList
+                  - AddProduct
+                  - EditProduct
+            - Earnings:
+                stack:
+                  - EarningsDashboard
+                  - PayoutHistory
+            - Profile:
+                stack:
+                  - ShopProfile
+                  - Settings
+      
+      - DeliveryStack:
+          tabs:
+            - AssignedOrders
+            - DeliveryNavigation
+            - Earnings
+            - Profile
+
+# ==============================================================================
+# USER WORKFLOWS
+# ==============================================================================
+
+workflows:
+  customer_order_flow:
+    steps:
+      1_browse:
+        screen: CustomerHome
+        actions:
+          - "View nearby shops with auto-location"
+          - "Filter by distance, rating, price"
+          - "Search for specific products"
+      
+      2_select_shop:
+        screen: ShopDetail
+        actions:
+          - "View shop profile and products"
+          - "Read reviews and ratings"
+          - "Add products to cart"
+      
+      3_review_cart:
+        screen: Cart
+        actions:
+          - "Review items and quantities"
+          - "Apply promo code"
+          - "Update delivery address"
+      
+      4_checkout:
+        screen: Checkout
+        actions:
+          - "Select delivery time (ASAP/Schedule)"
+          - "Choose payment method (UPI/COD)"
+          - "Add delivery instructions"
+          - "Place order"
+      
+      5_track:
+        screen: OrderTracking
+        actions:
+          - "Real-time status updates"
+          - "Live delivery tracking on map"
+          - "Contact shop/delivery person"
+      
+      6_complete:
+        screen: OrderComplete
+        actions:
+          - "Verify OTP"
+          - "Rate shop and delivery"
+          - "View invoice"
+
+  shop_order_management:
+    steps:
+      1_receive:
+        screen: ShopDashboard
+        trigger: "New order notification (push + sound)"
+        actions:
+          - "View order details"
+          - "Check customer info and address"
+          - "Accept or reject (with reason)"
+      
+      2_prepare:
+        screen: OrderDetail
+        actions:
+          - "Mark items as prepared"
+          - "Update preparation status"
+          - "Notify customer of progress"
+      
+      3_dispatch:
+        actions:
+          - "Assign to delivery person (auto/manual)"
+          - "Mark ready for pickup"
+          - "Generate delivery OTP"
+      
+      4_track:
+        actions:
+          - "Monitor delivery progress"
+          - "Handle customer queries"
+          - "Update delivery status"
+      
+      5_complete:
+        actions:
+          - "Confirm delivery completion"
+          - "Collect COD payment from delivery person"
+          - "View earnings summary"
+
+  delivery_workflow:
+    steps:
+      1_assignment:
+        screen: AssignedOrders
+        trigger: "New delivery assigned notification"
+        actions:
+          - "View assigned deliveries"
+          - "Check pickup location and drop address"
+          - "Accept assignment"
+      
+      2_pickup:
+        screen: DeliveryNavigation
+        actions:
+          - "Navigate to shop"
+          - "Collect order from shop"
+          - "Verify order items"
+      
+      3_navigate:
+        screen: DeliveryNavigation
+        actions:
+          - "Real-time navigation to customer"
+          - "Update status (on the way)"
+          - "Contact customer if needed"
+      
+      4_deliver:
+        screen: OTPConfirmation
+        actions:
+          - "Arrive at location"
+          - "Collect OTP from customer"
+          - "Verify OTP in app"
+          - "Collect COD payment (if applicable)"
+          - "Upload delivery proof photo (high-value orders)"
+      
+      5_complete:
+        screen: DeliverySuccess
+        actions:
+          - "View earnings for delivery"
+          - "Return to assigned orders"
+
+# ==============================================================================
+# STATE TRANSITIONS
+# ==============================================================================
+
+order_state_machine:
+  states:
+    - PENDING:
+        description: "Order placed, waiting for shop acceptance"
+        next_states: [ACCEPTED, REJECTED]
+        timeout: "5 minutes → auto-reject if no action"
+    
+    - ACCEPTED:
+        description: "Shop accepted, preparing order"
+        next_states: [PREPARING, CANCELLED]
+    
+    - PREPARING:
+        description: "Order being prepared"
+        next_states: [READY, CANCELLED]
+    
+    - READY:
+        description: "Ready for pickup"
+        next_states: [ASSIGNED, CANCELLED]
+    
+    - ASSIGNED:
+        description: "Assigned to delivery person"
+        next_states: [PICKED_UP, CANCELLED]
+    
+    - PICKED_UP:
+        description: "Delivery person picked up order"
+        next_states: [OUT_FOR_DELIVERY]
+    
+    - OUT_FOR_DELIVERY:
+        description: "On the way to customer"
+        next_states: [ARRIVED, FAILED]
+    
+    - ARRIVED:
+        description: "Delivery person at customer location"
+        next_states: [DELIVERED, FAILED]
+    
+    - DELIVERED:
+        description: "Successfully delivered"
+        terminal: true
+    
+    - CANCELLED:
+        description: "Order cancelled"
+        terminal: true
+        reasons: ["customer", "shop", "unavailable", "payment_failed"]
+    
+    - FAILED:
+        description: "Delivery failed"
+        terminal: true
+        reasons: ["customer_unavailable", "wrong_address", "customer_refused"]
+
+# ==============================================================================
+# NOTIFICATION TRIGGERS
+# ==============================================================================
+
+notification_triggers:
+  customer:
+    - event: "order_accepted"
+      title: "Order Accepted!"
+      body: "{shop_name} is preparing your order"
+      action: "Track Order"
+    
+    - event: "out_for_delivery"
+      title: "On the way!"
+      body: "{delivery_person} is heading to your location"
+      action: "Track Live"
+    
+    - event: "delivery_nearby"
+      title: "Almost there!"
+      body: "Your delivery is 2 mins away"
+      sound: true
+      vibration: true
+    
+    - event: "delivered"
+      title: "Delivered!"
+      body: "Order #{order_id} delivered successfully"
+      action: "Rate Experience"
+  
+  shop:
+    - event: "new_order"
+      title: "New Order!"
+      body: "Order #{order_id} • ₹{amount}"
+      priority: "high"
+      sound: true
+      vibration: true
+      action: "Accept Order"
+    
+    - event: "low_stock"
+      title: "Low Stock Alert"
+      body: "{product_name} has only {quantity} units left"
+      action: "Update Inventory"
+    
+    - event: "negative_review"
+      title: "New Review"
+      body: "{rating}★ review from {customer_name}"
+      action: "View & Respond"
+  
+  delivery:
+    - event: "new_assignment"
+      title: "New Delivery"
+      body: "₹{amount} • {distance} km away"
+      action: "View Details"
+    
+    - event: "pickup_ready"
+      title: "Ready for Pickup"
+      body: "Order #{order_id} ready at {shop_name}"
+      action: "Navigate"
+
+# ==============================================================================
+# DEEP LINKING STRUCTURE
+# ==============================================================================
+
+deep_links:
+  scheme: "thannigo://"
+  
+  routes:
+    customer:
+      - "thannigo://shop/{shop_id}"
+      - "thannigo://order/{order_id}"
+      - "thannigo://track/{order_id}"
+      - "thannigo://product/{product_id}"
+    
+    shop:
+      - "thannigo://shop/order/{order_id}"
+      - "thannigo://shop/inventory"
+      - "thannigo://shop/earnings"
+    
+    delivery:
+      - "thannigo://delivery/order/{order_id}"
+      - "thannigo://delivery/navigate/{order_id}"
+
+# ==============================================================================
+# PERMISSION REQUIREMENTS
+# ==============================================================================
+
+permissions:
+  customer:
+    location:
+      type: "foreground"
+      purpose: "Find nearby shops and track deliveries"
+      required: true
+    
+    notifications:
+      purpose: "Order updates and delivery alerts"
+      required: false
+  
+  shop:
+    location:
+      type: "foreground"
+      purpose: "Show your shop location to customers"
+      required: true
+    
+    camera:
+      purpose: "Add product photos"
+      required: false
+    
+    notifications:
+      purpose: "Receive new order alerts"
+      required: true
+  
+  delivery:
+    location:
+      type: "background"
+      purpose: "Real-time delivery tracking"
+      required: true
+    
+    camera:
+      purpose: "Upload delivery proof photos"
+      required: true
+    
+    notifications:
+      purpose: "Receive delivery assignments"
+      required: true
+
+# ==============================================================================
+# ERROR HANDLING PATTERNS
+# ==============================================================================
+
+error_handling:
+  network_errors:
+    no_internet:
+      message: "No internet connection"
+      action: "Show cached data + 'Retry' button"
+      icon: "wifi_off"
+    
+    timeout:
+      message: "Request timed out"
+      action: "Auto-retry 3 times with exponential backoff"
+    
+    server_error:
+      message: "Something went wrong. Please try again."
+      action: "Log error + show generic message"
+  
+  validation_errors:
+    pattern: "Show inline error below input field"
+    color: "#C0392B"
+    examples:
+      - "Please enter a valid phone number"
+      - "OTP must be 4 digits"
+      - "Please select a delivery address"
+  
+  business_logic_errors:
+    shop_closed:
+      message: "This shop is currently closed"
+      action: "Show alternative shops or schedule for later"
+    
+    out_of_stock:
+      message: "This item is out of stock"
+      action: "Remove from cart or suggest alternative"
+    
+    payment_failed:
+      message: "Payment failed. Please try again."
+      action: "Retry payment or switch to COD"
+
+# ==============================================================================
+# ANALYTICS EVENTS
+# ==============================================================================
+
+analytics_events:
+  user_acquisition:
+    - app_installed
+    - onboarding_started
+    - onboarding_completed
+    - role_selected
+    - first_login
+  
+  customer:
+    - shop_viewed
+    - product_added_to_cart
+    - cart_abandoned
+    - order_placed
+    - order_cancelled
+    - order_rated
+    - promo_code_applied
+  
+  shop:
+    - order_accepted
+    - order_rejected
+    - inventory_updated
+    - payout_requested
+  
+  delivery:
+    - assignment_accepted
+    - delivery_started
+    - delivery_completed
+    - delivery_failed
+
+# ==============================================================================
+# OFFLINE SUPPORT STRATEGY
+# ==============================================================================
+
+offline_support:
+  cached_data:
+    - "User profile"
+    - "Recent orders (last 30 days)"
+    - "Favorite shops"
+    - "Cart contents"
+  
+  queued_actions:
+    - "Order placement (retry when online)"
+    - "Inventory updates (shop owner)"
+    - "Status updates (delivery person)"
+  
+  ui_indicators:
+    offline_banner:
+      position: "top"
+      background: "#F59E0B"
+      text: "You're offline. Changes will sync when connected."
+    
+    sync_indicator:
+      text: "Syncing..."
+      icon: "refresh"
+      animation: "rotate"

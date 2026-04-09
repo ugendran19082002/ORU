@@ -14,10 +14,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAppState } from '@/hooks/use-app-state';
 
 const ROLE_COLORS: Record<string, { start: string; end: string }> = {
   customer: { start: "#005d90", end: "#0077b6" },
   shop: { start: "#006878", end: "#008e9b" },
+  delivery: { start: "#0f766e", end: "#14b8a6" },
   admin: { start: "#23616b", end: "#2d828f" },
 };
 
@@ -25,6 +27,7 @@ const OTP_LENGTH = 6;
 
 export default function OTPScreen() {
   const router = useRouter();
+  const { loginAs } = useAppState();
   
   // 🔥 FIREBASE MOCKS: Temporarily suppress TS Errors before AuthContext is built
   const auth = () => ({ signInWithPhoneNumber: async (p: string) => ({}) });
@@ -101,9 +104,12 @@ export default function OTPScreen() {
 
       setTimeout(() => {
         // Navigate based on role
-        if (role === "shop") router.replace("/shop" as any);
-        else if (role === "admin") router.replace("/admin" as any);
-        else router.replace("/(tabs)" as any);
+        loginAs(role as any).finally(() => {
+          if (role === "shop") router.replace("/shop" as any);
+          else if (role === "delivery") router.replace("/delivery" as any);
+          else if (role === "admin") router.replace("/admin" as any);
+          else router.replace("/(tabs)" as any);
+        });
       }, 1200);
     }
   };
@@ -206,7 +212,7 @@ export default function OTPScreen() {
 
         {/* RESEND */}
         <View style={styles.resendRow}>
-          <Text style={styles.resendLabel}>Didn't receive the code?</Text>
+          <Text style={styles.resendLabel}>Did not receive the code?</Text>
           {resendTimer > 0 ? (
             <Text style={styles.resendTimer}>Resend in {resendTimer}s</Text>
           ) : (

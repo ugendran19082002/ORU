@@ -1,0 +1,814 @@
+# ==============================================================================
+# 04.screens-shop.openspec.yaml
+# THANNIGO — All Shop App Screens (P0 + P1 + P2)
+# ==============================================================================
+
+screen_shop_dashboard:
+  id: ShopDashboardScreen
+  file: src/screens/shop/ShopDashboardScreen.tsx
+  priority: P0
+  tab: Dashboard
+  design:
+    background: "#F5F9FF"
+    sections:
+      header:
+        gradient: ["#6A1B9A", "#9C27B0"]
+        height: 72
+        padding: [0, 16]
+        elements:
+          ShopAvatar:
+            { size: 36, round: true, bg: "#FFFFFF", initials_color: "#6A1B9A" }
+          ShopName: { size: 16, weight: 700, color: "#FFFFFF" }
+          Subtitle:
+            { text: "Shop Owner", size: 12, color: "rgba(255,255,255,0.75)" }
+          Actions:
+            NotificationBell: { color: "#FFFFFF", badge: true }
+            SettingsIcon: { color: "#FFFFFF" }
+
+      # CRITICAL — Accept Orders + Busy Mode
+      accept_orders_banner:
+        state_ON:
+          bg: "#E8F5E9"
+          border: "1px solid #27AE60"
+          radius: 12
+          margin: [12, 16]
+          padding: [12, 16]
+          elements:
+            Toggle: { size: 52, on_color: "#27AE60" }
+            StatusText:
+              {
+                text: "Accepting Orders",
+                size: 14,
+                weight: 600,
+                color: "#27AE60",
+              }
+            CapacityBadge:
+              {
+                text: "Capacity: {n}/hr",
+                bg: "#E3F2FD",
+                color: "#0077B6",
+                editable: true,
+              }
+            BusyModeChip:
+              {
+                text: "Normal",
+                bg: "#E8F5E9",
+                color: "#27AE60",
+                outlined: true,
+              }
+        state_OFF:
+          bg: "#FFEBEE"
+          border: "1px solid #C0392B"
+          elements:
+            Toggle: { size: 52, off_color: "#C0392B" }
+            StatusText: { text: "Paused — Not Accepting", color: "#C0392B" }
+        state_BUSY:
+          bg: "#FFF3E0"
+          border: "1px solid #E67E22"
+          elements:
+            BusyModeChip:
+              { text: "BUSY", bg: "#E67E22", color: "#FFFFFF", filled: true }
+        priority: CRITICAL
+
+      metric_cards:
+        type: horizontal_scroll
+        show_scrollbar: false
+        padding_horizontal: 16
+        gap: 12
+        each_card:
+          width: 150
+          bg: "#FFFFFF"
+          radius: 12
+          shadow: card
+          padding: 14
+        cards:
+          orders_today:
+            {
+              label: "Orders Today",
+              value_color: "#6A1B9A",
+              value_size: 30,
+              sub: "{n} pending",
+            }
+          earnings:
+            {
+              label: "Today Earnings",
+              value_color: "#27AE60",
+              value_size: 26,
+              sub: "Cash + UPI",
+            }
+          full_cans:
+            {
+              label: "Full Cans",
+              value_color: "#0077B6",
+              alert_color: "#C0392B",
+              alert_condition: "< min_threshold",
+            }
+          empty_cans: { label: "Empty Cans", value_color: "#74777C" }
+
+      low_stock_banner:
+        condition: "full_cans < min_threshold"
+        bg: "#FFF3E0"
+        border_left: { width: 4, color: "#E67E22" }
+        padding: 12
+        margin: [0, 16, 8]
+        elements:
+          WarningIcon: { color: "#E67E22" }
+          Text:
+            {
+              text: "Only {n} cans left! Restock now",
+              color: "#E65100",
+              weight: 600,
+              size: 13,
+            }
+          RestockLink: { text: "Add Stock →", color: "#0077B6" }
+        priority: CRITICAL
+
+      order_tabs:
+        sticky: true
+        bg: "#FFFFFF"
+        border_bottom: "1px solid #E8ECEF"
+        height: 48
+        tabs:
+          - { id: new, label: "New", badge: true, badge_bg: "#C0392B" }
+          - {
+              id: preparing,
+              label: "Preparing",
+              badge: true,
+              badge_bg: "#E67E22",
+            }
+          - { id: out, label: "Out", badge: true, badge_bg: "#0077B6" }
+          - { id: delivered, label: "Delivered" }
+        active_style:
+          color: "#6A1B9A"
+          border_bottom: { width: 2, color: "#6A1B9A" }
+
+      order_cards:
+        type: FlatList
+        pull_to_refresh: true
+        padding: [8, 16]
+        each_card:
+          bg: "#FFFFFF"
+          radius: 12
+          shadow: card
+          margin_bottom: 10
+          padding: 12
+          elements:
+            TopRow:
+              OrderID: { font: monospace, size: 11, color: "#74777C" }
+              TimeAgo: { size: 11, color: "#74777C" }
+              PriorityTag:
+                {
+                  condition: "customer.tag === VIP",
+                  bg: "#FFF8E1",
+                  text: "#F59E0B",
+                  size: 10,
+                }
+            CustomerRow:
+              Avatar:
+                {
+                  size: 40,
+                  round: true,
+                  bg: "#E8F4FD",
+                  initials_color: "#0077B6",
+                }
+              Name: { size: 15, weight: 600 }
+              Items: { text: "{qty}x {product}", size: 13, color: "#74777C" }
+            AddressRow:
+              PinIcon: { color: "#0077B6", size: 14 }
+              Address: { size: 13, color: "#74777C" }
+              Distance: { color: "#0077B6", weight: 600 }
+            PaymentRow:
+              Amount: { text: "₹{total}", weight: 600 }
+              Method: { text: COD | UPI }
+              PaidBadge: { condition: upi_paid, bg: "#E8F5E9", text: "#27AE60" }
+            CountdownTimer:
+              condition: "tab === new && age > 3min"
+              text: "Respond in {mm:ss}"
+              color: "#C0392B"
+              weight: 700
+              animated: true
+              priority: CRITICAL
+            ActionRow:
+              new_tab:
+                RejectButton:
+                  {
+                    text: "Reject",
+                    style: outlined,
+                    color: "#C0392B",
+                    flex: 1,
+                    height: 44,
+                  }
+                AcceptButton:
+                  {
+                    text: "Accept",
+                    style: filled,
+                    bg: "#27AE60",
+                    flex: 1.5,
+                    height: 44,
+                  }
+              preparing_tab:
+                OutButton:
+                  {
+                    text: "Mark Out for Delivery",
+                    bg: "#0077B6",
+                    full_width: true,
+                    height: 44,
+                  }
+              out_tab:
+                DeliveredButton:
+                  {
+                    text: "Mark Delivered",
+                    bg: "#27AE60",
+                    full_width: true,
+                    height: 44,
+                  }
+
+screen_shop_order_detail:
+  id: ShopOrderDetailScreen
+  file: src/screens/shop/ShopOrderDetailScreen.tsx
+  priority: P0
+  design:
+    background: "#F5F9FF"
+    sections:
+      header:
+        title: "Order #{id}"
+        status_badge:
+          new: { bg: "#FFEBEE", text: "#C0392B", label: "NEW ORDER" }
+          accepted: { bg: "#E3F2FD", text: "#0077B6", label: "ACCEPTED" }
+          preparing: { bg: "#FFF3E0", text: "#E67E22", label: "PREPARING" }
+          out: { bg: "#E3F2FD", text: "#0077B6", label: "OUT FOR DELIVERY" }
+          delivered: { bg: "#E8F5E9", text: "#27AE60", label: "DELIVERED" }
+
+      # CRITICAL — Auto-countdown
+      countdown_banner:
+        condition: "status === new && age > 3min"
+        bg: "#FFEBEE"
+        border_left: { width: 4, color: "#C0392B" }
+        elements:
+          Lightning: { icon: bolt, color: "#C0392B" }
+          Text:
+            {
+              text: "Respond in {mm:ss} or order auto-cancels",
+              color: "#C0392B",
+              weight: 700,
+              size: 13,
+            }
+          animated: true
+        priority: CRITICAL
+
+      customer_card:
+        bg: "#FFFFFF"
+        radius: 12
+        shadow: card
+        margin: [0, 16, 12]
+        padding: 14
+        elements:
+          Avatar: { size: 48, round: true }
+          Name: { size: 16, weight: 600 }
+          Phone: { size: 13, color: "#74777C" }
+          Actions:
+            CallButton:
+              {
+                icon: phone,
+                size: 40,
+                round: true,
+                border_color: "#27AE60",
+                icon_color: "#27AE60",
+              }
+            WhatsAppButton:
+              {
+                icon: whatsapp,
+                size: 40,
+                round: true,
+                border_color: "#25D366",
+                icon_color: "#25D366",
+              }
+
+      order_items_card:
+        bg: "#FFFFFF"
+        radius: 12
+        margin: [0, 16, 12]
+        padding: 14
+        elements:
+          each_item:
+            Icon: { size: 32 }
+            ItemName: { size: 15, weight: 600 }
+            Qty: { text: "x {n}", size: 13, color: "#74777C" }
+            Price: { size: 15, weight: 600, right_align: true }
+          DeliveryNote:
+            condition: note_exists
+            icon: notes
+            text: { italic: true, color: "#74777C" }
+          PaymentSummary:
+            border_top: "1px solid #E8ECEF"
+            Total: { weight: 700, color: "#0077B6" }
+            PaymentBadge:
+              COD:
+                { bg: "#FFF3E0", text: "#E65100", label: "COD — NOT YET PAID" }
+              UPI_Paid: { bg: "#E8F5E9", text: "#27AE60", label: "UPI — PAID" }
+
+      address_card:
+        bg: "#FFFFFF"
+        radius: 12
+        margin: [0, 16, 12]
+        elements:
+          PinIcon: { color: "#0077B6" }
+          FullAddress: { size: 14 }
+          Distance: { color: "#0077B6", weight: 600 }
+          NavigateButton:
+            {
+              text: "Navigate in Maps",
+              style: outlined,
+              color: "#0077B6",
+              height: 40,
+              radius: 8,
+            }
+
+      action_buttons:
+        sticky_bottom: true
+        bg: "#FFFFFF"
+        border_top: "1px solid #E8ECEF"
+        padding: 16
+        variants:
+          status_new:
+            - RejectButton:
+                { style: outlined, color: "#C0392B", flex: 1, height: 48 }
+            - AcceptButton:
+                { style: filled, bg: "#27AE60", flex: 1.5, height: 48 }
+          status_accepted:
+            - MarkPreparingButton:
+                { bg: "#E67E22", full_width: true, height: 48 }
+          status_preparing:
+            - MarkOutButton: { bg: "#0077B6", full_width: true, height: 48 }
+          status_out:
+            - MarkDeliveredButton:
+                { bg: "#27AE60", full_width: true, height: 48 }
+            - ProofPhotoRequired: { condition: "COD > 500", warning: true }
+
+      # Modals
+      eta_picker_sheet:
+        trigger: accept_button
+        type: bottom_sheet
+        title: "Set Delivery Time"
+        options: ["15 min", "20 min", "30 min", "45 min", "Custom"]
+        active: { bg: "#6A1B9A", text: "#FFFFFF" }
+        confirm: { text: "Confirm & Accept", bg: "#27AE60" }
+        mandatory: true
+
+      reject_reason_sheet:
+        trigger: reject_button
+        type: bottom_sheet
+        title: "Why are you rejecting?"
+        options:
+          - "Out of Stock"
+          - "Area not serviceable"
+          - "Too busy right now"
+          - "Customer unreachable"
+          - "Other"
+        mandatory: true
+        priority: CRITICAL
+        confirm: { text: "Confirm Reject", bg: "#C0392B" }
+
+      failed_delivery_sheet:
+        trigger: mark_delivered_failed
+        type: bottom_sheet
+        title: "Why couldn't you deliver?"
+        options:
+          - "Customer not home"
+          - "Wrong address"
+          - "Customer cancelled at door"
+          - "Access denied"
+          - "Phone not reachable"
+        mandatory: true
+        priority: CRITICAL
+
+screen_inventory:
+  id: InventoryScreen
+  file: src/screens/shop/InventoryScreen.tsx
+  priority: P0
+  tab: Stock
+  design:
+    background: "#F5F9FF"
+    sections:
+      header:
+        title: "Inventory"
+        subtitle: { text: "Last synced {time}", color: "#74777C", size: 12 }
+
+      product_tabs: ["20L", "10L", "5L", "All"]
+
+      stock_overview_grid:
+        type: grid
+        columns: 2
+        gap: 12
+        padding: 16
+
+        full_cans_card:
+          bg: "#E8F5E9"
+          border: "1px solid #27AE60"
+          radius: 16
+          padding: 16
+          elements:
+            Label:
+              {
+                text: "FULL CANS READY",
+                size: 11,
+                color: "#27AE60",
+                weight: 700,
+                letter_spacing: 0.5,
+              }
+            Count: { size: 56, weight: 700, color: "#27AE60", center: true }
+            MinLabel: { text: "Min: {min} cans", size: 12, color: "#74777C" }
+            Buttons:
+              RemoveButton:
+                {
+                  text: "- Remove",
+                  style: outlined,
+                  color: "#27AE60",
+                  height: 36,
+                }
+              AddButton:
+                {
+                  text: "+ Add Stock",
+                  style: filled,
+                  bg: "#27AE60",
+                  height: 36,
+                }
+          low_variant:
+            bg: "#FFEBEE"
+            border: "1px solid #C0392B"
+            Count_color: "#C0392B"
+          priority: CRITICAL
+
+        empty_cans_card:
+          bg: "#E3F2FD"
+          border: "1px solid #0077B6"
+          radius: 16
+          padding: 16
+          elements:
+            Label:
+              {
+                text: "EMPTY CANS COLLECTED",
+                size: 11,
+                color: "#0077B6",
+                weight: 700,
+              }
+            Count: { size: 56, weight: 700, color: "#0077B6" }
+            ReturnButton:
+              {
+                text: "+ Record Return",
+                style: outlined,
+                color: "#0077B6",
+                full_width: true,
+                height: 36,
+              }
+          priority: CRITICAL
+
+      low_stock_banner:
+        condition: "full_cans < min"
+        bg: "#FFF3E0"
+        border_left: { width: 4, color: "#E67E22" }
+        text: "Stock below minimum! Order from supplier now"
+        priority: CRITICAL
+
+      add_stock_sheet:
+        type: bottom_sheet
+        title: "Add Incoming Stock"
+        elements:
+          SupplierInput: { placeholder: "Supplier name (optional)" }
+          QuantityInput:
+            { size: large, keyboard: numeric, border_active: "#6A1B9A" }
+          ProductTypeChips: ["20L", "10L", "5L"]
+          ConfirmButton:
+            {
+              text: "Confirm Add Stock",
+              bg: "#27AE60",
+              full_width: true,
+              height: 48,
+            }
+
+      stock_transactions:
+        section_title: "Today's Stock Movement"
+        header_row:
+          {
+            bg: "#6A1B9A",
+            text: "#FFFFFF",
+            columns: [Time, Action, Qty, Balance],
+          }
+        rows:
+          alt_bg: "#F3E5F5"
+          added_qty_color: "#27AE60"
+          dispatched_qty_color: "#C0392B"
+          returned_qty_color: "#0077B6"
+
+      min_stock_setting:
+        bg: "#FFFFFF"
+        radius: 12
+        padding: 14
+        label: "Alert when stock drops below:"
+        input: { type: number, border_active: "#6A1B9A" }
+        unit: "cans"
+        save_button: { style: outlined, color: "#6A1B9A", size: sm }
+
+screen_earnings_eod:
+  id: EarningsScreen
+  file: src/screens/shop/EarningsScreen.tsx
+  priority: P0
+  tab: Earnings
+  design:
+    sections:
+      total_hero_card:
+        gradient: ["#6A1B9A", "#9C27B0"]
+        radius: 16
+        margin: 16
+        padding: 20
+        elements:
+          Label:
+            {
+              text: "TOTAL EARNED TODAY",
+              size: 11,
+              color: "rgba(255,255,255,0.7)",
+              letter_spacing: 1,
+            }
+          Amount: { size: 44, weight: 700, color: "#FFFFFF" }
+          OrderCount:
+            {
+              text: "{n} orders completed",
+              size: 13,
+              color: "rgba(255,255,255,0.75)",
+            }
+          BreakdownRow:
+            Cash: { text: "Cash ₹{cash}", color: "#FFFFFF", size: 14 }
+            UPI: { text: "UPI ₹{upi}", color: "#FFFFFF", size: 14 }
+
+      cash_upi_doughnut:
+        type: SVGDoughnut
+        diameter: 200
+        segments:
+          cash: { color: "#27AE60", label: "Cash" }
+          upi: { color: "#0077B6", label: "UPI" }
+        center_label: { text: "₹{total}", size: 18, weight: 700 }
+        legend_below: true
+
+      pending_dues_card:
+        condition: "pending > 0"
+        bg: "#FFF3E0"
+        border_left: { width: 4, color: "#E67E22" }
+        elements:
+          Text:
+            {
+              text: "{n} orders unpaid — ₹{amount} pending",
+              color: "#E65100",
+              weight: 600,
+            }
+          CollectButton:
+            { text: "Collect Now", bg: "#E67E22", color: "#FFFFFF", pill: true }
+
+      payment_log:
+        filter_chips: [All, Cash, UPI, Pending]
+        header_row: { bg: "#6A1B9A", text: "#FFFFFF" }
+        columns: [Order, Customer, Amount, Method, Status]
+        paid_badge: { bg: "#E8F5E9", text: "#27AE60" }
+        pending_badge: { bg: "#FFF3E0", text: "#E67E22" }
+        tap_to_collect: true
+
+      eod_button:
+        text: "End Day & Reconcile"
+        bg: "#6A1B9A"
+        color: "#FFFFFF"
+        height: 52
+        sticky_bottom: true
+        haptic: heavy
+        priority: CRITICAL
+
+      eod_modal:
+        type: center_overlay
+        bg: "#FFFFFF"
+        radius: 20
+        padding: 24
+        title: { text: "End of Day — {date}", size: 18, weight: 700 }
+        summary_rows:
+          - { label: "Total Orders", value: "{n}" }
+          - { label: "Cash Expected", value: "₹{cash}" }
+          - { label: "UPI Received", value: "₹{upi}" }
+          - { separator: true }
+          - { label: "TOTAL", value: "₹{total}", weight: 700, color: "#0077B6" }
+        cash_input:
+          label: "Enter actual cash counted:"
+          border_active: "#6A1B9A"
+          keyboard: numeric
+        difference:
+          match: { text: "✓ Matched!", color: "#27AE60" }
+          mismatch: { text: "₹{diff} difference", color: "#C0392B" }
+        buttons:
+          ConfirmButton: { text: "Confirm & Close Day", bg: "#27AE60", flex: 1 }
+          SaveDraftButton: { text: "Save Draft", style: outlined, flex: 1 }
+        priority: CRITICAL
+
+screen_customer_list:
+  id: CustomerListScreen
+  file: src/screens/shop/CustomerListScreen.tsx
+  priority: P0
+  tab: Customers
+  design:
+    sections:
+      search_bar: { bg: "#F3E5F5", focus_border: "#6A1B9A", radius: 24 }
+      filter_chips:
+        items: [All, VIP, Regular, New, Lost, Has Dues]
+        active: { bg: "#6A1B9A", text: "#FFFFFF" }
+      customer_cards:
+        each:
+          tag_badges:
+            VIP: { bg: "#FFF8E1", text: "#F59E0B", weight: 700 }
+            Regular: { bg: "#E3F2FD", text: "#1565C0" }
+            New: { bg: "#E8F5E9", text: "#27AE60" }
+            Lost: { bg: "#F5F5F5", text: "#74777C" }
+          verified_checkmark: { color: "#0077B6" }
+          deposit_badge: { color: "#C0392B", condition: "deposit_owed > 0" }
+          actions: [Call 40px green, WhatsApp 40px teal]
+
+screen_customer_profile:
+  id: CustomerProfileScreen
+  file: src/screens/shop/CustomerProfileScreen.tsx
+  priority: P1
+  design:
+    sections:
+      header:
+        Avatar: { size: 72, round: true }
+        Name: { size: 20, weight: 700 }
+        Tag: badge_by_type
+        Phone: { size: 14, color: "#74777C" }
+        Actions: [Call, WhatsApp]
+
+      stats_row: [Total Orders, Total Spent, Avg Order Value]
+
+      notes_section:
+        editable: true
+        pencil_icon: true
+        bg: "#F5F9FF"
+        border: "#ADEBF4"
+
+      deposit_section:
+        label: "Can Deposits"
+        amount: "₹{deposit} held — {n} cans"
+        refund_button: { color: "#0077B6" }
+
+      order_history_mini:
+        last_5_orders: true
+        compact: true
+
+      danger_zone:
+        BlacklistButton: { color: "#C0392B", style: outlined }
+
+screen_analytics:
+  id: AnalyticsScreen
+  file: src/screens/shop/AnalyticsScreen.tsx
+  priority: P1
+  tier: Paid
+  design:
+    sections:
+      period_toggle: ["Week", "Month", "Year"]
+
+      metric_grid:
+        type: 2x2_grid
+        cards:
+          - { label: Revenue, color: "#27AE60", change: true }
+          - { label: Orders, color: "#0077B6", change: true }
+          - { label: New Customers, color: "#F59E0B" }
+          - { label: Avg Order Value, color: "#6A1B9A" }
+
+      revenue_bar_chart:
+        type: SVGBarChart
+        this_period_color: "#0077B6"
+        last_period_color: "#ADEBF4"
+        tooltip: true
+        x_auto_skip: false
+
+      peak_hours_chart:
+        type: horizontal_bars
+        time_range: "6AM to 10PM"
+        high_intensity: "#0077B6"
+        low_intensity: "#E3F2FD"
+        label_peak: true
+
+      payment_doughnut:
+        cash: "#27AE60"
+        upi: "#0077B6"
+        legend: inline
+
+      customer_doughnut:
+        returning: "#6A1B9A"
+        new_customer: "#F59E0B"
+
+      top_customers_table:
+        rank_1_bg: "#FFF8E1"
+        alt_rows: "#F3E5F5"
+        columns: [Rank, Name, Orders, Revenue, Tag]
+
+screen_promotions:
+  id: PromotionsScreen
+  file: src/screens/shop/PromotionsScreen.tsx
+  priority: P1
+  tier: Paid
+  design:
+    sections:
+      create_cta: { position: header_right, text: "+ Create", color: "#6A1B9A" }
+
+      coupon_cards:
+        each:
+          border_left: { width: 4, color: "#6A1B9A" }
+          Code: { font: monospace, size: 18, color: "#6A1B9A" }
+          ActiveBadge: { bg: "#E8F5E9", text: "#27AE60" }
+          UsageBar: { fill_color: "#0077B6" }
+          Validity: { size: 12, color: "#74777C" }
+          Actions: [Share, Edit, Pause/Deactivate]
+
+      create_coupon_sheet:
+        type: bottom_sheet
+        fields:
+          CodeInput: { placeholder: "SUMMER20", monospace: true }
+          GenerateButton: { text: "Auto-Generate", color: "#6A1B9A" }
+          DiscountToggle: [Amount ₹, Percentage %]
+          ValueInput: { keyboard: numeric }
+          MinOrderInput: { keyboard: numeric }
+          MaxUsesInput: { keyboard: numeric }
+          DateRangePicker: { active_color: "#6A1B9A" }
+        confirm: { text: "Create Coupon", bg: "#6A1B9A", full_width: true }
+
+      bulk_discount_rules:
+        rows:
+          - { threshold: 5, discount: "5% off", editable: true }
+          - { threshold: 10, discount: "10% off", editable: true }
+        add_rule: { color: "#6A1B9A" }
+
+      first_order_toggle:
+        text: "Auto ₹10 off for first-time customers"
+        on_color: "#27AE60"
+
+screen_delivery_management:
+  id: DeliveryManagementScreen
+  file: src/screens/shop/DeliveryManagementScreen.tsx
+  priority: P1
+  design:
+    tabs: ["Staff", "Live Map", "Slots"]
+
+    staff_tab:
+      add_staff_button: { position: header_right, color: "#6A1B9A" }
+      each_staff_card:
+        Avatar: { size: 48, round: true }
+        Status:
+          available: { dot: "#27AE60", text: "Available", bg: "#E8F5E9" }
+          on_delivery: { dot: "#E67E22", text: "On Delivery", bg: "#FFF3E0" }
+          offline: { dot: "#74777C", text: "Offline", bg: "#F5F5F5" }
+        CurrentTask: { size: 12, color: "#74777C" }
+        TodayCount: { text: "{n} deliveries today" }
+        AssignButton: { style: outlined, color: "#6A1B9A" }
+
+    live_map_tab:
+      height: full_screen_minus_tabs
+      shop_pin: { color: "#6A1B9A", icon: store }
+      delivery_pins: { color: "#27AE60", icon: two_wheeler, animated: true }
+      customer_pins: { color: "#0077B6", icon: home }
+      routes: { color: "#0077B6", dash: [8, 4] }
+
+    slots_tab:
+      time_slots:
+        ["6AM", "8AM", "10AM", "12PM", "2PM", "4PM", "6PM", "8PM", "10PM"]
+      available: { bg: "#E8F5E9", label: "Open", tap: block }
+      blocked: { bg: "#FFEBEE", label: "Blocked", tap: unblock }
+
+screen_shop_settings:
+  id: ShopSettingsScreen
+  file: src/screens/shop/ShopSettingsScreen.tsx
+  priority: P0
+  design:
+    sections:
+      shop_photo_upload:
+        CoverPhoto: { dashed: true, height: 160 }
+        LogoUpload: { round: true, size: 80, overlay: camera_icon }
+
+      basic_info:
+        ShopNameInput: { size: large }
+        DescriptionInput: { multiline: true, max_chars: 300 }
+        CategoryChips: [Water Delivery, RO Plant, Mineral Water]
+
+      location_section:
+        MapView: { height: 180, draggable_pin: true, pin_color: "#6A1B9A" }
+        AddressInput: { autocomplete: true }
+        RadiusSlider: { min: 2, max: 20, unit: km, thumb_color: "#6A1B9A" }
+
+      working_hours:
+        days: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+        each_row: [DayLabel, Toggle, OpenTimePicker, CloseTimePicker]
+        toggle_on: "#27AE60"
+        copy_all_link: { color: "#6A1B9A" }
+
+      operational_settings:
+        MinOrderInput: { label: "Minimum order value (₹)" }
+        MaxOrdersInput: { label: "Maximum orders per day" }
+        AcceptOrdersToggle: { label: "Accept orders" }
+        HolidayPicker: { multi_date: true }
+        ClosedToggle: { label: "Mark as temporarily closed" }
+
+      certificates:
+        WaterCertUpload: { label: "Upload water quality certificate" }
+        GSTInput: { label: "GST number (optional)" }

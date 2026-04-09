@@ -86,7 +86,7 @@ export default function ShopEarningsScreen() {
         </TouchableOpacity>
 
         {/* METRICS GRID */}
-        <Text style={styles.sectionHeader}>Today's Overview</Text>
+        <Text style={styles.sectionHeader}>Today Overview</Text>
         <View style={styles.statsGrid}>
           <View style={styles.statBox}>
             <View style={[styles.statIconWrap, { backgroundColor: '#e0f0ff' }]}>

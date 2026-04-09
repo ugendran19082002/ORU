@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 import { Platform } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { AppStateProvider } from '@/hooks/use-app-state';
 
 export const unstable_settings = {
   // Start from auth welcome screen
@@ -18,15 +19,18 @@ export default function RootLayout() {
   console.log('📍 [APP] RootLayout mounted', {
     platform: Platform.OS,
     isDev: __DEV__,
-    routes: ['auth', '(tabs)', 'order/[id]', 'order/tracking', 'shop', 'admin', 'map-preview', 'addresses', 'edit-profile']
   });
 
   return (
     <ErrorBoundary>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
+      <AppStateProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack screenOptions={{ headerShown: false }}>
           {/* AUTH FLOW — entry point */}
           <Stack.Screen name="auth" options={{ headerShown: false, animation: 'fade' }} />
+
+          {/* CUSTOMER STACK ROUTES */}
+          <Stack.Screen name="(customer)" options={{ headerShown: false, animation: 'slide_from_right' }} />
 
           {/* CUSTOMER TABS */}
           <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
@@ -34,6 +38,9 @@ export default function RootLayout() {
           {/* ORDER SCREENS */}
           <Stack.Screen name="order/[id]" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="order/tracking" options={{ animation: 'slide_from_right' }} />
+
+          {/* DELIVERY FLOW */}
+          <Stack.Screen name="delivery" options={{ headerShown: false, animation: 'fade' }} />
 
           {/* ADDITIONAL SCREENS */}
           <Stack.Screen name="map-preview" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
@@ -48,9 +55,10 @@ export default function RootLayout() {
 
           {/* MODAL */}
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </AppStateProvider>
     </ErrorBoundary>
   );
 }

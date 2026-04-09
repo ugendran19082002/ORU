@@ -1,0 +1,2708 @@
+# ==============================================================================
+# 06.features-complete.openspec.yaml
+# THANNIGO — ALL 366 FEATURES (P0 + P1 + P2) by Category
+# ==============================================================================
+
+summary:
+  total_features: 366
+  p0_must_have: 125
+  p1_important: 167
+  p2_future: 74
+  customer_app: 136
+  shop_app: 196
+  both_apps: 34
+  status_existing_built: 89
+  status_new_to_build: 277
+  zero_dev_cost: 248
+  gps_required: 4
+  ai_ml_required: 2
+  weather_api_required: 1
+
+# Priority key:
+# P0 = Must have — build before launch
+# P1 = Important — build in phase 2
+# P2 = Nice to have — future roadmap
+
+features:
+  # ==============================================================================
+  order_management:
+    total: 48
+    items:
+      - {
+          feature: "Auto location detect (nearby shops)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Browse shops (list + map view)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Filter shops (rating, distance, price)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "View shop profile (hours, products, ratings)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Order water cans (20L / 10L)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Multiple can types in one order",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Select quantity (1-50 cans)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Instant delivery (ASAP)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Schedule delivery (date + time)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Delivery slot selection (morning/afternoon/evening)",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Repeat last order (1-tap reorder)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+          critical: true,
+        }
+      - {
+          feature: "Order Again from history",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "View order summary before confirm",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Add delivery notes/instructions",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Emergency order (30 min delivery)",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Edit order (before shop accepts)",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Cancel order (before dispatch)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Cancel reason selection",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Partial delivery acceptance",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Bulk order (10+ cans)",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Corporate order (apartment/office)",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Schedule recurring weekly orders",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Subscription plans (daily/weekly/monthly)",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Pause subscription (vacation mode)",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Resume subscription",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Modify subscription (change time/quantity)",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Order notifications (sound + vibrate)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Push notification for new order",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Accept order",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Reject order (with reason)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Auto-reject if out of stock",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Auto-reject if outside delivery area",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "View order details (customer, items, address)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Order list tabs (New/Preparing/Out/Delivered)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Filter orders (today/pending/completed)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Search orders (customer name, order ID)",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Mark order preparing",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Mark order out for delivery",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Mark delivered (1-tap)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Upload delivery proof photo",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Get customer signature on delivery",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Manual order entry (phone orders)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Assign delivery to delivery person",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Batch accept multiple orders",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Set estimated delivery time",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Update delivery time if delayed",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Notify customer of delay",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Order priority tags (VIP/Regular/First)",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+
+  # ==============================================================================
+  payment_pricing:
+    total: 40
+    items:
+      - {
+          feature: "Cash on Delivery (COD)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "UPI payment (GPay, PhonePe, Paytm)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Wallet balance",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Add money to wallet",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Use wallet + cash (split payment)",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Save UPI ID for quick payment",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "UPI auto-collect",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Pay later (credit for trusted customers)",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "View outstanding balance",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Payment history",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Download invoice (PDF)",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "See price breakdown (product + delivery + tax)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Apply coupon/promo code",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "View savings (You saved Rs.50)",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Price comparison across shops",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Deposit refund tracking",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Accept cash payment",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Accept UPI payment",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Record payment received",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Mark order paid/unpaid",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Cash vs UPI tracking",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Daily earnings summary",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Weekly/monthly earnings",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Pending payments (credit customers)",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Send payment reminder to customer",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Monthly billing for regular customers",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Generate bill/invoice",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Track customer deposits (can deposits)",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Refund deposit when customer leaves",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Profit per order (revenue - cost)",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Delivery cost vs earnings",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Set product prices (20L, 10L)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Set distance-based delivery charges",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Set floor-based charges",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Set bulk discount rules",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Emergency order premium pricing",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Auto price calculation",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Create discount coupons",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Festival/seasonal pricing",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "End of day reconciliation (cash + UPI)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+
+  # ==============================================================================
+  delivery_tracking:
+    total: 37
+    items:
+      - {
+          feature: "Track order status (placed→accepted→preparing→out→delivered)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Real-time delivery tracking on map",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+          dev_cost: GPS_required,
+        }
+      - {
+          feature: "Live delivery person location",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+          dev_cost: GPS_required,
+        }
+      - {
+          feature: "Estimated delivery time (ETA)",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Delivery person name + photo",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Delivery person contact number",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Call delivery person (1-tap)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+          critical: true,
+        }
+      - {
+          feature: "WhatsApp delivery person",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "See delivery person vehicle details",
+          app: "Customer App",
+          priority: P2,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Delivery instructions (gate code, landmark)",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Save delivery instructions per address",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Safe drop option (contactless)",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Get notified when order dispatched",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Get notified when delivery nearby",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+          dev_cost: GPS_required,
+        }
+      - {
+          feature: "View delivery proof photo",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Track multiple orders simultaneously",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Share live order tracking with family",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Start Delivery Mode button",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "GPS tracking for delivery person",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+          dev_cost: GPS_required,
+        }
+      - {
+          feature: "Show all deliveries on map",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Route optimization (best route)",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Multi-stop route planning",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Cluster nearby deliveries",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Navigate to customer location",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Call customer (1-tap)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "WhatsApp customer",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Update order status manually",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Mark delivered + capture photo",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Delivery time tracking per order",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Delivery performance metrics",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Failed delivery reasons",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Reschedule delivery",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Delivery boy mode (separate app)",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Assign delivery person to order",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Delivery person availability status",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Set delivery area/radius (2km, 5km)",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Delivery slot management",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+
+  # ==============================================================================
+  inventory_stock:
+    total: 18
+    items:
+      - {
+          feature: "Track full cans inventory",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+          critical: true,
+        }
+      - {
+          feature: "Track empty cans inventory",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+          critical: true,
+        }
+      - {
+          feature: "Low stock alert (when < 10 cans)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Set minimum stock level",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Out of stock indicator",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Add stock (when supplier delivers)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Remove stock (when selling)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Stock adjustment (damage/theft)",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Daily stock reconciliation",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Stock movement history",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Return can tracking (empty to full exchange)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Customer-wise can deposit tracking",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Damaged can tracking",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Supplier order management",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Supplier contact list",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Stock forecast (predict shortage)",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+          dev_cost: AI_ML,
+        }
+      - {
+          feature: "Product variants (20L, 10L, 5L)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Multiple product types (water, soda, juice)",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+
+  # ==============================================================================
+  notifications:
+    total: 25
+    items:
+      - {
+          feature: "Order placed confirmation",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Order accepted by shop",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Order preparing notification",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Out for delivery notification",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Delivered notification",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Order cancelled notification",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Auto reminder (water running low)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+          critical: true,
+        }
+      - {
+          feature: "Reorder suggestion based on usage",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Promotional offers notification",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Shop closed/holiday notification",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Price change notification (subscriptions)",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Subscription renewal reminder",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Payment due reminder",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Delivery slot reminder (30 min before)",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "App update notification",
+          app: "Customer App",
+          priority: P2,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "New order notification (sound + vibrate)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+          critical: true,
+        }
+      - {
+          feature: "Low stock alert",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Daily summary (total orders, earnings)",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Weekly summary notification",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Payment received notification",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Customer complaint notification",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Review/rating received notification",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Delivery person availability update",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Holiday reminder (set day before)",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Subscription expiry notification",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+
+  # ==============================================================================
+  customer_management:
+    total: 32
+    items:
+      - {
+          feature: "User registration (phone + OTP)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Profile management (name, email, photo)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Add multiple delivery addresses",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Set default address",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Edit/delete addresses",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Save addresses (home, office, other)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Family account (link family members)",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Order for multiple addresses in family",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Favourite shops list",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Block shop (don't show)",
+          app: "Customer App",
+          priority: P2,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Order history (all past orders)",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Filter order history (date, shop, status)",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Download order history",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Reorder from history (1-tap)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Customer database (all customers)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "View customer profile",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Customer order history",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Total orders per customer",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Total spent per customer",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Customer type tags (VIP, Regular, New, Lost)",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Add customer notes",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Customer address book",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Customer search (name, phone)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Filter customers (active, inactive)",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "High-risk customer alert (many cancellations)",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Auto-block after X fake orders",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Blacklist customer",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Set COD limit per customer",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Customer credit limit",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Mark customer as verified",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Customer communication log",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Bulk message to customers",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+
+  # ==============================================================================
+  analytics_reports:
+    total: 23
+    items:
+      - {
+          feature: "Water consumption tracking (monthly)",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Usage pattern graph",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Spending analytics",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Savings tracker",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Order frequency insights",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Today's summary (orders, earnings)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Weekly analytics",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Monthly analytics",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Sales graph (daily/weekly/monthly)",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Top customers list",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Top products sold",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Peak hours analysis (morning vs evening)",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Busiest days analysis",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Order drop analysis (cancellation reasons)",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Delivery efficiency (avg time per order)",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Fuel cost tracking",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Profit analysis (revenue - costs)",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Customer lifetime value",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Customer retention rate",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "New vs returning customers",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Payment method breakdown",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Revenue forecast",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+          dev_cost: AI_ML,
+        }
+      - {
+          feature: "Export reports (PDF/Excel)",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+
+  # ==============================================================================
+  rating_feedback:
+    total: 23
+    items:
+      - {
+          feature: "Rate shop (1-5 stars)",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Rate delivery person (1-5 stars)",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Rate water quality (1-5 stars)",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Write review",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Upload photos with review",
+          app: "Customer App",
+          priority: P2,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Report issue/complaint",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+          critical: true,
+        }
+      - {
+          feature: "Complaint types (late, wrong order, quality, rude)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Track complaint status",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Replacement request (bad water, leaking can)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Refund request",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "View shop ratings before ordering",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "View reviews from other customers",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "View ratings received",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "View reviews received",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Overall rating display",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Respond to reviews",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Complaint management",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "View all complaints",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Resolve complaint",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Add resolution notes",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Quality issue tracking",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Replacement orders tracking",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Refund processing",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+
+  # ==============================================================================
+  referral_loyalty:
+    total: 19
+    items:
+      - {
+          feature: "Referral code (invite friends)",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Share referral via WhatsApp/SMS",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Referral earnings tracker",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Referral bonus (Rs.30 per referral)",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "First order discount (Rs.10 off)",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Loyalty points on every order",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Redeem points for discount",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "View points balance",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Apply coupon code",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Cashback offers",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Birthday discount",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Anniversary discount",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Create discount coupons",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Set coupon validity",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Track coupon usage",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Loyalty program management",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Referral performance tracking",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Create promotional campaigns",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "First-time customer discount auto-apply",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+
+  # ==============================================================================
+  shop_settings:
+    total: 16
+    items:
+      - {
+          feature: "Shop profile setup",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Shop name, photo, description",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Shop address + location on map",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Shop contact number",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Shop working hours (open/close)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Set holiday dates",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Mark shop closed temporarily",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Delivery area/radius setting",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Minimum order value",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Maximum orders per day limit",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Delivery slot configuration",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Accept orders toggle (pause orders)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Bank account details (for settlements)",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "GST/business registration details",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Upload shop photos",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Upload water quality certificates",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+
+  # ==============================================================================
+  staff_management:
+    total: 10
+    items:
+      - {
+          feature: "Add delivery person",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Delivery person profile (name, photo, phone)",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Delivery person vehicle details",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Delivery person availability status",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Assign order to delivery person",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Delivery person performance tracking",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Multi-user login (owner + staff)",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: Existing,
+        }
+      - {
+          feature: "Role-based permissions (owner, manager, delivery)",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Staff attendance tracking",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Commission calculation per staff",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+
+  # ==============================================================================
+  ux_ui:
+    total: 23
+    items:
+      - {
+          feature: "Login with phone number + OTP",
+          app: "Both Apps",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Biometric login (fingerprint/face)",
+          app: "Both Apps",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Auto login (stay logged in)",
+          app: "Both Apps",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Logout",
+          app: "Both Apps",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Forgot password/reset",
+          app: "Both Apps",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Dark mode",
+          app: "Both Apps",
+          priority: P2,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Light mode (default)",
+          app: "Both Apps",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Multi-language (Tamil + English)",
+          app: "Both Apps",
+          priority: P1,
+          tier: Free,
+          status: Existing,
+        }
+      - {
+          feature: "Language switcher",
+          app: "Both Apps",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Onboarding tutorial (first time)",
+          app: "Both Apps",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Help/FAQ section",
+          app: "Both Apps",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Contact support",
+          app: "Both Apps",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Share app link",
+          app: "Both Apps",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Rate app on Play Store",
+          app: "Both Apps",
+          priority: P2,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "App update notification",
+          app: "Both Apps",
+          priority: P2,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Force update (critical bugs)",
+          app: "Both Apps",
+          priority: P2,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Pull to refresh lists",
+          app: "Both Apps",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Loading indicators",
+          app: "Both Apps",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Error messages (friendly)",
+          app: "Both Apps",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "No internet connection handling",
+          app: "Both Apps",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Offline mode (view past data)",
+          app: "Both Apps",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Search functionality",
+          app: "Both Apps",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Filter & sort options",
+          app: "Both Apps",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+
+  # ==============================================================================
+  security_data:
+    total: 10
+    items:
+      - {
+          feature: "Phone number verification (OTP)",
+          app: "Both Apps",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Secure authentication",
+          app: "Both Apps",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Session timeout (auto logout)",
+          app: "Both Apps",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Data encryption",
+          app: "Both Apps",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Privacy policy",
+          app: "Both Apps",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Terms & conditions",
+          app: "Both Apps",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Delete account option",
+          app: "Both Apps",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Data backup (cloud)",
+          app: "Both Apps",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Two-factor authentication",
+          app: "Both Apps",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Fraud detection",
+          app: "Both Apps",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+
+  # ==============================================================================
+  critical_missing:
+    note: "ALL are ZERO DEV COST — must be built before launch"
+    total: 20
+    items:
+      - {
+          feature: "View shop availability status (open/closed)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "See real-time product availability",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Get alternative shop suggestions if closed",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Emergency contact (call shop directly)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "SOS button (urgent water need)",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Share live order tracking with family",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Delivery OTP verification",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Cancel reason mandatory (prevent abuse)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Edit delivery address (before dispatch)",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Change delivery time (before dispatch)",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Reject order reason mandatory",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Busy mode (auto-reject new orders)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Delivery capacity management (max 5 orders/hour)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Customer no-show tracking",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Delivery failed reasons",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Quick actions (accept all, reject all)",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Order reminder if not accepted (5 min)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Customer call log (track communication)",
+          app: "Shop App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "Delivery proof mandatory for COD > Rs.500",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+      - {
+          feature: "End of day reconciliation (cash + UPI)",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+          critical: true,
+        }
+
+  # ==============================================================================
+  communication:
+    total: 10
+    items:
+      - {
+          feature: "In-app chat with shop",
+          app: "Customer App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "WhatsApp message to shop",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Call shop button",
+          app: "Customer App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Share order details via WhatsApp",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Notify friend (I ordered for you)",
+          app: "Customer App",
+          priority: P2,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Broadcast message to all customers",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Send WhatsApp to customer",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Call customer button",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "SMS notification to customer",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Push notification to customer",
+          app: "Shop App",
+          priority: P0,
+          tier: Free,
+          status: NEW,
+        }
+
+  # ==============================================================================
+  advanced_features:
+    total: 12
+    items:
+      - {
+          feature: "Smart water usage prediction (AI)",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+          dev_cost: AI_ML,
+        }
+      - {
+          feature: "Compare multiple shops (side-by-side)",
+          app: "Customer App",
+          priority: P1,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Save favourite filters",
+          app: "Customer App",
+          priority: P2,
+          tier: Free,
+          status: NEW,
+        }
+      - {
+          feature: "Voice search/order",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Eco-friendly delivery option",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Carbon footprint tracker",
+          app: "Customer App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Weather-based demand forecast",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+          dev_cost: Weather_API,
+        }
+      - {
+          feature: "Competitor price tracking",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Integration with Tally/accounting",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Supplier auto-ordering",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Admin dashboard (super admin)",
+          app: "Shop App",
+          priority: P1,
+          tier: Paid,
+          status: NEW,
+        }
+      - {
+          feature: "Multi-branch management",
+          app: "Shop App",
+          priority: P2,
+          tier: Paid,
+          status: NEW,
+        }

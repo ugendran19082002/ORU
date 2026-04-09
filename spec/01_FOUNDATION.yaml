@@ -1,0 +1,329 @@
+# ==============================================================================
+# THANNIGO WATER DELIVERY APP - FOUNDATION SPECIFICATION
+# Version: 3.0
+# Last Updated: 2026-04-09
+# ==============================================================================
+
+project:
+  name: "Thannigo Water Delivery"
+  description: "Azure-themed water delivery marketplace with customer, shop owner & delivery person apps"
+  version: "3.0.0"
+  platform: React Native (Expo)
+  deployment:
+    customer_app: iOS + Android
+    shop_app: iOS + Android
+    delivery_app: iOS + Android
+
+# ==============================================================================
+# DESIGN TOKENS - AZURE FLOW THEME
+# ==============================================================================
+
+design_tokens:
+  colors:
+    # Primary Brand Colors
+    primary:
+      azure_deep: "#0077B6"        # Primary buttons, headers, active states
+      azure_light: "#00B4D8"       # Accents, hover states
+      azure_pale: "#90E0EF"        # Backgrounds, disabled states
+      azure_sky: "#CAF0F8"         # Light backgrounds
+      azure_mist: "#E8F4FD"        # Subtle backgrounds, input fields
+    
+    # Teal Accents (Shop/Business)
+    teal:
+      deep: "#00695C"              # Shop owner primary
+      medium: "#00897B"            # Shop accents
+      light: "#4DB6AC"             # Shop light elements
+    
+    # Green Success
+    success:
+      primary: "#27AE60"           # Success states, completed
+      light: "#E8F5E9"             # Success backgrounds
+      dark: "#1E8449"              # Success hover
+    
+    # Semantic Colors
+    warning:
+      primary: "#F59E0B"           # Warnings, pending states
+      light: "#FEF3C7"             # Warning backgrounds
+    
+    error:
+      primary: "#C0392B"           # Errors, cancellations
+      light: "#FFEBEE"             # Error backgrounds
+    
+    # Neutral Grays
+    neutral:
+      darkest: "#1A1A2E"           # Primary text
+      dark: "#2E3A59"              # Secondary text
+      medium: "#74777C"            # Muted text, placeholders
+      light: "#ADEBF4"             # Borders, dividers
+      lightest: "#F5F9FF"          # Page backgrounds
+      white: "#FFFFFF"             # Cards, surfaces
+    
+    # Purple/Violet (Premium features)
+    purple:
+      primary: "#6A1B9A"           # Premium badges
+      light: "#E1BEE7"             # Premium backgrounds
+
+  typography:
+    font_family: "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    
+    sizes:
+      h1: 28                       # Page titles
+      h2: 24                       # Section headers
+      h3: 20                       # Card titles
+      h4: 18                       # Subsection headers
+      body_large: 16               # Important body text
+      body: 14                     # Default body text
+      caption: 12                  # Small text, timestamps
+      tiny: 10                     # Badges, tags
+    
+    weights:
+      regular: 400
+      medium: 500
+      semibold: 600
+      bold: 700
+      extra_bold: 800
+
+  spacing:
+    base: 4                        # 4px base unit
+    xs: 4                          # 4px
+    sm: 8                          # 8px
+    md: 12                         # 12px
+    lg: 16                         # 16px
+    xl: 20                         # 20px
+    xxl: 24                        # 24px
+    xxxl: 32                       # 32px
+
+  radius:
+    sm: 8                          # Small elements
+    md: 12                         # Cards, buttons
+    lg: 16                         # Large cards
+    xl: 20                         # Modals
+    full: 9999                     # Circular elements
+
+  shadows:
+    sm: "0px 1px 3px rgba(0,0,0,0.08)"
+    md: "0px 2px 8px rgba(0,0,0,0.12)"
+    lg: "0px 4px 16px rgba(0,0,0,0.16)"
+    card: "0px 2px 8px rgba(0,119,182,0.08)"
+    floating: "0px 8px 24px rgba(0,0,0,0.16)"
+
+  animations:
+    duration:
+      fast: 150                    # Quick transitions
+      normal: 250                  # Standard transitions
+      slow: 400                    # Emphasis animations
+    
+    easing:
+      default: "ease-in-out"
+      spring: "cubic-bezier(0.68, -0.55, 0.265, 1.55)"
+
+# ==============================================================================
+# TECHNOLOGY STACK
+# ==============================================================================
+
+tech_stack:
+  framework:
+    name: "React Native (Expo SDK 50+)"
+    language: "TypeScript 5.0+"
+    navigation: "React Navigation 6.x"
+    state: "Zustand 4.x"
+    
+  ui_libraries:
+    core: "React Native Paper 5.x"
+    icons: "@expo/vector-icons (MaterialCommunityIcons)"
+    animations: "react-native-reanimated 3.x"
+    gestures: "react-native-gesture-handler"
+    maps: "react-native-maps"
+    
+  backend:
+    api: "REST + WebSocket"
+    auth: "Firebase Auth / JWT"
+    database: "Firebase Firestore / Supabase"
+    storage: "Firebase Storage / Cloudinary"
+    push: "Firebase Cloud Messaging"
+    
+  payments:
+    upi: "PhonePe / Razorpay UPI SDK"
+    gateway: "Razorpay / Stripe"
+    
+  utilities:
+    forms: "react-hook-form + zod"
+    date: "date-fns"
+    http: "axios"
+    storage: "@react-native-async-storage/async-storage"
+    permissions: "expo-location, expo-camera, expo-contacts"
+
+# ==============================================================================
+# FREE & OPEN SOURCE PACKAGES (ZERO COST)
+# ==============================================================================
+
+free_packages:
+  ui_components:
+    - "@react-navigation/native"
+    - "@react-navigation/bottom-tabs"
+    - "@react-navigation/native-stack"
+    - "react-native-paper"
+    - "react-native-vector-icons"
+    - "react-native-elements"
+    
+  functionality:
+    - "react-native-maps"           # Google Maps (free tier)
+    - "react-native-geolocation-service"
+    - "react-native-image-picker"
+    - "react-native-qrcode-svg"
+    - "react-hook-form"
+    - "zod"
+    - "date-fns"
+    - "lodash"
+    
+  state_and_storage:
+    - "zustand"
+    - "@react-native-async-storage/async-storage"
+    - "react-query / @tanstack/react-query"
+    
+  networking:
+    - "axios"
+    - "socket.io-client"
+    
+  animations:
+    - "react-native-reanimated"
+    - "react-native-gesture-handler"
+    - "lottie-react-native"
+    
+  utilities:
+    - "expo-location"
+    - "expo-camera"
+    - "expo-image-picker"
+    - "expo-notifications"
+    - "expo-haptics"
+
+# ==============================================================================
+# PROJECT FOLDER STRUCTURE
+# ==============================================================================
+
+folder_structure:
+  root:
+    - src/
+      - components/           # Reusable UI components
+        - common/             # Buttons, Inputs, Cards
+        - customer/           # Customer-specific components
+        - shop/               # Shop owner components
+        - delivery/           # Delivery person components
+      
+      - screens/              # App screens
+        - auth/               # Login, OTP, Registration
+        - customer/           # Customer app screens
+        - shop/               # Shop owner app screens
+        - delivery/           # Delivery person screens
+        - shared/             # Shared screens (Settings, Help)
+      
+      - navigation/           # Navigation configuration
+        - CustomerNavigator.tsx
+        - ShopNavigator.tsx
+        - DeliveryNavigator.tsx
+        - RootNavigator.tsx
+      
+      - store/                # State management (Zustand)
+        - authStore.ts
+        - cartStore.ts
+        - orderStore.ts
+        - shopStore.ts
+      
+      - services/             # API services
+        - api/
+          - auth.ts
+          - orders.ts
+          - shops.ts
+          - delivery.ts
+        - websocket/
+          - orderSocket.ts
+      
+      - utils/                # Utility functions
+        - formatters.ts       # Date, currency formatting
+        - validators.ts       # Input validation
+        - permissions.ts      # Location, camera permissions
+      
+      - constants/            # App constants
+        - colors.ts
+        - typography.ts
+        - config.ts
+      
+      - types/                # TypeScript types
+        - order.ts
+        - user.ts
+        - shop.ts
+      
+      - assets/               # Static assets
+        - images/
+        - animations/         # Lottie files
+        - fonts/
+    
+    - App.tsx               # Root component
+    - app.json              # Expo configuration
+    - package.json
+    - tsconfig.json
+
+# ==============================================================================
+# SCREEN NAMING CONVENTION
+# ==============================================================================
+
+naming_convention:
+  screens:
+    pattern: "{Role}{Feature}Screen"
+    examples:
+      - "CustomerHomeScreen.tsx"
+      - "ShopDashboardScreen.tsx"
+      - "DeliveryNavigationScreen.tsx"
+      - "OTPScreen.tsx"          # Shared screens
+  
+  components:
+    pattern: "{Feature}{Type}"
+    examples:
+      - "OrderCard.tsx"
+      - "ProductList.tsx"
+      - "SearchBar.tsx"
+  
+  stores:
+    pattern: "{domain}Store.ts"
+    examples:
+      - "authStore.ts"
+      - "cartStore.ts"
+      - "orderStore.ts"
+
+# ==============================================================================
+# COMPONENT PRIORITY LEVELS
+# ==============================================================================
+
+priority_levels:
+  P0: "Critical - Core functionality, must-have for MVP"
+  P1: "High - Important features, needed for launch"
+  P2: "Medium - Nice-to-have, can be added post-launch"
+  P3: "Low - Future enhancements"
+
+# ==============================================================================
+# DESIGN PRINCIPLES
+# ==============================================================================
+
+design_principles:
+  consistency:
+    - "Use design tokens for all colors, spacing, typography"
+    - "Follow 4px/8px grid system for spacing"
+    - "Maintain consistent component sizing across roles"
+  
+  accessibility:
+    - "Minimum touch target: 44x44px"
+    - "Color contrast ratio: 4.5:1 (WCAG AA)"
+    - "Support dynamic font sizing"
+    - "Provide alternative text for images"
+  
+  performance:
+    - "Optimize FlatList with proper keys and memoization"
+    - "Lazy load images and heavy components"
+    - "Use React.memo for expensive renders"
+    - "Implement pagination for large lists"
+  
+  offline_support:
+    - "Cache critical data locally"
+    - "Queue actions when offline"
+    - "Show offline indicator"
+    - "Sync on reconnection"

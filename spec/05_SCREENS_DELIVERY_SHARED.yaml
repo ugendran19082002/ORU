@@ -1,0 +1,338 @@
+# ==============================================================================
+# 05.screens-delivery-shared.openspec.yaml
+# THANNIGO — Delivery Person Screens + Shared Screens
+# ==============================================================================
+
+# ==============================================================================
+# DELIVERY PERSON SCREENS
+# ==============================================================================
+
+screen_assigned_orders:
+  id: AssignedOrdersScreen
+  file: src/screens/delivery/AssignedOrdersScreen.tsx
+  priority: P0
+  design:
+    background: "#F5F9FF"
+    sections:
+      header:
+        gradient: ["#00695C", "#00897B"]
+        height: 72
+        elements:
+          Name: { size: 16, weight: 700, color: "#FFFFFF" }
+          ShiftToggle:
+            on: { text: "Online", bg: "#27AE60", text_color: "#FFFFFF" }
+            off: { text: "Offline", bg: "rgba(255,255,255,0.3)", text_color: "#FFFFFF" }
+
+      today_stats:
+        type: horizontal_row
+        gap: 12
+        padding: 16
+        cards:
+          - { label: "Deliveries", value: "{n}", color: "#00695C" }
+          - { label: "Completed", value: "{n}", color: "#27AE60" }
+          - { label: "Earnings", value: "₹{n}", color: "#F59E0B" }
+
+      assigned_order_cards:
+        type: FlatList
+        pull_to_refresh: true
+        each:
+          bg: "#FFFFFF"
+          radius: 12
+          shadow: card
+          padding: 14
+          margin_bottom: 10
+          elements:
+            OrderID: { font: monospace, size: 12, color: "#74777C" }
+            CustomerInfo: { name: bold, phone: muted }
+            Address: { icon: location_on, color: "#0077B6" }
+            Items: { text: "{qty}x {product}", size: 13 }
+            PaymentBadge:
+              COD: { bg: "#FFF3E0", text: "#E65100", text: "COD ₹{amount}" }
+              UPI: { bg: "#E8F5E9", text: "#27AE60", text: "UPI — Paid" }
+            Priority: { urgent: { bg: "#FFEBEE", text: "#C0392B", label: "URGENT" } }
+            StartButton:
+              text: "Start Delivery"
+              bg: "#00695C"
+              color: "#FFFFFF"
+              full_width: true
+              height: 44
+              radius: 8
+
+screen_delivery_navigation:
+  id: DeliveryNavigationScreen
+  file: src/screens/delivery/DeliveryNavigationScreen.tsx
+  priority: P0
+  design:
+    layout: full_screen
+    sections:
+      map_view:
+        height: "60% of screen"
+        type: GoogleMaps
+        style: delivery_blue_theme
+        elements:
+          ShopPin: { icon: store, color: "#6A1B9A", size: 36 }
+          CustomerPin: { icon: home, color: "#0077B6", size: 36 }
+          CurrentLocationDot: { color: "#27AE60", animated: pulse }
+          RoutePolyline: { color: "#00695C", width: 4, dash: [8,4] }
+          ETABadge: { bg: "#00695C", text: "#FFFFFF", position: top_right, size: 13 }
+
+      draggable_bottom_sheet:
+        default_height: "42% of screen"
+        max_height: "80%"
+        handle: { color: "#ADEBF4", width: 40, height: 4 }
+        sections:
+          eta_display:
+            ETAText: { text: "Arriving in {n} mins", size: 22, weight: 700, color: "#00695C" }
+            ClockIcon: { color: "#F59E0B" }
+
+          customer_contact:
+            Avatar: { size: 40, round: true }
+            Name: { size: 15, weight: 600 }
+            Distance: { size: 12, color: "#74777C" }
+            Actions:
+              CallButton: { icon: phone, size: 44, round: true, bg: "#E8F5E9", icon_color: "#27AE60" }
+              WhatsAppButton: { icon: sms, size: 44, round: true, bg: "#E0F7FA", icon_color: "#25D366" }
+
+          order_summary:
+            compact: true
+            items: "{qty}x {product}"
+            payment: "{method} ₹{amount}"
+
+          action_buttons:
+            UpdateStatusButton: { text: "Update Status", style: outlined, color: "#00695C", height: 44 }
+            ArrivedButton: { text: "I've Arrived", bg: "#F59E0B", height: 44 }
+
+      back_button:
+        position: top_left
+        style: white_circle_32
+
+screen_otp_confirmation:
+  id: OTPConfirmationScreen
+  file: src/screens/delivery/OTPConfirmationScreen.tsx
+  priority: P0
+  design:
+    background: "#FFFFFF"
+    sections:
+      header: { title: "Confirm Delivery", subtitle: "Ask customer for their OTP" }
+
+      otp_hint_card:
+        bg: "#E8F4FD"
+        border: "1px solid #ADEBF4"
+        radius: 12
+        padding: 14
+        margin: [0, 16]
+        text: { text: "Customer's OTP is shown in their app", size: 14, color: "#0077B6" }
+        icon: { name: smartphone, color: "#0077B6" }
+
+      otp_input:
+        type: 4_digit_boxes
+        each: { size: 64, radius: 12, border: "#ADEBF4", active_border: "#0077B6", bg: "#F5F9FF" }
+        gap: 12
+        keyboard: numeric
+        margin_top: 32
+
+      verify_button:
+        text: "Verify OTP & Complete"
+        bg: "#27AE60"
+        height: 52
+        full_width: true
+        haptic: success
+        disabled_until: "4 digits entered"
+
+      failed_link:
+        text: "Can't get OTP? Report failed delivery"
+        color: "#C0392B"
+        size: 13
+        align: center
+        margin_top: 16
+
+screen_delivery_complete:
+  id: DeliveryCompleteScreen
+  file: src/screens/delivery/DeliveryCompleteScreen.tsx
+  priority: P0
+  design:
+    sections:
+      proof_photo_section:
+        condition: "cod_amount > 500"
+        label: "Upload Delivery Proof"
+        mandatory_badge: { text: "REQUIRED", bg: "#FFEBEE", text_color: "#C0392B" }
+        camera_button: { bg: "#6A1B9A", icon: camera_alt, text: "Take Photo", height: 48 }
+        photo_preview: { radius: 12, height: 120 }
+        priority: CRITICAL
+
+      empty_can_return:
+        label: "Empty Cans Collected"
+        counter: { default: 0, max: 10 }
+        Stepper: { minus_color: "#C0392B", plus_color: "#27AE60" }
+
+      payment_section:
+        COD:
+          label: "Collect Cash"
+          amount: { size: 28, weight: 700, color: "#1A1A2E" }
+          ConfirmCashButton: { text: "Cash Collected ✓", bg: "#27AE60", height: 44 }
+        UPI:
+          label: "UPI Payment Confirmed"
+          badge: { bg: "#E8F5E9", text: "#27AE60", text: "Already Paid Online" }
+
+      mark_delivered_button:
+        text: "Mark as Delivered"
+        bg: "#27AE60"
+        height: 56
+        full_width: true
+        haptic: success
+
+      failed_delivery_sheet:
+        trigger: "Can't deliver"
+        options:
+          - "Customer not home"
+          - "Wrong address"
+          - "Customer cancelled"
+          - "Access denied"
+          - "Phone unreachable"
+        mandatory: true
+        priority: CRITICAL
+
+screen_delivery_success:
+  id: DeliverySuccessScreen
+  file: src/screens/delivery/DeliverySuccessScreen.tsx
+  priority: P0
+  design:
+    background: "#FFFFFF"
+    elements:
+      SuccessAnimation: { file: "delivery_success.json", type: lottie, size: 120 }
+      Title: { text: "Delivered!", size: 28, weight: 700, color: "#27AE60" }
+      OrderID: { font: monospace, color: "#74777C" }
+      EarningsCard:
+        bg: "#E8F5E9"
+        radius: 12
+        elements:
+          EarningText: { text: "You earned ₹{earnings}", size: 18, weight: 700, color: "#27AE60" }
+          TodayTotal: { text: "Today's total: ₹{total}", color: "#74777C" }
+      NextOrderButton:
+        text: "Back to Orders"
+        bg: "#00695C"
+        height: 48
+        margin_top: 24
+
+# ==============================================================================
+# SHARED SCREENS (all roles)
+# ==============================================================================
+
+screen_settings:
+  id: SettingsScreen
+  file: src/screens/shared/SettingsScreen.tsx
+  priority: P1
+  design:
+    background: "#F5F9FF"
+    sections:
+      header: { title: "Settings" }
+
+      sections:
+        account:
+          label: "Account"
+          items:
+            - { icon: person, label: "Edit Profile", route: EditProfile }
+            - { icon: phone, label: "Phone Number", value: "{phone}", editable: true }
+            - { icon: location_on, label: "Saved Addresses", route: Addresses }
+            - { icon: payment, label: "Saved UPI IDs", route: UPIList }
+
+        preferences:
+          label: "Preferences"
+          items:
+            - { icon: dark_mode, label: "Dark Mode", toggle: true, store: appStore.darkMode }
+            - { icon: language, label: "Language", value: "English | Tamil", route: Language }
+            - { icon: notifications, label: "Notification Preferences", route: NotificationSettings }
+
+        security:
+          label: "Security"
+          items:
+            - { icon: fingerprint, label: "Biometric Login", toggle: true }
+            - { icon: lock, label: "Change PIN", route: ChangePIN }
+            - { icon: delete_forever, label: "Delete Account", color: "#C0392B", route: DeleteAccount }
+
+        about:
+          label: "About"
+          items:
+            - { icon: privacy_tip, label: "Privacy Policy", external: true }
+            - { icon: gavel, label: "Terms of Service", external: true }
+            - { icon: info, label: "App Version", value: "3.0.0" }
+            - { icon: star, label: "Rate on Play Store", external: true }
+
+screen_language:
+  id: LanguageScreen
+  file: src/screens/shared/LanguageScreen.tsx
+  priority: P1
+  design:
+    sections:
+      header: { title: "Choose Language" }
+      options:
+        - { code: en, label: "English", native: "English", flag: "🇬🇧" }
+        - { code: ta, label: "Tamil", native: "தமிழ்", flag: "🇮🇳" }
+      option_card:
+        selected: { border: "#0077B6", border_width: 2, bg: "#E8F4FD", check: "#0077B6" }
+        unselected: { border: "#ADEBF4", bg: "#FFFFFF" }
+        size: { width: full, height: 72, padding: 20, radius: 12 }
+      note: "App will reload to apply language"
+
+screen_notifications_list:
+  id: NotificationsScreen
+  file: src/screens/shared/NotificationsScreen.tsx
+  priority: P1
+  design:
+    sections:
+      mark_all_read: { position: header_right, color: "#0077B6" }
+      notification_list:
+        unread_bg: "#E8F4FD"
+        read_bg: "#FFFFFF"
+        type_icons:
+          order: { color: "#0077B6", icon: receipt }
+          payment: { color: "#27AE60", icon: payments }
+          alert: { color: "#E67E22", icon: warning }
+          promo: { color: "#9C27B0", icon: local_offer }
+          system: { color: "#74777C", icon: info }
+        each_item:
+          radius: 12
+          padding: 12
+          margin_bottom: 4
+          TimeAgo: { position: top_right, size: 11, color: "#74777C" }
+          Title: { size: 14, weight: 600 }
+          Body: { size: 13, color: "#74777C" }
+          UnreadDot: { size: 8, color: "#0077B6", position: left_center }
+
+screen_help:
+  id: HelpScreen
+  file: src/screens/shared/HelpScreen.tsx
+  priority: P1
+  design:
+    sections:
+      search_faq: { placeholder: "Search for help...", bg: "#F5F9FF" }
+      contact_options:
+        - { icon: whatsapp, label: "WhatsApp Support", color: "#25D366", action: open_whatsapp }
+        - { icon: call, label: "Call Support", color: "#0077B6", action: call }
+        - { icon: email, label: "Email Support", color: "#E67E22", action: email }
+      faq_sections:
+        - { title: "Orders", items: [How to place, Cancel, Track, Reorder] }
+        - { title: "Payments", items: [UPI, COD, Wallet, Refunds] }
+        - { title: "Delivery", items: [Time, OTP, Failed delivery] }
+
+screen_addresses:
+  id: AddressesScreen
+  file: src/screens/customer/AddressesScreen.tsx
+  priority: P0
+  design:
+    sections:
+      address_list:
+        each:
+          type_badge:
+            Home: { icon: home, color: "#0077B6" }
+            Office: { icon: business, color: "#6A1B9A" }
+            Other: { icon: location_on, color: "#74777C" }
+          Address: { size: 14, color: "#1A1A2E" }
+          DefaultBadge: { bg: "#E8F5E9", text: "#27AE60", condition: is_default }
+          Actions: [Set Default, Edit, Delete]
+      add_address_button:
+        text: "+ Add New Address"
+        style: dashed_border
+        color: "#0077B6"
+        full_width: true
+        height: 52

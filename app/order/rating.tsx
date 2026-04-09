@@ -4,7 +4,8 @@ import { View, Text, ScrollView,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAppState } from '@/hooks/use-app-state';
 
 export default function OrderRatingScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
@@ -16,12 +17,15 @@ export default function OrderRatingScreen() {
   }, []);
 
   const router = useRouter();
+  const { orderId } = useLocalSearchParams<{ orderId?: string }>();
+  const { orders, submitRating } = useAppState();
+  const order = orders.find((item) => item.id === orderId) ?? orders[0];
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
 
-  const submitFeedback = () => {
-    // In a real app, this would submit the feedback to the backend.
-    router.replace('/(tabs)/');
+  const submitFeedback = async () => {
+    await submitRating(order.id, rating || 5, feedback);
+    router.replace('/(tabs)/orders' as any);
   };
 
   return (
@@ -43,7 +47,7 @@ export default function OrderRatingScreen() {
           <Ionicons name="checkmark-circle" size={80} color="#2e7d32" />
         </View>
         <Text style={styles.successTitle}>Delivery Successful!</Text>
-        <Text style={styles.successSub}>Order #TN-9412 from AquaPrime has been delivered to your location.</Text>
+        <Text style={styles.successSub}>Order {order.id} from {order.shopName} has been delivered to your location.</Text>
 
         <View style={styles.ratingCard}>
           <Text style={styles.ratingLabel}>Rate your experience</Text>

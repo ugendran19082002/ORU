@@ -20,12 +20,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const ROLE_LABELS: Record<string, string> = {
   customer: "Customer",
   shop: "Shop Owner",
+  delivery: "Delivery Partner",
   admin: "Admin",
 };
 
 const ROLE_COLORS: Record<string, { start: string; end: string }> = {
   customer: { start: "#005d90", end: "#0077b6" },
   shop: { start: "#006878", end: "#008e9b" },
+  delivery: { start: "#0f766e", end: "#14b8a6" },
   admin: { start: "#23616b", end: "#2d828f" },
 };
 
@@ -59,6 +61,7 @@ export default function LoginScreen() {
         if (result.success) {
           // Success! Redirect to app
           if (role === 'shop') router.replace('/shop' as any);
+          else if (role === 'delivery') router.replace('/delivery' as any);
           else if (role === 'admin') router.replace('/admin' as any);
           else router.replace('/(tabs)' as any);
         }
@@ -124,7 +127,7 @@ export default function LoginScreen() {
           <View style={styles.titleBlock}>
             <Text style={styles.title}>Enter your{"\n"}phone number</Text>
             <Text style={styles.subtitle}>
-              We'll send a 6-digit OTP to verify your identity
+              We will send a 6-digit OTP to verify your identity
             </Text>
           </View>
 
@@ -153,7 +156,7 @@ export default function LoginScreen() {
 
           {/* TERMS */}
           <Text style={styles.terms}>
-            By continuing you agree to ThanniGo's{" "}
+            By continuing you agree to the ThanniGo{" "}
             <Text style={[styles.termsLink, { color: accent }]}>
               Terms of Service
             </Text>{" "}

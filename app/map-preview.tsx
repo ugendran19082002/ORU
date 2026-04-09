@@ -186,9 +186,8 @@ export default function MapPreviewScreen() {
 
         {/* FLOATING ACTION BOX */}
         <View style={styles.floatingActionBox}>
-          <LinearGradient
-            colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,1)']}
-            style={styles.actionCard}
+          <View
+            style={[styles.actionCard, { backgroundColor: 'white' }]}
           >
             <View style={styles.locationInfo}>
               <View style={styles.iconCircle}>
@@ -211,15 +210,12 @@ export default function MapPreviewScreen() {
                   router.back();
                 }}
               >
-                <LinearGradient
-                  colors={['#10b981', '#059669']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.navigateBtnGrad}
+                <View
+                  style={[styles.navigateBtnGrad, { backgroundColor: '#10b981' }]}
                 >
                   <Ionicons name="checkmark-circle-outline" size={20} color="white" />
                   <Text style={styles.navigateBtnText}>Confirm Selected Location</Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
@@ -227,18 +223,15 @@ export default function MapPreviewScreen() {
                 style={styles.navigateBtn}
                 onPress={openInExternalMaps}
               >
-                <LinearGradient
-                  colors={['#005d90', '#0077b6']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.navigateBtnGrad}
+                <View
+                  style={[styles.navigateBtnGrad, { backgroundColor: '#005d90' }]}
                 >
                   <Ionicons name="navigate" size={20} color="white" />
                   <Text style={styles.navigateBtnText}>Open in Google Maps</Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
             )}
-          </LinearGradient>
+          </View>
         </View>
       </View>
     </SafeAreaView>

@@ -1,0 +1,593 @@
+# ==============================================================================
+# THANNIGO - API & DATA MODELS SPECIFICATION
+# ==============================================================================
+
+# ==============================================================================
+# API ENDPOINTS
+# ==============================================================================
+
+api_base_url: "https://api.thannigo.com/v1"
+
+authentication:
+  method: "JWT Bearer Token"
+  refresh: "Refresh token with 30-day expiry"
+  headers:
+    authorization: "Bearer {access_token}"
+    content_type: "application/json"
+
+endpoints:
+  # ============================================================================
+  # AUTH ENDPOINTS
+  # ============================================================================
+  
+  auth:
+    send_otp:
+      method: POST
+      path: "/auth/send-otp"
+      body:
+        phone: "+919876543210"
+        country_code: "+91"
+      response:
+        success: true
+        message: "OTP sent successfully"
+        expires_in: 300
+    
+    verify_otp:
+      method: POST
+      path: "/auth/verify-otp"
+      body:
+        phone: "+919876543210"
+        otp: "1234"
+      response:
+        success: true
+        access_token: "eyJhbGciOiJIUzI1NiIs..."
+        refresh_token: "eyJhbGciOiJIUzI1NiIs..."
+        user:
+          id: "user_123"
+          phone: "+919876543210"
+          name: "Rahul Sharma"
+          role: "customer"
+          created_at: "2026-01-15T10:30:00Z"
+    
+    refresh_token:
+      method: POST
+      path: "/auth/refresh"
+      body:
+        refresh_token: "eyJhbGciOiJIUzI1NiIs..."
+      response:
+        access_token: "new_access_token"
+        refresh_token: "new_refresh_token"
+
+  # ============================================================================
+  # CUSTOMER ENDPOINTS
+  # ============================================================================
+  
+  customer:
+    get_nearby_shops:
+      method: GET
+      path: "/customer/shops/nearby"
+      query:
+        latitude: 12.9716
+        longitude: 77.5946
+        radius: 5000
+        filters: "verified,open"
+        sort: "distance"
+      response:
+        shops:
+          - id: "shop_123"
+            name: "Blue Spring Aquatics"
+            location:
+              latitude: 12.9720
+              longitude: 77.5950
+              address: "Koramangala, Bangalore"
+            distance: 1200
+            rating: 4.8
+            total_ratings: 1234
+            delivery_time: "25-30 mins"
+            is_open: true
+            is_verified: true
+            products:
+              - id: "prod_001"
+                name: "20L Mineral Water Can"
+                price: 45
+                image_url: "https://..."
+    
+    get_shop_detail:
+      method: GET
+      path: "/customer/shops/{shop_id}"
+      response:
+        shop:
+          id: "shop_123"
+          name: "Blue Spring Aquatics"
+          description: "Premium water supplier"
+          rating: 4.8
+          hours:
+            monday: { open: "06:00", close: "23:00" }
+            tuesday: { open: "06:00", close: "23:00" }
+          certifications: ["ISO", "FSSAI", "BIS"]
+          payment_methods: ["UPI", "COD", "Card"]
+          products: [...]
+          reviews: [...]
+    
+    place_order:
+      method: POST
+      path: "/customer/orders"
+      body:
+        shop_id: "shop_123"
+        items:
+          - product_id: "prod_001"
+            quantity: 2
+          - product_id: "prod_002"
+            quantity: 1
+        delivery_address:
+          address_id: "addr_123"
+          instructions: "Ring doorbell twice"
+        delivery_time:
+          type: "asap"
+        payment_method: "upi"
+        promo_code: "FIRST50"
+      response:
+        success: true
+        order:
+          id: "order_WD4524"
+          status: "PENDING"
+          total_amount: 455
+          estimated_delivery: "2026-04-09T15:30:00Z"
+          payment_status: "pending"
+    
+    get_order_history:
+      method: GET
+      path: "/customer/orders"
+      query:
+        status: "delivered"
+        page: 1
+        limit: 20
+      response:
+        orders: [...]
+        pagination:
+          current_page: 1
+          total_pages: 5
+          total_orders: 95
+    
+    track_order:
+      method: GET
+      path: "/customer/orders/{order_id}/track"
+      response:
+        order:
+          id: "order_WD4524"
+          status: "OUT_FOR_DELIVERY"
+          timeline:
+            - status: "PENDING"
+              timestamp: "2026-04-09T14:15:00Z"
+            - status: "ACCEPTED"
+              timestamp: "2026-04-09T14:17:00Z"
+          delivery_person:
+            name: "Arjun Kumar"
+            phone: "+919876543210"
+            current_location:
+              latitude: 12.9725
+              longitude: 77.5955
+          eta: "15-20 mins"
+  
+  # ============================================================================
+  # SHOP OWNER ENDPOINTS
+  # ============================================================================
+  
+  shop:
+    get_dashboard:
+      method: GET
+      path: "/shop/dashboard"
+      query:
+        date: "2026-04-09"
+      response:
+        metrics:
+          revenue: 12450
+          orders: 32
+          new_customers: 8
+          avg_order_value: 389
+        active_orders:
+          new: 2
+          preparing: 1
+          out_for_delivery: 1
+        orders: [...]
+    
+    accept_order:
+      method: POST
+      path: "/shop/orders/{order_id}/accept"
+      body:
+        estimated_preparation_time: 15
+      response:
+        success: true
+        order:
+          id: "order_WD4524"
+          status: "ACCEPTED"
+          delivery_otp: "4532"
+    
+    reject_order:
+      method: POST
+      path: "/shop/orders/{order_id}/reject"
+      body:
+        reason: "out_of_stock"
+        comment: "20L cans out of stock"
+      response:
+        success: true
+        refund_initiated: true
+    
+    update_order_status:
+      method: PATCH
+      path: "/shop/orders/{order_id}/status"
+      body:
+        status: "PREPARING"
+        notes: "Order being prepared"
+      response:
+        success: true
+        status: "PREPARING"
+    
+    update_inventory:
+      method: PATCH
+      path: "/shop/inventory/{product_id}"
+      body:
+        stock: 45
+        price: 45
+        available: true
+      response:
+        success: true
+        product:
+          id: "prod_001"
+          stock: 45
+          updated_at: "2026-04-09T16:30:00Z"
+    
+    get_earnings:
+      method: GET
+      path: "/shop/earnings"
+      query:
+        from: "2026-04-01"
+        to: "2026-04-09"
+      response:
+        total_revenue: 125000
+        total_orders: 287
+        pending_payout: 12450
+        payouts_history: [...]
+        daily_breakdown:
+          - date: "2026-04-09"
+            revenue: 12450
+            orders: 32
+
+  # ============================================================================
+  # DELIVERY PERSON ENDPOINTS
+  # ============================================================================
+  
+  delivery:
+    get_assigned_orders:
+      method: GET
+      path: "/delivery/orders/assigned"
+      response:
+        orders:
+          - id: "order_WD4524"
+            shop:
+              name: "Blue Spring Aquatics"
+              address: "..."
+              location: { lat: 12.9720, lng: 77.5950 }
+            customer:
+              name: "Rahul Sharma"
+              phone: "+919876543210"
+              address: "..."
+              location: { lat: 12.9730, lng: 77.5960 }
+            items_count: 3
+            payment_method: "COD"
+            amount: 455
+            priority: "normal"
+    
+    start_delivery:
+      method: POST
+      path: "/delivery/orders/{order_id}/start"
+      response:
+        success: true
+        navigation:
+          pickup_location: { lat: 12.9720, lng: 77.5950 }
+          drop_location: { lat: 12.9730, lng: 77.5960 }
+          route: [...]
+          estimated_time: 18
+    
+    update_location:
+      method: POST
+      path: "/delivery/location"
+      body:
+        latitude: 12.9725
+        longitude: 77.5955
+        accuracy: 10
+      response:
+        success: true
+        eta_updated: true
+    
+    verify_otp:
+      method: POST
+      path: "/delivery/orders/{order_id}/verify-otp"
+      body:
+        otp: "4532"
+      response:
+        success: true
+        verified: true
+    
+    complete_delivery:
+      method: POST
+      path: "/delivery/orders/{order_id}/complete"
+      body:
+        proof_photo_url: "https://..."
+        cod_collected: 455
+        empty_cans_collected: 2
+      response:
+        success: true
+        earnings: 30
+        order:
+          id: "order_WD4524"
+          status: "DELIVERED"
+
+# ==============================================================================
+# WEBSOCKET EVENTS
+# ==============================================================================
+
+websocket:
+  url: "wss://api.thannigo.com/ws"
+  
+  authentication:
+    event: "authenticate"
+    payload:
+      token: "access_token"
+  
+  customer_events:
+    order_status_update:
+      event: "order:status"
+      payload:
+        order_id: "order_WD4524"
+        status: "OUT_FOR_DELIVERY"
+        timestamp: "2026-04-09T15:00:00Z"
+    
+    delivery_location_update:
+      event: "delivery:location"
+      payload:
+        order_id: "order_WD4524"
+        latitude: 12.9725
+        longitude: 77.5955
+        eta: 15
+  
+  shop_events:
+    new_order:
+      event: "shop:new_order"
+      payload:
+        order_id: "order_WD4524"
+        customer_name: "Rahul Sharma"
+        amount: 455
+        items_count: 3
+  
+  delivery_events:
+    new_assignment:
+      event: "delivery:assigned"
+      payload:
+        order_id: "order_WD4524"
+        pickup_address: "..."
+        drop_address: "..."
+        amount: 455
+
+# ==============================================================================
+# DATA MODELS
+# ==============================================================================
+
+models:
+  User:
+    id: string
+    phone: string
+    name: string
+    email: string
+    role: "customer | shop_owner | delivery_person"
+    profile_photo_url: string
+    created_at: timestamp
+    updated_at: timestamp
+    is_active: boolean
+  
+  Customer:
+    user_id: string
+    saved_addresses: Address[]
+    saved_upi_ids: string[]
+    loyalty_points: number
+    total_orders: number
+    preferences:
+      language: string
+      notifications_enabled: boolean
+  
+  ShopOwner:
+    user_id: string
+    shop_id: string
+    bank_details: BankDetails
+    documents:
+      fssai: string
+      gst: string
+  
+  DeliveryPerson:
+    user_id: string
+    vehicle_type: "bike | scooter"
+    vehicle_number: string
+    license_number: string
+    current_location:
+      latitude: number
+      longitude: number
+    is_online: boolean
+    total_deliveries: number
+    rating: number
+  
+  Shop:
+    id: string
+    name: string
+    owner_id: string
+    description: string
+    location:
+      latitude: number
+      longitude: number
+      address: string
+      city: string
+      pincode: string
+    rating: number
+    total_ratings: number
+    is_verified: boolean
+    is_open: boolean
+    hours:
+      monday: { open: string, close: string }
+      tuesday: { open: string, close: string }
+      # ... rest of week
+    certifications: string[]
+    payment_methods: string[]
+    delivery_radius: number
+    min_order_amount: number
+    created_at: timestamp
+  
+  Product:
+    id: string
+    shop_id: string
+    name: string
+    description: string
+    category: "20L | 10L | 1L | Dispenser"
+    price: number
+    stock: number
+    image_url: string
+    is_available: boolean
+    created_at: timestamp
+    updated_at: timestamp
+  
+  Order:
+    id: string
+    shop_id: string
+    customer_id: string
+    delivery_person_id: string
+    items:
+      - product_id: string
+        product_name: string
+        quantity: number
+        price: number
+    delivery_address: Address
+    delivery_instructions: string
+    delivery_time:
+      type: "asap | scheduled"
+      scheduled_time: timestamp
+    payment:
+      method: "upi | cod | card"
+      amount: number
+      status: "pending | paid | failed | refunded"
+      transaction_id: string
+    status: "PENDING | ACCEPTED | PREPARING | READY | ASSIGNED | PICKED_UP | OUT_FOR_DELIVERY | DELIVERED | CANCELLED | FAILED"
+    delivery_otp: string
+    timeline:
+      - status: string
+        timestamp: timestamp
+        actor: string
+    created_at: timestamp
+    updated_at: timestamp
+  
+  Address:
+    id: string
+    user_id: string
+    type: "home | office | other"
+    address_line_1: string
+    address_line_2: string
+    landmark: string
+    city: string
+    state: string
+    pincode: string
+    location:
+      latitude: number
+      longitude: number
+    is_default: boolean
+  
+  Review:
+    id: string
+    order_id: string
+    customer_id: string
+    shop_id: string
+    rating: number
+    comment: string
+    reply: string
+    images: string[]
+    created_at: timestamp
+  
+  Notification:
+    id: string
+    user_id: string
+    type: "order | payment | alert | promo | system"
+    title: string
+    body: string
+    data: object
+    is_read: boolean
+    created_at: timestamp
+
+# ==============================================================================
+# VALIDATION RULES
+# ==============================================================================
+
+validation:
+  phone:
+    pattern: "^\\+91[6-9]\\d{9}$"
+    message: "Invalid Indian phone number"
+  
+  otp:
+    pattern: "^\\d{4}$"
+    message: "OTP must be 4 digits"
+  
+  email:
+    pattern: "^[^@]+@[^@]+\\.[^@]+$"
+    message: "Invalid email address"
+  
+  pincode:
+    pattern: "^[1-9]\\d{5}$"
+    message: "Invalid pincode"
+  
+  quantity:
+    min: 1
+    max: 50
+    message: "Quantity must be between 1 and 50"
+  
+  price:
+    min: 0
+    max: 10000
+    message: "Invalid price"
+
+# ==============================================================================
+# ERROR CODES
+# ==============================================================================
+
+error_codes:
+  # 400 - Bad Request
+  INVALID_PHONE: "Invalid phone number format"
+  INVALID_OTP: "Invalid OTP"
+  INVALID_QUANTITY: "Quantity must be between 1 and 50"
+  
+  # 401 - Unauthorized
+  UNAUTHORIZED: "Authentication required"
+  TOKEN_EXPIRED: "Access token expired"
+  INVALID_TOKEN: "Invalid access token"
+  
+  # 403 - Forbidden
+  SHOP_CLOSED: "Shop is currently closed"
+  ORDER_ALREADY_ACCEPTED: "Order already accepted by another shop"
+  
+  # 404 - Not Found
+  SHOP_NOT_FOUND: "Shop not found"
+  ORDER_NOT_FOUND: "Order not found"
+  PRODUCT_NOT_FOUND: "Product not found"
+  
+  # 409 - Conflict
+  OUT_OF_STOCK: "Product is out of stock"
+  DUPLICATE_ORDER: "Order already placed"
+  
+  # 500 - Internal Server Error
+  PAYMENT_FAILED: "Payment processing failed"
+  SERVER_ERROR: "Internal server error"
+
+# ==============================================================================
+# RATE LIMITS
+# ==============================================================================
+
+rate_limits:
+  send_otp: "5 requests per 10 minutes per phone"
+  verify_otp: "10 requests per 10 minutes per phone"
+  place_order: "20 requests per hour per user"
+  update_location: "100 requests per minute per delivery person"
+  general_api: "1000 requests per hour per user"

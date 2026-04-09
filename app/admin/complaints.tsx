@@ -48,7 +48,7 @@ export default function AdminComplaintsScreen() {
                   <Text style={styles.entitiesLabel}>{item.customer} • {item.shop}</Text>
                   
                   <View style={styles.issueBox}>
-                    <Text style={styles.issueText}>"{item.issue}"</Text>
+                    <Text style={styles.issueText}>{item.issue}</Text>
                   </View>
 
                   {item.status === 'open' && (

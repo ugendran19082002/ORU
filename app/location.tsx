@@ -118,7 +118,7 @@ export default function EnableLocationScreen() {
               onPress={handleEnableLocation}
             >
               <Ionicons name="refresh" size={20} color="white" />
-              <Text style={styles.buttonText}>I've Enabled It - Retry</Text>
+              <Text style={styles.buttonText}>Retry After Enabling</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
