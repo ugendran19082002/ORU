@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Checkout | Thannigo</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#f7f9ff",
+                        "background": "#f7f9ff",
+                        "secondary": "#006a61",
+                        "on-surface-variant": "#404751",
+                        "on-tertiary-fixed-variant": "#105139",
+                        "on-primary": "#ffffff",
+                        "tertiary": "#28654c",
+                        "primary": "#005e97",
+                        "surface-variant": "#e0e2e8",
+                        "surface-container-high": "#e6e8ee",
+                        "primary-container": "#0077be",
+                        "on-tertiary-container": "#e8fff0",
+                        "on-error": "#ffffff",
+                        "surface-container": "#eceef3",
+                        "on-tertiary-fixed": "#002114",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#f7f9ff",
+                        "tertiary-fixed": "#b1f0d0",
+                        "tertiary-container": "#437e64",
+                        "inverse-primary": "#9acbff",
+                        "inverse-surface": "#2d3135",
+                        "inverse-on-surface": "#eff1f6",
+                        "surface-container-highest": "#e0e2e8",
+                        "on-secondary-fixed-variant": "#005049",
+                        "surface-container-low": "#f2f3f9",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "on-background": "#181c20",
+                        "secondary-container": "#83f2e3",
+                        "surface-tint": "#00629e",
+                        "outline": "#707882",
+                        "outline-variant": "#c0c7d2",
+                        "on-primary-fixed": "#001d34",
+                        "secondary-fixed": "#86f5e6",
+                        "on-secondary-fixed": "#00201c",
+                        "on-secondary-container": "#006f65",
+                        "on-primary-fixed-variant": "#004a79",
+                        "primary-fixed-dim": "#9acbff",
+                        "secondary-fixed-dim": "#68d9ca",
+                        "primary-fixed": "#cfe5ff",
+                        "on-tertiary": "#ffffff",
+                        "surface-dim": "#d8dadf",
+                        "surface-bright": "#f7f9ff",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#96d4b5",
+                        "on-surface": "#181c20"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .editorial-shadow {
+            box-shadow: 0 12px 32px -8px rgba(0, 94, 151, 0.08);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface antialiased max-w-[390px] mx-auto min-h-screen relative overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 h-16 bg-[#f7f9ff]/70 backdrop-blur-md">
+<div class="flex items-center gap-4">
+<button class="active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[#005e97]" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline font-bold tracking-tight text-lg text-[#005e97]">Checkout</h1>
+</div>
+<span class="font-headline font-bold tracking-tight text-sm text-[#404751]">Step 2 of 3</span>
+</header>
+<main class="pt-20 pb-40 px-5 space-y-6">
+<!-- Order Items Card -->
+<section class="bg-surface-container-lowest rounded-xl p-5 editorial-shadow relative overflow-hidden">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="text-xs font-headline font-bold uppercase tracking-wider text-on-surface-variant">From:</span>
+<div class="flex items-center gap-1">
+<span class="text-sm font-headline font-bold text-primary">Aqua Crystal Pure</span>
+<span class="material-symbols-outlined text-secondary text-[16px]" data-icon="verified" data-weight="fill" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+</div>
+<div class="flex gap-4 items-start pb-4">
+<div class="w-16 h-16 rounded-lg bg-surface-container overflow-hidden flex-shrink-0">
+<img alt="20L Water Can" class="w-full h-full object-cover" data-alt="close-up of a large blue plastic 20 liter mineral water can in a clean bright studio setting with soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3UgCkBDnGy-kmT-FvDLf4gaJy2QZy7RJVZGWb_Gr-8z0Pxkfgc8Lt2iaCGz42vlp5SlrZrADnWtEzudHfzMFpJcUvtobqZ_BB5gSMth094vJlPWClv_d_y7c99cMreEVeSFFdJ15PLQuDgS0CFTly9nadCl5nu7PDw9wWEvUmgBaXPCSvfu1iwju3AZ6zHfpA3Ye1si92H46cDNYxTrSuRE5A2Kpe1aQ0xxvRRhKpkm_y7kWZxrp5lJw60DPpAc7-SNh8tS0h84dM"/>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<h3 class="font-headline font-bold text-on-surface leading-tight">20L Mineral Water Can</h3>
+<span class="font-headline font-bold text-on-surface">₹90.00</span>
+</div>
+<p class="text-xs text-on-surface-variant mt-1">Quantity: 2</p>
+</div>
+</div>
+<div class="pt-4 flex justify-end">
+<button class="flex items-center gap-1 text-primary-container font-headline font-bold text-sm hover:underline transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="add_circle">add_circle</span>
+                    + Add More Items
+                </button>
+</div>
+</section>
+<!-- Delivery Section -->
+<section class="space-y-4">
+<div class="flex items-center justify-between px-1">
+<h2 class="font-headline font-extrabold text-xl tracking-tight">Delivery Details</h2>
+</div>
+<div class="bg-surface-container-low rounded-xl p-4 flex items-start gap-3">
+<span class="material-symbols-outlined text-primary-container mt-1" data-icon="location_on">location_on</span>
+<div class="flex-grow">
+<p class="text-sm font-medium leading-relaxed text-on-surface">12/3, Koramangala 5th Block, near Blue Tokai, Bengaluru, 560095</p>
+</div>
+<button class="p-2 hover:bg-surface-container-highest rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="edit">edit</span>
+</button>
+</div>
+<div class="relative group">
+<input class="w-full bg-surface-container-lowest border-none rounded-xl px-4 py-4 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-outline transition-all" placeholder="Add Delivery Note (e.g. Leave at gate)" type="text"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors" data-icon="sticky_note_2">sticky_note_2</span>
+</div>
+<div class="flex items-center justify-between px-4 py-3 bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="schedule">schedule</span>
+<span class="text-sm font-semibold text-on-surface">Schedule for later</span>
+</div>
+<!-- Toggle Switch -->
+<button class="w-12 h-6 bg-surface-variant rounded-full relative transition-colors duration-300">
+<span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300 transform translate-x-0"></span>
+</button>
+</div>
+</section>
+<!-- Payment Section -->
+<section class="space-y-4">
+<h2 class="font-headline font-extrabold text-xl tracking-tight px-1">Payment Method</h2>
+<div class="space-y-3">
+<!-- UPI Active -->
+<div class="flex items-center justify-between p-4 rounded-xl bg-primary/5 ring-2 ring-primary transition-all">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="account_balance">account_balance</span>
+</div>
+<div>
+<p class="font-headline font-bold text-on-surface">UPI</p>
+<p class="text-[10px] uppercase tracking-widest text-primary font-bold">Fast &amp; Secure</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary" data-icon="radio_button_checked" style="font-variation-settings: 'FILL' 1;">radio_button_checked</span>
+</div>
+<!-- COD Inactive -->
+<div class="flex items-center justify-between p-4 rounded-xl bg-surface-container-low opacity-80 grayscale active:scale-95 transition-all">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="payments">payments</span>
+</div>
+<p class="font-headline font-bold text-on-surface">Cash on Delivery</p>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="radio_button_unchecked">radio_button_unchecked</span>
+</div>
+<!-- Wallet Chip -->
+<div class="flex items-center justify-between p-3 px-4 bg-secondary-container/30 rounded-xl border border-secondary-container/50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="text-xs font-bold text-on-secondary-container">Wallet Balance</span>
+</div>
+<span class="text-sm font-headline font-extrabold text-secondary">₹120 available</span>
+</div>
+</div>
+<!-- Coupon Input -->
+<div class="flex gap-2 pt-2">
+<div class="relative flex-grow">
+<input class="w-full bg-surface-container-lowest border-none rounded-xl pl-10 pr-4 py-4 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-outline" placeholder="Have a coupon?" type="text"/>
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline" data-icon="sell">sell</span>
+</div>
+<button class="bg-primary-container text-on-primary font-headline font-bold px-6 py-4 rounded-xl active:scale-95 transition-all">Apply</button>
+</div>
+</section>
+<!-- Price Breakdown -->
+<section class="bg-surface-container-low rounded-xl p-5 space-y-3">
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant">Item Total</span>
+<span class="font-medium">₹90.00</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant">Delivery Fee</span>
+<span class="text-secondary font-bold uppercase text-[10px] tracking-widest">Free</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant">Coupon Applied</span>
+<span class="text-error font-medium">-₹15.00</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant">Wallet Credit</span>
+<span class="text-error font-medium">-₹20.00</span>
+</div>
+<div class="h-[1px] bg-outline-variant/30 my-2"></div>
+<div class="flex justify-between items-center pt-1">
+<span class="font-headline font-extrabold text-lg">Total Payable</span>
+<span class="font-headline font-extrabold text-lg text-primary">₹65.00</span>
+</div>
+</section>
+</main>
+<!-- Sticky Bottom Button -->
+<footer class="fixed bottom-0 left-0 w-full bg-surface/90 backdrop-blur-xl px-6 py-6 rounded-t-[2rem] shadow-[0_-8px_40px_rgba(0,0,0,0.08)] z-50">
+<button class="w-full h-14 bg-gradient-to-r from-primary to-primary-container rounded-xl flex items-center justify-center gap-2 editorial-shadow active:scale-[0.98] transition-all">
+<span class="font-headline font-extrabold text-on-primary text-lg tracking-tight">Place Order — ₹65.00</span>
+</button>
+<div class="flex items-center justify-center gap-1.5 mt-4 opacity-60">
+<span class="material-symbols-outlined text-[16px]" data-icon="shield_check">shield</span>
+<span class="text-[10px] font-headline font-bold uppercase tracking-[0.1em]">Safe &amp; Secure Transaction</span>
+</div>
+</footer>
+</body></html>

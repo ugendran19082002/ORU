@@ -13,18 +13,15 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const ROLE_COLORS: Record<string, { start: string; end: string }> = {
-  customer: { start: "#005d90", end: "#0077b6" },
-  shop: { start: "#006878", end: "#008e9b" },
-  admin: { start: "#23616b", end: "#2d828f" },
-};
+import { roleAccent, roleGradients } from '@/constants/theme';
+import { useAppSession } from '@/hooks/use-app-session';
+import type { AppRole } from '@/types/session';
 
 const OTP_LENGTH = 6;
 
 export default function OTPScreen() {
   const router = useRouter();
+  const { signIn, setPreferredRole } = useAppSession();
   
   // 🔥 FIREBASE MOCKS: Temporarily suppress TS Errors before AuthContext is built
   const auth = () => ({ signInWithPhoneNumber: async (p: string) => ({}) });
@@ -33,10 +30,10 @@ export default function OTPScreen() {
 
   const { phone = "9876543210", role = "customer" } = useLocalSearchParams<{
     phone: string;
-    role: string;
+    role: AppRole;
   }>();
-  const theme = ROLE_COLORS[role] ?? ROLE_COLORS.customer;
-  const accent = theme.start;
+  const theme = roleGradients[role] ?? roleGradients.customer;
+  const accent = roleAccent[role] ?? roleAccent.customer;
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [verified, setVerified] = useState(false);
@@ -77,21 +74,21 @@ export default function OTPScreen() {
     try {
       // 🔥 FIREBASE INTEGRATION ZONE
       // 1. In production, this tries the Firebase confirm hook:
-      const res = await confirm.confirm(code);
+      await confirm.confirm(code);
 
       // Simulate network request...
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       // Force an error thrown here to simulate missing firebase configs and drop into the catch bypass
       throw new Error("Local dev mock bypassing Firebase");
-    } catch (error) {
+    } catch {
       // 🚨 DEV BYPASS: "catch addd anything otp allow inside"
       // Even if Firebase fails or is missing, explicitly grant access using any OTP during development
       setLoading(false);
       setVerified(true);
       
-      // Mark user as logged in for future Biometric sessions
-      await AsyncStorage.setItem('user_logged_in', 'true');
+      await setPreferredRole(role);
+      await signIn({ role, phone });
 
       Animated.spring(successAnim, {
         toValue: 1,
@@ -206,7 +203,7 @@ export default function OTPScreen() {
 
         {/* RESEND */}
         <View style={styles.resendRow}>
-          <Text style={styles.resendLabel}>Didn't receive the code?</Text>
+          <Text style={styles.resendLabel}>Didn&apos;t receive the code?</Text>
           {resendTimer > 0 ? (
             <Text style={styles.resendTimer}>Resend in {resendTimer}s</Text>
           ) : (

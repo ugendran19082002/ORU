@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 import { Platform } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { AppRouteGuard, AppSessionProvider } from '@/providers/AppSessionProvider';
 
 export const unstable_settings = {
   // Start from auth welcome screen
@@ -23,8 +24,10 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
+      <AppSessionProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <AppRouteGuard />
+          <Stack screenOptions={{ headerShown: false }}>
           {/* AUTH FLOW — entry point */}
           <Stack.Screen name="auth" options={{ headerShown: false, animation: 'fade' }} />
 
@@ -48,9 +51,10 @@ export default function RootLayout() {
 
           {/* MODAL */}
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </AppSessionProvider>
     </ErrorBoundary>
   );
 }

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#006f65",
+                    "inverse-surface": "#2d3135",
+                    "tertiary-container": "#437e64",
+                    "primary": "#005e97",
+                    "surface-container-low": "#f2f3f9",
+                    "on-tertiary": "#ffffff",
+                    "surface-container": "#eceef3",
+                    "surface-tint": "#00629e",
+                    "surface-bright": "#f7f9ff",
+                    "surface-container-highest": "#e0e2e8",
+                    "on-tertiary-fixed": "#002114",
+                    "tertiary-fixed-dim": "#96d4b5",
+                    "primary-fixed": "#cfe5ff",
+                    "on-tertiary-fixed-variant": "#105139",
+                    "on-secondary-fixed-variant": "#005049",
+                    "primary-fixed-dim": "#9acbff",
+                    "secondary": "#006a61",
+                    "on-surface-variant": "#404751",
+                    "on-background": "#181c20",
+                    "on-error-container": "#93000a",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary": "#28654c",
+                    "surface-container-high": "#e6e8ee",
+                    "secondary-fixed-dim": "#68d9ca",
+                    "tertiary-fixed": "#b1f0d0",
+                    "outline": "#707882",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed": "#86f5e6",
+                    "on-secondary": "#ffffff",
+                    "primary-container": "#0077be",
+                    "on-tertiary-container": "#e8fff0",
+                    "on-secondary-fixed": "#00201c",
+                    "on-primary-container": "#f7f9ff",
+                    "outline-variant": "#c0c7d2",
+                    "inverse-on-surface": "#eff1f6",
+                    "error-container": "#ffdad6",
+                    "on-surface": "#181c20",
+                    "surface": "#f7f9ff",
+                    "on-error": "#ffffff",
+                    "surface-variant": "#e0e2e8",
+                    "inverse-primary": "#9acbff",
+                    "secondary-container": "#83f2e3",
+                    "background": "#f7f9ff",
+                    "on-primary-fixed-variant": "#004a79",
+                    "on-primary-fixed": "#001d34",
+                    "error": "#ba1a1a",
+                    "surface-dim": "#d8dadf"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "2xl": "1rem",
+                    "3xl": "1.5rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .tonal-shift { transition: background-color 0.3s ease; }
+        .primary-gradient { background: linear-gradient(135deg, #005e97 0%, #0077be 100%); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+<div class="flex justify-between items-center px-6 py-4 w-full max-w-screen-xl mx-auto">
+<div class="flex items-center gap-1 cursor-pointer active:scale-95 duration-150">
+<span class="material-symbols-outlined text-primary" data-icon="location_on">location_on</span>
+<span class="text-[#1A2340] font-bold text-sm tracking-tight">Koramangala, Bangalore</span>
+<span class="material-symbols-outlined text-primary text-lg" data-icon="expand_more">expand_more</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative active:scale-95 duration-150 cursor-pointer">
+<span class="material-symbols-outlined text-slate-700" data-icon="notifications">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+</div>
+<div class="active:scale-95 duration-150 cursor-pointer">
+<span class="material-symbols-outlined text-slate-700" data-icon="shopping_cart">shopping_cart</span>
+</div>
+</div>
+</div>
+</header>
+<main class="pt-20 px-5 space-y-6">
+<!-- Search Bar -->
+<div class="relative w-full">
+<div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline" data-icon="search">search</span>
+</div>
+<input class="w-full h-[48px] pl-12 pr-4 bg-surface-container-high border-none rounded-[14px] text-sm focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest transition-all placeholder:text-outline/70" placeholder="Find refreshing water near you..." type="text"/>
+</div>
+<!-- Active Order Tracker -->
+<section class="bg-[#E8F7F4] p-4 rounded-[14px] flex flex-col gap-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="local_shipping" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
+<span class="text-on-secondary-container font-semibold text-sm">Your order is on the way!</span>
+</div>
+<div class="flex justify-between items-center relative px-2 py-1">
+<div class="absolute h-0.5 bg-secondary-fixed-dim w-[90%] left-4 top-1/2 -translate-y-1/2 z-0"></div>
+<div class="absolute h-0.5 bg-secondary w-[60%] left-4 top-1/2 -translate-y-1/2 z-0"></div>
+<!-- Steps -->
+<div class="relative z-10 w-3 h-3 rounded-full bg-secondary"></div>
+<div class="relative z-10 w-3 h-3 rounded-full bg-secondary"></div>
+<div class="relative z-10 w-3 h-3 rounded-full bg-secondary"></div>
+<div class="relative z-10 w-3 h-3 rounded-full bg-white border-2 border-secondary-fixed-dim"></div>
+</div>
+<div class="flex justify-between text-[10px] font-medium text-on-surface-variant/80 px-0">
+<span>Placed</span>
+<span>Accepted</span>
+<span>Out for Delivery</span>
+<span>Delivered</span>
+</div>
+</section>
+<!-- Hero Reorder Card -->
+<section class="bg-surface-container-lowest rounded-[20px] shadow-[0_12px_32px_rgba(24,28,32,0.06)] overflow-hidden relative border-l-[6px] border-primary">
+<div class="p-5 flex justify-between items-start">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<h2 class="text-[20px] font-bold text-[#1A2340] font-headline">One-Tap Refresh</h2>
+<span class="material-symbols-outlined text-primary text-xl" data-icon="water_drop">water_drop</span>
+</div>
+<p class="text-xs text-on-surface-variant">Reorder 2 cans from Aqua Crystal Pure</p>
+<div class="pt-2">
+<span class="text-[#48BCAE] font-bold text-sm">🕐 30-45 min · ₹90.00</span>
+</div>
+</div>
+<button class="primary-gradient text-white px-5 py-2.5 rounded-xl text-sm font-bold active:scale-95 transition-transform shadow-md">
+                    Reorder Now
+                </button>
+</div>
+</section>
+<!-- Filter Chips -->
+<div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
+<button class="whitespace-nowrap px-4 py-2 bg-primary-container text-on-primary-container rounded-full text-sm font-semibold">All Shops</button>
+<button class="whitespace-nowrap px-4 py-2 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium">Nearest</button>
+<button class="whitespace-nowrap px-4 py-2 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium">Top Rated</button>
+<button class="whitespace-nowrap px-4 py-2 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium">Budget</button>
+<button class="whitespace-nowrap px-4 py-2 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium">RO+UV</button>
+<button class="whitespace-nowrap px-4 py-2 bg-surface-container-high text-on-surface-variant rounded-full text-sm font-medium">Alkaline</button>
+</div>
+<!-- Promoted Section -->
+<section class="space-y-4">
+<div class="flex justify-between items-center">
+<h3 class="font-headline font-bold text-lg">Verified Partners</h3>
+<button class="text-primary font-bold text-sm flex items-center gap-1">
+                    View Map 
+                    <span class="material-symbols-outlined text-sm" data-icon="play_arrow">play_arrow</span>
+</button>
+</div>
+<div class="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+<!-- Shop Card 1 -->
+<div class="min-w-[180px] bg-surface-container-lowest rounded-3xl shadow-sm border border-outline-variant/10 overflow-hidden">
+<img class="w-full h-[100px] object-cover" data-alt="clean warehouse with rows of large blue water cooler jugs stacked on professional metal racks in bright lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVQ4tBINmA4OMaXFaiRlXuFwJts2MWVza0kqTVlldBi0v8zqbkgK1lx8JG3F4GeSKrvHhkh2uo31GTWMLZII6LIe1AdQBHY3ZjX-gzSZtFrESQ9Ja5c-sD1H86-VB-sjp73rxyKc46Ov4hUHr6aw4qqR5xRUn8Rl_aWtWc0AUk03cBl3QMt60_TgvcK5wpl6V9qPYhtLNv-fGalWlFEqNzcukEbwf2MYuWipP0n_xd0E6pUSYz6sATRTw8ApkqkI4hwwOYG2RUWWA"/>
+<div class="p-3 space-y-1.5">
+<div class="flex justify-between items-start">
+<span class="text-xs font-bold text-[#48BCAE]">Verified ✓</span>
+<div class="flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[#FF9800] text-xs" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-[10px] font-bold text-on-surface">4.8</span>
+</div>
+</div>
+<h4 class="font-bold text-sm text-[#1A2340] leading-tight truncate">Pure Drop Aqua</h4>
+<p class="text-[10px] text-on-surface-variant">0.8 km • HSR Layout</p>
+<div class="flex gap-1">
+<span class="px-2 py-0.5 bg-[#EEF7FF] text-primary text-[9px] font-bold rounded-md">RO+UV</span>
+</div>
+<p class="text-primary-container font-extrabold text-sm pt-1">₹35/can</p>
+</div>
+</div>
+<!-- Shop Card 2 -->
+<div class="min-w-[180px] bg-surface-container-lowest rounded-3xl shadow-sm border border-outline-variant/10 overflow-hidden">
+<img class="w-full h-[100px] object-cover" data-alt="close-up of water being poured into a large glass bottle with fresh condensation and a bright blue background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuByxpygzuMZlUntEv3XpiyjF9C6j2tsXleaaGJjogW2soDg5AAPqgeit0TydTQecIkcFCr8Hs_wCrefU_Td6i7m_FWgt-zQUpVzD464dgY0aMcWGCeY-58lmBPKLGhJfPJPimx10iOpQMpDfbuImt1ePPqD-X2N0X56JJot_MSRDm1e88_V3BvMrTK_VGk98HAsMKnKlvKpfDyAhRq1gK11XrtjuRHv-WgfSTPqt2nPeotSAtLxzfvphLihH1yRfMiI3OHcI3mln2Q"/>
+<div class="p-3 space-y-1.5">
+<div class="flex justify-between items-start">
+<span class="text-xs font-bold text-[#48BCAE]">Verified ✓</span>
+<div class="flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[#FF9800] text-xs" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-[10px] font-bold text-on-surface">4.5</span>
+</div>
+</div>
+<h4 class="font-bold text-sm text-[#1A2340] leading-tight truncate">Blue Wave Labs</h4>
+<p class="text-[10px] text-on-surface-variant">1.2 km • BTM Layout</p>
+<div class="flex gap-1">
+<span class="px-2 py-0.5 bg-[#EEF7FF] text-primary text-[9px] font-bold rounded-md">Alkaline</span>
+</div>
+<p class="text-primary-container font-extrabold text-sm pt-1">₹45/can</p>
+</div>
+</div>
+<!-- Shop Card 3 -->
+<div class="min-w-[180px] bg-surface-container-lowest rounded-3xl shadow-sm border border-outline-variant/10 overflow-hidden">
+<img class="w-full h-[100px] object-cover" data-alt="professional industrial water filtration system with stainless steel pipes and blue tanks in a clean facility" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDh1ej2XzZyBu2iZDwWS_sipRFXRxGikzms7MMjdd9iRDK5L7J7UNaL0nUc0FRG8Z21-aoUUsVIiNVbxNvwHGz9-d2Pv3VT7p6LRoj4hQSbQZyCnRsxD2pv9WWtllNzaGRhbafmTEkWAFxXBtpTn8QCDVHIugz53lhi9XhAB91pDspQKpDUoTq7c1tkQcXMbOrHHgwa8w_28WnXR5gUPZX-Dj9GnmVqOyY4BI68jteuI6DjNEgOhI8mLLkq7IQOIVyENkGcTz9JxSc"/>
+<div class="p-3 space-y-1.5">
+<div class="flex justify-between items-start">
+<span class="text-xs font-bold text-[#48BCAE]">Verified ✓</span>
+<div class="flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[#FF9800] text-xs" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-[10px] font-bold text-on-surface">4.9</span>
+</div>
+</div>
+<h4 class="font-bold text-sm text-[#1A2340] leading-tight truncate">EverFresh Pure</h4>
+<p class="text-[10px] text-on-surface-variant">2.1 km • Indiranagar</p>
+<div class="flex gap-1">
+<span class="px-2 py-0.5 bg-[#EEF7FF] text-primary text-[9px] font-bold rounded-md">RO+UV</span>
+</div>
+<p class="text-primary-container font-extrabold text-sm pt-1">₹40/can</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Secondary Promotions -->
+<section class="grid grid-cols-2 gap-4">
+<div class="bg-primary/5 p-4 rounded-3xl border border-primary/10">
+<span class="material-symbols-outlined text-primary mb-2" data-icon="eco">eco</span>
+<p class="text-xs font-bold text-primary">Eco-friendly Return</p>
+<p class="text-[10px] text-on-surface-variant mt-1">Get ₹5 back on every empty can return</p>
+</div>
+<div class="bg-tertiary/5 p-4 rounded-3xl border border-tertiary/10">
+<span class="material-symbols-outlined text-tertiary mb-2" data-icon="diamond">diamond</span>
+<p class="text-xs font-bold text-tertiary">Flow Rewards</p>
+<p class="text-[10px] text-on-surface-variant mt-1">Earn points on every 20L purchase</p>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pt-3 pb-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-50 rounded-t-[24px] shadow-[0_-4px_20px_rgba(24,28,32,0.04)] border-t border-slate-100 dark:border-slate-800">
+<a class="flex flex-col items-center justify-center text-blue-600 dark:text-blue-400 relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-blue-600 after:rounded-full transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-wide">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-blue-500 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-wide">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-blue-500 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-wide">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-blue-500 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-wide">Wallet</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 hover:text-blue-500 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Inter'] text-[10px] font-semibold tracking-wide">Profile</span>
+</a>
+</nav>
+</body></html>

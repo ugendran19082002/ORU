@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Image,
   StyleSheet,
   RefreshControl,
   Alert,
@@ -16,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
+import { useAppSession } from '@/hooks/use-app-session';
 
 const MENU_ITEMS = [
   { icon: 'location-outline' as const, label: 'Saved Addresses', subtitle: '2 saved locations', hasArrow: true },
@@ -29,6 +29,7 @@ const MENU_ITEMS = [
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { signOut } = useAppSession();
   const [refreshing, setRefreshing] = React.useState(false);
 
   const onRefresh = React.useCallback(() => {
@@ -38,8 +39,8 @@ export default function ProfileScreen() {
     }, 1000);
   }, []);
 
-  const handleSignOut = () => {
-    // Replace so user can't navigate back into the app
+  const handleSignOut = async () => {
+    await signOut();
     router.replace('/auth' as any);
   };
   return (

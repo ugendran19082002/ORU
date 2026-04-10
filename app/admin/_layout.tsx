@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Slot, useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Logo } from '@/components/ui/Logo';
+import { useAppSession } from '@/hooks/use-app-session';
 
 const { width } = Dimensions.get('window');
 const isMobile = width < 768; // Simple breakpoint for web/tablet vs mobile
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
 export default function AdminLayout() {
   const router = useRouter();
   const pathname = usePathname();
+  const { signOut } = useAppSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleNav = (path: string) => {
@@ -29,7 +31,8 @@ export default function AdminLayout() {
     if (isMobile) setMobileMenuOpen(false);
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    await signOut();
     router.replace('/auth' as any);
   };
 

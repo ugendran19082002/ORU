@@ -5,7 +5,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState, useEffect } from "react";
 import * as LocalAuthentication from 'expo-local-authentication';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -16,6 +15,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { roleAccent, roleGradients } from '@/constants/theme';
+import { useAppSession } from '@/hooks/use-app-session';
+import type { AppRole } from '@/types/session';
 
 const ROLE_LABELS: Record<string, string> = {
   customer: "Customer",
@@ -23,34 +25,26 @@ const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
 };
 
-const ROLE_COLORS: Record<string, { start: string; end: string }> = {
-  customer: { start: "#005d90", end: "#0077b6" },
-  shop: { start: "#006878", end: "#008e9b" },
-  admin: { start: "#23616b", end: "#2d828f" },
-};
-
 export default function LoginScreen() {
   const router = useRouter();
+  const { preferredRole, biometricEnabled, user, setPreferredRole } = useAppSession();
 
   // 🔥 FIREBASE MOCKS: Temporarily suppress TS Errors before AuthContext is built
-  const auth = () => ({ signInWithPhoneNumber: async (p: string) => ({}) });
-  const globalStore = { setConfirmation: (c: any) => {} };
 
-  const { role = "customer" } = useLocalSearchParams<{ role: string }>();
+  const { role = preferredRole ?? "customer" } = useLocalSearchParams<{ role: AppRole }>();
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const theme = ROLE_COLORS[role] ?? ROLE_COLORS.customer;
-  const accent = theme.start;
+  const theme = roleGradients[role] ?? roleGradients.customer;
+  const accent = roleAccent[role] ?? roleAccent.customer;
   const roleLabel = ROLE_LABELS[role] ?? "Customer";
 
   // Check for Biometric Auto-Login
   useEffect(() => {
     const checkBiometrics = async () => {
-      const isEnabled = await AsyncStorage.getItem('fingerprint_enabled');
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       
-      if (isEnabled === 'true' && hasHardware) {
+      if (biometricEnabled && user?.role === role && hasHardware) {
         const result = await LocalAuthentication.authenticateAsync({
           promptMessage: 'Login with Biometrics',
           fallbackLabel: 'Use PIN',
@@ -65,7 +59,11 @@ export default function LoginScreen() {
       }
     };
     checkBiometrics();
-  }, []);
+  }, [biometricEnabled, role, router, user?.role]);
+
+  useEffect(() => {
+    setPreferredRole(role);
+  }, [role, setPreferredRole]);
 
   const handleSendOTP = async () => {
     if (phone.length < 10) return;
@@ -82,7 +80,7 @@ export default function LoginScreen() {
 
       // Force an error thrown here to drop into the catch bypass
       throw new Error("Local dev mock bypassing Firebase SMS");
-    } catch (error) {
+    } catch {
       // 🚨 DEV BYPASS: Allow flow to continue to OTP entry screen regardless of SMS delivery status
       setLoading(false);
       router.push({ pathname: "/auth/otp", params: { phone, role } });
@@ -124,7 +122,7 @@ export default function LoginScreen() {
           <View style={styles.titleBlock}>
             <Text style={styles.title}>Enter your{"\n"}phone number</Text>
             <Text style={styles.subtitle}>
-              We'll send a 6-digit OTP to verify your identity
+              We&apos;ll send a 6-digit OTP to verify your identity
             </Text>
           </View>
 
@@ -153,7 +151,7 @@ export default function LoginScreen() {
 
           {/* TERMS */}
           <Text style={styles.terms}>
-            By continuing you agree to ThanniGo's{" "}
+            By continuing you agree to ThanniGo&apos;s{" "}
             <Text style={[styles.termsLink, { color: accent }]}>
               Terms of Service
             </Text>{" "}

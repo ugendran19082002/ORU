@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -12,8 +11,8 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Logo } from '@/components/ui/Logo';
-
-const { width } = Dimensions.get('window');
+import { roleAccent, roleGradients } from '@/constants/theme';
+import { useAppSession } from '@/hooks/use-app-session';
 
 type Role = 'customer' | 'shop' | 'admin';
 
@@ -23,7 +22,7 @@ const ROLES = [
     title: 'Customer',
     subtitle: 'Order pure water\ndelivered to your door',
     icon: 'person-outline' as const,
-    accent: '#005d90',
+    accent: roleAccent.customer,
     bg: '#e0f0ff',
     features: ['Browse nearby shops', 'Track live delivery', 'Pay via UPI / COD'],
   },
@@ -32,7 +31,7 @@ const ROLES = [
     title: 'Shop Owner',
     subtitle: 'Manage orders &\ngrow your business',
     icon: 'storefront-outline' as const,
-    accent: '#006878',
+    accent: roleAccent.shop,
     bg: '#e0f7fa',
     features: ['Accept/reject orders', 'Track daily earnings', 'View delivery map'],
   },
@@ -41,7 +40,7 @@ const ROLES = [
     title: 'Admin',
     subtitle: 'Oversee the entire\nThanniGo platform',
     icon: 'shield-checkmark-outline' as const,
-    accent: '#23616b',
+    accent: roleAccent.admin,
     bg: '#e0f2f1',
     features: ['Live orders feed', 'Shop verification', 'Revenue analytics'],
   },
@@ -49,10 +48,12 @@ const ROLES = [
 
 export default function RoleSelectScreen() {
   const router = useRouter();
+  const { setPreferredRole } = useAppSession();
   const [selected, setSelected] = useState<Role | null>(null);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!selected) return;
+    await setPreferredRole(selected);
     router.push({ pathname: '/auth/login', params: { role: selected } });
   };
 
@@ -129,7 +130,7 @@ export default function RoleSelectScreen() {
           style={[styles.ctaWrap, !selected && { opacity: 0.4 }]}
         >
           <LinearGradient
-            colors={['#005d90', '#0077b6']}
+            colors={[roleGradients.customer.start, roleGradients.customer.end]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.ctaBtn}

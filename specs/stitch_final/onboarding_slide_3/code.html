@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thannigo Onboarding - Track Every Drop</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-background": "#181c20",
+                    "surface": "#f7f9ff",
+                    "secondary-fixed-dim": "#68d9ca",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "background": "#f7f9ff",
+                    "tertiary-fixed": "#b1f0d0",
+                    "surface-container-highest": "#e0e2e8",
+                    "inverse-primary": "#9acbff",
+                    "error": "#ba1a1a",
+                    "on-surface-variant": "#404751",
+                    "inverse-on-surface": "#eff1f6",
+                    "on-primary-container": "#f7f9ff",
+                    "on-error-container": "#93000a",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-fixed-variant": "#005049",
+                    "tertiary-fixed-dim": "#96d4b5",
+                    "surface-tint": "#00629e",
+                    "on-secondary-container": "#006f65",
+                    "surface-bright": "#f7f9ff",
+                    "secondary-fixed": "#86f5e6",
+                    "surface-container": "#eceef3",
+                    "on-primary-fixed-variant": "#004a79",
+                    "primary-fixed": "#cfe5ff",
+                    "on-tertiary-fixed-variant": "#105139",
+                    "on-secondary-fixed": "#00201c",
+                    "surface-container-low": "#f2f3f9",
+                    "on-surface": "#181c20",
+                    "primary-container": "#0077be",
+                    "inverse-surface": "#2d3135",
+                    "tertiary-container": "#437e64",
+                    "on-tertiary-fixed": "#002114",
+                    "secondary-container": "#83f2e3",
+                    "tertiary": "#28654c",
+                    "primary-fixed-dim": "#9acbff",
+                    "outline-variant": "#c0c7d2",
+                    "secondary": "#006a61",
+                    "outline": "#707882",
+                    "surface-variant": "#e0e2e8",
+                    "surface-container-high": "#e6e8ee",
+                    "on-primary-fixed": "#001d34",
+                    "on-tertiary": "#ffffff",
+                    "surface-dim": "#d8dadf",
+                    "primary": "#005e97",
+                    "on-tertiary-container": "#e8fff0"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+        .illustration-bg {
+            background: radial-gradient(circle at center, #f0f7ff 0%, #ffffff 100%);
+        }
+        .primary-gradient {
+            background: linear-gradient(135deg, #005e97 0%, #0077be 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col h-screen w-full max-w-[390px] mx-auto overflow-hidden text-on-surface">
+<!-- Top AppBar (Suppressed FAB/Nav per Onboarding rules, but maintaining Brand Anchor Hierarchy) -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-6 h-16 bg-white/80 backdrop-blur-md">
+<span class="text-xl font-extrabold text-primary font-headline tracking-tight">Thannigo</span>
+</header>
+<!-- Top 55%: Illustration & Timeline -->
+<section class="flex-[55] flex flex-col justify-end items-center pt-16 pb-8 illustration-bg relative overflow-hidden">
+<!-- Floating Water Drops for Atmosphere -->
+<div class="absolute top-20 left-10 opacity-10 animate-pulse">
+<span class="material-symbols-outlined text-primary text-6xl" data-icon="water_drop">water_drop</span>
+</div>
+<!-- Vertical Order Status Timeline -->
+<div class="bg-surface-container-lowest p-8 rounded-3xl shadow-[0_12px_32px_rgba(24,28,32,0.06)] w-[85%] border-[1.5px] border-outline-variant/20">
+<div class="flex flex-col space-y-6 relative">
+<!-- Vertical Line -->
+<div class="absolute left-[13px] top-3 bottom-3 w-0.5 bg-surface-container-highest"></div>
+<!-- Step 1: Completed -->
+<div class="flex items-center space-x-4 relative">
+<div class="w-7 h-7 rounded-full bg-tertiary-fixed text-tertiary flex items-center justify-center z-10">
+<span class="material-symbols-outlined text-lg" data-icon="check">check</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Order Placed</p>
+<p class="text-xs text-outline">10:30 AM</p>
+</div>
+</div>
+<!-- Step 2: Completed -->
+<div class="flex items-center space-x-4 relative">
+<div class="w-7 h-7 rounded-full bg-tertiary-fixed text-tertiary flex items-center justify-center z-10">
+<span class="material-symbols-outlined text-lg" data-icon="check">check</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Accepted</p>
+<p class="text-xs text-outline">10:32 AM</p>
+</div>
+</div>
+<!-- Step 3: Active -->
+<div class="flex items-center space-x-4 relative">
+<div class="w-7 h-7 rounded-full bg-primary-container text-white flex items-center justify-center z-10 ring-4 ring-primary-fixed">
+<span class="material-symbols-outlined text-lg animate-spin" data-icon="cycle">cycle</span>
+</div>
+<div>
+<p class="text-sm font-bold text-primary-container">On Way</p>
+<p class="text-xs text-primary-container/80">Estimated 5 mins</p>
+</div>
+</div>
+<!-- Step 4: Pending -->
+<div class="flex items-center space-x-4 relative">
+<div class="w-7 h-7 rounded-full border-2 border-outline-variant bg-white z-10"></div>
+<div>
+<p class="text-sm font-medium text-outline">Delivered</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Decorative Map Background Blur Hint -->
+<div class="absolute -bottom-10 w-full h-24 bg-surface/50 blur-2xl"></div>
+</section>
+<!-- Bottom 45%: Text & Controls -->
+<section class="flex-[45] bg-white px-8 pt-10 pb-8 flex flex-col justify-between items-center text-center">
+<div class="space-y-4">
+<h1 class="text-[24px] font-bold font-headline text-[#1A2340] leading-tight tracking-tight">
+                Track Every Drop Live
+            </h1>
+<p class="text-[15px] leading-relaxed text-[#74777C] px-2 font-body">
+                Real-time updates at every step from shop to your door.
+            </p>
+</div>
+<div class="w-full flex flex-col items-center space-y-10">
+<!-- Pagination Dots -->
+<div class="flex space-x-2">
+<div class="w-2 h-2 rounded-full bg-[#A0DEBF]"></div>
+<div class="w-2 h-2 rounded-full bg-[#A0DEBF]"></div>
+<div class="w-6 h-2 rounded-full bg-[#0077BE]"></div>
+</div>
+<!-- Get Started Button -->
+<button class="w-full h-[52px] rounded-xl primary-gradient text-white font-headline font-bold text-base shadow-[0_8px_16px_rgba(0,94,151,0.2)] active:scale-[0.98] transition-all">
+                Get Started
+            </button>
+</div>
+</section>
+<!-- Implicit Screen Identity: Onboarding / Transactional -->
+<!-- NAVIGATION SHELL SUPPRESSED AS PER DESIGN SYSTEM MANDATE FOR FOCUS JOURNEYS -->
+</body></html>

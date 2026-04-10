@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thannigo Credit Book</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-dim": "#d8dadf",
+                    "primary-fixed-dim": "#9acbff",
+                    "on-surface-variant": "#404751",
+                    "on-error-container": "#93000a",
+                    "surface": "#f7f9ff",
+                    "surface-tint": "#00629e",
+                    "surface-container-highest": "#e0e2e8",
+                    "on-secondary-fixed-variant": "#005049",
+                    "on-secondary-fixed": "#00201c",
+                    "on-secondary": "#ffffff",
+                    "tertiary-container": "#437e64",
+                    "on-primary-fixed": "#001d34",
+                    "error-container": "#ffdad6",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed": "#b1f0d0",
+                    "on-surface": "#181c20",
+                    "primary": "#005e97",
+                    "inverse-on-surface": "#eff1f6",
+                    "outline-variant": "#c0c7d2",
+                    "inverse-surface": "#2d3135",
+                    "secondary-container": "#83f2e3",
+                    "on-tertiary-fixed": "#002114",
+                    "tertiary": "#28654c",
+                    "on-primary": "#ffffff",
+                    "primary-fixed": "#cfe5ff",
+                    "outline": "#707882",
+                    "surface-bright": "#f7f9ff",
+                    "surface-variant": "#e0e2e8",
+                    "surface-container": "#eceef3",
+                    "on-tertiary-fixed-variant": "#105139",
+                    "primary-container": "#0077be",
+                    "on-tertiary-container": "#e8fff0",
+                    "secondary-fixed": "#86f5e6",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed-variant": "#004a79",
+                    "on-background": "#181c20",
+                    "secondary-fixed-dim": "#68d9ca",
+                    "tertiary-fixed-dim": "#96d4b5",
+                    "background": "#f7f9ff",
+                    "surface-container-low": "#f2f3f9",
+                    "on-tertiary": "#ffffff",
+                    "secondary": "#006a61",
+                    "inverse-primary": "#9acbff",
+                    "surface-container-high": "#e6e8ee",
+                    "on-error": "#ffffff",
+                    "on-primary-container": "#f7f9ff",
+                    "on-secondary-container": "#006f65"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tap-highlight-none { -webkit-tap-highlight-color: transparent; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface antialiased selection:bg-primary-fixed">
+<!-- Top App Bar (From Shared Components) -->
+<header class="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-[0_12px_32px_rgba(0,119,190,0.08)] docked full-width top-0 z-50 sticky flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-3">
+<button class="material-symbols-outlined text-on-surface hover:bg-blue-50 transition-colors p-2 rounded-full">arrow_back</button>
+<h1 class="font-headline font-bold text-lg text-on-surface">Credit Book</h1>
+</div>
+<div class="relative">
+<span class="bg-error text-white text-[10px] font-bold px-2 py-0.5 rounded-full">₹2,450 pending</span>
+</div>
+</header>
+<main class="max-w-[390px] mx-auto px-4 pt-6 pb-32">
+<!-- Summary Card -->
+<section class="bg-surface-container-lowest rounded-[14px] border border-outline-variant/30 p-6 shadow-sm mb-6">
+<div class="flex justify-between items-start mb-2">
+<div>
+<h2 class="font-headline text-[18px] font-bold text-[#1A2340]">Total Outstanding</h2>
+<p class="text-[13px] text-on-surface-variant">From 8 customers</p>
+</div>
+<div class="bg-orange-50 text-[#FF9800] text-[11px] font-bold px-3 py-1 rounded-full border border-orange-100">
+                    Oldest due: 12 days
+                </div>
+</div>
+<div class="mt-4">
+<span class="font-headline text-[40px] font-extrabold text-error tracking-tight leading-none">₹2,450</span>
+</div>
+</section>
+<!-- Filter Tabs -->
+<nav class="flex gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
+<button class="bg-primary text-white px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap">All</button>
+<button class="bg-surface-container-highest text-on-surface px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap flex items-center gap-2">
+                Overdue 7+ days
+                <span class="bg-error text-white text-[10px] px-1.5 py-0.5 rounded-full">3</span>
+</button>
+<button class="bg-surface-container-highest text-on-surface px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap">This Week</button>
+</nav>
+<!-- Customer List -->
+<div class="space-y-3">
+<!-- Customer Row: Overdue -->
+<div class="bg-[#FFF0F0] border-l-4 border-error rounded-[12px] p-4 flex items-center justify-between shadow-sm transition-all active:scale-[0.98]">
+<div class="flex items-center gap-3">
+<input checked="" class="w-5 h-5 rounded border-error text-error focus:ring-error" type="checkbox"/>
+<div class="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center text-error font-bold overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="portrait of a middle-aged smiling man working in a small retail shop warm lighting realistic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFhGXRA6IhQgfKk1Hc327Fx0Vc5XGmwT6BhVLyeP3VOGEsqpqgZvvcN4zn8d9B0AdSmi7Jd3KIW1kPorttCQPdHnZtfegBoK2y8oOrpgnuvP6GAeILzc2yXvYhWL89FADaaOKdQ38vWxGwX-cePEDgTDYW8T_AN_5myn4Qj4eRQZFNgZiZGggIUXz_Os9i_vuODsV54jbmEMzdM7QCmkyXtFzIhA917Z3lIywnREMirrdpFgvR2LstOEcJ2S42ZJUUacPlsNinzM_B"/>
+</div>
+<div>
+<h3 class="font-bold text-[#1A2340] text-[14px]">Rajesh Kumar</h3>
+<p class="text-[12px] text-on-surface-variant">+91 98765 43210</p>
+<p class="text-[11px] text-error font-medium mt-1">Since 8 Apr · 3 orders unpaid</p>
+</div>
+</div>
+<div class="text-right">
+<div class="text-error font-bold text-[16px]">₹450</div>
+<div class="flex gap-2 mt-2">
+<button class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined text-[18px]">call</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#25D366] shadow-sm">
+<span class="material-symbols-outlined text-[18px]">chat</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Customer Row: Regular -->
+<div class="bg-surface-container-lowest border border-outline-variant/30 rounded-[12px] p-4 flex items-center justify-between shadow-sm transition-all active:scale-[0.98]">
+<div class="flex items-center gap-3">
+<input class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/>
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant font-bold">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div>
+<h3 class="font-bold text-[#1A2340] text-[14px]">Ananya Sharma</h3>
+<p class="text-[12px] text-on-surface-variant">+91 91234 56789</p>
+<p class="text-[11px] text-on-surface-variant mt-1">Since 14 Apr · 1 order unpaid</p>
+</div>
+</div>
+<div class="text-right">
+<div class="text-error font-bold text-[16px]">₹280</div>
+<button class="mt-2 text-primary font-bold text-[12px] flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+                        Mark Paid
+                    </button>
+</div>
+</div>
+<!-- Customer Row: Overdue 2 -->
+<div class="bg-[#FFF0F0] border-l-4 border-error rounded-[12px] p-4 flex items-center justify-between shadow-sm transition-all active:scale-[0.98]">
+<div class="flex items-center gap-3">
+<input checked="" class="w-5 h-5 rounded border-error text-error focus:ring-error" type="checkbox"/>
+<div class="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center text-error font-bold">
+                        VK
+                    </div>
+<div>
+<h3 class="font-bold text-[#1A2340] text-[14px]">Vikram Khanna</h3>
+<p class="text-[12px] text-on-surface-variant">+91 88822 33110</p>
+<p class="text-[11px] text-error font-medium mt-1">Since 10 Apr · 2 orders unpaid</p>
+</div>
+</div>
+<div class="text-right">
+<div class="text-error font-bold text-[16px]">₹1,120</div>
+<div class="flex gap-2 mt-2">
+<button class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined text-[18px]">call</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#25D366] shadow-sm">
+<span class="material-symbols-outlined text-[18px]">chat</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Batch Action Floating Button -->
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-surface via-surface to-transparent pointer-events-none">
+<div class="max-w-[390px] mx-auto pointer-events-auto">
+<button class="w-full h-[52px] bg-[#FF9800] text-white rounded-[14px] font-bold text-[15px] flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-transform">
+<span class="material-symbols-outlined">send</span>
+                Send WhatsApp reminder to 3 selected
+            </button>
+</div>
+</div>
+<!-- Mark Paid Sheet (Simulated Overlay) -->
+<div class="fixed inset-0 bg-on-surface/40 backdrop-blur-sm z-[60] flex items-end">
+<div class="w-full bg-surface rounded-t-[24px] p-6 max-w-[420px] mx-auto shadow-2xl animate-slide-up">
+<div class="w-12 h-1.5 bg-outline-variant/40 rounded-full mx-auto mb-6"></div>
+<div class="flex justify-between items-start mb-6">
+<div>
+<h4 class="text-[13px] text-on-surface-variant uppercase tracking-wider font-bold">Settling Account</h4>
+<h3 class="text-2xl font-headline font-extrabold text-[#1A2340]">Rajesh Kumar</h3>
+</div>
+<div class="text-right">
+<p class="text-[11px] text-on-surface-variant">Total Owed</p>
+<p class="text-xl font-bold text-error">₹450</p>
+</div>
+</div>
+<div class="space-y-4 mb-8">
+<div class="relative">
+<label class="absolute -top-2.5 left-4 bg-surface px-1 text-[11px] font-bold text-primary">Amount received</label>
+<div class="flex items-center bg-surface-container-low border-2 border-tertiary-fixed-dim rounded-xl px-4 py-3 focus-within:border-primary transition-colors">
+<span class="text-xl font-bold text-[#1A2340] mr-2">₹</span>
+<input class="bg-transparent border-none focus:ring-0 text-xl font-extrabold text-[#1A2340] p-0 w-full placeholder:text-outline-variant" placeholder="450" type="number"/>
+</div>
+</div>
+</div>
+<button class="w-full h-[52px] bg-secondary text-white rounded-[14px] font-bold text-lg flex items-center justify-center gap-2 shadow-xl active:scale-95 transition-transform">
+<span class="material-symbols-outlined">check_circle</span>
+                Confirm Payment
+            </button>
+</div>
+</div>
+<!-- Navigation Drawer (From Shared Components - Background Instance) -->
+<aside class="hidden w-80 flex flex-col h-screen bg-slate-50 dark:bg-slate-950 rounded-r-3xl absolute left-0 top-0 z-40">
+<!-- Content suppressed for this focused task screen -->
+</aside>
+<!-- Navigation Bar (Shared - Hidden on Mobile Task Screen) -->
+<nav class="fixed bottom-0 w-full flex justify-around items-center px-4 pb-8 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg rounded-3xl h-16 shadow-2xl z-50 hidden">
+<!-- Suppressed for transactional focus -->
+</nav>
+</body></html>

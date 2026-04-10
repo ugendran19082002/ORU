@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thannigo - Phone Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2, h3 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "inverse-surface": "#2d3135",
+                      "tertiary-container": "#437e64",
+                      "on-error-container": "#93000a",
+                      "on-surface-variant": "#404751",
+                      "on-secondary-fixed-variant": "#005049",
+                      "primary-fixed-dim": "#9acbff",
+                      "on-surface": "#181c20",
+                      "on-secondary": "#ffffff",
+                      "secondary": "#006a61",
+                      "tertiary-fixed-dim": "#96d4b5",
+                      "on-primary-fixed-variant": "#004a79",
+                      "on-tertiary-fixed-variant": "#105139",
+                      "surface-container-low": "#f2f3f9",
+                      "surface-container-lowest": "#ffffff",
+                      "on-background": "#181c20",
+                      "tertiary-fixed": "#b1f0d0",
+                      "inverse-primary": "#9acbff",
+                      "surface-variant": "#e0e2e8",
+                      "error": "#ba1a1a",
+                      "tertiary": "#28654c",
+                      "on-tertiary-fixed": "#002114",
+                      "secondary-fixed-dim": "#68d9ca",
+                      "on-secondary-fixed": "#00201c",
+                      "on-primary": "#ffffff",
+                      "surface-tint": "#00629e",
+                      "on-tertiary": "#ffffff",
+                      "on-error": "#ffffff",
+                      "surface-container-high": "#e6e8ee",
+                      "background": "#f7f9ff",
+                      "surface-bright": "#f7f9ff",
+                      "error-container": "#ffdad6",
+                      "secondary-container": "#83f2e3",
+                      "outline-variant": "#c0c7d2",
+                      "primary-fixed": "#cfe5ff",
+                      "on-tertiary-container": "#e8fff0",
+                      "surface-container-highest": "#e0e2e8",
+                      "inverse-on-surface": "#eff1f6",
+                      "outline": "#707882",
+                      "on-secondary-container": "#006f65",
+                      "primary": "#005e97",
+                      "surface-dim": "#d8dadf",
+                      "secondary-fixed": "#86f5e6",
+                      "surface": "#f7f9ff",
+                      "on-primary-fixed": "#001d34",
+                      "on-primary-container": "#f7f9ff",
+                      "primary-container": "#0077be",
+                      "surface-container": "#eceef3"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "2xl": "1.5rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "headline": ["Plus Jakarta Sans"],
+                      "body": ["Inter"],
+                      "label": ["Inter"]
+              }
+            },
+          }
+        }
+      </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[#f7f9ff] min-h-screen flex items-center justify-center p-4">
+<!-- Login Container -->
+<main class="w-full max-w-[440px]">
+<!-- White Card -->
+<div class="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_12px_32px_rgba(24,28,32,0.06)] flex flex-col items-center">
+<!-- Logo Section -->
+<div class="mb-8 flex flex-col items-center">
+<div class="w-12 h-12 flex items-center justify-center rounded-xl bg-primary-container/10 mb-4">
+<span class="material-symbols-outlined text-primary-container text-[40px]" data-icon="water_drop">water_drop</span>
+</div>
+<h1 class="text-[#1A2340] text-[26px] font-bold tracking-tight text-center">Welcome back</h1>
+<p class="text-[#74777C] text-[14px] mt-2 text-center">Enter your phone number to continue</p>
+</div>
+<!-- Form Section -->
+<form class="w-full space-y-6">
+<!-- Phone Input Field -->
+<div class="space-y-2">
+<div class="relative flex items-center">
+<div class="absolute left-4 flex items-center border-r border-outline-variant/30 pr-3 pointer-events-none">
+<span class="text-primary-container font-bold text-base">+91</span>
+</div>
+<input class="w-full h-14 pl-20 pr-4 bg-surface-container-low border-[1.5px] border-[#A0DEBF] rounded-xl text-on-surface font-medium focus:ring-0 focus:border-primary-container focus:bg-surface-container-lowest transition-all placeholder:text-outline/50" maxlength="10" placeholder="Mobile Number" type="tel"/>
+</div>
+</div>
+<!-- Submit Button -->
+<button class="w-full h-[52px] bg-gradient-to-br from-primary to-primary-container text-white font-semibold rounded-[14px] shadow-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2" type="submit">
+                    Send OTP
+                    <span class="material-symbols-outlined text-[20px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</form>
+<!-- Registration Link -->
+<div class="mt-8">
+<p class="text-on-surface-variant text-sm">
+                    New user? 
+                    <a class="text-primary-container font-bold hover:underline transition-all" href="#">Register here</a>
+</p>
+</div>
+<!-- Terms & Privacy -->
+<div class="mt-12 text-center">
+<p class="text-[#74777C] text-[11px] leading-relaxed max-w-[280px]">
+                    By continuing, you agree to our 
+                    <a class="font-medium underline hover:text-primary transition-colors" href="#">Terms</a> &amp; 
+                    <a class="font-medium underline hover:text-primary transition-colors" href="#">Privacy Policy</a>
+</p>
+</div>
+</div>
+<!-- Decorative Elements (Asymmetric) -->
+<div class="relative mt-8 opacity-40">
+<div class="absolute -top-40 -left-20 w-64 h-64 bg-primary-container/5 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute -top-20 -right-20 w-48 h-48 bg-secondary-container/10 rounded-full blur-3xl pointer-events-none"></div>
+</div>
+</main>
+<!-- Shell Suppression Notice: This is a task-focused transactional screen, so TopAppBar and BottomNavBar are suppressed to prioritize focus. -->
+</body></html>

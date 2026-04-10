@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thannigo Delivery Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "surface-tint": "#00629e",
+                "on-tertiary-container": "#e8fff0",
+                "on-surface": "#181c20",
+                "primary-fixed-dim": "#9acbff",
+                "primary-fixed": "#cfe5ff",
+                "on-background": "#181c20",
+                "surface-dim": "#d8dadf",
+                "primary-container": "#0077be",
+                "on-tertiary": "#ffffff",
+                "on-surface-variant": "#404751",
+                "outline": "#707882",
+                "on-error-container": "#93000a",
+                "on-error": "#ffffff",
+                "error-container": "#ffdad6",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary-fixed": "#002114",
+                "on-secondary-fixed": "#00201c",
+                "tertiary-fixed-dim": "#96d4b5",
+                "secondary": "#006a61",
+                "surface-bright": "#f7f9ff",
+                "error": "#ba1a1a",
+                "secondary-fixed-dim": "#68d9ca",
+                "on-primary-fixed-variant": "#004a79",
+                "outline-variant": "#c0c7d2",
+                "on-primary-fixed": "#001d34",
+                "surface-container": "#eceef3",
+                "inverse-on-surface": "#eff1f6",
+                "secondary-container": "#83f2e3",
+                "on-secondary": "#ffffff",
+                "on-secondary-fixed-variant": "#005049",
+                "tertiary-container": "#437e64",
+                "background": "#f7f9ff",
+                "inverse-primary": "#9acbff",
+                "inverse-surface": "#2d3135",
+                "surface": "#f7f9ff",
+                "surface-container-low": "#f2f3f9",
+                "surface-variant": "#e0e2e8",
+                "on-tertiary-fixed-variant": "#105139",
+                "tertiary-fixed": "#b1f0d0",
+                "on-primary": "#ffffff",
+                "on-secondary-container": "#006f65",
+                "secondary-fixed": "#86f5e6",
+                "tertiary": "#28654c",
+                "primary": "#005e97",
+                "surface-container-highest": "#e0e2e8",
+                "surface-container-high": "#e6e8ee",
+                "on-primary-container": "#f7f9ff"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "fontFamily": {
+                "headline": ["Manrope"],
+                "body": ["Plus Jakarta Sans"],
+                "label": ["Plus Jakarta Sans"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-manrope { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-[0_12px_32px_rgba(0,119,190,0.08)]">
+<div class="flex justify-between items-center px-6 h-16 w-full max-w-none">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sky-700 dark:text-sky-400">water_drop</span>
+<h1 class="text-xl font-extrabold text-sky-900 dark:text-sky-100 tracking-tighter font-manrope">Shop Admin</h1>
+</div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="text-xs font-semibold text-on-surface-variant">Thu, 9 Apr</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-white font-bold text-xs border-2 border-white shadow-sm overflow-hidden">
+<img alt="Admin Profile" class="w-full h-full object-cover" data-alt="professional profile portrait of a logistics manager in a clean modern office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUoNYevo63Wp1D5l-UcWWAZVbQx8WR9bOX2NWoMY5VkOlvcj88nCzP4PwgHxz7Oatv3xDi8XItC4wP91lP3QN8XA7J_F6BN-hYFiziLS20RfRAWUARC8ZWgaD8vstV1RGxLWBkphTs99p4OFJe_tNF2BTYG8Y5rFJ8emgP7ZFx74-fAVxORvnqPQm1O1hThDRZPzbX9DeFnOS3OBatZH3r9e8cDSose3zGtN8qo93MyYWjt5X5MpubzsA-VgqsPOcY-3kkfbabnwz-"/>
+</div>
+</div>
+</div>
+</header>
+<main class="mt-20 px-4 space-y-6 max-w-md mx-auto">
+<!-- Header Section -->
+<section class="flex justify-between items-end">
+<div>
+<h2 class="text-3xl font-manrope font-extrabold text-on-surface tracking-tight">Deliveries</h2>
+<p class="text-on-surface-variant font-medium">Thu, 9 Apr</p>
+</div>
+<div class="flex flex-col items-end">
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase mb-1">Live Status</span>
+<div class="flex items-center gap-1">
+<div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+<span class="text-xs font-semibold text-secondary">Operational</span>
+</div>
+</div>
+</section>
+<!-- Stats Bento Grid -->
+<section class="grid grid-cols-3 gap-3">
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_8px_20px_rgba(0,119,190,0.04)] border border-outline-variant/10">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Delivered</p>
+<p class="text-2xl font-manrope font-extrabold text-primary-container">8</p>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_8px_20px_rgba(0,119,190,0.04)] border border-outline-variant/10">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Out</p>
+<p class="text-2xl font-manrope font-extrabold text-secondary">3</p>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-[0_8px_20px_rgba(0,119,190,0.04)] border border-outline-variant/10">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Avg Time</p>
+<p class="text-2xl font-manrope font-extrabold text-on-surface">22<span class="text-xs ml-1">min</span></p>
+</div>
+</section>
+<!-- Map & Controls Card -->
+<section class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-[0_12px_32px_rgba(0,119,190,0.06)]">
+<div class="relative h-48 w-full">
+<img alt="Map View" class="w-full h-full object-cover" data-alt="minimalist clean digital map interface showing a city grid with blue and teal location pins" data-location="New York" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZFuun1Wclo0sepBIubzQRMyeHxFM9GNlNX8rrRT5iyu_khMpJE2OQwHW-5u8EPmiQK_tpYYXfRKntZAvd2MnJqTnx8MunnJDaGzEGFaDsH3tRqjZGkdgx9JagL0YSWX6aGgeQHC7iI8v_c9zhKUJkSVl31n_sXP1N2BJZkB_V0-FO5V7jTED86tyaZb-RSN3TIDeSB7_PaiXPYfqS07HoYjUjY3aKNkOZm9eJq6OXlpH72SlxqiaqqT-EF6tsrqndX8aBzdFKaL80"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+<div class="absolute bottom-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg">
+<span class="material-symbols-outlined text-primary-container text-sm">radar</span>
+<span class="text-xs font-bold text-on-surface">3 km Radius</span>
+</div>
+</div>
+<div class="p-5 space-y-4">
+<div class="flex justify-between items-center">
+<div class="space-y-0.5">
+<p class="text-sm font-bold text-on-surface">Delivery Capacity</p>
+<p class="text-xs text-on-surface-variant">Max orders per hour</p>
+</div>
+<div class="flex items-center bg-surface-container rounded-xl p-1">
+<button class="w-8 h-8 flex items-center justify-center text-primary-container hover:bg-white rounded-lg transition-colors"><span class="material-symbols-outlined">remove</span></button>
+<span class="px-4 font-manrope font-bold">5</span>
+<button class="w-8 h-8 flex items-center justify-center text-primary-container hover:bg-white rounded-lg transition-colors"><span class="material-symbols-outlined">add</span></button>
+</div>
+</div>
+<div class="h-px bg-outline-variant/20"></div>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-error-container/30 flex items-center justify-center text-error">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Busy Mode</p>
+<p class="text-xs text-on-surface-variant">Automated surge pricing</p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+</section>
+<!-- Active Deliveries (Urgency Strips) -->
+<section class="space-y-3">
+<div class="flex justify-between items-center">
+<h3 class="text-lg font-manrope font-bold text-on-surface">Active Deliveries</h3>
+<span class="text-xs font-bold text-primary cursor-pointer">View All</span>
+</div>
+<div class="space-y-3">
+<!-- High Urgency -->
+<div class="flex bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm">
+<div class="w-2 bg-error"></div>
+<div class="p-4 flex-1 flex justify-between items-center">
+<div class="flex gap-4 items-center">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">package_2</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">#ORD-9402</p>
+<p class="text-xs text-error font-semibold">Delayed • 42 min ago</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full border border-outline-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Medium Urgency -->
+<div class="flex bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm">
+<div class="w-2 bg-secondary"></div>
+<div class="p-4 flex-1 flex justify-between items-center">
+<div class="flex gap-4 items-center">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">shopping_bag</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">#ORD-9411</p>
+<p class="text-xs text-secondary font-semibold">In Transit • 12 min ago</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full border border-outline-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Normal -->
+<div class="flex bg-surface-container-lowest rounded-2xl overflow-hidden shadow-sm">
+<div class="w-2 bg-tertiary-fixed-dim"></div>
+<div class="p-4 flex-1 flex justify-between items-center">
+<div class="flex gap-4 items-center">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant">fastfood</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">#ORD-9418</p>
+<p class="text-xs text-on-surface-variant font-medium">Preparing • Just now</p>
+</div>
+</div>
+<button class="w-8 h-8 rounded-full border border-outline-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Delivery Slots -->
+<section class="space-y-3">
+<h3 class="text-lg font-manrope font-bold text-on-surface">Daily Slots</h3>
+<div class="grid grid-cols-4 gap-2">
+<div class="bg-primary-container text-white rounded-xl p-3 text-center transition-all active:scale-95">
+<p class="text-[10px] font-bold opacity-80">10:00</p>
+<p class="text-xs font-bold">Open</p>
+</div>
+<div class="bg-primary-container text-white rounded-xl p-3 text-center transition-all active:scale-95">
+<p class="text-[10px] font-bold opacity-80">11:00</p>
+<p class="text-xs font-bold">Open</p>
+</div>
+<div class="bg-surface-container-highest text-on-surface-variant/50 rounded-xl p-3 text-center border-2 border-dashed border-outline-variant/30">
+<p class="text-[10px] font-bold">12:00</p>
+<p class="text-xs font-bold">Blocked</p>
+</div>
+<div class="bg-primary-container text-white rounded-xl p-3 text-center transition-all active:scale-95">
+<p class="text-[10px] font-bold opacity-80">13:00</p>
+<p class="text-xs font-bold">Open</p>
+</div>
+</div>
+</section>
+<!-- Delivery Personnel -->
+<section class="space-y-4 pb-12">
+<div class="flex justify-between items-center">
+<h3 class="text-lg font-manrope font-bold text-on-surface">Team Status</h3>
+<button class="bg-primary/10 text-primary p-2 rounded-lg">
+<span class="material-symbols-outlined text-sm">person_add</span>
+</button>
+</div>
+<div class="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-4 px-4">
+<!-- Person 1 -->
+<div class="flex-shrink-0 w-32 bg-surface-container-lowest p-3 rounded-2xl shadow-sm border border-outline-variant/10 text-center">
+<div class="relative w-14 h-14 mx-auto mb-2">
+<img alt="Driver" class="w-full h-full rounded-full object-cover" data-alt="portrait of a young smiling delivery courier wearing a branded professional cap and blue jacket" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAK85wLgnUbd5_s6O449h85ZjE3g6hK90irgd6AIzCjMyng67DXciFdue0jxTcRdc4Bn_HlDSopZYvZmkooqmA2PiMDzVM8tY5dq7BxuafRIz4p0-_YnzmCVIW_lzHwmCj3MEO1ITgaWTPBamPED4M8FbblEM9OCpW82kGZhM1X8SgtJpbPK6kPNKaCvdIzxHcF39SO60kw5mSYtHjiMS63Vi9pEaAJc_iDF6vZ2hgUSzid82IUGcTDWV1Tc605wlj7lB6s6BsT4RMh"/>
+<div class="absolute bottom-0 right-0 w-4 h-4 bg-secondary border-2 border-white rounded-full"></div>
+</div>
+<p class="text-xs font-bold text-on-surface truncate">Marco R.</p>
+<p class="text-[9px] text-secondary font-bold uppercase tracking-tight">Available</p>
+</div>
+<!-- Person 2 -->
+<div class="flex-shrink-0 w-32 bg-surface-container-lowest p-3 rounded-2xl shadow-sm border border-outline-variant/10 text-center">
+<div class="relative w-14 h-14 mx-auto mb-2">
+<img alt="Driver" class="w-full h-full rounded-full object-cover" data-alt="professional delivery driver portrait with sunset lighting in the background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1c5k18dgmnwwhURPvCPrOl2J_-X3keflCw83seFUi4znYGssy9P4I-lV5X2yk3qeStaC3NvYm6X8dq7ru8L5BPKFxSzaC-dXoRJCkZkfvsTtNXe7CopPAQc0T-O1N--s-_EQvAea40gqgRVnJcaoNhAIQelAIXbVhSq3f1V-LTSldXhcDnzh7Vzcs0l4vSBdYny6X6S8PVMuXApjm1ZL3EGHgmUL9ZQ_3ZLVy4zjOUuLshqII2oqmtjs3dRG22anSS0IdBisXgDYD"/>
+<div class="absolute bottom-0 right-0 w-4 h-4 bg-primary-container border-2 border-white rounded-full"></div>
+</div>
+<p class="text-xs font-bold text-on-surface truncate">Sarah J.</p>
+<p class="text-[9px] text-primary-container font-bold uppercase tracking-tight">On Delivery</p>
+</div>
+<!-- Person 3 -->
+<div class="flex-shrink-0 w-32 bg-surface-container-lowest p-3 rounded-2xl shadow-sm border border-outline-variant/10 text-center">
+<div class="relative w-14 h-14 mx-auto mb-2">
+<img alt="Driver" class="w-full h-full rounded-full object-cover" data-alt="cheerful delivery person with headset and bicycle in urban city street" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3IkpyV-twvXIT9vJGxWlmVYSYJJ5MV6_qKA8ZwpOAfkW9ssbPh8MXJ6-lLXhw8UfcqWF0gwe2oc1gvZKhGNLyrUF7xqO9ZqhP6qkEKrHovu-0J5cHUIg3Q4wqyEcTxCmUhqhvVdch4wi5SzvSQeTjInKWDy2ExZvFmAZEDKMo52nF64y2teB-aWjH3F5-39syk2fwE46OScbWeIJ42q-UW1PLHOASElQWOlyeVXDiF6dzhkVZn2DV_HxBcfMHqE2PXaZeb1xr5_rL"/>
+<div class="absolute bottom-0 right-0 w-4 h-4 bg-outline-variant border-2 border-white rounded-full"></div>
+</div>
+<p class="text-xs font-bold text-on-surface truncate">Alex K.</p>
+<p class="text-[9px] text-on-surface-variant font-bold uppercase tracking-tight">Offline</p>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] rounded-3xl z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/20 dark:border-slate-700/50 shadow-[0_12px_32px_rgba(0,119,190,0.12)]">
+<div class="flex justify-around items-center h-20 px-2">
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 hover:text-sky-600 dark:hover:text-sky-300 active:scale-90 duration-300 ease-out">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-label text-[11px] font-semibold tracking-wide mt-1">Orders</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-sky-600 dark:bg-sky-500 text-white rounded-2xl px-4 py-2 active:scale-90 duration-300 ease-out">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
+<span class="font-label text-[11px] font-semibold tracking-wide mt-1">Delivery</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 hover:text-sky-600 dark:hover:text-sky-300 active:scale-90 duration-300 ease-out">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label text-[11px] font-semibold tracking-wide mt-1">Inventory</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 hover:text-sky-600 dark:hover:text-sky-300 active:scale-90 duration-300 ease-out">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label text-[11px] font-semibold tracking-wide mt-1">Earnings</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 py-2 hover:text-sky-600 dark:hover:text-sky-300 active:scale-90 duration-300 ease-out">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label text-[11px] font-semibold tracking-wide mt-1">Settings</span>
+</div>
+</div>
+</nav>
+</body></html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thannigo - Report Issue</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#d8dadf",
+                        "primary-fixed-dim": "#9acbff",
+                        "on-surface-variant": "#404751",
+                        "on-error-container": "#93000a",
+                        "surface": "#f7f9ff",
+                        "surface-tint": "#00629e",
+                        "surface-container-highest": "#e0e2e8",
+                        "on-secondary-fixed-variant": "#005049",
+                        "on-secondary-fixed": "#00201c",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#437e64",
+                        "on-primary-fixed": "#001d34",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#b1f0d0",
+                        "on-surface": "#181c20",
+                        "primary": "#005e97",
+                        "inverse-on-surface": "#eff1f6",
+                        "outline-variant": "#c0c7d2",
+                        "inverse-surface": "#2d3135",
+                        "secondary-container": "#83f2e3",
+                        "on-tertiary-fixed": "#002114",
+                        "tertiary": "#28654c",
+                        "on-primary": "#ffffff",
+                        "primary-fixed": "#cfe5ff",
+                        "outline": "#707882",
+                        "surface-bright": "#f7f9ff",
+                        "surface-variant": "#e0e2e8",
+                        "surface-container": "#eceef3",
+                        "on-tertiary-fixed-variant": "#105139",
+                        "primary-container": "#0077be",
+                        "on-tertiary-container": "#e8fff0",
+                        "secondary-fixed": "#86f5e6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#004a79",
+                        "on-background": "#181c20",
+                        "secondary-fixed-dim": "#68d9ca",
+                        "tertiary-fixed-dim": "#96d4b5",
+                        "background": "#f7f9ff",
+                        "surface-container-low": "#f2f3f9",
+                        "on-tertiary": "#ffffff",
+                        "secondary": "#006a61",
+                        "inverse-primary": "#9acbff",
+                        "surface-container-high": "#e6e8ee",
+                        "on-error": "#ffffff",
+                        "on-primary-container": "#f7f9ff",
+                        "on-secondary-container": "#006f65"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tap-highlight-none { -webkit-tap-highlight-color: transparent; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- Top AppBar (from JSON guidance) -->
+<header class="bg-white/70 backdrop-blur-xl shadow-[0_12px_32px_rgba(0,119,190,0.08)] sticky top-0 z-50 flex justify-between items-center px-6 py-4 w-full h-16">
+<div class="flex items-center gap-3">
+<button class="material-symbols-outlined text-on-surface p-1 active:opacity-80 transition-all">arrow_back</button>
+<div class="flex flex-col">
+<h1 class="font-headline font-bold text-lg leading-tight">Report Issue</h1>
+<span class="text-[10px] font-semibold text-outline tracking-wider">#TH-8847</span>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full bg-primary-fixed overflow-hidden ring-2 ring-primary/10">
+<img class="w-full h-full object-cover" data-alt="professional portrait of a young adult smiling in soft studio lighting with a neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClDebAdUl8oiRXt72T51Xx5905pkCDFRw5WsakwO2Slgi6uSgpOe_sQsPkaKbZ0LWNOFwq3hcIa3cC9o4cFq4qNSlpn6FNhCV3USZcau0G-qWqxfK608S2xbcpOWpy9Aw0d0XE-cI55KpDuxMsoKSIE3mgvlfevAtZBPZ0luMleH0kbTx33Q4rTN2F_1-3HpcXBbg25TI5IY7IrpFG0O3RTMTnOlNjQCqIKxT-menE7EeMPF816gBJKqBxOfFJSFkcs21wkUyfswT3"/>
+</div>
+</header>
+<main class="px-6 py-6 max-w-[390px] mx-auto space-y-8">
+<!-- Order Mini Summary Card -->
+<section class="bg-surface-container-lowest rounded-2xl p-4 shadow-sm border border-outline-variant/30">
+<div class="flex justify-between items-start mb-3">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container">water_drop</span>
+</div>
+<div>
+<h3 class="font-headline font-bold text-sm">Aqua Crystal Pure</h3>
+<p class="text-[11px] text-on-surface-variant">2× 20L Can • 5 Apr, 10:30 AM</p>
+</div>
+</div>
+<span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                    Delivered <span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'wght' 700;">check</span>
+</span>
+</div>
+</section>
+<!-- Issue Type Selection -->
+<section class="space-y-4">
+<h2 class="font-headline font-extrabold text-[#1A2340] text-base leading-tight">What went wrong?</h2>
+<div class="grid grid-cols-2 gap-3">
+<!-- Selected State -->
+<button class="bg-[#FFF0F0] border-2 border-error rounded-2xl h-20 flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95">
+<span class="material-symbols-outlined text-error" data-icon="schedule" data-weight="fill" style="font-variation-settings: 'FILL' 1;">schedule</span>
+<span class="text-[11px] font-bold text-error">Late Delivery</span>
+</button>
+<button class="bg-surface-container-lowest border border-outline-variant/40 rounded-2xl h-20 flex flex-col items-center justify-center gap-1.5 transition-all hover:bg-surface-container-low active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="inventory_2">inventory_2</span>
+<span class="text-[11px] font-medium text-on-surface-variant">Wrong Quantity</span>
+</button>
+<button class="bg-surface-container-lowest border border-outline-variant/40 rounded-2xl h-20 flex flex-col items-center justify-center gap-1.5 transition-all hover:bg-surface-container-low active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="water_drop">water_drop</span>
+<span class="text-[11px] font-medium text-on-surface-variant">Bad Quality</span>
+</button>
+<button class="bg-surface-container-lowest border border-outline-variant/40 rounded-2xl h-20 flex flex-col items-center justify-center gap-1.5 transition-all hover:bg-surface-container-low active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="layers_clear">layers_clear</span>
+<span class="text-[11px] font-medium text-on-surface-variant">Damaged Can</span>
+</button>
+<button class="bg-surface-container-lowest border border-outline-variant/40 rounded-2xl h-20 flex flex-col items-center justify-center gap-1.5 transition-all hover:bg-surface-container-low active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="minor_crash">minor_crash</span>
+<span class="text-[11px] font-medium text-on-surface-variant">Rude Delivery</span>
+</button>
+<button class="bg-surface-container-lowest border border-outline-variant/40 rounded-2xl h-20 flex flex-col items-center justify-center gap-1.5 transition-all hover:bg-surface-container-low active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="cancel">cancel</span>
+<span class="text-[11px] font-medium text-on-surface-variant">Not Delivered</span>
+</button>
+</div>
+</section>
+<!-- Resolution Request (Animated/Conditional Logic Simulation) -->
+<section class="space-y-4 pt-2">
+<h2 class="font-headline font-extrabold text-[#1A2340] text-base leading-tight">What do you want?</h2>
+<div class="space-y-2">
+<label class="flex items-center justify-between p-4 bg-primary-container/10 border border-primary-container/20 rounded-2xl cursor-pointer transition-all active:opacity-80">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-container" data-icon="sync">sync</span>
+<span class="text-sm font-semibold text-primary">Send Replacement</span>
+</div>
+<div class="w-5 h-5 rounded-full border-2 border-primary-container flex items-center justify-center">
+<div class="w-2.5 h-2.5 rounded-full bg-primary-container"></div>
+</div>
+<input checked="" class="hidden" name="resolution" type="radio"/>
+</label>
+<label class="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl cursor-pointer transition-all hover:bg-surface-container-low">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="payments">payments</span>
+<span class="text-sm font-medium text-on-surface">Get Refund</span>
+</div>
+<div class="w-5 h-5 rounded-full border-2 border-outline-variant"></div>
+<input class="hidden" name="resolution" type="radio"/>
+</label>
+<label class="flex items-center justify-between p-4 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl cursor-pointer transition-all hover:bg-surface-container-low">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chat_bubble">chat_bubble</span>
+<span class="text-sm font-medium text-on-surface">Just report it</span>
+</div>
+<div class="w-5 h-5 rounded-full border-2 border-outline-variant"></div>
+<input class="hidden" name="resolution" type="radio"/>
+</label>
+</div>
+</section>
+<!-- Description -->
+<section class="space-y-3">
+<label class="block text-xs font-bold text-outline uppercase tracking-wider">Describe your issue (optional)</label>
+<div class="relative">
+<textarea class="w-full h-32 bg-surface-container-low border-1.5 border-tertiary-fixed-dim/50 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all resize-none outline-none" placeholder="Enter details here..."></textarea>
+<span class="absolute bottom-3 right-4 text-[10px] text-outline font-medium">0/250</span>
+</div>
+</section>
+<!-- Photo Upload -->
+<section class="space-y-3">
+<h3 class="text-xs font-bold text-outline uppercase tracking-wider">Add Photo Proof</h3>
+<div class="flex gap-3">
+<button class="w-20 h-20 rounded-2xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center gap-1 active:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="add_a_photo">add_a_photo</span>
+</button>
+<div class="relative w-20 h-20">
+<img class="w-full h-full object-cover rounded-2xl" data-alt="close-up of a blue 20L plastic water can with a noticeable crack near the handle in bright daylight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRB7kawppZmtw93ODo4ALS5ASF4506Aola_uvqbfZI54LK3_Gd_Kn_ufcxxsy--_2BJlfMr1DN8nL90lqHsTvNEPFMIATMlgeUY-8-UQkFfck7cVDh-SBlDSN9a8sUZKmLw6ALNuh1P8vD9Jw6IMZyJa0m5lyXMItoMOnToahzxZyfgk4rLV-Fk9CSqSn-6GrFK3g1GQXgNxAcyDYZfZOjgV5aqVfwEd7jeNPc4FmjAb5SCI8AYV6y310zja-ZNr6-eyiu8IYy7DGL"/>
+<button class="absolute -top-1.5 -right-1.5 w-6 h-6 bg-error text-white rounded-full flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+</div>
+<div class="w-20 h-20 rounded-2xl bg-surface-container-highest/50 flex items-center justify-center text-[10px] text-outline font-bold border border-outline-variant/20">
+                    2/3
+                </div>
+</div>
+</section>
+<!-- Submit Action -->
+<div class="pt-4 flex flex-col items-center gap-3">
+<button class="w-full h-[52px] bg-error hover:bg-error/90 text-white font-bold rounded-2xl shadow-[0_8px_20px_rgba(186,26,26,0.2)] active:scale-[0.98] transition-all">
+                Submit Complaint
+            </button>
+<p class="text-[11px] font-medium text-on-surface-variant flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-tertiary">bolt</span>
+                We'll respond within 2 hours
+            </p>
+</div>
+</main>
+<!-- Bottom Navigation Shell (from JSON guidance - Filtered for Transactional flow) -->
+<!-- Suppression Rule Applied: This is a task-focused screen (Report Issue). BottomNavBar suppressed to prioritize focus. -->
+<!-- Footer tonal shift for separation -->
+<div class="fixed bottom-0 left-0 w-full h-4 bg-gradient-to-t from-surface to-transparent pointer-events-none"></div>
+</body></html>

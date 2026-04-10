@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Inventory Management - Hydro Essence Shop</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#437e64",
+                    "surface-dim": "#d8dadf",
+                    "outline": "#707882",
+                    "on-secondary": "#ffffff",
+                    "surface-container-highest": "#e0e2e8",
+                    "surface-container-high": "#e6e8ee",
+                    "on-primary-container": "#f7f9ff",
+                    "secondary-fixed-dim": "#68d9ca",
+                    "on-primary": "#ffffff",
+                    "surface-variant": "#e0e2e8",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-container": "#0077be",
+                    "background": "#f7f9ff",
+                    "surface": "#f7f9ff",
+                    "on-primary-fixed": "#001d34",
+                    "inverse-surface": "#2d3135",
+                    "primary": "#005e97",
+                    "secondary": "#006a61",
+                    "on-tertiary-fixed": "#002114",
+                    "tertiary-fixed": "#b1f0d0",
+                    "outline-variant": "#c0c7d2",
+                    "tertiary-fixed-dim": "#96d4b5",
+                    "secondary-fixed": "#86f5e6",
+                    "tertiary": "#28654c",
+                    "on-primary-fixed-variant": "#004a79",
+                    "on-secondary-container": "#006f65",
+                    "primary-fixed": "#cfe5ff",
+                    "on-surface": "#181c20",
+                    "on-error-container": "#93000a",
+                    "surface-container": "#eceef3",
+                    "error-container": "#ffdad6",
+                    "on-tertiary": "#ffffff",
+                    "surface-tint": "#00629e",
+                    "on-tertiary-fixed-variant": "#105139",
+                    "surface-bright": "#f7f9ff",
+                    "inverse-on-surface": "#eff1f6",
+                    "secondary-container": "#83f2e3",
+                    "on-tertiary-container": "#e8fff0",
+                    "on-background": "#181c20",
+                    "on-secondary-fixed-variant": "#005049",
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#9acbff",
+                    "primary-fixed-dim": "#9acbff",
+                    "surface-container-low": "#f2f3f9",
+                    "on-secondary-fixed": "#00201c",
+                    "on-surface-variant": "#404751",
+                    "error": "#ba1a1a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "1rem",
+                    "xl": "1.5rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Epilogue"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-editorial { font-family: 'Epilogue', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased min-h-screen pb-32">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm dark:shadow-none flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-primary-container/20 border border-outline-variant/30">
+<img class="w-full h-full object-cover" data-alt="Professional profile photo of a male business owner with a confident smile, wearing a clean collared shirt" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3A_g-AS67-hhQCcLGwP3qLEko6wp7Zj_QcjE5VPBU5LCY3cCQGbI3452XJBfrLt_LNn35A-9SGsM2S76JRp5tZ03IZlVkagqPQF91Zi9a1jyUsuE5SCTKDQ04wkP-FE4UnhltFe5Sec6aotIKm6lxRDISJHShs2zamiQ1TPZqADeUjv-A6oxK_1AWEOnOr_1KcsGGfkD9qfvY0s3gzDHUrS3Z41mJJwENQFieUux19ZE-8Ix5xBOvEk995kkXME-yslAwWQI2NG0"/>
+</div>
+<span class="text-xl font-bold text-sky-900 font-editorial tracking-tight">Inventory</span>
+</div>
+<button class="bg-primary px-4 py-1.5 rounded-full text-on-primary text-xs font-bold tracking-widest scale-95 active:duration-150 uppercase">OPEN</button>
+</header>
+<main class="pt-20 px-4 space-y-6">
+<!-- Stock Health Row -->
+<section class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+<!-- Full Cans -->
+<div class="min-w-[120px] flex-1 bg-surface-container-lowest p-4 rounded-xl shadow-sm">
+<p class="text-primary text-[32px] font-bold leading-none">48</p>
+<p class="text-on-surface-variant text-[10px] font-semibold mt-1">Full Cans</p>
+</div>
+<!-- Empty Cans -->
+<div class="min-w-[120px] flex-1 bg-surface-container-lowest p-4 rounded-xl shadow-sm">
+<p class="text-secondary text-[32px] font-bold leading-none">12</p>
+<p class="text-on-surface-variant text-[10px] font-semibold mt-1">Empty (Returns)</p>
+</div>
+<!-- Low Stock -->
+<div class="min-w-[120px] flex-1 bg-surface-container-lowest p-4 rounded-xl shadow-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[#FF9800] text-sm" data-icon="warning">warning</span>
+<p class="text-[#FF9800] text-[32px] font-bold leading-none">8</p>
+</div>
+<p class="text-on-surface-variant text-[10px] font-semibold mt-1">Min Stock = 10</p>
+</div>
+</section>
+<!-- Low Stock Alert Banner -->
+<div class="bg-[#FFF3E0] border border-[#FF9800]/30 rounded-xl p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#FF9800]" data-icon="warning">warning</span>
+<p class="text-[#FF9800] font-bold text-sm">Stock running low! Only 8 cans left.</p>
+</div>
+<a class="text-primary-container font-bold text-xs" href="#">Order from Supplier</a>
+</div>
+<!-- Product Cards -->
+<section class="space-y-4">
+<!-- Product Card: 20L Can -->
+<div class="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/30 shadow-sm space-y-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="water_drop">water_drop</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">20L Premium Can</h3>
+<p class="text-on-surface-variant text-xs">Hydro Essence Spring</p>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-end">
+<span class="text-on-surface-variant text-xs font-medium">Current: 48 / Min: 10</span>
+<span class="text-primary font-bold text-xs">80%</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary-container w-[80%] rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center gap-4">
+<button class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-on-surface" data-icon="remove">remove</span>
+</button>
+<input class="w-16 bg-surface-container-low border-none rounded-md text-center font-bold text-on-surface focus:ring-0" type="number" value="48"/>
+<button class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-on-surface" data-icon="add">add</span>
+</button>
+</div>
+<div class="text-right">
+<p class="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">Quick Bulk</p>
+<input class="mt-1 w-20 bg-surface-container-low border-none rounded-md text-xs text-center focus:ring-1 focus:ring-primary/40" placeholder="+ Bulk" type="text"/>
+</div>
+</div>
+</div>
+<!-- Product Card: 10L Can -->
+<div class="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/30 shadow-sm space-y-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-surface-container-low rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="water_bottle">water_bottle</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">10L Office Pack</h3>
+<p class="text-on-surface-variant text-xs">Hydro Essence Daily</p>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-end">
+<span class="text-on-surface-variant text-xs font-medium">Current: 8 / Min: 10</span>
+<span class="text-[#FF9800] font-bold text-xs">Critical</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-[#FF9800] w-[35%] rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center gap-4">
+<button class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-on-surface" data-icon="remove">remove</span>
+</button>
+<input class="w-16 bg-surface-container-low border-none rounded-md text-center font-bold text-on-surface focus:ring-0" type="number" value="8"/>
+<button class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-on-surface" data-icon="add">add</span>
+</button>
+</div>
+<input class="w-20 bg-surface-container-low border-none rounded-md text-xs text-center focus:ring-1 focus:ring-primary/40" placeholder="+ Bulk" type="text"/>
+</div>
+</div>
+</section>
+<!-- Quick Actions Row -->
+<section class="grid grid-cols-2 gap-4">
+<button class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-primary-container bg-surface-container-lowest hover:bg-sky-50 transition-colors group">
+<span class="material-symbols-outlined text-primary-container" data-icon="inventory">inventory</span>
+<span class="text-[10px] font-bold text-primary text-center leading-tight">📦 Add Stock (Supplier)</span>
+</button>
+<button class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-[#FF9800]/40 bg-surface-container-lowest hover:bg-orange-50 transition-colors">
+<span class="material-symbols-outlined text-[#FF9800]" data-icon="sync_problem">sync_problem</span>
+<span class="text-[10px] font-bold text-[#FF9800] text-center leading-tight">🔄 Adjust Damage/Theft</span>
+</button>
+</section>
+<!-- Empty Can Exchange -->
+<section class="bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/30 shadow-sm">
+<div class="flex justify-between items-center mb-4">
+<div>
+<h3 class="font-bold text-on-surface">Customer Returns</h3>
+<p class="text-on-surface-variant text-[10px] font-semibold">Track empty cans collected today</p>
+</div>
+<div class="bg-secondary-container/20 text-secondary px-3 py-1 rounded-full text-xs font-bold">
+                    +5 returned
+                </div>
+</div>
+<div class="flex items-center justify-center gap-8 bg-surface-container-low py-4 rounded-xl">
+<button class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center active:scale-95">
+<span class="material-symbols-outlined text-secondary text-3xl" data-icon="add">add</span>
+</button>
+<div class="text-center">
+<p class="text-2xl font-bold text-secondary">12</p>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold">Pending Return</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Sticky Reconcile Button Container -->
+<div class="fixed bottom-20 left-0 w-full px-6 z-40">
+<button class="w-full h-[52px] bg-[#1A2340] text-white rounded-xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined" data-icon="fact_check">fact_check</span>
+            End of Day Reconcile
+        </button>
+</div>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl shadow-[0_-4px_20px_rgba(0,0,0,0.04)] rounded-t-3xl">
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-3 py-1.5 hover:text-sky-500 transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="receipt_long">receipt_long</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-semibold mt-1">Orders</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-3 py-1.5 hover:text-sky-500 transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="local_shipping">local_shipping</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-semibold mt-1">Delivery</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-sky-100/50 dark:bg-sky-900/40 text-sky-800 dark:text-sky-200 rounded-2xl px-3 py-1.5" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="inventory_2" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-semibold mt-1">Inventory</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-3 py-1.5 hover:text-sky-500 transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="payments">payments</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-semibold mt-1">Earnings</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-3 py-1.5 hover:text-sky-500 transition-colors" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="settings">settings</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[10px] font-semibold mt-1">Settings</span>
+</a>
+</nav>
+</body></html>

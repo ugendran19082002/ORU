@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Thannigo - Rate &amp; Review</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#001d34",
+                        "inverse-primary": "#9acbff",
+                        "tertiary": "#28654c",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e0e2e8",
+                        "on-surface-variant": "#404751",
+                        "surface": "#f7f9ff",
+                        "primary-fixed-dim": "#9acbff",
+                        "background": "#f7f9ff",
+                        "surface-container-high": "#e6e8ee",
+                        "secondary": "#006a61",
+                        "secondary-fixed-dim": "#68d9ca",
+                        "primary": "#005e97",
+                        "on-surface": "#181c20",
+                        "secondary-fixed": "#86f5e6",
+                        "inverse-on-surface": "#eff1f6",
+                        "tertiary-fixed-dim": "#96d4b5",
+                        "outline-variant": "#c0c7d2",
+                        "on-secondary-fixed": "#00201c",
+                        "on-primary-container": "#f7f9ff",
+                        "on-secondary-container": "#006f65",
+                        "on-tertiary-fixed-variant": "#105139",
+                        "outline": "#707882",
+                        "surface-container-low": "#f2f3f9",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#437e64",
+                        "on-background": "#181c20",
+                        "error": "#ba1a1a",
+                        "primary-container": "#0077be",
+                        "surface-tint": "#00629e",
+                        "secondary-container": "#83f2e3",
+                        "tertiary-fixed": "#b1f0d0",
+                        "surface-variant": "#e0e2e8",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#002114",
+                        "on-error": "#ffffff",
+                        "surface-container": "#eceef3",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#2d3135",
+                        "primary-fixed": "#cfe5ff",
+                        "surface-dim": "#d8dadf",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#005049"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Epilogue"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .star-filled {
+            font-variation-settings: 'FILL' 1;
+            color: #FF9800;
+        }
+        .star-outline {
+            color: #E4EAF7;
+        }
+        /* Custom scrollbar suppression for clean editorial look */
+        ::-webkit-scrollbar { display: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- Top Navigation Anchor (Manual suppression of TopAppBar for task focus) -->
+<header class="fixed top-0 left-0 right-0 h-16 flex items-center justify-between px-6 bg-white/80 backdrop-blur-xl z-50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface" data-icon="close">close</span>
+</div>
+<h1 class="text-[#1A2340] font-headline font-bold text-[18px]">Rate &amp; Review</h1>
+<div class="w-6"></div> <!-- Spacer for balance -->
+</header>
+<main class="pt-24 pb-32 px-5 max-w-[390px] mx-auto">
+<!-- Header Content -->
+<div class="text-center mb-8">
+<h2 class="text-[#1A2340] font-headline font-bold text-[22px] tracking-tight mb-1">How was your order?</h2>
+<p class="text-[#74777C] text-sm">Order #TH-9928 • Delivered 20m ago</p>
+</div>
+<!-- Rating Section 1: Shop -->
+<section class="bg-surface-container-lowest rounded-[14px] border border-[#E4EAF7] p-5 mb-4 shadow-sm">
+<h3 class="font-headline font-semibold text-on-surface mb-3">Rate the Shop</h3>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[28px] star-filled" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[28px] star-filled" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[28px] star-filled" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[28px] star-filled" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[28px] star-outline" data-icon="star">star</span>
+</div>
+</section>
+<!-- Rating Section 2: Water Quality -->
+<section class="bg-surface-container-lowest rounded-[14px] border border-[#E4EAF7] p-5 mb-4 shadow-sm">
+<div class="flex flex-col gap-1 mb-3">
+<h3 class="font-headline font-semibold text-on-surface">Rate Water Quality</h3>
+<span class="text-[#74777C] text-[12px]">How was the taste and purity?</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[28px] star-filled" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[28px] star-filled" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[28px] star-filled" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[28px] star-outline" data-icon="star">star</span>
+<span class="material-symbols-outlined text-[28px] star-outline" data-icon="star">star</span>
+</div>
+</section>
+<!-- Rating Section 3: Delivery -->
+<section class="bg-surface-container-lowest rounded-[14px] border border-[#E4EAF7] p-5 mb-6 shadow-sm">
+<div class="flex items-center gap-3 mb-4">
+<img alt="Driver" class="w-10 h-10 rounded-full bg-surface-container-high object-cover" data-alt="professional portrait of a friendly delivery person in a clean uniform with a warm smile and blue cap" src="https://lh3.googleusercontent.com/aida-public/AB6AXuARG1tcm88XslFURGdfRNULw82KdoNLz1hj4diArW9TGbpkwWesuVazUWjcg6IbeqMfgg_QYb0a5jozdiRC7PbPKOgRfu56slR0hQ0EZbEwhN0LxD8sIX4VhE1D10VdfUO_6JpKOra_cH1Nws433VJwIPxfOwlGG3vqMIimQwnh5v7-39wAKUDpQPsdQ5EPSU9nw4JVaV11U6tRhCRvjUlmTHR0rvyD6tjREWTiG91TNu1ML0BOPS1jcJOllN_pKe-jeJQ8myQqhUQ"/>
+<div>
+<h3 class="font-headline font-semibold text-on-surface">Rate Delivery</h3>
+<p class="text-[#74777C] text-[12px]">Rate speed, behavior, packaging</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[28px] star-filled" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[28px] star-filled" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[28px] star-filled" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[28px] star-filled" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[28px] star-filled" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</section>
+<!-- Review Text Input -->
+<div class="mb-6">
+<label class="block text-sm font-semibold text-on-surface-variant mb-2 px-1">Detailed Feedback</label>
+<textarea class="w-full bg-surface-container-low border border-[#A0DEBF] rounded-[10px] p-4 text-sm focus:ring-2 focus:ring-primary-container focus:border-primary-container outline-none transition-all resize-none placeholder:text-outline" placeholder="Tell others about your experience... (optional)" rows="4"></textarea>
+</div>
+<!-- Photo Upload -->
+<div class="mb-6">
+<label class="block text-sm font-semibold text-on-surface-variant mb-2 px-1">Photos</label>
+<div class="flex gap-3 overflow-x-auto pb-2">
+<div class="flex-shrink-0 w-24 h-24 border-2 border-dashed border-[#A0DEBF] rounded-[10px] flex flex-col items-center justify-center bg-surface-container-low cursor-pointer hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[#0077BE]" data-icon="add_a_photo">add_a_photo</span>
+<span class="text-[10px] font-medium text-[#0077BE] mt-1">+ Add photos</span>
+</div>
+</div>
+</div>
+<!-- Complaint Section (Expanded for visual clarity in design) -->
+<div class="mb-8 border-t border-surface-container-highest pt-6">
+<button class="flex items-center justify-between w-full mb-4">
+<span class="font-headline font-bold text-[14px] text-on-surface">Report an Issue</span>
+<span class="material-symbols-outlined text-[18px]" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+</button>
+<div class="flex flex-wrap gap-2">
+<span class="px-4 py-2 rounded-full bg-[#FFEBEE] text-[#FF5252] text-[11px] font-bold border border-[#FF5252]/10">Wrong order</span>
+<span class="px-4 py-2 rounded-full bg-[#FF5252] text-white text-[11px] font-bold">Late delivery</span>
+<span class="px-4 py-2 rounded-full bg-[#FFEBEE] text-[#FF5252] text-[11px] font-bold border border-[#FF5252]/10">Quality issue</span>
+<span class="px-4 py-2 rounded-full bg-[#FFEBEE] text-[#FF5252] text-[11px] font-bold border border-[#FF5252]/10">Rude behavior</span>
+<span class="px-4 py-2 rounded-full bg-[#FFEBEE] text-[#FF5252] text-[11px] font-bold border border-[#FF5252]/10">Damaged can</span>
+</div>
+</div>
+</main>
+<!-- Footer Action -->
+<div class="fixed bottom-0 left-0 right-0 p-5 bg-white/90 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.04)] z-50">
+<button class="w-full h-[52px] bg-primary-container text-white font-headline font-bold rounded-xl shadow-lg shadow-primary-container/20 active:scale-[0.98] transition-transform">
+            Submit Review
+        </button>
+</div>
+</body></html>

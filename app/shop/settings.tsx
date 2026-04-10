@@ -17,6 +17,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
+import { useAppSession } from '@/hooks/use-app-session';
 
 export default function ShopSettingsScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
@@ -28,6 +29,7 @@ export default function ShopSettingsScreen() {
   }, []);
 
   const router = useRouter();
+  const { signOut, setBiometricEnabled } = useAppSession();
   const [shopOpen, setShopOpen] = useState(true);
   const [personAvailable, setPersonAvailable] = useState(true);
   const [stockAvailable, setStockAvailable] = useState(true);
@@ -63,9 +65,11 @@ export default function ShopSettingsScreen() {
 
       setBiometricsEnabled(true);
       await AsyncStorage.setItem('shop_fingerprint_enabled', 'true');
+      await setBiometricEnabled(true);
     } else {
       setBiometricsEnabled(false);
       await AsyncStorage.setItem('shop_fingerprint_enabled', 'false');
+      await setBiometricEnabled(false);
     }
   };
 
@@ -76,7 +80,8 @@ export default function ShopSettingsScreen() {
     }
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    await signOut();
     router.replace('/auth' as any);
   };
 

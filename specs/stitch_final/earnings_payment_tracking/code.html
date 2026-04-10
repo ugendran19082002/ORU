@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Earnings &amp; Payment Tracking</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#d8dadf",
+                        "surface-bright": "#f7f9ff",
+                        "secondary-container": "#83f2e3",
+                        "on-secondary-fixed": "#00201c",
+                        "inverse-primary": "#9acbff",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#e0e2e8",
+                        "surface": "#f7f9ff",
+                        "primary-fixed-dim": "#9acbff",
+                        "on-background": "#181c20",
+                        "tertiary": "#28654c",
+                        "surface-container-low": "#f2f3f9",
+                        "secondary-fixed-dim": "#68d9ca",
+                        "inverse-on-surface": "#eff1f6",
+                        "surface-container-high": "#e6e8ee",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#001d34",
+                        "on-primary-fixed-variant": "#004a79",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#f7f9ff",
+                        "error": "#ba1a1a",
+                        "on-surface-variant": "#404751",
+                        "on-surface": "#181c20",
+                        "on-secondary-container": "#006f65",
+                        "surface-container-highest": "#e0e2e8",
+                        "background": "#f7f9ff",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#eceef3",
+                        "primary-container": "#0077be",
+                        "primary": "#005e97",
+                        "tertiary-container": "#437e64",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed": "#86f5e6",
+                        "tertiary-fixed-dim": "#96d4b5",
+                        "primary-fixed": "#cfe5ff",
+                        "on-secondary-fixed-variant": "#005049",
+                        "on-error": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#00629e",
+                        "secondary": "#006a61",
+                        "outline": "#707882",
+                        "on-tertiary-fixed-variant": "#105139",
+                        "on-tertiary-fixed": "#002114",
+                        "tertiary-fixed": "#b1f0d0",
+                        "outline-variant": "#c0c7d2",
+                        "inverse-surface": "#2d3135",
+                        "on-tertiary-container": "#e8fff0"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- TopAppBar -->
+<header class="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl docked full-width top-0 sticky z-50 shadow-[0_12px_32px_rgba(0,119,190,0.08)] flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-sky-700 dark:text-sky-400 active:scale-95 duration-200 cursor-pointer" data-icon="menu">menu</span>
+<h1 class="font-['Manrope'] font-bold text-lg tracking-tight text-sky-700 dark:text-sky-400">Shop Management</h1>
+</div>
+<div class="h-8 w-8 rounded-full bg-surface-container-highest overflow-hidden active:scale-95 duration-200 cursor-pointer">
+<img alt="User Profile" class="h-full w-full object-cover" data-alt="close up professional headshot of a shop owner with friendly expression in soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmSKxkB1iEt6kzI8ZVSJw8G8RpyTNX4xNfkcdeN-Tt4YeKDw6oRvmZ-tADnTWIFEZ1a0jU8Mmw_fHadYtsI0H9YETJkPv32SMUttxBn0sfg48ASGviQkSKDXG7xvhECAchmXqUSYO8n4VMuqQPbLXEzRWByILCXg7Mgl8KG9ApIz1yf4dFQeAQ1miyPWx6eUOHH1ff9PNbFbfr_UOlsuyk38gXh86oFxbCjc-Zua02WInachHt4AGR-DgxbcgmevnhgUHN4Xgt0PVj"/>
+</div>
+</header>
+<main class="max-w-md mx-auto px-6 pt-6 pb-32 space-y-8">
+<!-- Period Selector -->
+<nav class="flex p-1 bg-surface-container-low rounded-2xl">
+<button class="flex-1 py-2 text-sm font-semibold rounded-xl bg-white shadow-sm text-primary transition-all">Today</button>
+<button class="flex-1 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary transition-all">This Week</button>
+<button class="flex-1 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary transition-all">This Month</button>
+</nav>
+<!-- Total Earnings Card -->
+<section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0077BE] to-[#0099CC] p-8 text-white shadow-xl">
+<div class="relative z-10">
+<p class="text-white/80 font-medium tracking-wide">Total Earnings</p>
+<h2 class="text-[42px] font-bold mt-1 tracking-tight">₹1,250</h2>
+<div class="mt-4 flex items-center gap-2 bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="check_circle">check_circle</span>
+<span class="text-xs font-semibold">15 Orders Completed</span>
+</div>
+</div>
+<!-- Decorative circle -->
+<div class="absolute -right-12 -top-12 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+</section>
+<!-- Payment Split Cards -->
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-lowest p-5 rounded-[24px] shadow-sm flex flex-col gap-3">
+<div class="w-10 h-10 rounded-xl bg-secondary-container/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container" data-icon="qr_code_2">qr_code_2</span>
+</div>
+<div>
+<p class="text-xs font-semibold text-on-surface-variant">UPI</p>
+<p class="text-xl font-bold text-on-surface">₹850</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-[24px] shadow-sm flex flex-col gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-fixed/50 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="payments">payments</span>
+</div>
+<div>
+<p class="text-xs font-semibold text-on-surface-variant">Cash</p>
+<p class="text-xl font-bold text-on-surface">₹400</p>
+</div>
+</div>
+</div>
+<!-- Pending Payments Card -->
+<section class="bg-error-container/40 rounded-[24px] p-6 border border-error/5">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-error" data-icon="warning">warning</span>
+<h3 class="font-bold text-on-surface">Pending Balances</h3>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between bg-white/60 p-3 rounded-2xl">
+<div>
+<p class="font-bold text-sm">Rahul Sharma</p>
+<p class="text-xs text-error font-bold">₹240 Due</p>
+</div>
+<button class="bg-white px-4 py-2 rounded-xl text-[11px] font-bold text-primary shadow-sm active:scale-95 transition-transform">Send Reminder</button>
+</div>
+<div class="flex items-center justify-between bg-white/60 p-3 rounded-2xl">
+<div>
+<p class="font-bold text-sm">Anita Desai</p>
+<p class="text-xs text-error font-bold">₹110 Due</p>
+</div>
+<button class="bg-white px-4 py-2 rounded-xl text-[11px] font-bold text-primary shadow-sm active:scale-95 transition-transform">Send Reminder</button>
+</div>
+</div>
+</section>
+<!-- Daily Earnings Chart -->
+<section class="bg-surface-container-low rounded-[24px] p-6">
+<h3 class="font-bold text-on-surface mb-6">Daily Activity</h3>
+<div class="flex items-end justify-between h-40 gap-2">
+<div class="flex flex-col items-center flex-1 gap-2">
+<div class="w-full bg-primary-container h-[40%] rounded-t-lg"></div>
+<span class="text-[10px] font-bold text-on-surface-variant">Mon</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-2">
+<div class="w-full bg-primary-container h-[65%] rounded-t-lg"></div>
+<span class="text-[10px] font-bold text-on-surface-variant">Tue</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-2">
+<div class="w-full bg-primary-container h-[85%] rounded-t-lg"></div>
+<span class="text-[10px] font-bold text-on-surface-variant">Wed</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-2">
+<div class="w-full bg-primary-container h-[45%] rounded-t-lg"></div>
+<span class="text-[10px] font-bold text-on-surface-variant">Thu</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-2">
+<div class="w-full bg-primary-container h-[95%] rounded-t-lg"></div>
+<span class="text-[10px] font-bold text-on-surface-variant">Fri</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-2">
+<div class="w-full bg-primary-container h-[60%] rounded-t-lg"></div>
+<span class="text-[10px] font-bold text-on-surface-variant">Sat</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-2">
+<div class="w-full bg-primary-container h-[30%] rounded-t-lg"></div>
+<span class="text-[10px] font-bold text-on-surface-variant">Sun</span>
+</div>
+</div>
+</section>
+<!-- Order Payment Log -->
+<section class="space-y-4">
+<h3 class="font-bold text-on-surface px-1">Payment History</h3>
+<div class="bg-surface-container-lowest rounded-[24px] overflow-hidden shadow-sm">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container">
+<th class="p-4 text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Time</th>
+<th class="p-4 text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">Customer</th>
+<th class="p-4 text-[11px] font-bold uppercase tracking-wider text-on-surface-variant text-right">Amount</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<tr>
+<td class="p-4 text-sm text-on-surface-variant">14:20</td>
+<td class="p-4 text-sm font-semibold">Vikram Roy</td>
+<td class="p-4 text-sm font-bold text-right text-primary">₹320</td>
+</tr>
+<tr>
+<td class="p-4 text-sm text-on-surface-variant">13:45</td>
+<td class="p-4 text-sm font-semibold">Priya K.</td>
+<td class="p-4 text-sm font-bold text-right text-primary">₹150</td>
+</tr>
+<tr>
+<td class="p-4 text-sm text-on-surface-variant">12:10</td>
+<td class="p-4 text-sm font-semibold">Sameer Khan</td>
+<td class="p-4 text-sm font-bold text-right text-primary">₹480</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Export Action -->
+<button class="w-full h-[52px] rounded-[14px] bg-primary-container text-white font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="picture_as_pdf">picture_as_pdf</span>
+<span>Export PDF Report</span>
+</button>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pb-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl h-20 shadow-[0_12px_32px_rgba(0,119,190,0.12)]">
+<div class="fixed bottom-4 left-4 right-4 rounded-3xl h-20 flex justify-around items-center px-2">
+<!-- Active: Earnings -->
+<button class="flex flex-col items-center justify-center bg-sky-600 text-white rounded-2xl px-5 py-2 tap-highlight-transparent active:scale-90 duration-300">
+<span class="material-symbols-outlined" data-icon="payments" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-semibold tracking-wide">Earnings</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 hover:text-sky-500 active:scale-90 duration-300">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-semibold tracking-wide">Analytics</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 hover:text-sky-500 active:scale-90 duration-300">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-semibold tracking-wide">Shop</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 hover:text-sky-500 active:scale-90 duration-300">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-semibold tracking-wide">Inbox</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 px-4 hover:text-sky-500 active:scale-90 duration-300">
+<span class="material-symbols-outlined" data-icon="settings_suggest">settings_suggest</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-semibold tracking-wide">Settings</span>
+</button>
+</div>
+</nav>
+</body></html>

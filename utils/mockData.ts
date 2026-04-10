@@ -1,0 +1,196 @@
+import type {
+  DeliveryTask,
+  NotificationItem,
+  Order,
+  Product,
+  RewardSummary,
+  Shop,
+  SubscriptionPlan,
+} from '@/types/domain';
+
+export const mockProducts: Product[] = [
+  {
+    id: 'P001',
+    name: '20L Mineral Water Can',
+    unitLabel: 'per can',
+    description: 'BIS-certified, UV-treated and delivery-ready.',
+    price: 45,
+    inStock: true,
+    stockCount: 48,
+    image: 'water_can_1',
+  },
+  {
+    id: 'P002',
+    name: '10L Family Water Can',
+    unitLabel: 'per can',
+    description: 'Compact refill for apartments and office pantries.',
+    price: 28,
+    inStock: true,
+    stockCount: 26,
+    image: 'water_can_2',
+  },
+  {
+    id: 'P003',
+    name: '5L Travel Pack',
+    unitLabel: 'per bottle',
+    description: 'Quick hydration pack for urgent orders.',
+    price: 18,
+    inStock: true,
+    stockCount: 80,
+    image: 'water_can_3',
+  },
+];
+
+export const mockShops: Shop[] = [
+  {
+    id: '1',
+    name: 'Blue Spring Aquatics',
+    area: 'Koramangala',
+    rating: 4.8,
+    distanceKm: 1.2,
+    eta: '20-25 min',
+    isOpen: true,
+    tags: ['Fast Delivery', 'BIS', 'Top Rated'],
+    verified: true,
+    pricePerCan: 45,
+    accent: '#005D90',
+    heroImage: 'water_can_1',
+    products: mockProducts,
+  },
+  {
+    id: '2',
+    name: 'Aqua Crystal Pure',
+    area: 'Indiranagar',
+    rating: 4.6,
+    distanceKm: 2.1,
+    eta: '25-30 min',
+    isOpen: true,
+    tags: ['Schedule', 'Cold Bottles'],
+    verified: true,
+    pricePerCan: 48,
+    accent: '#0077B6',
+    heroImage: 'water_can_2',
+    products: mockProducts.slice(0, 2),
+  },
+  {
+    id: '3',
+    name: 'Clear Drop Deliveries',
+    area: 'HSR Layout',
+    rating: 4.3,
+    distanceKm: 2.8,
+    eta: '35-40 min',
+    isOpen: false,
+    tags: ['Budget', 'Bulk Orders'],
+    verified: false,
+    pricePerCan: 40,
+    accent: '#006878',
+    heroImage: 'water_can_3',
+    products: mockProducts,
+  },
+];
+
+export const mockOrders: Order[] = [
+  {
+    id: 'TNG-20260410-001',
+    shopId: '1',
+    customerName: 'Rahul Sharma',
+    customerPhone: '+91 98765 43210',
+    items: [{ productId: 'P001', quantity: 2 }],
+    address: 'Apartment 402, Serene Residency, Koramangala, Bangalore',
+    paymentMethod: 'upi',
+    status: 'out_for_delivery',
+    eta: '12 min',
+    createdAtLabel: 'Today, 10:30 AM',
+    deliveryOtp: '4829',
+    total: 110,
+    deliveryAgentName: 'Ravi Kumar',
+  },
+  {
+    id: 'TNG-20260408-014',
+    shopId: '2',
+    customerName: 'Rahul Sharma',
+    customerPhone: '+91 98765 43210',
+    items: [{ productId: 'P001', quantity: 3 }],
+    address: 'Apartment 402, Serene Residency, Koramangala, Bangalore',
+    paymentMethod: 'cod',
+    status: 'delivered',
+    eta: 'Delivered',
+    createdAtLabel: 'Apr 8, 08:10 AM',
+    deliveryOtp: '5614',
+    total: 155,
+  },
+];
+
+export const mockNotifications: NotificationItem[] = [
+  {
+    id: 'N001',
+    type: 'order',
+    title: 'Order on the way',
+    body: 'Ravi Kumar is delivering your Blue Spring order.',
+    read: false,
+    timestamp: '2 min ago',
+  },
+  {
+    id: 'N002',
+    type: 'promo',
+    title: 'Free delivery unlocked',
+    body: 'Use THANNI10 on your next scheduled order.',
+    read: false,
+    timestamp: '1 hour ago',
+  },
+  {
+    id: 'N003',
+    type: 'payment',
+    title: 'Wallet top-up successful',
+    body: '₹200 added to your wallet balance.',
+    read: true,
+    timestamp: 'Yesterday',
+  },
+];
+
+export const mockSubscriptions: SubscriptionPlan[] = [
+  {
+    id: 'SUB001',
+    name: 'Morning Daily 20L',
+    cadence: 'daily',
+    quantity: 1,
+    price: 1199,
+    perks: ['Pause anytime', 'Priority dispatch', 'Flat delivery'],
+    active: true,
+  },
+  {
+    id: 'SUB002',
+    name: 'Office Weekly Combo',
+    cadence: 'weekly',
+    quantity: 4,
+    price: 699,
+    perks: ['Shared billing', 'Bulk pricing'],
+    active: false,
+  },
+];
+
+export const mockRewards: RewardSummary = {
+  referralCode: 'THANNI-RAHUL',
+  tier: 'Plus',
+  points: 420,
+  vouchers: 3,
+};
+
+export const mockDeliveryTasks: DeliveryTask[] = [
+  {
+    id: 'DLV001',
+    orderId: 'TNG-20260410-001',
+    customerName: 'Rahul Sharma',
+    address: 'Apartment 402, Serene Residency, Koramangala, Bangalore',
+    priority: 'Urgent',
+    paymentPending: false,
+  },
+  {
+    id: 'DLV002',
+    orderId: 'TNG-20260410-004',
+    customerName: 'Priya Suresh',
+    address: 'Block B, Palm Meadows, Indiranagar, Bangalore',
+    priority: 'Normal',
+    paymentPending: true,
+  },
+];
