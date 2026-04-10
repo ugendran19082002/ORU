@@ -8,6 +8,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { useDeliveryStore } from '@/stores/deliveryStore';
+import { useOrderStore } from '@/stores/orderStore';
 
 type FailReason = 'not_home' | 'wrong_address' | 'refused' | 'cant_carry' | 'other';
 
@@ -21,6 +23,10 @@ const FAIL_REASONS: { id: FailReason; label: string; icon: string }[] = [
 
 export default function DeliveryCompleteScreen() {
   const router = useRouter();
+  const { tasks, currentTaskId, updateTaskStatus } = useDeliveryStore();
+  const { updateStatus: updateOrderStatus } = useOrderStore();
+  const task = tasks.find((item) => item.id === currentTaskId) ?? tasks[0];
+  
   const [mode, setMode] = useState<'success' | 'failed'>('success');
   const [selectedReason, setSelectedReason] = useState<FailReason | null>(null);
   const [otherText, setOtherText] = useState('');
@@ -39,10 +45,17 @@ export default function DeliveryCompleteScreen() {
       Alert.alert('Reschedule Required', 'Please suggest a next delivery slot.');
       return;
     }
+    if (task) {
+      const finalStatus = mode === 'success' ? 'completed' : 'cancelled';
+      updateTaskStatus(task.id, finalStatus);
+      // Sync with orderStore (In real app, backend handles this sync)
+      updateOrderStatus(task.orderId, finalStatus);
+    }
+
     Alert.alert(
       mode === 'success' ? '✅ Trip Complete!' : '⚠️ Delivery Reported',
       mode === 'success'
-        ? `Order ${orderId} marked delivered. Earnings ${earnings} added to your wallet.`
+        ? `Order ${task?.orderId ?? orderId} marked delivered. Earnings ${earnings} added to your wallet.`
         : `Failed delivery reported. Rescheduled for: ${rescheduleSlot}`,
       [{ text: 'OK', onPress: () => router.replace('/delivery' as any) }]
     );
@@ -64,10 +77,10 @@ export default function DeliveryCompleteScreen() {
         {/* ORDER CARD */}
         <View style={styles.orderCard}>
           <View style={styles.orderRow}>
-            <Text style={styles.orderId}>{orderId}</Text>
-            <Text style={styles.customerName}>{customerName}</Text>
+            <Text style={styles.orderId}>{task?.orderId ?? orderId}</Text>
+            <Text style={styles.customerName}>{task?.customerName ?? customerName}</Text>
           </View>
-          <Text style={styles.orderAddress}>Flat 4B, Emerald Heights, Sector 42</Text>
+          <Text style={styles.orderAddress}>{task?.address ?? 'Customer Hub Address'}</Text>
         </View>
 
         {/* MODE TOGGLE */}

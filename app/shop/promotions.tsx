@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, TextInput, Switch, Alert,
+  StyleSheet, TextInput, Switch, Alert, BackHandler
 } from 'react-native';
+import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -51,6 +51,28 @@ export default function ShopPromotionsScreen() {
     setPromos(promos.map((p) => (p.id === id ? { ...p, active: !p.active } : p)));
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/shop/settings');
+    }
+  };
+
+  useEffect(() => {
+    const backAction = () => {
+      handleBack();
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
+
   const handleCreate = () => {
     if (!newCode.trim() || !newValue.trim()) {
       Alert.alert('Error', 'Please fill in the coupon code and discount value.');
@@ -83,12 +105,17 @@ export default function ShopPromotionsScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <View>
-          <View style={styles.brandRow}>
-            <Logo size="md" />
-            <Text style={styles.brandName}>ThanniGo</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
+            <Ionicons name="arrow-back" size={24} color="#0f172a" />
+          </TouchableOpacity>
+          <View>
+            <View style={styles.brandRow}>
+              <Logo size="md" />
+              <Text style={styles.brandName}>ThanniGo</Text>
+            </View>
+            <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
-          <Text style={styles.roleLabel}>SHOP PANEL</Text>
         </View>
         <TouchableOpacity
           style={styles.createBtn}
@@ -320,6 +347,7 @@ const styles = StyleSheet.create({
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: '700', color: '#006878', letterSpacing: 1.5, marginTop: 3 },
+  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
   createBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: '#005d90', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14,

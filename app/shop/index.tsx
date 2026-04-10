@@ -5,7 +5,7 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  StyleSheet,
+  StyleSheet, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -38,8 +38,8 @@ export default function ShopOrdersScreen() {
   const { orders, updateStatus, setActiveOrder } = useOrderStore();
   const { shops } = useShopStore();
   const shop = shops[0];
-  const activeOrders = orders.filter((order) => !['delivered', 'cancelled'].includes(order.status));
-  const completedOrders = orders.filter((order) => ['delivered', 'cancelled'].includes(order.status));
+  const activeOrders = orders.filter((order) => !['completed', 'cancelled'].includes(order.status));
+  const completedOrders = orders.filter((order) => ['completed', 'cancelled'].includes(order.status));
   const nextOrder = activeOrders[0];
   const lowStock = shop?.products.filter((product) => product.stockCount < 30) ?? [];
 
@@ -58,7 +58,7 @@ export default function ShopOrdersScreen() {
     }
 
     if (action === 'delivered' && orderId) {
-      updateStatus(orderId, 'delivered');
+      updateStatus(orderId, 'completed');
     }
 
     if (action === 'delivered') {
@@ -86,10 +86,15 @@ export default function ShopOrdersScreen() {
           </View>
           <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications' as any)}>
-          <Ionicons name="notifications-outline" size={22} color="#005d90" />
-          <View style={styles.notifDot} />
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/shop/settings' as any)}>
+            <Ionicons name="grid-outline" size={20} color="#005d90" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications' as any)}>
+            <Ionicons name="notifications-outline" size={22} color="#005d90" />
+            <View style={styles.notifDot} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
@@ -97,6 +102,32 @@ export default function ShopOrdersScreen() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
       >
         <Text style={styles.pageTitle}>Orders</Text>
+
+        {/* --- DELIVERY MODE HERO CARD --- */}
+        <TouchableOpacity 
+          activeOpacity={0.9} 
+          onPress={() => router.push('/delivery' as any)}
+        >
+          <LinearGradient
+            colors={['#006878', '#004e5b']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.deliveryHeroCard}
+          >
+            <View style={styles.heroLeft}>
+              <View style={styles.heroIconBackground}>
+                <Ionicons name="bicycle" size={28} color="#006878" />
+              </View>
+              <View>
+                <Text style={styles.heroTitle}>Switch to Delivery Mode</Text>
+                <Text style={styles.heroSub}>Act as delivery agent for your shop</Text>
+              </View>
+            </View>
+            <View style={styles.heroAction}>
+              <Ionicons name="arrow-forward" size={20} color="white" />
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
 
         <View style={styles.opsCard}>
           <View style={styles.opsRow}>
@@ -110,6 +141,18 @@ export default function ShopOrdersScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+
+        {/* --- QUICK ANALYTICS LINK (Hidden Menu Entry Point) --- */}
+        <TouchableOpacity 
+          style={styles.insightsRow}
+          onPress={() => router.push('/shop/analytics' as any)}
+        >
+          <View style={styles.insightsLeft}>
+            <Ionicons name="trending-up" size={16} color="#006878" />
+            <Text style={styles.insightsText}>View Shop Analytics & Trends</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={14} color="#94a3b8" />
+        </TouchableOpacity>
           <View style={styles.dividerLine} />
           <View style={styles.opsRow}>
             <View>
@@ -264,12 +307,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24, paddingVertical: 14, backgroundColor: 'rgba(255,255,255,0.92)',
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
-  roleLabel: { fontSize: 9, fontWeight: '700', color: '#006878', letterSpacing: 1.5, marginTop: 3 },
+  brandName: { fontSize: 20, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
+  roleLabel: { fontSize: 8, fontWeight: '700', color: '#006878', letterSpacing: 1.2, marginTop: 2 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   iconBtn: {
     width: 40, height: 40, borderRadius: 20, backgroundColor: '#f1f4f9',
     alignItems: 'center', justifyContent: 'center', position: 'relative',
   },
+  deliveryHeroCard: {
+    borderRadius: 24, padding: 20, flexDirection: 'row', alignItems: 'center',
+    marginBottom: 24, overflow: 'hidden',
+    shadowColor: '#004e5b', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 16, elevation: 8,
+  },
+  heroLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 16 },
+  heroIconBackground: { width: 52, height: 52, borderRadius: 16, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  heroTitle: { fontSize: 18, fontWeight: '900', color: 'white' },
+  heroSub: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  heroAction: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   notifDot: {
     position: 'absolute', top: 8, right: 8, width: 8, height: 8,
     backgroundColor: '#ba1a1a', borderRadius: 4, borderWidth: 1.5, borderColor: '#f1f4f9',
@@ -340,4 +394,12 @@ const styles = StyleSheet.create({
   completedId: { color: '#005d90', fontWeight: '800', fontSize: 12 },
   completedName: { color: '#181c20', fontWeight: '800', fontSize: 16, marginTop: 4 },
   completedStatus: { color: '#006878', fontWeight: '700', textTransform: 'capitalize' },
+  
+  insightsRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#e6f7f9', paddingHorizontal: 16, paddingVertical: 12,
+    borderRadius: 14, marginBottom: 24, borderStyle: 'dashed', borderWidth: 1, borderColor: '#006878',
+  },
+  insightsLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  insightsText: { fontSize: 13, fontWeight: '700', color: '#006878' },
 });

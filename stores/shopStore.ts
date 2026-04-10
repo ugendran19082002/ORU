@@ -4,6 +4,7 @@ import type { Shop, DeliveryAgent } from '@/types/domain';
 import { mockShops } from '@/utils/mockData';
 
 const DEFAULT_AGENTS: DeliveryAgent[] = [
+  { id: 'da_owner', name: 'Store Owner', phone: '9999999999', status: 'active', assignedOrders: 0 },
   { id: 'da_1', name: 'Ravi Kumar', phone: '9876543210', status: 'active', assignedOrders: 2 },
   { id: 'da_2', name: 'Suresh M', phone: '9123456789', status: 'offline', assignedOrders: 0 },
 ];

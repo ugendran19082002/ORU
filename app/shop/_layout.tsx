@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
 import React from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 
 function TabIcon({
   name,
@@ -56,7 +56,7 @@ export default function ShopLayout() {
           text: "Switch Now",
           onPress: () => router.replace("/delivery" as any),
         },
-      ]
+      ],
     );
   };
 
@@ -92,11 +92,16 @@ export default function ShopLayout() {
       }}
     >
       {/* Hidden screens (no tab icon) */}
-      <Tabs.Screen name="dashboard" options={{ href: null }} />
-      <Tabs.Screen name="order/[id]" options={{ href: null, tabBarStyle: { display: "none" } }} />
+      <Tabs.Screen
+        name="order/[id]"
+        options={{ href: null, tabBarStyle: { display: "none" } }}
+      />
       <Tabs.Screen name="vendor-register" options={{ href: null }} />
       <Tabs.Screen name="subscription-plans" options={{ href: null }} />
       <Tabs.Screen name="manual-order" options={{ href: null }} />
+      <Tabs.Screen name="analytics" options={{ href: null }} />
+      <Tabs.Screen name="analytics.next" options={{ href: null }} />
+      <Tabs.Screen name="delivery-fleet" options={{ href: null }} />
 
       {/* TAB 1 — Orders (Home) */}
       <Tabs.Screen
@@ -128,21 +133,6 @@ export default function ShopLayout() {
         }}
       />
 
-      {/* TAB 3 — Analytics */}
-      <Tabs.Screen
-        name="analytics"
-        options={{
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon
-              name={focused ? "bar-chart" : "bar-chart-outline"}
-              focused={focused}
-              color={color}
-              label="Analytics"
-            />
-          ),
-        }}
-      />
-
       {/* TAB 4 — Earnings */}
       <Tabs.Screen
         name="earnings"
@@ -167,7 +157,7 @@ export default function ShopLayout() {
               name={focused ? "grid" : "grid-outline"}
               focused={focused}
               color={color}
-              label="More"
+              label="Settings"
             />
           ),
         }}

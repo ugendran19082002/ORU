@@ -17,13 +17,13 @@ export default function ShopDeliveredOrderScreen() {
 
   const handleAssignAgent = (agentName: string) => {
     // In real app, we update backend order.deliveryAgentId
-    updateStatus(orderId, 'out_for_delivery');
+    updateStatus(orderId, 'assigned');
     setAssignModalOpen(false);
   };
 
   const order = orders.find((item) => item.id === id) ?? orders[0];
   const shop = shops.find((item) => item.id === order?.shopId);
-  const orderId = order?.id || id || '9824';
+  const orderId = order?.id || (Array.isArray(id) ? id[0] : id) || '9824';
   const customer = order?.customerName || 'Rahul Sharma';
   const address = order?.address || 'Flat 402, Ocean Breeze Apartments, Sunset Boulevard, Coastal Road.';
   const phone = order?.customerPhone || '+91 98765 43210';
@@ -69,14 +69,14 @@ export default function ShopDeliveredOrderScreen() {
               <Ionicons name="time" size={32} color="#005d90" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.successTitle, { color: '#005d90' }]}>Order Status: {order?.status === 'out_for_delivery' ? 'Out for Delivery' : 'Preparing'}</Text>
-              <Text style={[styles.successSub, { color: '#005d90' }]}>{order?.status === 'out_for_delivery' && order.deliveryAgentName ? `Assigned to ${order.deliveryAgentName}` : 'Awaiting Delivery Agent'}</Text>
+              <Text style={[styles.successTitle, { color: '#005d90' }]}>Order Status: {order?.status.toUpperCase()}</Text>
+              <Text style={[styles.successSub, { color: '#005d90' }]}>{['assigned', 'accepted', 'picked'].includes(order?.status || '') && order.deliveryAgentName ? `Assigned to ${order.deliveryAgentName}` : 'Awaiting Delivery Agent'}</Text>
             </View>
           </View>
         )}
 
         {/* ASSIGNMENT CTA */}
-        {order?.status !== 'delivered' && order?.status !== 'out_for_delivery' && (
+        {order?.status === 'pending' && (
           <TouchableOpacity style={styles.assignBtn} onPress={() => setAssignModalOpen(true)}>
             <Ionicons name="bicycle-outline" size={20} color="white" />
             <Text style={styles.assignBtnText}>Assign Delivery Driver</Text>

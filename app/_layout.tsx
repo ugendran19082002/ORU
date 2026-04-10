@@ -55,9 +55,6 @@ export default function RootLayout() {
 
             {/* SHOP OWNER SCREENS */}
             <Stack.Screen name="shop" options={{ headerShown: false, animation: 'fade' }} />
-            <Stack.Screen name="shop/vendor-register" options={{ headerShown: false, animation: 'slide_from_right' }} />
-            <Stack.Screen name="shop/subscription-plans" options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="shop/manual-order" options={{ animation: 'slide_from_right' }} />
 
             {/* DELIVERY SCREENS */}
             <Stack.Screen name="delivery" options={{ headerShown: false, animation: 'fade' }} />

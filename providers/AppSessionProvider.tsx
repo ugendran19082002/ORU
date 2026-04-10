@@ -173,6 +173,11 @@ export function AppRouteGuard() {
       return;
     }
 
+    if (user.role === 'delivery' && (isCustomerTabs || isShopRoute || isAdminRoute)) {
+      router.replace('/delivery');
+      return;
+    }
+
     if (pathname === '/') {
       if (user.role === 'shop') router.replace('/shop');
       else if (user.role === 'admin') router.replace('/admin');

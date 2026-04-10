@@ -20,6 +20,8 @@ type NavItem = {
 };
 
 const SHOP_MENU: NavItem[] = [
+  { label: 'Shop Analytics & Trends', icon: 'bar-chart-outline', route: '/shop/analytics' },
+  { label: 'Revenue & Earnings', icon: 'wallet-outline', route: '/shop/earnings' },
   { label: 'Shop Profile & Address', icon: 'storefront-outline', route: '/shop/profile' },
   { label: 'Promotions & Coupons', icon: 'pricetag-outline', route: '/shop/promotions', badge: 'NEW' },
   { label: 'Delivery Management', icon: 'bicycle-outline', route: '/shop/delivery' },
@@ -32,8 +34,8 @@ const ACCOUNT_MENU: NavItem[] = [
   { label: 'Notifications', icon: 'notifications-outline', route: '/notifications' },
   { label: 'Report an Issue', icon: 'chatbubble-ellipses-outline', route: '/report-issue' },
   { label: 'Emergency Help', icon: 'warning-outline', route: '/emergency-help', color: '#c62828' },
-  { label: 'Terms of Service', icon: 'document-text-outline', route: '' },
-  { label: 'Support & Help', icon: 'help-buoy-outline', route: '' },
+  { label: 'Terms of Service', icon: 'document-text-outline', route: '/report-issue' },
+  { label: 'Support & Help', icon: 'help-buoy-outline', route: '/emergency-help' },
 ];
 
 function MenuRow({ item }: { item: NavItem }) {
@@ -70,19 +72,7 @@ export default function ShopSettingsScreen() {
     setTimeout(() => setRefreshing(false), 1000);
   };
 
-  const handleDeliverySwitch = () => {
-    Alert.alert(
-      '🛵 Switch to Delivery Mode',
-      'You will be taken to the Delivery Agent dashboard. Switch back to Shop Panel anytime from the delivery menu.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Switch Now',
-          onPress: () => router.replace('/delivery' as any),
-        },
-      ]
-    );
-  };
+
 
   const handleSignOut = async () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out of the Shop Panel?', [
@@ -125,31 +115,9 @@ export default function ShopSettingsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
       >
-        <Text style={styles.pageTitle}>More</Text>
+        <Text style={styles.pageTitle}>Settings</Text>
 
-        {/* ——— DELIVERY MODE SWITCH — HERO CARD ——— */}
-        <TouchableOpacity activeOpacity={0.9} onPress={handleDeliverySwitch}>
-          <LinearGradient
-            colors={['#2e7d32', '#388e3c']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.deliverySwitchCard}
-          >
-            <Ionicons name="bicycle" size={64} color="rgba(255,255,255,0.08)" style={styles.deliveryDecor} />
-            <View style={styles.deliveryLeft}>
-              <View style={styles.deliveryIconWrap}>
-                <Ionicons name="bicycle" size={28} color="#2e7d32" />
-              </View>
-              <View>
-                <Text style={styles.deliverySwitchTitle}>Switch to Delivery Mode</Text>
-                <Text style={styles.deliverySwitchSub}>Act as a delivery agent for your shop</Text>
-              </View>
-            </View>
-            <View style={styles.deliveryArrow}>
-              <Ionicons name="arrow-forward" size={20} color="white" />
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
+
 
         {/* QUICK STATUS */}
         <View style={styles.statusCard}>
@@ -244,18 +212,7 @@ const styles = StyleSheet.create({
   notifDot: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, backgroundColor: '#ba1a1a', borderRadius: 4 },
   pageTitle: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, marginTop: 10, marginBottom: 20 },
 
-  // DELIVERY SWITCH
-  deliverySwitchCard: {
-    borderRadius: 22, padding: 20, flexDirection: 'row', alignItems: 'center',
-    marginBottom: 16, overflow: 'hidden',
-    shadowColor: '#2e7d32', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 6,
-  },
-  deliveryDecor: { position: 'absolute', right: -10, bottom: -10 },
-  deliveryLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14 },
-  deliveryIconWrap: { width: 52, height: 52, borderRadius: 16, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
-  deliverySwitchTitle: { fontSize: 17, fontWeight: '900', color: 'white' },
-  deliverySwitchSub: { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
-  deliveryArrow: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+
 
   // STATUS CARD
   statusCard: {

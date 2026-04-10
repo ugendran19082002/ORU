@@ -23,9 +23,10 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { StitchScreenNote } from "@/components/stitch/StitchScreenNote";
+import { useRouter } from "expo-router";
 
 /**
  * PRODUCTION DEBUG HELPER: Validate coordinates before use
@@ -52,7 +53,30 @@ type Region = {
 };
 
 export default function ShopProfileScreen() {
+  const router = useRouter();
   const [refreshing, setRefreshing] = React.useState(false);
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/shop/settings");
+    }
+  };
+
+  useEffect(() => {
+    const backAction = () => {
+      handleBack();
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, []);
+
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     setTimeout(() => {
@@ -345,12 +369,17 @@ export default function ShopProfileScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <View>
-          <View style={styles.brandRow}>
-            <Logo size="md" />
-            <Text style={styles.brandName}>ThanniGo</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
+          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
+            <Ionicons name="arrow-back" size={24} color="#0f172a" />
+          </TouchableOpacity>
+          <View>
+            <View style={styles.brandRow}>
+              <Logo size="md" />
+              <Text style={styles.brandName}>ThanniGo</Text>
+            </View>
+            <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
-          <Text style={styles.roleLabel}>SHOP PANEL</Text>
         </View>
         <TouchableOpacity
           style={styles.editBtn}
@@ -391,7 +420,6 @@ export default function ShopProfileScreen() {
           contentContainerStyle={{ paddingBottom: 120 }}
         >
           <Text style={styles.pageTitle}>Shop Profile</Text>
-
 
           {/* PROFILE BANNER */}
           <View style={styles.bannerContainer}>
@@ -739,7 +767,6 @@ export default function ShopProfileScreen() {
           >
             <Text style={styles.saveBtnText}>Save Profile Changes</Text>
           </TouchableOpacity>
-
           <View style={{ height: 100 }} />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -770,6 +797,14 @@ const styles = StyleSheet.create({
     color: "#006878",
     letterSpacing: 1.5,
     marginTop: 3,
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#f8fafc",
+    alignItems: "center",
+    justifyContent: "center",
   },
   editBtn: {
     backgroundColor: "#e0f0ff",
@@ -952,7 +987,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 12,
     left: 12,
-    color: "#005d90", // More visible color for shop profile
+    color: "#005d90",
     fontSize: 10,
     fontWeight: "800",
     letterSpacing: 1,

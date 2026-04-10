@@ -9,7 +9,7 @@ import { useDeliveryStore } from '@/stores/deliveryStore';
 
 export default function DeliveryNavigationScreen() {
   const router = useRouter();
-  const { tasks, currentTaskId } = useDeliveryStore();
+  const { tasks, currentTaskId, updateTaskStatus } = useDeliveryStore();
   const task = tasks.find((item) => item.id === currentTaskId) ?? tasks[0];
   const [navStarted, setNavStarted] = React.useState(true);
 
@@ -77,7 +77,15 @@ export default function DeliveryNavigationScreen() {
           <TouchableOpacity
             activeOpacity={0.9}
             style={{ flex: 1 }}
-            onPress={() => router.push('/delivery/otp' as any)}
+            onPress={() => {
+              if (task?.status === 'accepted') {
+                updateTaskStatus(task.id, 'picked');
+                Alert.alert('Picked up', 'Order items successfully picked up from shop.');
+              } else if (task?.status === 'picked') {
+                updateTaskStatus(task.id, 'delivered');
+                router.push('/delivery/complete' as any);
+              }
+            }}
           >
             <LinearGradient
               colors={['#005d90', '#0077b6']}
@@ -85,7 +93,9 @@ export default function DeliveryNavigationScreen() {
               end={{ x: 1, y: 0 }}
               style={styles.arriveBtn}
             >
-              <Text style={styles.arriveBtnText}>Slide When Arrived</Text>
+              <Text style={styles.arriveBtnText}>
+                {task?.status === 'accepted' ? 'Confirm Pickup' : 'Slide When Arrived'}
+              </Text>
               <Ionicons name="arrow-forward" size={18} color="white" />
             </LinearGradient>
           </TouchableOpacity>

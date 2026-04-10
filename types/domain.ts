@@ -35,11 +35,12 @@ export type CartItem = {
 };
 
 export type OrderStatus =
-  | 'placed'
+  | 'pending'
+  | 'assigned'
   | 'accepted'
-  | 'preparing'
-  | 'out_for_delivery'
+  | 'picked'
   | 'delivered'
+  | 'completed'
   | 'cancelled';
 
 export type Order = {
@@ -91,7 +92,12 @@ export type DeliveryTask = {
   customerName: string;
   address: string;
   priority: 'Normal' | 'Urgent';
+  status: OrderStatus;
   paymentPending: boolean;
+  distance: string;
+  eta: string;
+  cans: number;
+  amount: string;
 };
 
 export type DeliveryAgent = {

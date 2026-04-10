@@ -8,10 +8,12 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { useOrderStore } from '@/stores/orderStore';
 
 // Manual order entry for shop staff
 export default function ManualOrderScreen() {
   const router = useRouter();
+  const { placeOrder } = useOrderStore();
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [address, setAddress] = useState('');
@@ -29,6 +31,21 @@ export default function ManualOrderScreen() {
       Alert.alert('Required', 'Please fill in customer name, phone, and address.');
       return;
     }
+
+    const orderPayload = {
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim() || 'Not provided',
+      address: address.trim(),
+      items: [{ productId: 'manual_can', quantity: parseInt(quantity || '1') }],
+      total: total,
+      shopId: 'shop_1',
+      paymentMethod: paymentMode as 'cash' | 'upi' | 'wallet',
+      eta: '30-45 mins',
+      notes: notes,
+    };
+
+    placeOrder(orderPayload as any);
+
     Alert.alert('Order Placed!', `Manual order for ${customerName} — ₹${total} (${paymentMode.toUpperCase()})`, [
       { text: 'OK', onPress: () => router.replace('/shop' as any) },
     ]);

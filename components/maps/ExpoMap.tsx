@@ -47,7 +47,7 @@ export interface ExpoMarkerProps {
 
 let NativeMapView: any = null;
 let NativeMarker: any = null;
-let PROVIDER_GOOGLE: any = null;
+let PROVIDER_GOOGLE_NATIVE: any = null;
 let UrlTile: any = null;
 
 if (Platform.OS !== 'web') {
@@ -55,7 +55,7 @@ if (Platform.OS !== 'web') {
     const RNMaps = require('react-native-maps');
     NativeMapView   = RNMaps.default;
     NativeMarker    = RNMaps.Marker;
-    PROVIDER_GOOGLE = RNMaps.PROVIDER_GOOGLE;
+    PROVIDER_GOOGLE_NATIVE = RNMaps.PROVIDER_GOOGLE;
     UrlTile         = RNMaps.UrlTile;
     console.log('✅ [ExpoMap] react-native-maps loaded');
   } catch (e) {
@@ -138,7 +138,7 @@ export const ExpoMap = forwardRef<any, ExpoMapProps>((props, ref) => {
   return (
     <NativeMapView
       ref={nativeRef}
-      provider={PROVIDER_GOOGLE}
+      provider={PROVIDER_GOOGLE_NATIVE}
       style={style}
       initialRegion={initialRegion}
       region={region}
@@ -179,4 +179,4 @@ export const ExpoMarker = (props: ExpoMarkerProps) => {
   );
 };
 
-export { PROVIDER_GOOGLE };
+export const PROVIDER_GOOGLE = Platform.OS === 'web' ? 'google' : PROVIDER_GOOGLE_NATIVE;

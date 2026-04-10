@@ -19,7 +19,7 @@ export const useOrderStore = create<OrderState>((set) => ({
       ...payload,
       id: `TNG-${Date.now()}`,
       createdAtLabel: 'Just now',
-      status: 'placed',
+      status: 'pending',
       deliveryOtp: String(Math.floor(1000 + Math.random() * 9000)),
     };
     set((state) => ({

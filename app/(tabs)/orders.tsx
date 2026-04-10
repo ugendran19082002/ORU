@@ -148,13 +148,14 @@ export default function OrdersScreen() {
   const normalizedOrders = orders.map((order) => {
     const shop = shops.find((item) => item.id === order.shopId);
     const quantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
-    const isActive = !['delivered', 'cancelled'].includes(order.status);
+    const isActive = !['delivered', 'completed', 'cancelled'].includes(order.status);
     const statusMap = {
-      placed: { label: 'Placed', color: '#005D90', bg: '#E3F2FD', progress: 0.2 },
-      accepted: { label: 'Accepted', color: '#005D90', bg: '#E3F2FD', progress: 0.4 },
-      preparing: { label: 'Preparing', color: '#0077B6', bg: '#E0F0FF', progress: 0.55 },
-      out_for_delivery: { label: 'Out for Delivery', color: '#006878', bg: '#E0F7FA', progress: 0.75 },
-      delivered: { label: 'Delivered', color: '#005D90', bg: '#E3F2FD', progress: 1 },
+      pending: { label: 'Pending', color: '#005D90', bg: '#E3F2FD', progress: 0.1 },
+      assigned: { label: 'Assigned', color: '#0077B6', bg: '#E0F0FF', progress: 0.3 },
+      accepted: { label: 'Accepted', color: '#006878', bg: '#E0F7FA', progress: 0.5 },
+      picked: { label: 'Picked', color: '#005D90', bg: '#E3F2FD', progress: 0.75 },
+      delivered: { label: 'Delivered', color: '#005D90', bg: '#E3F2FD', progress: 0.9 },
+      completed: { label: 'Completed', color: '#2e7d32', bg: '#e8f5e9', progress: 1 },
       cancelled: { label: 'Cancelled', color: '#ba1a1a', bg: '#ffdad6', progress: 0 },
     } as const;
     const statusInfo = statusMap[order.status];

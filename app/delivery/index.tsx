@@ -11,21 +11,24 @@ import { useRouter } from 'expo-router';
 import { useDeliveryStore } from '@/stores/deliveryStore';
 import { useAppSession } from '@/hooks/use-app-session';
 
-const TRIPS = [
-  { id: 't1', orderId: '#9831', customer: 'Ananya Sharma', address: 'Flat 4B, Emerald Heights, Sector 42', distance: '1.2 km', eta: '8 min', priority: 'Urgent', cans: 1, amount: '₹50', status: 'assigned' },
-  { id: 't2', orderId: '#9830', customer: 'Karthik Rajan', address: 'Plot 12, Green View Colony', distance: '2.8 km', eta: '15 min', priority: 'Normal', cans: 2, amount: '₹90', status: 'assigned' },
-  { id: 't3', orderId: '#9829', customer: 'Meena Subramanian', address: '22/A, Brigade Road Extension', distance: '4.1 km', eta: '22 min', priority: 'Normal', cans: 3, amount: '₹135', status: 'assigned' },
-];
+
 
 export default function DeliveryDashboardScreen() {
   const router = useRouter();
   const { user, signOut } = useAppSession();
-  const { tasks, online, toggleOnline, assignCurrentTask } = useDeliveryStore();
-  const [trips] = useState(TRIPS);
+  const { tasks, online, toggleOnline, assignCurrentTask, updateTaskStatus, removeTask } = useDeliveryStore();
+
+  const handleAccept = (id: string) => {
+    updateTaskStatus(id, 'accepted');
+  };
+
+  const handleReject = (id: string) => {
+    removeTask(id);
+  };
 
   const totalEarnings = 284;
   const completedToday = 6;
-  const activeTrips = trips.length;
+  const activeTrips = tasks.length;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -38,7 +41,7 @@ export default function DeliveryDashboardScreen() {
       >
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.greeting}>Good morning, Ravi 👋</Text>
+            <Text style={styles.greeting}>Good morning, {user?.name ?? 'Agent'} 👋</Text>
             <View style={styles.onlineRow}>
               <View style={[styles.onlineDot, { backgroundColor: online ? '#4ade80' : '#f87171' }]} />
               <Text style={styles.onlineStatus}>{online ? 'Online — ready for trips' : 'Offline'}</Text>
@@ -124,7 +127,7 @@ export default function DeliveryDashboardScreen() {
 
         {/* ACTIVE TRIPS */}
         <Text style={styles.sectionTitle}>
-          {online ? `Assigned Trips (${trips.length})` : 'Go online to receive trips'}
+          {online ? `Assigned Trips (${tasks.length})` : 'Go online to receive trips'}
         </Text>
 
         {!online && (
@@ -135,7 +138,7 @@ export default function DeliveryDashboardScreen() {
           </View>
         )}
 
-        {online && trips.map((trip) => (
+        {online && tasks.map((trip) => (
           <View key={trip.id} style={styles.tripCard}>
             {/* TRIP TOP */}
             <View style={styles.tripTop}>
@@ -149,7 +152,7 @@ export default function DeliveryDashboardScreen() {
             </View>
 
             {/* CUSTOMER & ADDRESS */}
-            <Text style={styles.tripCustomer}>{trip.customer}</Text>
+            <Text style={styles.tripCustomer}>{trip.customerName}</Text>
             <View style={styles.addressRow}>
               <Ionicons name="location-outline" size={14} color="#707881" />
               <Text style={styles.tripAddress} numberOfLines={1}>{trip.address}</Text>
@@ -177,23 +180,34 @@ export default function DeliveryDashboardScreen() {
 
             {/* ACTIONS */}
             <View style={styles.tripActions}>
-              <TouchableOpacity
-                style={styles.startBtn}
-                onPress={() => {
-                  assignCurrentTask(trip.id);
-                  router.push('/delivery/navigation' as any);
-                }}
-              >
-                <LinearGradient
-                  colors={['#005d90', '#0077b6']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.startBtnGrad}
+              {trip.status === 'assigned' ? (
+                <View style={{ flexDirection: 'row', flex: 1, gap: 10 }}>
+                  <TouchableOpacity style={[styles.startBtn, { backgroundColor: '#f1f4f9', flex: 1 }]} onPress={() => handleReject(trip.id)}>
+                    <Text style={[styles.startBtnText, { color: '#ba1a1a' }]}>Reject</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.startBtn, { backgroundColor: '#005d90', flex: 1 }]} onPress={() => handleAccept(trip.id)}>
+                    <Text style={styles.startBtnText}>Accept</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.startBtn}
+                  onPress={() => {
+                    assignCurrentTask(trip.id);
+                    router.push('/delivery/navigation' as any);
+                  }}
                 >
-                  <Ionicons name="navigate" size={16} color="white" />
-                  <Text style={styles.startBtnText}>Start Trip</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                  <LinearGradient
+                    colors={['#005d90', '#0077b6']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.startBtnGrad}
+                  >
+                    <Ionicons name="navigate" size={16} color="white" />
+                    <Text style={styles.startBtnText}>Start Trip</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity style={styles.callBtn}>
                 <Ionicons name="call-outline" size={18} color="#005d90" />
               </TouchableOpacity>

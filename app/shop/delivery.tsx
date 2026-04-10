@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert,
+  StyleSheet, Alert, BackHandler
 } from 'react-native';
+import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,39 +10,58 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
 import { useDeliveryStore } from '@/stores/deliveryStore';
+import { useOrderStore } from '@/stores/orderStore';
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
+  pending: { bg: '#f1f5f9', color: '#64748b', label: 'Pending' },
   assigned: { bg: '#fef3c7', color: '#b45309', label: 'Assigned' },
-  in_transit: { bg: '#e0f0ff', color: '#005d90', label: 'In Transit' },
+  accepted: { bg: '#fef3c7', color: '#b45309', label: 'Accepted' },
+  picked: { bg: '#e0f0ff', color: '#005d90', label: 'Picked up' },
   delivered: { bg: '#e8f5e9', color: '#2e7d32', label: 'Delivered' },
-  failed: { bg: '#ffebee', color: '#c62828', label: 'Failed' },
+  completed: { bg: '#e8f5e9', color: '#2e7d32', label: 'Completed' },
+  cancelled: { bg: '#ffebee', color: '#c62828', label: 'Cancelled' },
 };
-
-const MOCK_TRIPS = [
-  { id: 't1', orderId: '#9831', customer: 'Ananya Sharma', address: 'Flat 4B, Emerald Heights', rider: 'Ravi Kumar', status: 'in_transit', eta: '4 min', amount: '₹50', payment: 'UPI' },
-  { id: 't2', orderId: '#9830', customer: 'Karthik Rajan', address: 'Plot 12, Green View Colony', rider: 'Ravi Kumar', status: 'assigned', eta: '18 min', amount: '₹90', payment: 'Cash' },
-  { id: 't3', orderId: '#9829', customer: 'Meena Subramanian', address: '22/A, Brigade Road Ext.', rider: 'Suresh M', status: 'delivered', eta: 'Done', amount: '₹135', payment: 'Wallet' },
-  { id: 't4', orderId: '#9828', customer: 'Prakash Nair', address: '10B, Lake View Apartments', rider: 'Suresh M', status: 'failed', eta: '—', amount: '₹50', payment: 'UPI' },
-];
 
 const FILTERS = ['All', 'Active', 'Delivered', 'Failed'];
 
 export default function ShopDeliveryManagementScreen() {
+  const { orders } = useOrderStore();
   const router = useRouter();
-  const { tasks } = useDeliveryStore();
   const [filter, setFilter] = useState('All');
 
-  const filtered = MOCK_TRIPS.filter((t) => {
+  const filtered = orders.filter((t) => {
     if (filter === 'All') return true;
-    if (filter === 'Active') return ['assigned', 'in_transit'].includes(t.status);
-    if (filter === 'Delivered') return t.status === 'delivered';
-    if (filter === 'Failed') return t.status === 'failed';
+    if (filter === 'Active') return ['assigned', 'accepted', 'picked'].includes(t.status);
+    if (filter === 'Delivered') return ['delivered', 'completed'].includes(t.status);
+    if (filter === 'Failed') return t.status === 'cancelled';
     return true;
   });
 
-  const activeCount = MOCK_TRIPS.filter(t => ['assigned', 'in_transit'].includes(t.status)).length;
-  const deliveredToday = MOCK_TRIPS.filter(t => t.status === 'delivered').length;
-  const failedCount = MOCK_TRIPS.filter(t => t.status === 'failed').length;
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/shop/settings');
+    }
+  };
+
+  useEffect(() => {
+    const backAction = () => {
+      handleBack();
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
+
+  const activeCount = orders.filter(t => ['assigned', 'accepted', 'picked'].includes(t.status)).length;
+  const deliveredToday = orders.filter(t => ['delivered', 'completed'].includes(t.status)).length;
+  const cancelledCount = orders.filter(t => t.status === 'cancelled').length;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -50,12 +69,17 @@ export default function ShopDeliveryManagementScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <View>
-          <View style={styles.brandRow}>
-            <Logo size="md" />
-            <Text style={styles.brandName}>ThanniGo</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
+            <Ionicons name="arrow-back" size={24} color="#0f172a" />
+          </TouchableOpacity>
+          <View>
+            <View style={styles.brandRow}>
+              <Logo size="md" />
+              <Text style={styles.brandName}>ThanniGo</Text>
+            </View>
+            <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
-          <Text style={styles.roleLabel}>SHOP PANEL</Text>
         </View>
         <TouchableOpacity
           style={styles.dispatchBtn}
@@ -80,7 +104,7 @@ export default function ShopDeliveryManagementScreen() {
           {[
             { label: 'Active', value: activeCount, color: '#005d90', bg: '#e0f0ff', icon: 'bicycle-outline' },
             { label: 'Delivered', value: deliveredToday, color: '#2e7d32', bg: '#e8f5e9', icon: 'checkmark-circle-outline' },
-            { label: 'Failed', value: failedCount, color: '#c62828', bg: '#ffebee', icon: 'close-circle-outline' },
+            { label: 'Cancelled', value: cancelledCount, color: '#c62828', bg: '#ffebee', icon: 'close-circle-outline' },
           ].map((s) => (
             <View key={s.label} style={styles.statBox}>
               <View style={[styles.statIcon, { backgroundColor: s.bg }]}>
@@ -108,26 +132,26 @@ export default function ShopDeliveryManagementScreen() {
         {/* TRIP LIST */}
         <Text style={styles.sectionTitle}>{filtered.length} trips</Text>
         {filtered.map((trip) => {
-          const status = STATUS_COLORS[trip.status];
+          const status = STATUS_COLORS[trip.status] || STATUS_COLORS.pending;
           return (
             <View key={trip.id} style={styles.tripCard}>
               <View style={styles.tripTop}>
-                <Text style={styles.tripId}>{trip.orderId}</Text>
+                <Text style={styles.tripId}>#{trip.id.split('-').pop()}</Text>
                 <View style={[styles.statusChip, { backgroundColor: status.bg }]}>
                   <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
                 </View>
               </View>
 
-              <Text style={styles.customerName}>{trip.customer}</Text>
+              <Text style={styles.customerName}>{trip.customerName}</Text>
               <View style={styles.addressRow}>
                 <Ionicons name="location-outline" size={13} color="#707881" />
-                <Text style={styles.address}>{trip.address}</Text>
+                <Text style={styles.address} numberOfLines={1}>{trip.address}</Text>
               </View>
 
               <View style={styles.metaRow}>
                 <View style={styles.metaItem}>
                   <Ionicons name="person-outline" size={12} color="#005d90" />
-                  <Text style={styles.metaText}>{trip.rider}</Text>
+                  <Text style={styles.metaText}>{trip.deliveryAgentName || 'Unassigned'}</Text>
                 </View>
                 <View style={styles.metaItem}>
                   <Ionicons name="time-outline" size={12} color="#005d90" />
@@ -135,11 +159,11 @@ export default function ShopDeliveryManagementScreen() {
                 </View>
                 <View style={styles.metaItem}>
                   <Ionicons name="cash-outline" size={12} color="#2e7d32" />
-                  <Text style={[styles.metaText, { color: '#2e7d32' }]}>{trip.amount} · {trip.payment}</Text>
+                  <Text style={[styles.metaText, { color: '#2e7d32' }]}>₹{trip.total} · {trip.paymentMethod.toUpperCase()}</Text>
                 </View>
               </View>
 
-              {['assigned', 'in_transit'].includes(trip.status) && (
+              {['assigned', 'accepted', 'picked'].includes(trip.status) && (
                 <TouchableOpacity
                   style={styles.trackBtn}
                   onPress={() => router.push('/order/tracking' as any)}
@@ -149,13 +173,13 @@ export default function ShopDeliveryManagementScreen() {
                 </TouchableOpacity>
               )}
 
-              {trip.status === 'failed' && (
+              {trip.status === 'cancelled' && (
                 <TouchableOpacity
                   style={styles.rescheduleBtn}
-                  onPress={() => Alert.alert('Reschedule', `Reschedule order ${trip.orderId}?`)}
+                  onPress={() => Alert.alert('History', `Order ${trip.id} was cancelled.`)}
                 >
-                  <Ionicons name="calendar-outline" size={14} color="#c62828" />
-                  <Text style={styles.rescheduleBtnText}>Reschedule Delivery</Text>
+                  <Ionicons name="close-circle-outline" size={14} color="#c62828" />
+                  <Text style={styles.rescheduleBtnText}>Cancelled</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -173,6 +197,7 @@ const styles = StyleSheet.create({
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: '700', color: '#006878', letterSpacing: 1.5, marginTop: 3 },
+  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
   dispatchBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#e0f0ff', paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12 },
   dispatchBtnText: { fontSize: 13, fontWeight: '700', color: '#005d90' },
   content: { paddingHorizontal: 24, paddingBottom: 120 },
