@@ -136,6 +136,27 @@ export default function ShopSettingsScreen() {
           </View>
         </View>
 
+        <Text style={styles.sectionHeader}>Growth & Operations</Text>
+        <View style={styles.card}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/shop/analytics' as any)}>
+            <Ionicons name="bar-chart-outline" size={20} color="#707881" />
+            <Text style={styles.menuText}>Analytics Dashboard</Text>
+            <Ionicons name="chevron-forward" size={16} color="#bfc7d1" />
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/shop/promotions' as any)}>
+            <Ionicons name="pricetag-outline" size={20} color="#707881" />
+            <Text style={styles.menuText}>Promotions & Coupons</Text>
+            <Ionicons name="chevron-forward" size={16} color="#bfc7d1" />
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/shop/delivery' as any)}>
+            <Ionicons name="bicycle-outline" size={20} color="#707881" />
+            <Text style={styles.menuText}>Delivery Management</Text>
+            <Ionicons name="chevron-forward" size={16} color="#bfc7d1" />
+          </TouchableOpacity>
+        </View>
+
         {/* ACCOUNT SECURITY */}
         <Text style={styles.sectionHeader}>Account Security</Text>
         <View style={styles.card}>

@@ -4,6 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+
+import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
 
 const TRANSACTIONS = [
   { id: '1', type: 'debit', title: 'Order #TN-9412', date: 'Today, 10:45 AM', amount: '110', method: 'UPI' },
@@ -12,6 +15,7 @@ const TRANSACTIONS = [
 ];
 
 export default function CustomerWalletScreen() {
+  const router = useRouter();
   const [balance] = useState('420.00');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -29,7 +33,7 @@ export default function CustomerWalletScreen() {
       {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Wallet</Text>
-        <TouchableOpacity style={styles.iconBtn}>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications' as any)}>
           <Ionicons name="help-circle-outline" size={24} color="#005d90" />
         </TouchableOpacity>
       </View>
@@ -39,6 +43,7 @@ export default function CustomerWalletScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
       >
+        <StitchScreenNote screen="my_wallet" />
         
         {/* WALLET CARD */}
         <LinearGradient
@@ -52,11 +57,11 @@ export default function CustomerWalletScreen() {
           <Text style={styles.walletBalance}>₹{balance}</Text>
 
           <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.actionBtn}>
+            <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/subscriptions' as any)}>
               <Ionicons name="add" size={18} color="#005d90" />
               <Text style={styles.actionBtnText}>Add Money</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: 'rgba(255,255,255,0.2)' }]} onPress={() => router.push('/rewards' as any)}>
               <Ionicons name="arrow-up" size={18} color="white" />
               <Text style={[styles.actionBtnText, { color: 'white' }]}>Send</Text>
             </TouchableOpacity>
@@ -67,7 +72,7 @@ export default function CustomerWalletScreen() {
         <Text style={styles.sectionTitle}>Quick Top-up</Text>
         <View style={styles.quickAmtRow}>
           {['+ ₹100', '+ ₹200', '+ ₹500'].map((amt) => (
-            <TouchableOpacity key={amt} style={styles.quickAmtBtn}>
+            <TouchableOpacity key={amt} style={styles.quickAmtBtn} onPress={() => router.push('/subscriptions' as any)}>
               <Text style={styles.quickAmtText}>{amt}</Text>
             </TouchableOpacity>
           ))}
@@ -76,7 +81,7 @@ export default function CustomerWalletScreen() {
         {/* TRANSACTIONS */}
         <View style={styles.historyHeader}>
           <Text style={styles.sectionTitle}>Payment History</Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/orders' as any)}>
             <Text style={styles.viewAllText}>View All</Text>
           </TouchableOpacity>
         </View>

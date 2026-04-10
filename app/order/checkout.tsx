@@ -6,6 +6,9 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useCartStore } from '@/stores/cartStore';
+import { useOrderStore } from '@/stores/orderStore';
+import { useShopStore } from '@/stores/shopStore';
 
 type PaymentType = 'upi' | 'cod';
 
@@ -19,15 +22,16 @@ export default function OrderCheckoutScreen() {
   }, []);
 
   const router = useRouter();
-  const { shopId = '1', qty = '2' } = useLocalSearchParams<{ shopId: string; qty: string }>();
-  
-  const [payment, setPayment] = useState<PaymentType>('upi');
-  
-  const quantity = parseInt(qty, 10);
-  const pricePerUnit = 45;
-  const deliveryFee = 20;
-  const subtotal = pricePerUnit * quantity;
-  const total = subtotal + deliveryFee;
+  const { shopId = '1' } = useLocalSearchParams<{ shopId: string; qty: string }>();
+  const { paymentMethod, setPaymentMethod, getSubtotal, getDeliveryFee, getTotal, items, note, clearCart } = useCartStore();
+  const { shops } = useShopStore();
+  const { placeOrder } = useOrderStore();
+  const [payment, setPayment] = useState<PaymentType>(paymentMethod === 'wallet' ? 'upi' : paymentMethod);
+  const shop = shops.find((item) => item.id === shopId) ?? shops[0];
+  const quantity = Object.values(items).reduce((sum, qty) => sum + qty, 0);
+  const subtotal = getSubtotal();
+  const deliveryFee = getDeliveryFee();
+  const total = getTotal();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -49,7 +53,10 @@ export default function OrderCheckoutScreen() {
         <View style={styles.paymentGrid}>
           <TouchableOpacity
             style={[styles.paymentOption, payment === 'upi' && styles.paymentOptionActive]}
-            onPress={() => setPayment('upi')}
+            onPress={() => {
+              setPayment('upi');
+              setPaymentMethod('upi');
+            }}
           >
             <View style={[styles.paymentIcon, payment === 'upi' && styles.paymentIconActive]}>
               <Ionicons name="phone-portrait-outline" size={22} color={payment === 'upi' ? '#005d90' : '#707881'} />
@@ -62,7 +69,10 @@ export default function OrderCheckoutScreen() {
 
           <TouchableOpacity
             style={[styles.paymentOption, payment === 'cod' && styles.paymentOptionActive]}
-            onPress={() => setPayment('cod')}
+            onPress={() => {
+              setPayment('cod');
+              setPaymentMethod('cod');
+            }}
           >
             <View style={[styles.paymentIcon, payment === 'cod' && styles.paymentIconActive]}>
               <Ionicons name="cash-outline" size={22} color={payment === 'cod' ? '#005d90' : '#707881'} />
@@ -117,7 +127,21 @@ export default function OrderCheckoutScreen() {
         </View>
         <TouchableOpacity
           activeOpacity={0.9}
-          onPress={() => router.replace('/order/tracking')}
+          onPress={() => {
+            placeOrder({
+              shopId: shop.id,
+              customerName: 'Rahul Sharma',
+              customerPhone: '+91 98765 43210',
+              items: Object.entries(items).filter(([, qty]) => qty > 0).map(([productId, qty]) => ({ productId, quantity: qty })),
+              address: 'Apartment 402, Serene Residency, Koramangala, Bangalore',
+              paymentMethod: payment,
+              eta: shop.eta,
+              total,
+              notes: note,
+            });
+            clearCart();
+            router.replace('/order/confirmed');
+          }}
         >
           <LinearGradient colors={['#005d90', '#0077b6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.ctaBtn}>
             <Text style={styles.ctaBtnText}>Confirm Order</Text>

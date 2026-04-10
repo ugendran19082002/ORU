@@ -14,6 +14,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+
+import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
 import { Logo } from '@/components/ui/Logo';
 import { useAppSession } from '@/hooks/use-app-session';
 
@@ -21,6 +23,8 @@ const MENU_ITEMS = [
   { icon: 'location-outline' as const, label: 'Saved Addresses', subtitle: '2 saved locations', hasArrow: true },
   { icon: 'card-outline' as const, label: 'Payment Methods', subtitle: 'UPI, Cards', hasArrow: true },
   { icon: 'receipt-outline' as const, label: 'Order History', subtitle: '15 past orders', hasArrow: true },
+  { icon: 'repeat-outline' as const, label: 'Subscriptions', subtitle: 'Manage scheduled deliveries', hasArrow: true },
+  { icon: 'gift-outline' as const, label: 'Rewards', subtitle: 'Referral code and loyalty points', hasArrow: true },
   { icon: 'star-outline' as const, label: 'My Reviews', subtitle: '3 reviews written', hasArrow: true },
   { icon: 'shield-checkmark-outline' as const, label: 'Privacy & Security', subtitle: 'Manage your data', hasArrow: true },
   { icon: 'help-circle-outline' as const, label: 'Help & Support', subtitle: '24/7 customer service', hasArrow: true },
@@ -55,10 +59,10 @@ export default function ProfileScreen() {
         </View>
         <TouchableOpacity
           style={styles.iconBtn}
-          onPress={() => router.push('/edit-profile' as any)}
+          onPress={() => router.push('/notifications' as any)}
           activeOpacity={0.8}
         >
-          <Ionicons name="settings-outline" size={22} color="#005d90" />
+          <Ionicons name="notifications-outline" size={22} color="#005d90" />
         </TouchableOpacity>
       </View>
 
@@ -67,6 +71,7 @@ export default function ProfileScreen() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
       >
+        <StitchScreenNote screen="customer_profile" />
         {/* PROFILE CARD */}
         <LinearGradient
           colors={['#005d90', '#0077b6']}
@@ -112,7 +117,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         {/* MEMBERSHIP BADGE */}
-        <View style={styles.memberBadge}>
+        <TouchableOpacity style={styles.memberBadge} onPress={() => router.push('/rewards' as any)}>
           <View style={styles.memberBadgeIcon}>
             <Ionicons name="diamond-outline" size={20} color="#0077b6" />
           </View>
@@ -121,7 +126,7 @@ export default function ProfileScreen() {
             <Text style={styles.memberBadgeSub}>Free delivery on all orders · Priority support</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color="#005d90" />
-        </View>
+        </TouchableOpacity>
 
         {/* MENU LIST */}
         <Text style={styles.sectionTitle}>Account</Text>
@@ -136,6 +141,10 @@ export default function ProfileScreen() {
                     router.push('/addresses' as any);
                   } else if (item.label === 'Order History') {
                     router.push('/(tabs)/orders' as any);
+                  } else if (item.label === 'Subscriptions') {
+                    router.push('/subscriptions' as any);
+                  } else if (item.label === 'Rewards') {
+                    router.push('/rewards' as any);
                   } else if (item.label === 'Payment Methods') {
                     Alert.alert('Coming Soon', 'Payment methods management is coming in the next update!');
                   } else if (item.label === 'My Reviews') {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -14,14 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Logo } from '@/components/ui/Logo';
-
-const SHOP_DATA: Record<string, { name: string; rating: number; deliveryTime: string }> = {
-  '1': { name: 'Aqua Crystal Pure', rating: 4.8, deliveryTime: '25-30 min' },
-  '2': { name: 'Blue Drop Waters', rating: 4.5, deliveryTime: '15-20 min' },
-  '3': { name: 'H2O Wellness', rating: 4.2, deliveryTime: '45 min' },
-};
-
-type PaymentType = 'upi' | 'cod';
+import { useCartStore } from '@/stores/cartStore';
+import { useShopStore } from '@/stores/shopStore';
 
 export default function OrderDetailScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
@@ -34,10 +28,12 @@ export default function OrderDetailScreen() {
 
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const shop = SHOP_DATA[id ?? '1'] ?? SHOP_DATA['1'];
-
-  const [quantity, setQuantity] = useState(2);
-  const pricePerUnit = 45;
+  const { shops, setSelectedShop } = useShopStore();
+  const { items, setQuantity, setShop } = useCartStore();
+  const shop = shops.find((item) => item.id === (id ?? '1')) ?? shops[0];
+  const product = shop.products[0];
+  const quantity = items[product.id] ?? 2;
+  const pricePerUnit = product.price;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -54,7 +50,7 @@ export default function OrderDetailScreen() {
             <Text style={styles.headerShopName} numberOfLines={1}>{shop.name}</Text>
             <View style={styles.headerMeta}>
               <Ionicons name="star" size={12} color="#f59e0b" />
-              <Text style={styles.headerMetaText}>{shop.rating} • {shop.deliveryTime}</Text>
+              <Text style={styles.headerMetaText}>{shop.rating} | {shop.eta}</Text>
             </View>
           </View>
         </View>
@@ -75,16 +71,16 @@ export default function OrderDetailScreen() {
             resizeMode="cover"
           />
           <View style={styles.productBadge}>
-            <Text style={styles.productBadgeText}>Pure Mineral</Text>
+            <Text style={styles.productBadgeText}>{shop.isOpen ? 'Available Now' : 'Closed Today'}</Text>
           </View>
         </View>
 
-        <Text style={styles.productName}>20L Mineral Water Can</Text>
-        <Text style={styles.productPrice}>₹{pricePerUnit}.00 per unit</Text>
+        <Text style={styles.productName}>{product.name}</Text>
+        <Text style={styles.productPrice}>Rs. {pricePerUnit}.00 per unit</Text>
 
         {/* WATER QUALITY TAGS */}
         <View style={styles.tagRow}>
-          {['RO Filtered', 'UV Treated', 'BIS Certified'].map((tag) => (
+          {shop.tags.map((tag) => (
             <View key={tag} style={styles.tag}>
               <Ionicons name="checkmark-circle" size={12} color="#006878" />
               <Text style={styles.tagText}>{tag}</Text>
@@ -101,13 +97,19 @@ export default function OrderDetailScreen() {
           <View style={styles.quantityControls}>
             <TouchableOpacity
               style={styles.qtyBtnMinus}
-              onPress={() => setQuantity(Math.max(1, quantity - 1))}
+              onPress={() => {
+                setSelectedShop(shop.id);
+                setQuantity(product.id, Math.max(1, quantity - 1), shop.id);
+              }}
             >
               <Ionicons name="remove" size={22} color="#005d90" />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.qtyBtnPlus}
-              onPress={() => setQuantity(quantity + 1)}
+              onPress={() => {
+                setSelectedShop(shop.id);
+                setQuantity(product.id, quantity + 1, shop.id);
+              }}
             >
               <LinearGradient
                 colors={['#005d90', '#0077b6']}
@@ -126,13 +128,18 @@ export default function OrderDetailScreen() {
         <View style={styles.totalFloating}>
           <View>
             <Text style={styles.totalFloatingLabel}>TOTAL ESTIMATE</Text>
-            <Text style={styles.totalFloatingValue}>₹{quantity * 45}</Text>
+            <Text style={styles.totalFloatingValue}>Rs. {quantity * pricePerUnit}</Text>
           </View>
           <Text style={styles.totalFloatingSub}>Excl. Delivery</Text>
         </View>
         <TouchableOpacity
           activeOpacity={0.9}
-          onPress={() => router.push(`/order/checkout?shopId=${id}&qty=${quantity}` as any)}
+          onPress={() => {
+            setSelectedShop(shop.id);
+            setShop(shop.id);
+            setQuantity(product.id, quantity, shop.id);
+            router.push(`/order/checkout?shopId=${shop.id}&qty=${quantity}` as any);
+          }}
         >
           <LinearGradient
             colors={['#005d90', '#0077b6']}

@@ -7,7 +7,6 @@ import {
 import { safeNavigate } from "@/utils/safeNavigation";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
@@ -26,6 +25,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { StitchScreenNote } from "@/components/stitch/StitchScreenNote";
 
 /**
  * PRODUCTION DEBUG HELPER: Validate coordinates before use
@@ -52,7 +52,6 @@ type Region = {
 };
 
 export default function ShopProfileScreen() {
-  const router = useRouter();
   const [refreshing, setRefreshing] = React.useState(false);
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -222,7 +221,7 @@ export default function ShopProfileScreen() {
         if (best) finalizeLocation(best);
         setIsFetchingLocation(false);
       }, 5000);
-    } catch (err) {
+    } catch {
       setIsFetchingLocation(false);
     }
   };
@@ -248,8 +247,8 @@ export default function ShopProfileScreen() {
       } else if (data?.display_name) {
         setAddressArea(data.display_name);
       }
-    } catch (e) {
-      console.warn("[SHOP GPS] Nominatim failed, fallback:", e);
+    } catch {
+      console.warn("[SHOP GPS] Nominatim failed, fallback");
       try {
         const geocode = await Location.reverseGeocodeAsync({
           latitude,
@@ -262,7 +261,7 @@ export default function ShopProfileScreen() {
           );
           setAddressArea(parts.join(", "));
         }
-      } catch (err) {}
+      } catch {}
     }
     setIsFetchingLocation(false);
   };
@@ -313,7 +312,7 @@ export default function ShopProfileScreen() {
           );
           setAddressArea(parts.join(", "));
         }
-      } catch (e) {}
+      } catch {}
     }
   };
 
@@ -337,7 +336,7 @@ export default function ShopProfileScreen() {
         message: `📍 Visit ${shopName} at:\n${shopNo}, ${addressArea}\n\nLocation Link: ${mapUrl}`,
         title: `ThanniGo - ${shopName}`,
       });
-    } catch (e) {}
+    } catch {}
   };
 
   return (
@@ -392,6 +391,7 @@ export default function ShopProfileScreen() {
           contentContainerStyle={{ paddingBottom: 120 }}
         >
           <Text style={styles.pageTitle}>Shop Profile</Text>
+          <StitchScreenNote screen="shop_settings_profile" />
 
           {/* PROFILE BANNER */}
           <View style={styles.bannerContainer}>
@@ -733,7 +733,10 @@ export default function ShopProfileScreen() {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.saveBtn}>
+          <TouchableOpacity
+            style={styles.saveBtn}
+            onPress={() => Alert.alert("Profile Saved", "Shop profile details have been updated in this mock flow.")}
+          >
             <Text style={styles.saveBtnText}>Save Profile Changes</Text>
           </TouchableOpacity>
 

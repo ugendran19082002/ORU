@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
 
 export default function OrderRatingScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
@@ -21,7 +22,7 @@ export default function OrderRatingScreen() {
 
   const submitFeedback = () => {
     // In a real app, this would submit the feedback to the backend.
-    router.replace('/(tabs)/');
+    router.replace('/(tabs)' as any);
   };
 
   return (
@@ -38,6 +39,7 @@ export default function OrderRatingScreen() {
       </View>
 
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />} contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 40 }}>
+        <StitchScreenNote screen="rate_review_customer" />
         
         <View style={styles.successIconWrap}>
           <Ionicons name="checkmark-circle" size={80} color="#2e7d32" />

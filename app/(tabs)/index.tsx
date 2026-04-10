@@ -18,6 +18,7 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { Logo } from '@/components/ui/Logo';
+import { useShopStore } from '@/stores/shopStore';
 
 /* ---------- UTILS ---------- */
 // Haversine formula to calculate distance in km
@@ -84,6 +85,7 @@ const SAMPLE_SHOPS = [
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { setSelectedShop } = useShopStore();
   const [search, setSearch] = useState('');
   
   const [loadingLoc, setLoadingLoc] = useState(true);
@@ -267,7 +269,9 @@ export default function HomeScreen() {
             <Text style={styles.sectionTitle}>Shops Near You</Text>
             <Text style={styles.sectionSubtitle}>Within 3km radius</Text>
           </View>
-          <Ionicons name="options" size={20} color="#005d90" />
+          <TouchableOpacity onPress={() => router.push('/(tabs)/search' as any)}>
+            <Ionicons name="options" size={20} color="#005d90" />
+          </TouchableOpacity>
         </View>
 
         {filteredShops.length === 0 ? (
@@ -287,7 +291,14 @@ export default function HomeScreen() {
                  key={shop.id} 
                  activeOpacity={0.92} 
                  style={styles.shopCard}
-                 onPress={() => isLinked ? router.push(`/order/${shop.id}`) : handleRequestLink(shop.id)}
+                 onPress={() => {
+                   setSelectedShop(shop.id);
+                   if (isLinked) {
+                     router.push(`/order/${shop.id}`);
+                   } else {
+                     handleRequestLink(shop.id);
+                   }
+                 }}
                >
                  <View style={styles.shopImageContainer}>
                    <Image source={shop.image} style={styles.shopImage} contentFit="cover" transition={300} />
@@ -306,14 +317,17 @@ export default function HomeScreen() {
                        </View>
                      </View>
                      <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
-                       <Text style={styles.shopPrice}>₹{shop.price}</Text>
+                      <Text style={styles.shopPrice}>Rs. {shop.price}</Text>
                        <Text style={styles.shopPriceLabel}>PER CAN</Text>
                      </View>
                    </View>
                    
                    {/* ACTION BUTTON */}
                    {isLinked ? (
-                     <TouchableOpacity style={styles.orderBtn} onPress={() => router.push(`/order/${shop.id}`)}>
+                     <TouchableOpacity style={styles.orderBtn} onPress={() => {
+                       setSelectedShop(shop.id);
+                       router.push(`/order/${shop.id}`);
+                     }}>
                        <Text style={styles.orderBtnText}>Order Details</Text>
                      </TouchableOpacity>
                    ) : isRequested ? (

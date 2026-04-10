@@ -5,7 +5,6 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  Image,
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,17 +12,11 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Logo } from '@/components/ui/Logo';
 
-const ACTIVE_ORDER = {
-  id: '9824',
-  customer: 'Rahul Sharma',
-  phone: '+91 98765 43210',
-  qty: 3,
-  unit: '20L',
-  address: 'Flat 402, Ocean Breeze Apartments, Sunset Boulevard, Coastal Road.',
-  isPriority: true,
-};
+import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
+import { Logo } from '@/components/ui/Logo';
+import { useOrderStore } from '@/stores/orderStore';
+import { useShopStore } from '@/stores/shopStore';
 
 type OrderAction = 'accept' | 'reject' | 'delivered';
 type TabState = 'active' | 'completed';
@@ -39,15 +32,42 @@ export default function ShopOrdersScreen() {
 
   const [actionDone, setActionDone] = useState<OrderAction | null>(null);
   const [activeTab, setActiveTab] = useState<TabState>('active');
+  const [acceptingOrders, setAcceptingOrders] = useState(true);
+  const [busyMode, setBusyMode] = useState(false);
 
   const router = useRouter();
+  const { orders, updateStatus, setActiveOrder } = useOrderStore();
+  const { shops } = useShopStore();
+  const shop = shops[0];
+  const activeOrders = orders.filter((order) => !['delivered', 'cancelled'].includes(order.status));
+  const completedOrders = orders.filter((order) => ['delivered', 'cancelled'].includes(order.status));
+  const nextOrder = activeOrders[0];
+  const lowStock = shop?.products.filter((product) => product.stockCount < 30) ?? [];
 
-  const handleAction = (action: OrderAction) => {
+  const handleAction = (action: OrderAction, orderId?: string) => {
     setActionDone(action);
+    if (orderId) {
+      setActiveOrder(orderId);
+    }
+
+    if (action === 'accept' && orderId) {
+      updateStatus(orderId, 'accepted');
+    }
+
+    if (action === 'reject' && orderId) {
+      updateStatus(orderId, 'cancelled');
+    }
+
+    if (action === 'delivered' && orderId) {
+      updateStatus(orderId, 'delivered');
+    }
+
     if (action === 'delivered') {
       setTimeout(() => {
         setActionDone(null);
-        router.push(`/shop/order/${ACTIVE_ORDER.id}` as any);
+        if (orderId) {
+          router.push(`/shop/order/${orderId}` as any);
+        }
       }, 700);
     } else {
       setTimeout(() => setActionDone(null), 2000);
@@ -59,15 +79,15 @@ export default function ShopOrdersScreen() {
       <StatusBar style="dark" />
 
       {/* HEADER */}
-      <View style={styles.header}>
-        <View>
+        <View style={styles.header}>
+          <View>
           <View style={styles.brandRow}>
             <Logo size="md" />
             <Text style={styles.brandName}>ThanniGo</Text>
           </View>
           <Text style={styles.roleLabel}>SHOP PANEL</Text>
-        </View>
-        <TouchableOpacity style={styles.iconBtn}>
+          </View>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications' as any)}>
           <Ionicons name="notifications-outline" size={22} color="#005d90" />
           <View style={styles.notifDot} />
         </TouchableOpacity>
@@ -78,6 +98,48 @@ export default function ShopOrdersScreen() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
       >
         <Text style={styles.pageTitle}>Orders</Text>
+        <StitchScreenNote screen="shop_dashboard_home_1" />
+
+        <View style={styles.opsCard}>
+          <View style={styles.opsRow}>
+            <View>
+              <Text style={styles.opsTitle}>Accept Orders</Text>
+              <Text style={styles.opsSub}>Control whether customers can place new orders right now.</Text>
+            </View>
+            <TouchableOpacity style={[styles.statePill, acceptingOrders && styles.statePillActive]} onPress={() => setAcceptingOrders((value) => !value)}>
+              <Text style={[styles.statePillText, acceptingOrders && styles.statePillTextActive]}>
+                {acceptingOrders ? 'Online' : 'Paused'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.dividerLine} />
+          <View style={styles.opsRow}>
+            <View>
+              <Text style={styles.opsTitle}>Busy Mode</Text>
+              <Text style={styles.opsSub}>Use when capacity is full and new requests should be slowed down.</Text>
+            </View>
+            <TouchableOpacity style={[styles.statePill, busyMode && styles.statePillWarn]} onPress={() => setBusyMode((value) => !value)}>
+              <Text style={[styles.statePillText, busyMode && styles.statePillWarnText]}>
+                {busyMode ? 'Busy' : 'Normal'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.capacityRow}>
+          <View style={styles.capacityCard}>
+            <Text style={styles.capacityLabel}>Open Orders</Text>
+            <Text style={styles.capacityValue}>{activeOrders.length}</Text>
+          </View>
+          <View style={styles.capacityCard}>
+            <Text style={styles.capacityLabel}>Per Hour Capacity</Text>
+            <Text style={styles.capacityValue}>5</Text>
+          </View>
+          <View style={styles.capacityCard}>
+            <Text style={styles.capacityLabel}>Low Stock SKUs</Text>
+            <Text style={styles.capacityValue}>{lowStock.length}</Text>
+          </View>
+        </View>
 
         {/* CUSTOM TABS */}
         <View style={styles.tabsWrap}>
@@ -98,7 +160,7 @@ export default function ShopOrdersScreen() {
         {activeTab === 'active' && (
           <>
             <Text style={styles.sectionHeader}>Pending Actions</Text>
-            {/* INCOMING ORDER CARD */}
+            {nextOrder ? (
             <View style={styles.orderCard}>
               <View style={styles.orderTop}>
                 <View style={styles.orderIconWrap}>
@@ -106,10 +168,10 @@ export default function ShopOrdersScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.priorityLabel}>Priority Order</Text>
-                  <Text style={styles.customerName}>{ACTIVE_ORDER.customer}</Text>
+                  <Text style={styles.customerName}>{nextOrder.customerName}</Text>
                 </View>
                 <View style={styles.orderIdBadge}>
-                  <Text style={styles.orderIdText}>#{ACTIVE_ORDER.id}</Text>
+                  <Text style={styles.orderIdText}>#{nextOrder.id}</Text>
                 </View>
               </View>
 
@@ -118,7 +180,7 @@ export default function ShopOrdersScreen() {
                   <Ionicons name="layers-outline" size={18} color="#005d90" />
                 </View>
                 <Text style={styles.detailValue}>
-                  {ACTIVE_ORDER.qty} Cans <Text style={styles.detailValueSub}>({ACTIVE_ORDER.unit})</Text>
+                  {nextOrder.items.reduce((sum, item) => sum + item.quantity, 0)} Cans <Text style={styles.detailValueSub}>({shop?.products[0]?.unitLabel ?? '20L'})</Text>
                 </Text>
               </View>
 
@@ -127,29 +189,29 @@ export default function ShopOrdersScreen() {
                 style={styles.detailRow}
                 onPress={() => router.push({
                   pathname: "/map-preview",
-                  params: { lat: "28.4595", lng: "77.0266", title: ACTIVE_ORDER.customer }
+                  params: { lat: "28.4595", lng: "77.0266", title: nextOrder.customerName }
                 })}
               >
                 <View style={styles.detailIconWrap}>
                   <Ionicons name="location-outline" size={18} color="#707881" />
                 </View>
-                <Text style={styles.addressText}>{ACTIVE_ORDER.address}</Text>
+                <Text style={styles.addressText}>{nextOrder.address}</Text>
               </TouchableOpacity>
 
               {/* Action Buttons */}
               <View style={styles.actionGrid}>
-                <TouchableOpacity activeOpacity={0.9} style={{ flex: 1 }} onPress={() => handleAction('accept')}>
+                <TouchableOpacity activeOpacity={0.9} style={{ flex: 1 }} onPress={() => handleAction('accept', nextOrder.id)}>
                   <LinearGradient colors={['#005d90', '#0077b6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.acceptBtn}>
                     <Ionicons name="checkmark-circle" size={20} color="white" />
                     <Text style={styles.acceptBtnText}>ACCEPT</Text>
                   </LinearGradient>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.rejectBtn} onPress={() => handleAction('reject')}>
+                <TouchableOpacity style={styles.rejectBtn} onPress={() => handleAction('reject', nextOrder.id)}>
                   <Ionicons name="close" size={18} color="#ba1a1a" />
                   <Text style={styles.rejectBtnText}>REJECT</Text>
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity style={styles.deliveredBtn} onPress={() => handleAction('delivered')}>
+              <TouchableOpacity style={styles.deliveredBtn} onPress={() => handleAction('delivered', nextOrder.id)}>
                 <Ionicons name="bicycle" size={18} color="white" />
                 <Text style={styles.deliveredBtnText}>MARK AS DELIVERED</Text>
               </TouchableOpacity>
@@ -163,15 +225,34 @@ export default function ShopOrdersScreen() {
                 </View>
               )}
             </View>
+            ) : (
+              <View style={styles.emptyState}>
+                <Ionicons name="checkmark-done-circle-outline" size={48} color="#bfc7d1" />
+                <Text style={styles.emptyTitle}>No active shop orders</Text>
+                <Text style={styles.emptySub}>New customer orders will appear here.</Text>
+              </View>
+            )}
           </>
         )}
 
         {activeTab === 'completed' && (
-          <View style={styles.emptyState}>
-            <Ionicons name="checkmark-done-circle-outline" size={48} color="#bfc7d1" />
-            <Text style={styles.emptyTitle}>No completed orders yet</Text>
-            <Text style={styles.emptySub}>Orders marked as delivered will appear here.</Text>
-          </View>
+          completedOrders.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="checkmark-done-circle-outline" size={48} color="#bfc7d1" />
+              <Text style={styles.emptyTitle}>No completed orders yet</Text>
+              <Text style={styles.emptySub}>Orders marked as delivered will appear here.</Text>
+            </View>
+          ) : (
+            completedOrders.map((order) => (
+              <TouchableOpacity key={order.id} style={styles.completedCard} onPress={() => router.push(`/shop/order/${order.id}` as any)}>
+                <View>
+                  <Text style={styles.completedId}>#{order.id}</Text>
+                  <Text style={styles.completedName}>{order.customerName}</Text>
+                </View>
+                <Text style={styles.completedStatus}>{order.status.replaceAll('_', ' ')}</Text>
+              </TouchableOpacity>
+            ))
+          )
         )}
       </ScrollView>
     </SafeAreaView>
@@ -207,6 +288,21 @@ const styles = StyleSheet.create({
   tabTextActive: { color: '#005d90', fontWeight: '800' },
 
   sectionHeader: { fontSize: 13, fontWeight: '800', color: '#707881', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
+  opsCard: { backgroundColor: '#fff', borderRadius: 20, padding: 18, gap: 14, marginBottom: 16 },
+  opsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, alignItems: 'center' },
+  opsTitle: { fontSize: 15, fontWeight: '800', color: '#181c20' },
+  opsSub: { color: '#707881', width: 220, lineHeight: 18, fontSize: 12 },
+  dividerLine: { height: 1, backgroundColor: '#f1f4f9' },
+  statePill: { borderRadius: 999, backgroundColor: '#f1f4f9', paddingHorizontal: 14, paddingVertical: 10 },
+  statePillActive: { backgroundColor: '#E0F7FA' },
+  statePillWarn: { backgroundColor: '#FFF3E0' },
+  statePillText: { color: '#707881', fontWeight: '800' },
+  statePillTextActive: { color: '#006878' },
+  statePillWarnText: { color: '#E67E22' },
+  capacityRow: { flexDirection: 'row', gap: 10, marginBottom: 24 },
+  capacityCard: { flex: 1, backgroundColor: '#fff', borderRadius: 18, padding: 14, alignItems: 'center' },
+  capacityLabel: { color: '#707881', fontSize: 11, fontWeight: '700', textAlign: 'center' },
+  capacityValue: { color: '#181c20', fontSize: 22, fontWeight: '900', marginTop: 6 },
 
   orderCard: {
     backgroundColor: 'white', borderRadius: 24, padding: 20,
@@ -242,4 +338,8 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
   emptyTitle: { fontSize: 16, fontWeight: '800', color: '#181c20', marginTop: 12 },
   emptySub: { fontSize: 13, color: '#707881', marginTop: 4, textAlign: 'center' },
+  completedCard: { backgroundColor: '#fff', borderRadius: 18, padding: 16, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  completedId: { color: '#005d90', fontWeight: '800', fontSize: 12 },
+  completedName: { color: '#181c20', fontWeight: '800', fontSize: 16, marginTop: 4 },
+  completedStatus: { color: '#006878', fontWeight: '700', textTransform: 'capitalize' },
 });

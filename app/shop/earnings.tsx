@@ -11,7 +11,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
 import { Logo } from '@/components/ui/Logo';
+import { useOrderStore } from '@/stores/orderStore';
 
 export default function ShopEarningsScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
@@ -21,6 +23,9 @@ export default function ShopEarningsScreen() {
       setRefreshing(false);
     }, 1000);
   }, []);
+  const { orders } = useOrderStore();
+  const deliveredRevenue = orders.filter((order) => order.status === 'delivered').reduce((sum, order) => sum + order.total, 0);
+  const activeRevenue = orders.filter((order) => order.status !== 'cancelled').reduce((sum, order) => sum + order.total, 0);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -42,6 +47,7 @@ export default function ShopEarningsScreen() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
       >
         <Text style={styles.pageTitle}>Earnings</Text>
+        <StitchScreenNote screen="shop_earnings" />
 
         {/* SHOP WALLET CARD */}
         <LinearGradient
@@ -55,7 +61,7 @@ export default function ShopEarningsScreen() {
           <View style={styles.walletTop}>
             <View>
               <Text style={styles.walletLabel}>SHOP WALLET BALANCE</Text>
-              <Text style={styles.walletBalance}>₹1,248.00</Text>
+              <Text style={styles.walletBalance}>Rs. {activeRevenue}.00</Text>
             </View>
             <View style={styles.walletIconWrap}>
               <Ionicons name="wallet-outline" size={24} color="#006878" />
@@ -71,7 +77,7 @@ export default function ShopEarningsScreen() {
                 <Ionicons name="alert-circle" size={14} color="#ffdad6" />
                 <Text style={styles.pendingLabel}>Pending Admin Commission (Cash Orders)</Text>
               </View>
-              <Text style={styles.pendingAmount}>-₹42.00</Text>
+              <Text style={styles.pendingAmount}>-Rs. 42.00</Text>
               <Text style={styles.pendingSub}>Settle dues to avoid account suspension.</Text>
             </View>
             <TouchableOpacity style={styles.settleBtn}>
@@ -80,26 +86,26 @@ export default function ShopEarningsScreen() {
           </View>
         </LinearGradient>
 
-        <TouchableOpacity style={styles.withdrawBtn}>
+        <TouchableOpacity style={styles.withdrawBtn} onPress={() => {}}>
           <Ionicons name="cash-outline" size={20} color="#006878" />
           <Text style={styles.withdrawText}>Withdraw to Bank Account</Text>
         </TouchableOpacity>
 
         {/* METRICS GRID */}
-        <Text style={styles.sectionHeader}>Today's Overview</Text>
+        <Text style={styles.sectionHeader}>Today&apos;s Overview</Text>
         <View style={styles.statsGrid}>
           <View style={styles.statBox}>
             <View style={[styles.statIconWrap, { backgroundColor: '#e0f0ff' }]}>
               <Ionicons name="receipt-outline" size={20} color="#005d90" />
             </View>
-            <Text style={styles.statVal}>24</Text>
+            <Text style={styles.statVal}>{orders.length}</Text>
             <Text style={styles.statLabel}>Orders</Text>
           </View>
           <View style={styles.statBox}>
             <View style={[styles.statIconWrap, { backgroundColor: '#e0f7fa' }]}>
               <Ionicons name="trending-up-outline" size={20} color="#006878" />
             </View>
-            <Text style={styles.statVal}>₹1,152</Text>
+            <Text style={styles.statVal}>Rs. {deliveredRevenue}</Text>
             <Text style={styles.statLabel}>Revenue</Text>
           </View>
           <View style={styles.statBox}>

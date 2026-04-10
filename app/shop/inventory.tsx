@@ -5,6 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+
+import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
 import { Logo } from '@/components/ui/Logo';
 
 // Simulated Master Categories fetched from Admin side
@@ -96,12 +98,13 @@ export default function ShopInventoryScreen() {
             <Text style={styles.addBtnText}>Add Product</Text>
           </TouchableOpacity>
         </View>
+        <StitchScreenNote screen="inventory_management" />
 
         <View style={styles.listContainer}>
           {activeShopItems.length === 0 ? (
             <View style={styles.emptyCard}>
               <Ionicons name="layers-outline" size={32} color="#bfc7d1" />
-              <Text style={styles.emptyText}>No products added yet. Click 'Add Product' to pull from Master list.</Text>
+              <Text style={styles.emptyText}>No products added yet. Click &apos;Add Product&apos; to pull from Master list.</Text>
             </View>
           ) : (
             activeShopItems.map((cat) => {

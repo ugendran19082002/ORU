@@ -154,6 +154,9 @@ export default function ShopLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="analytics" options={{ href: null }} />
+      <Tabs.Screen name="promotions" options={{ href: null }} />
+      <Tabs.Screen name="delivery" options={{ href: null }} />
     </Tabs>
   );
 }

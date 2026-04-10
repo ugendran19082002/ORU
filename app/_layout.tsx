@@ -35,8 +35,13 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
 
           {/* ORDER SCREENS */}
-          <Stack.Screen name="order/[id]" options={{ animation: 'slide_from_right' }} />
-          <Stack.Screen name="order/tracking" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="order/[id]" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="order/confirmed" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="order/tracking" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="notifications" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="subscriptions" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="rewards" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="report-issue" options={{ animation: 'slide_from_right' }} />
 
           {/* ADDITIONAL SCREENS */}
           <Stack.Screen name="map-preview" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
@@ -44,7 +49,8 @@ export default function RootLayout() {
           <Stack.Screen name="edit-profile" options={{ headerShown: false, animation: 'slide_from_right' }} />
 
           {/* SHOP OWNER SCREENS */}
-          <Stack.Screen name="shop" options={{ headerShown: false, animation: 'fade' }} />
+            <Stack.Screen name="shop" options={{ headerShown: false, animation: 'fade' }} />
+            <Stack.Screen name="delivery" options={{ headerShown: false, animation: 'fade' }} />
 
           {/* ADMIN SCREENS */}
           <Stack.Screen name="admin" options={{ headerShown: false, animation: 'fade' }} />

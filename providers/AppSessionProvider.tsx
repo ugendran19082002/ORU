@@ -139,6 +139,7 @@ export function AppRouteGuard() {
     const isCustomerTabs = firstSegment === '(tabs)';
     const isShopRoute = firstSegment === 'shop';
     const isAdminRoute = firstSegment === 'admin';
+    const isDeliveryRoute = firstSegment === 'delivery';
 
     if (status === 'anonymous') {
       if (!isAuthRoute) {
@@ -156,17 +157,17 @@ export function AppRouteGuard() {
       return;
     }
 
-    if (user.role === 'customer' && (isShopRoute || isAdminRoute)) {
+    if (user.role === 'customer' && (isShopRoute || isAdminRoute || isDeliveryRoute)) {
       router.replace('/(tabs)');
       return;
     }
 
-    if (user.role === 'shop' && (isCustomerTabs || isAdminRoute)) {
+    if (user.role === 'shop' && isAdminRoute) {
       router.replace('/shop');
       return;
     }
 
-    if (user.role === 'admin' && (isCustomerTabs || isShopRoute)) {
+    if (user.role === 'admin' && (isCustomerTabs || isShopRoute || isDeliveryRoute)) {
       router.replace('/admin');
       return;
     }

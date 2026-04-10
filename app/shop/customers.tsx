@@ -4,7 +4,10 @@ import { View, Text, ScrollView,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
+import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
+import { useOrderStore } from '@/stores/orderStore';
 
 interface Customer {
   id: string;
@@ -25,6 +28,7 @@ const PENDING_REQUESTS = [
 ];
 
 export default function ShopCustomersScreen() {
+  const router = useRouter();
   const [refreshing, setRefreshing] = React.useState(false);
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -46,6 +50,7 @@ export default function ShopCustomersScreen() {
   const [fMobile, setFMobile] = useState('');
   const [fAddress, setFAddress] = useState('');
   const [fIsActive, setFIsActive] = useState(true);
+  const { orders, setActiveOrder } = useOrderStore();
 
   const openAddForm = () => {
     setEditingId(null); setFName(''); setFMobile(''); setFAddress(''); setFIsActive(true);
@@ -99,6 +104,7 @@ export default function ShopCustomersScreen() {
 
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.pageTitle}>My Customers</Text>
+        <StitchScreenNote screen="customer_management_shop" />
 
         {/* PENDING REQUESTS */}
         {pendingReqs.length > 0 && (
@@ -169,7 +175,16 @@ export default function ShopCustomersScreen() {
                       <TouchableOpacity style={styles.miniBtn} onPress={() => openEditForm(customer)}>
                         <Ionicons name="pencil-outline" size={16} color="#005d90" />
                       </TouchableOpacity>
-                      <TouchableOpacity style={[styles.miniBtn, { width: 'auto', paddingHorizontal: 12 }]}>
+                      <TouchableOpacity
+                        style={[styles.miniBtn, { width: 'auto', paddingHorizontal: 12 }]}
+                        onPress={() => {
+                          const customerOrder = orders.find((order) => order.customerName === customer.name);
+                          if (customerOrder) {
+                            setActiveOrder(customerOrder.id);
+                            router.push(`/shop/order/${customerOrder.id}` as any);
+                          }
+                        }}
+                      >
                         <Ionicons name="receipt-outline" size={14} color="#006878" style={{ marginRight: 4 }} />
                         <Text style={styles.miniBtnText}>History</Text>
                       </TouchableOpacity>

@@ -5,17 +5,22 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useOrderStore } from '@/stores/orderStore';
+import { useShopStore } from '@/stores/shopStore';
 
 export default function ShopDeliveredOrderScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
+  const { orders } = useOrderStore();
+  const { shops } = useShopStore();
 
-  // Mock Data
-  const orderId = id || '9824';
-  const customer = 'Rahul Sharma';
-  const address = 'Flat 402, Ocean Breeze Apartments, Sunset Boulevard, Coastal Road.';
-  const phone = '+91 98765 43210';
-  const time = '10:45 AM, Today';
+  const order = orders.find((item) => item.id === id) ?? orders[0];
+  const shop = shops.find((item) => item.id === order?.shopId);
+  const orderId = order?.id || id || '9824';
+  const customer = order?.customerName || 'Rahul Sharma';
+  const address = order?.address || 'Flat 402, Ocean Breeze Apartments, Sunset Boulevard, Coastal Road.';
+  const phone = order?.customerPhone || '+91 98765 43210';
+  const time = order?.createdAtLabel || '10:45 AM, Today';
   const lat = 28.4595;
   const lng = 77.0266;
 
@@ -63,7 +68,7 @@ export default function ShopDeliveredOrderScreen() {
               <Text style={styles.customerName}>{customer}</Text>
               <Text style={styles.customerPhone}>{phone}</Text>
             </View>
-            <TouchableOpacity style={styles.callBtn}>
+            <TouchableOpacity style={styles.callBtn} onPress={() => Linking.openURL(`tel:${phone}`)}>
               <Ionicons name="call" size={18} color="white" />
             </TouchableOpacity>
           </View>
@@ -99,19 +104,19 @@ export default function ShopDeliveredOrderScreen() {
           <Text style={styles.sectionLabel}>ORDER SUMMARY</Text>
           <View style={styles.itemRow}>
             <View style={styles.itemQtyWrap}>
-              <Text style={styles.itemQty}>3x</Text>
+              <Text style={styles.itemQty}>{order?.items[0]?.quantity || 3}x</Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.itemName}>20L Mineral Water Can</Text>
-              <Text style={styles.itemSubName}>Blue Spring Aquatics</Text>
+              <Text style={styles.itemSubName}>{shop?.name || 'Blue Spring Aquatics'}</Text>
             </View>
-            <Text style={styles.itemTotal}>₹135</Text>
+            <Text style={styles.itemTotal}>Rs. {order?.total || 135}</Text>
           </View>
           
           <View style={styles.summaryTotals}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Subtotal</Text>
-              <Text style={styles.summaryVal}>₹135</Text>
+              <Text style={styles.summaryVal}>Rs. {order?.total || 135}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Delivery Fee</Text>
@@ -120,7 +125,7 @@ export default function ShopDeliveredOrderScreen() {
             <View style={styles.divider} />
             <View style={styles.summaryRow}>
               <Text style={styles.grandTotalLabel}>Grand Total</Text>
-              <Text style={styles.grandTotalVal}>₹135</Text>
+              <Text style={styles.grandTotalVal}>Rs. {order?.total || 135}</Text>
             </View>
           </View>
         </View>
@@ -132,11 +137,11 @@ export default function ShopDeliveredOrderScreen() {
                <Text style={styles.sectionLabel}>PAYMENT STATUS</Text>
                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
                  <Ionicons name="checkmark-circle" size={18} color="#10b981" />
-                 <Text style={styles.paymentMethod}>UPI Online (Paid)</Text>
+                 <Text style={styles.paymentMethod}>{order?.paymentMethod === 'cod' ? 'Cash on Delivery' : 'UPI Online (Paid)'}</Text>
                </View>
              </View>
              <View style={styles.collectionBadge}>
-               <Text style={styles.collectionText}>NO CASH</Text>
+               <Text style={styles.collectionText}>{order?.paymentMethod === 'cod' ? 'COLLECT CASH' : 'NO CASH'}</Text>
              </View>
            </View>
         </View>

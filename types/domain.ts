@@ -18,6 +18,7 @@ export type Shop = {
   rating: number;
   distanceKm: number;
   eta: string;
+  deliveryTime?: string;
   isOpen: boolean;
   tags: string[];
   verified: boolean;

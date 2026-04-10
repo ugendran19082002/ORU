@@ -16,6 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
 import { ExpoMap } from '@/components/maps/ExpoMap';
+import { useOrderStore } from '@/stores/orderStore';
+import { useShopStore } from '@/stores/shopStore';
 
 type StepStatus = 'done' | 'active' | 'pending';
 
@@ -25,13 +27,6 @@ interface Step {
   subtitle: string;
   status: StepStatus;
 }
-
-const STEPS: Step[] = [
-  { icon: 'water', title: 'Order Placed', subtitle: 'Your order was placed at 10:30 AM', status: 'done' },
-  { icon: 'checkmark-circle', title: 'Accepted by Shop', subtitle: 'Confirmed at 10:35 AM', status: 'done' },
-  { icon: 'bicycle', title: 'Out for Delivery', subtitle: 'Driver is ~5 mins away from you', status: 'active' },
-  { icon: 'home', title: 'Delivered', subtitle: 'Estimated arrival by 11:00 AM', status: 'pending' },
-];
 
 // Tracking map: customer + driver positions
 const TRACKING_MARKERS = [
@@ -117,6 +112,51 @@ export default function OrderTrackingScreen() {
   }, []);
 
   const router = useRouter();
+  const { orders, activeOrderId } = useOrderStore();
+  const { shops } = useShopStore();
+  const activeOrder = orders.find((order) => order.id === activeOrderId) ?? orders[0];
+  const shop = shops.find((item) => item.id === activeOrder?.shopId);
+  const quantity = activeOrder?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 2;
+  const deliveryFee = 20;
+  const subtotal = Math.max((activeOrder?.total ?? 110) - deliveryFee, 0);
+  const steps: Step[] = [
+    {
+      icon: 'water',
+      title: 'Order Placed',
+      subtitle: activeOrder ? `Your order was placed ${activeOrder.createdAtLabel}` : 'Your order was placed recently',
+      status: 'done',
+    },
+    {
+      icon: 'checkmark-circle',
+      title: 'Accepted by Shop',
+      subtitle: shop ? `${shop.name} confirmed your request` : 'Confirmed by the shop',
+      status:
+        activeOrder && ['accepted', 'preparing', 'out_for_delivery', 'delivered'].includes(activeOrder.status)
+          ? 'done'
+          : activeOrder?.status === 'placed'
+            ? 'active'
+            : 'pending',
+    },
+    {
+      icon: 'bicycle',
+      title: 'Out for Delivery',
+      subtitle: activeOrder?.deliveryAgentName
+        ? `${activeOrder.deliveryAgentName} is heading to your location`
+        : 'Driver assignment will appear here',
+      status:
+        activeOrder && ['out_for_delivery', 'delivered'].includes(activeOrder.status)
+          ? activeOrder.status === 'delivered'
+            ? 'done'
+            : 'active'
+          : 'pending',
+    },
+    {
+      icon: 'home',
+      title: 'Delivered',
+      subtitle: activeOrder?.status === 'delivered' ? 'Order completed successfully' : `Expected in ${activeOrder?.eta ?? 'a short while'}`,
+      status: activeOrder?.status === 'delivered' ? 'active' : 'pending',
+    },
+  ];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -132,9 +172,9 @@ export default function OrderTrackingScreen() {
             <Logo size="sm" />
             <Text style={styles.brandName}>ThanniGo</Text>
           </View>
-          <Text style={styles.headerSub}>Order #THN-8821</Text>
+          <Text style={styles.headerSub}>Order #{activeOrder?.id ?? 'TNG-TRACK'}</Text>
         </View>
-        <TouchableOpacity style={styles.backBtn}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/notifications' as any)}>
           <Ionicons name="notifications-outline" size={20} color="#005d90" />
         </TouchableOpacity>
       </View>
@@ -193,7 +233,7 @@ export default function OrderTrackingScreen() {
           {/* ETA chip */}
           <View style={styles.etaChip}>
             <Ionicons name="time-outline" size={14} color="#005d90" />
-            <Text style={styles.etaText}>~5 mins away</Text>
+            <Text style={styles.etaText}>{activeOrder?.eta ?? '~5 mins away'}</Text>
           </View>
 
           {/* Driver info card overlaid on map */}
@@ -203,7 +243,7 @@ export default function OrderTrackingScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.driverLabel}>DELIVERY PARTNER</Text>
-              <Text style={styles.driverName}>Raju Kumar</Text>
+              <Text style={styles.driverName}>{activeOrder?.deliveryAgentName ?? 'Assigned shortly'}</Text>
             </View>
             <TouchableOpacity
               style={styles.callDriverBtn}
@@ -220,8 +260,8 @@ export default function OrderTrackingScreen() {
           <View style={styles.timelineDecor}>
             <Ionicons name="water" size={100} color="#005d90" style={{ opacity: 0.04 }} />
           </View>
-          {STEPS.map((step, index) => (
-            <StepNode key={step.title} step={step} isLast={index === STEPS.length - 1} />
+          {steps.map((step, index) => (
+            <StepNode key={step.title} step={step} isLast={index === steps.length - 1} />
           ))}
         </View>
 
@@ -257,7 +297,7 @@ export default function OrderTrackingScreen() {
           <View style={styles.summaryHeader}>
             <Text style={styles.summaryTitle}>Order Details</Text>
             <View style={styles.prepaidBadge}>
-              <Text style={styles.prepaidText}>PREPAID</Text>
+              <Text style={styles.prepaidText}>{activeOrder?.paymentMethod === 'cod' ? 'COD' : 'PREPAID'}</Text>
             </View>
           </View>
           <View style={styles.summaryRow}>

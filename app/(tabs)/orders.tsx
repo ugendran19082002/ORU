@@ -12,6 +12,9 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
+import { useCartStore } from '@/stores/cartStore';
+import { useOrderStore } from '@/stores/orderStore';
+import { useShopStore } from '@/stores/shopStore';
 
 const ORDERS = [
   {
@@ -63,11 +66,13 @@ const ORDERS = [
     isActive: false,
   },
 ];
+void ORDERS;
 
-function OrderCard({ order, onTrack, onReorder }: {
-  order: typeof ORDERS[0];
+function OrderCard({ order, onTrack, onReorder, onSupport }: {
+  order: any;
   onTrack: () => void;
   onReorder: () => void;
+  onSupport: () => void;
 }) {
   return (
     <View style={styles.orderCard}>
@@ -115,7 +120,7 @@ function OrderCard({ order, onTrack, onReorder }: {
             <Text style={styles.trackBtnText}>Reorder</Text>
           </TouchableOpacity>
         ) : null}
-        <TouchableOpacity style={styles.supportBtn}>
+        <TouchableOpacity style={styles.supportBtn} onPress={onSupport}>
           <Ionicons name="chatbubble-outline" size={15} color="#707881" />
           <Text style={styles.supportBtnText}>Support</Text>
         </TouchableOpacity>
@@ -128,6 +133,9 @@ export default function OrdersScreen() {
   const router = useRouter();
   const [tab, setTab] = useState<'active' | 'past'>('active');
   const [refreshing, setRefreshing] = useState(false);
+  const { orders, setActiveOrder } = useOrderStore();
+  const { shops, setSelectedShop } = useShopStore();
+  const { setShop, setQuantity } = useCartStore();
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -137,7 +145,38 @@ export default function OrdersScreen() {
     }, 1000);
   }, []);
 
-  const filtered = tab === 'active' ? ORDERS.filter((o) => o.isActive) : ORDERS.filter((o) => !o.isActive);
+  const normalizedOrders = orders.map((order) => {
+    const shop = shops.find((item) => item.id === order.shopId);
+    const quantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+    const isActive = !['delivered', 'cancelled'].includes(order.status);
+    const statusMap = {
+      placed: { label: 'Placed', color: '#005D90', bg: '#E3F2FD', progress: 0.2 },
+      accepted: { label: 'Accepted', color: '#005D90', bg: '#E3F2FD', progress: 0.4 },
+      preparing: { label: 'Preparing', color: '#0077B6', bg: '#E0F0FF', progress: 0.55 },
+      out_for_delivery: { label: 'Out for Delivery', color: '#006878', bg: '#E0F7FA', progress: 0.75 },
+      delivered: { label: 'Delivered', color: '#005D90', bg: '#E3F2FD', progress: 1 },
+      cancelled: { label: 'Cancelled', color: '#ba1a1a', bg: '#ffdad6', progress: 0 },
+    } as const;
+    const statusInfo = statusMap[order.status];
+
+    return {
+      id: order.id,
+      shopId: order.shopId,
+      shop: shop?.name ?? 'Water Shop',
+      items: `${quantity}x Water Can`,
+      date: order.createdAtLabel,
+      amount: `Rs. ${order.total}`,
+      status: statusInfo.label,
+      statusColor: statusInfo.color,
+      statusBg: statusInfo.bg,
+      progress: statusInfo.progress,
+      isActive,
+    };
+  });
+
+  const filtered = tab === 'active'
+    ? normalizedOrders.filter((order) => order.isActive)
+    : normalizedOrders.filter((order) => !order.isActive);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -149,14 +188,14 @@ export default function OrdersScreen() {
           <Logo size="md" />
           <Text style={styles.brandName}>ThanniGo</Text>
         </View>
-        <TouchableOpacity style={styles.iconBtn}>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications' as any)}>
           <Ionicons name="notifications-outline" size={22} color="#005d90" />
         </TouchableOpacity>
       </View>
 
       <View style={styles.titleRow}>
         <Text style={styles.screenTitle}>My Orders</Text>
-        <Text style={styles.screenSubtitle}>{ORDERS.length} total orders</Text>
+        <Text style={styles.screenSubtitle}>{normalizedOrders.length} total orders</Text>
       </View>
 
       {/* TOGGLE */}
@@ -195,8 +234,23 @@ export default function OrdersScreen() {
             <OrderCard
               key={order.id}
               order={order}
-              onTrack={() => router.push('/order/tracking')}
-              onReorder={() => router.push(`/order/${order.id}`)}
+              onTrack={() => {
+                setActiveOrder(order.id);
+                router.push('/order/tracking');
+              }}
+              onReorder={() => {
+                const sourceOrder = orders.find((item) => item.id === order.id);
+                setSelectedShop(order.shopId);
+                setShop(order.shopId);
+                sourceOrder?.items.forEach((item) => {
+                  setQuantity(item.productId, item.quantity, order.shopId);
+                });
+                router.push(`/order/${order.shopId}`);
+              }}
+              onSupport={() => {
+                setActiveOrder(order.id);
+                router.push('/report-issue');
+              }}
             />
           ))
         )}
