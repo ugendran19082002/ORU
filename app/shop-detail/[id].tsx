@@ -12,6 +12,7 @@ import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import * as Linking from 'expo-linking';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
@@ -59,11 +60,8 @@ export default function ShopDetailScreen() {
       <View style={styles.errorContainer}>
         <Ionicons name="storefront-outline" size={64} color="#bfc7d1" />
         <Text style={styles.errorText}>Shop not found</Text>
-        <Ionicons name="storefront-outline" size={64} color="#bfc7d1" />
-        <Text style={styles.errorText}>Shop not found</Text>
         <BackButton fallback="/(tabs)" style={styles.errorBack} />
       </View>
-
     );
   }
 
@@ -247,9 +245,8 @@ export default function ShopDetailScreen() {
               { icon: 'time-outline', label: 'Estimated delivery', value: shop.deliveryTime },
               { icon: 'cash-outline', label: 'Price per can (20L)', value: `₹${shop.pricePerCan}` },
               { icon: 'star-outline', label: 'Rating', value: `${shop.rating} / 5.0` },
-            ].map((item) => (
-              <View key={item.label} style={styles.infoRow}>
-
+            ].map((item, idx) => (
+              <View key={idx} style={styles.infoRow}>
                 <View style={styles.infoIconWrap}>
                   <Ionicons name={item.icon as any} size={20} color="#005d90" />
                 </View>
@@ -259,6 +256,23 @@ export default function ShopDetailScreen() {
                 </View>
               </View>
             ))}
+
+            <View style={{ marginVertical: 20, gap: 12 }}>
+              <TouchableOpacity
+                style={[styles.contactBtn, styles.callBtn]}
+                onPress={() => Linking.openURL('tel:919876543210')}
+              >
+                <Ionicons name="call" size={20} color="white" />
+                <Text style={styles.contactBtnText}>Call Shop Now</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.contactBtn, styles.waBtn]}
+                onPress={() => Linking.openURL('whatsapp://send?phone=+919876543210&text=Hi, I have a question about my order')}
+              >
+                <Ionicons name="logo-whatsapp" size={18} color="white" />
+                <Text style={styles.contactBtnText}>WhatsApp</Text>
+              </TouchableOpacity>
+            </View>
 
             <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Tags</Text>
             <View style={styles.tagsWrap}>
@@ -394,6 +408,12 @@ const styles = StyleSheet.create({
   tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   infoTag: { backgroundColor: '#e0f0ff', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
   infoTagText: { fontSize: 13, fontWeight: '700', color: '#005d90' },
+
+  contactActions: { flexDirection: 'row', gap: 12, marginTop: 16 },
+  contactBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14 },
+  callBtn: { backgroundColor: '#005d90' },
+  waBtn: { backgroundColor: '#25D366' },
+  contactBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
 
   // CHECKOUT BAR
   checkoutBar: {

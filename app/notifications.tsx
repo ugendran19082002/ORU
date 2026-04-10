@@ -32,7 +32,7 @@ const NOTIFS: Notif[] = [
   { id: '4', type: 'order', title: 'Order #9823 Out for Delivery', body: 'Your water can is on the way. Expected in 12 mins. Track live.', time: 'Yesterday', read: true, icon: 'bicycle' },
   { id: '5', type: 'system', title: 'System Maintenance', body: 'ThanniGo will undergo a brief maintenance window on Apr 12, 2–3 AM IST.', time: '2 days ago', read: true, icon: 'cog' },
   { id: '6', type: 'promo', title: 'Loyalty Upgraded 🥇', body: 'Congratulations! You\'ve reached Gold tier. Enjoy 10% off on all future orders.', time: '3 days ago', read: true, icon: 'ribbon' },
-  { id: '7', type: 'complaint', title: 'Refund Processed', body: '₹45 has been credited to your ThanniGo Wallet for order #9780. Use within 30 days.', time: '5 days ago', read: true, icon: 'cash' },
+  { id: '7', type: 'complaint', title: 'Refund Processed', body: '₹45 has been credited to your original payment method for order #9780. Resolution within 24–48 hrs.', time: '5 days ago', read: true, icon: 'cash' },
 ];
 
 const TYPE_CONFIG: Record<NotifType, { label: string; color: string; bg: string }> = {

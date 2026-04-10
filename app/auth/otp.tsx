@@ -10,6 +10,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Animated,
   StyleSheet,
   Text,
@@ -84,20 +85,21 @@ export default function OTPScreen() {
 
     try {
       // 🔥 FIREBASE INTEGRATION ZONE
-      // 1. In production, this tries the Firebase confirm hook:
-      await confirm.confirm(code);
-
-      // Simulate network request...
+      // When Firebase is configured, confirm the real OTP:
+      // await confirm.confirm(code);
       await new Promise((resolve) => setTimeout(resolve, 800));
-
-      // Force an error thrown here to simulate missing firebase configs and drop into the catch bypass
-      throw new Error("Local dev mock bypassing Firebase");
+      throw new Error("Firebase not yet configured");
     } catch {
-      // 🚨 DEV BYPASS: "catch addd anything otp allow inside"
-      // Even if Firebase fails or is missing, explicitly grant access using any OTP during development
+      if (!__DEV__) {
+        // In production, we must have real Firebase confirm — bail out
+        setLoading(false);
+        Alert.alert('Verification Failed', 'Please check your OTP and try again.');
+        return;
+      }
+      // 🚧 DEV ONLY BYPASS — will not run in production builds
       setLoading(false);
       setVerified(true);
-      
+
       await setPreferredRole(role);
       await signIn({ role, phone });
 
@@ -108,7 +110,6 @@ export default function OTPScreen() {
       }).start();
 
       setTimeout(() => {
-        // Navigate based on role
         if (role === "shop") router.replace("/shop" as any);
         else if (role === "admin") router.replace("/admin" as any);
         else router.replace("/(tabs)" as any);
@@ -221,17 +222,18 @@ export default function OTPScreen() {
           )}
         </View>
 
-        {/* AUTO-FILL HINT */}
-        <View style={styles.hintCard}>
-          <Ionicons
-            name="information-circle-outline"
-            size={16}
-            color="#707881"
-          />
-          <Text style={styles.hintText}>
-            For demo, enter any 6 digits and tap Verify
-          </Text>
-        </View>
+        {__DEV__ && (
+          <View style={styles.hintCard}>
+            <Ionicons
+              name="warning-outline"
+              size={16}
+              color="#e07b00"
+            />
+            <Text style={[styles.hintText, { color: '#e07b00' }]}>
+              DEV MODE — any 6 digits accepted. Firebase auth required in production.
+            </Text>
+          </View>
+        )}
       </SafeAreaView>
 
       {/* VERIFY BUTTON */}

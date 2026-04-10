@@ -403,7 +403,7 @@ export default function ShopProfileScreen() {
             />
           }
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
         >
           <Text style={styles.pageTitle}>Shop Profile</Text>
 

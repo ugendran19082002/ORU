@@ -34,9 +34,9 @@ export default function ShopInventoryScreen() {
 
   
   // Implicitly, this shop only carries cat_1 and cat_2 right now
-  const [shopConfigs, setShopConfigs] = useState<Record<string, { price: string }>>({
-    'cat_1': { price: '40' },
-    'cat_2': { price: '85' },
+  const [shopConfigs, setShopConfigs] = useState<Record<string, { price: string; fullCans: string; emptyCans: string }>>({
+    'cat_1': { price: '40', fullCans: '120', emptyCans: '15' },
+    'cat_2': { price: '85', fullCans: '45', emptyCans: '8' },
   });
 
   const [isModalVisible, setModalVisible] = useState(false);
@@ -49,7 +49,14 @@ export default function ShopInventoryScreen() {
   const updatePrice = (id: string, price: string) => {
     setShopConfigs(prev => ({
       ...prev,
-      [id]: { price }
+      [id]: { ...prev[id], price }
+    }));
+  };
+
+  const updateStocks = (id: string, key: 'fullCans' | 'emptyCans', val: string) => {
+    setShopConfigs(prev => ({
+      ...prev,
+      [id]: { ...prev[id], [key]: val }
     }));
   };
 
@@ -65,7 +72,7 @@ export default function ShopInventoryScreen() {
     if (!selectedMasterId || !newPrice) return;
     setShopConfigs(prev => ({
       ...prev,
-      [selectedMasterId]: { price: newPrice }
+      [selectedMasterId]: { price: newPrice, fullCans: '0', emptyCans: '0' }
     }));
     setModalVisible(false);
     setSelectedMasterId(null);
@@ -128,6 +135,34 @@ export default function ShopInventoryScreen() {
                     </TouchableOpacity>
                   </View>
                   
+                  <View style={styles.stockSection}>
+                    <View style={styles.stockCol}>
+                      <Text style={styles.stockLabel}>Full Cans</Text>
+                      <View style={[styles.stockInputWrap, parseInt(config.fullCans) < 20 && styles.lowStockBorder]}>
+                        <TextInput
+                          style={styles.stockInput}
+                          value={config.fullCans}
+                          onChangeText={(v) => updateStocks(cat.id, 'fullCans', v)}
+                          keyboardType="number-pad"
+                        />
+                        {parseInt(config.fullCans) < 20 && (
+                          <Ionicons name="alert-circle" size={14} color="#ba1a1a" />
+                        )}
+                      </View>
+                    </View>
+                    <View style={styles.stockCol}>
+                      <Text style={styles.stockLabel}>Empty Cans</Text>
+                      <View style={styles.stockInputWrap}>
+                        <TextInput
+                          style={styles.stockInput}
+                          value={config.emptyCans}
+                          onChangeText={(v) => updateStocks(cat.id, 'emptyCans', v)}
+                          keyboardType="number-pad"
+                        />
+                      </View>
+                    </View>
+                  </View>
+
                   <View style={styles.dividerInner} />
                   
                   <View style={styles.priceRow}>
@@ -254,6 +289,13 @@ const styles = StyleSheet.create({
 
   saveBtn: { backgroundColor: '#006878', borderRadius: 16, paddingVertical: 16, alignItems: 'center', shadowColor: '#006878', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
   saveBtnText: { color: 'white', fontSize: 16, fontWeight: '900' },
+
+  stockSection: { flexDirection: 'row', gap: 12, marginBottom: 4 },
+  stockCol: { flex: 1, gap: 6 },
+  stockLabel: { fontSize: 11, fontWeight: '800', color: '#707881', textTransform: 'uppercase' },
+  stockInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f1f4f9', borderRadius: 10, paddingHorizontal: 12, height: 42 },
+  stockInput: { flex: 1, fontSize: 14, fontWeight: '800', color: '#181c20' },
+  lowStockBorder: { borderWidth: 1.5, borderColor: '#ba1a1a', backgroundColor: '#fff5f4' },
 
   emptyCard: { backgroundColor: 'white', borderRadius: 20, padding: 30, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2, borderWidth: 1, borderColor: '#e0e2e8', borderStyle: 'dashed' },
   emptyText: { textAlign: 'center', color: '#707881', marginTop: 10, lineHeight: 20, fontWeight: '500' },

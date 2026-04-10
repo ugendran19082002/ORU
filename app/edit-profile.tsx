@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform, Modal } from 'react-native';
-import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -29,51 +28,7 @@ export default function EditProfileScreen() {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpCode, setOtpCode] = useState('');
 
-  // Security
-  const [appPin, setAppPin] = useState('');
-  const [fingerprintEnabled, setFingerprintEnabled] = useState(false);
 
-  // Load saved preferences
-  useEffect(() => {
-    const loadSettings = async () => {
-      const savedPin = await SecureStore.getItemAsync('user_app_pin');
-      const savedBiometrics = await SecureStore.getItemAsync('fingerprint_enabled');
-      if (savedPin) setAppPin(savedPin);
-      if (savedBiometrics === 'true') setFingerprintEnabled(true);
-    };
-    loadSettings();
-  }, []);
-
-  const handleToggleFingerprint = async () => {
-    if (!fingerprintEnabled) {
-      // Trying to enable
-      const hasHardware = await LocalAuthentication.hasHardwareAsync();
-      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-
-
-      if (!hasHardware) {
-        Alert.alert('Error', 'Your device does not support biometric authentication.');
-        return;
-      }
-      if (!isEnrolled) {
-        Alert.alert('Error', 'No biometrics (Fingerprint/FaceID) found. Please set them up in your phone settings.');
-        return;
-      }
-
-      setFingerprintEnabled(true);
-      await SecureStore.setItemAsync('fingerprint_enabled', 'true');
-    } else {
-      setFingerprintEnabled(false);
-      await SecureStore.setItemAsync('fingerprint_enabled', 'false');
-    }
-  };
-
-  const handleUpdatePin = async (val: string) => {
-    setAppPin(val);
-    if (val.length === 4) {
-      await SecureStore.setItemAsync('user_app_pin', val);
-    }
-  };
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -118,7 +73,9 @@ export default function EditProfileScreen() {
           <BackButton fallback="/(tabs)/profile" />
           <Text style={styles.headerTitle}>Edit Profile</Text>
 
-          <View style={{ width: 40 }} />
+          <TouchableOpacity style={styles.headerSaveBtn} onPress={saveProfile} activeOpacity={0.7}>
+            <Text style={styles.headerSaveText}>Save</Text>
+          </TouchableOpacity>
         </View>
 
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
@@ -229,52 +186,8 @@ export default function EditProfileScreen() {
 
             </View>
 
-            {/* SECURITY SETTINGS */}
-            <View style={styles.formSection}>
-               <Text style={styles.sectionHeaderTitle}>Security Settings</Text>
-               
-               <View style={styles.inputGroup}>
-                 <Text style={styles.label}>App Lock PIN</Text>
-                 <View style={styles.inputWrap}>
-                   <Ionicons name="keypad" size={20} color="#94a3b8" style={styles.inputIcon} />
-                   <TextInput 
-                     style={styles.input}
-                     value={appPin}
-                     onChangeText={handleUpdatePin}
-                     placeholder="Set 4-digit PIN"
-                     keyboardType="number-pad"
-                     secureTextEntry
-                     maxLength={4}
-                   />
-                 </View>
-                 <Text style={styles.helperText}>Use this PIN to access your app securely.</Text>
-               </View>
-
-               <TouchableOpacity 
-                  style={[styles.securityToggleWrap, fingerprintEnabled && { borderColor: '#10b981', backgroundColor: '#f0fdf4' }]}
-                  activeOpacity={0.8}
-                  onPress={handleToggleFingerprint}
-               >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-                     <View style={[styles.fingerprintIconBlock, fingerprintEnabled ? { backgroundColor: '#10b981' } : { backgroundColor: '#e2e8f0' }]}>
-                        <Ionicons name="finger-print" size={22} color="white" />
-                     </View>
-                     <View>
-                        <Text style={[styles.securityToggleTitle, fingerprintEnabled && { color: '#047857' }]}>Enable Fingerprint Login</Text>
-                        <Text style={styles.securityToggleSub}>{fingerprintEnabled ? 'Biometrics active' : 'Tap to enable biometrics'}</Text>
-                     </View>
-                  </View>
-                  <View style={[styles.toggleSwitch, fingerprintEnabled && styles.toggleSwitchActive]}>
-                     <View style={[styles.toggleThumb, fingerprintEnabled && styles.toggleThumbActive]} />
-                  </View>
-               </TouchableOpacity>
-
-            </View>
 
             {/* SAVE ACTION */}
-            <TouchableOpacity style={styles.saveBtn} onPress={saveProfile} activeOpacity={0.88}>
-               <Text style={styles.saveBtnText}>Save Profile Updates</Text>
-            </TouchableOpacity>
 
             <View style={{ height: 60 }} />
 
@@ -322,9 +235,10 @@ export default function EditProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#0f172a' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: '#0f172a' },
+  headerSaveBtn: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: '#005d90', borderRadius: 12 },
+  headerSaveText: { color: 'white', fontWeight: '800', fontSize: 14 },
   
   scrollContent: { paddingHorizontal: 24, paddingTop: 30 },
 

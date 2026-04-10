@@ -30,7 +30,7 @@ export default function ManualOrderScreen() {
   const [address, setAddress] = useState('');
   const [quantity, setQuantity] = useState('1');
   const [canType, setCanType] = useState('20L');
-  const [paymentMode, setPaymentMode] = useState<'cash' | 'upi' | 'wallet'>('cash');
+  const [paymentMode, setPaymentMode] = useState<'cash' | 'upi'>('cash');
   const [notes, setNotes] = useState('');
 
   const canTypes = ['5L', '10L', '20L', '50L'];
@@ -50,7 +50,7 @@ export default function ManualOrderScreen() {
       items: [{ productId: 'manual_can', quantity: parseInt(quantity || '1') }],
       total: total,
       shopId: 'shop_1',
-      paymentMethod: paymentMode as 'cash' | 'upi' | 'wallet',
+      paymentMethod: paymentMode as 'cash' | 'upi',
       eta: '30-45 mins',
       notes: notes,
     };
@@ -127,14 +127,14 @@ export default function ManualOrderScreen() {
         {/* PAYMENT */}
         <Text style={styles.sectionTitle}>Payment Mode</Text>
         <View style={styles.paymentRow}>
-          {(['cash', 'upi', 'wallet'] as const).map((p) => (
+          {(['cash', 'upi'] as const).map((p) => (
             <TouchableOpacity
               key={p}
               style={[styles.paymentPill, paymentMode === p && styles.paymentPillActive]}
               onPress={() => setPaymentMode(p)}
             >
               <Ionicons
-                name={p === 'cash' ? 'cash-outline' : p === 'upi' ? 'phone-portrait-outline' : 'wallet-outline'}
+                name={p === 'cash' ? 'cash-outline' : 'phone-portrait-outline'}
                 size={16}
                 color={paymentMode === p ? '#005d90' : '#707881'}
               />

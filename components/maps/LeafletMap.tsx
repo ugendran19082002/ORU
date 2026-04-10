@@ -1,6 +1,11 @@
-import React, { forwardRef, useImperativeHandle, useRef, useCallback } from 'react';
-import { WebView } from 'react-native-webview';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import React, {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+} from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { WebView } from "react-native-webview";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -15,7 +20,7 @@ export interface LeafletMarker {
   /** Leaflet color name or hex e.g. '#005d90' */
   color?: string;
   /** Built-in icon types */
-  iconType?: 'pin' | 'bicycle' | 'home' | 'shop';
+  iconType?: "pin" | "bicycle" | "home" | "shop";
 }
 
 interface LeafletMapProps {
@@ -40,14 +45,14 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
       latitude,
       longitude,
       zoom = 15,
-      title = 'Location',
+      title = "Location",
       style,
       draggable = false,
       onMarkerDragEnd,
       markers,
       showRoute = false,
     },
-    ref
+    ref,
   ) => {
     const webviewRef = useRef<any>(null);
 
@@ -62,20 +67,25 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
         try {
           const msg = JSON.parse(event.nativeEvent.data);
           if (
-            (msg.type === 'markerDragEnd' || msg.type === 'mapPress') &&
+            (msg.type === "markerDragEnd" || msg.type === "mapPress") &&
             onMarkerDragEnd
           ) {
-            onMarkerDragEnd({ latitude: msg.payload.latitude, longitude: msg.payload.longitude });
+            onMarkerDragEnd({
+              latitude: msg.payload.latitude,
+              longitude: msg.payload.longitude,
+            });
           }
         } catch (e) {}
       },
-      [onMarkerDragEnd]
+      [onMarkerDragEnd],
     );
 
     // Build JS arrays for multi-marker mode
     const markersJs = markers
       ? JSON.stringify(markers)
-      : JSON.stringify([{ latitude, longitude, title, color: '#005d90', iconType: 'pin' }]);
+      : JSON.stringify([
+          { latitude, longitude, title, color: "#005d90", iconType: "pin" },
+        ]);
 
     const mapHtml = `<!DOCTYPE html>
 <html>
@@ -108,8 +118,8 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
 <div id="map"></div>
 <script>
   var MARKERS = ${markersJs};
-  var DRAGGABLE = ${draggable ? 'true' : 'false'};
-  var SHOW_ROUTE = ${showRoute ? 'true' : 'false'};
+  var DRAGGABLE = ${draggable ? "true" : "false"};
+  var SHOW_ROUTE = ${showRoute ? "true" : "false"};
   var LAT = ${latitude};
   var LNG = ${longitude};
   var ZOOM = ${zoom};
@@ -206,7 +216,7 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
       <View style={[styles.container, style]}>
         <WebView
           ref={webviewRef}
-          originWhitelist={['*']}
+          originWhitelist={["*"]}
           source={{ html: mapHtml }}
           style={styles.webview}
           startInLoadingState
@@ -220,20 +230,20 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
               <ActivityIndicator size="large" color="#005d90" />
             </View>
           )}
-          onError={(e) => console.warn('[LEAFLET] error:', e.nativeEvent)}
+          onError={(e) => console.warn("[LEAFLET] error:", e.nativeEvent)}
         />
       </View>
     );
-  }
+  },
 );
 
 const styles = StyleSheet.create({
-  container: { flex: 1, overflow: 'hidden' },
-  webview: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1, overflow: "hidden" },
+  webview: { flex: 1, backgroundColor: "#f8fafc" },
   loading: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#f8fafc',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#f8fafc",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

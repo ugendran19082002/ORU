@@ -7,13 +7,13 @@ type CartState = {
   items: Record<string, number>;
   note: string;
   scheduledSlot: string | null;
-  paymentMethod: 'upi' | 'cod' | 'wallet';
+  paymentMethod: 'upi' | 'cod';
   couponCode: string;
   setShop: (shopId: string) => void;
   setQuantity: (productId: string, quantity: number, shopId: string) => void;
   setNote: (note: string) => void;
   setScheduledSlot: (slot: string | null) => void;
-  setPaymentMethod: (method: 'upi' | 'cod' | 'wallet') => void;
+  setPaymentMethod: (method: 'upi' | 'cod') => void;
   setCouponCode: (code: string) => void;
   clearCart: () => void;
   getSubtotal: () => number;
@@ -26,7 +26,7 @@ const initialState = {
   items: { P001: 2 } as Record<string, number>,
   note: '',
   scheduledSlot: null,
-  paymentMethod: 'upi' as const,
+  paymentMethod: 'cod' as const,
   couponCode: '',
 };
 
@@ -38,7 +38,7 @@ export const useCartStore = create<CartState>((set, get) => ({
       shopId,
       items: {
         ...state.items,
-        [productId]: Math.max(0, quantity),
+        [productId]: Math.min(50, Math.max(0, quantity)), // P0: max 50 cans per SKU
       },
     })),
   setNote: (note) => set({ note }),

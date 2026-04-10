@@ -235,21 +235,34 @@ export default function MapPreviewScreen() {
                 </LinearGradient>
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity
-                activeOpacity={0.8}
-                style={styles.navigateBtn}
-                onPress={openInExternalMaps}
-              >
-                <LinearGradient
-                  colors={['#005d90', '#0077b6']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.navigateBtnGrad}
+              <View style={{ gap: 10 }}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={styles.navigateBtn}
+                  onPress={openInExternalMaps}
                 >
-                  <Ionicons name="navigate" size={20} color="white" />
-                  <Text style={styles.navigateBtnText}>Open in Google Maps</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                  <LinearGradient
+                    colors={['#005d90', '#0077b6']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.navigateBtnGrad}
+                  >
+                    <Ionicons name="navigate" size={20} color="white" />
+                    <Text style={styles.navigateBtnText}>Open in Google Maps</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={[styles.navigateBtn, { backgroundColor: '#f1f5f9' }]}
+                  onPress={() => router.push('/search-map' as any)}
+                >
+                  <View style={[styles.navigateBtnGrad, { backgroundColor: 'transparent' }]}>
+                    <Ionicons name="map-outline" size={20} color="#005d90" />
+                    <Text style={[styles.navigateBtnText, { color: '#005d90' }]}>Explore Full Area Map</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
             )}
           </LinearGradient>
         </View>

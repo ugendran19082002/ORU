@@ -173,14 +173,24 @@ export default function OrderTrackingScreen() {
       <View style={styles.header}>
         <BackButton fallback="/(tabs)" />
         <View style={{ flex: 1 }}>
-
           <View style={styles.brandRow}>
             <Logo size="sm" />
             <Text style={styles.brandName}>ThanniGo</Text>
           </View>
           <Text style={styles.headerSub}>Order #{activeOrder?.id ?? 'TNG-TRACK'}</Text>
         </View>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/notifications' as any)}>
+        <TouchableOpacity 
+          style={styles.backBtn} 
+          onPress={() => {
+            const msg = `Track my water order #${activeOrder?.id} from ${shop?.name ?? 'ThanniGo'}: https://thannigo.app/track/${activeOrder?.id}`;
+            Linking.openURL(`whatsapp://send?text=${msg}`).catch(() => 
+              Alert.alert('Share', `Copy this message: ${msg}`)
+            );
+          }}
+        >
+          <Ionicons name="share-social-outline" size={20} color="#005d90" />
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.backBtn, { marginLeft: 10 }]} onPress={() => router.push('/notifications' as any)}>
           <Ionicons name="notifications-outline" size={20} color="#005d90" />
         </TouchableOpacity>
       </View>
@@ -296,6 +306,17 @@ export default function OrderTrackingScreen() {
               Call Driver
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionCard]}
+            activeOpacity={0.8}
+            onPress={() => Linking.openURL(`whatsapp://send?phone=${DRIVER_PHONE}&text=Hi, I%27m tracking my water delivery order.`)}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: '#e8f5e9' }]}>
+              <Ionicons name="logo-whatsapp" size={22} color="#25D366" />
+            </View>
+            <Text style={[styles.actionLabel, { color: '#25D366', fontWeight: '800' }]}>WhatsApp</Text>
+          </TouchableOpacity>
         </View>
 
         {/* ── ORDER SUMMARY ── */}
@@ -328,6 +349,18 @@ export default function OrderTrackingScreen() {
           >
             <Ionicons name="star-outline" size={16} color="#005d90" />
             <Text style={styles.rateBtnText}>Rate this Delivery</Text>
+          </TouchableOpacity>
+
+          {/* Share tracking via WhatsApp */}
+          <TouchableOpacity
+            style={[styles.rateBtn, { marginTop: 10, borderColor: '#dcfce7', backgroundColor: '#f0fdf4' }]}
+            onPress={() => Linking.openURL(
+              `whatsapp://send?text=Track my ThanniGo water delivery → Order%20%23${activeOrder?.id ?? 'TNG-001'}%20is%20${activeOrder?.status ?? 'on%20its%20way'}!`
+            )}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="logo-whatsapp" size={16} color="#25D366" />
+            <Text style={[styles.rateBtnText, { color: '#25D366' }]}>Share Tracking with Family</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

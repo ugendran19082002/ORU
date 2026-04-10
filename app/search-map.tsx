@@ -9,6 +9,7 @@ import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 
 
+import { ExpoMap } from '@/components/maps/ExpoMap';
 import { useShopStore } from '@/stores/shopStore';
 
 export default function SearchMapScreen() {
@@ -21,16 +22,63 @@ export default function SearchMapScreen() {
   });
 
   const [query, setQuery] = useState('');
+  const [searchLocation, setSearchLocation] = useState({ latitude: 12.9716, longitude: 80.2210 });
+  const [showSearchBtn, setShowSearchBtn] = useState(false);
+
+  const handleMapTap = (coords: { latitude: number; longitude: number }) => {
+    setSearchLocation(coords);
+    setShowSearchBtn(true);
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar style="dark" />
 
-      {/* Map Stub Background */}
-      <View style={styles.mapBackground}>
-        <Ionicons name="map-outline" size={120} color="#e0f0ff" />
-        <Text style={styles.mapBgText}>Interactive Map View</Text>
-      </View>
+      {/* Real Interactive Map */}
+      <ExpoMap
+        style={StyleSheet.absoluteFillObject}
+        initialRegion={{
+          latitude: 12.9716,
+          longitude: 80.2210,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        }}
+        region={{
+          ...searchLocation,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        }}
+        showRoute={false}
+        draggable={true}
+        onMarkerDragEnd={handleMapTap}
+        markers={[
+          // Current search pin
+          { 
+            latitude: searchLocation.latitude, 
+            longitude: searchLocation.longitude, 
+            title: 'Search Area', 
+            color: '#ef4444' 
+          },
+          // Shop markers
+          ...shops.map((shop, idx) => ({
+            latitude: 12.9716 + (idx * 0.005) - 0.01, 
+            longitude: 80.2210 + (idx * 0.005) - 0.01,
+            title: shop.name,
+            color: '#005d90',
+            iconType: 'shop' as const,
+          }))
+        ]}
+      />
+
+      {showSearchBtn && (
+        <TouchableOpacity 
+          style={styles.searchThisArea} 
+          onPress={() => setShowSearchBtn(false)}
+        >
+          <Ionicons name="search" size={16} color="white" />
+          <Text style={styles.searchThisAreaText}>Search this area</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Floating Header */}
       <View style={styles.header}>
@@ -132,4 +180,12 @@ const styles = StyleSheet.create({
   priceText: { fontSize: 15, fontWeight: '800', color: '#005d90' },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   statusText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  
+  searchThisArea: { 
+    position: 'absolute', top: 120, alignSelf: 'center', 
+    backgroundColor: '#005d90', flexDirection: 'row', alignItems: 'center', 
+    gap: 8, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 6 
+  },
+  searchThisAreaText: { color: 'white', fontWeight: '800', fontSize: 13 },
 });

@@ -116,16 +116,7 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="wallet"
-        options={{
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon
-              name={focused ? "wallet" : "wallet-outline"}
-              focused={focused}
-              color={color}
-              label="Wallet"
-            />
-          ),
-        }}
+        options={{ href: null }}  // Hidden: wallet removed per spec directive
       />
       <Tabs.Screen
         name="profile"

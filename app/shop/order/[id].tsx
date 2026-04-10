@@ -105,9 +105,21 @@ export default function ShopDeliveredOrderScreen() {
               <Text style={styles.customerName}>{customer}</Text>
               <Text style={styles.customerPhone}>{phone}</Text>
             </View>
-            <TouchableOpacity style={styles.callBtn} onPress={() => Linking.openURL(`tel:${phone}`)}>
-              <Ionicons name="call" size={18} color="white" />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TouchableOpacity style={styles.callBtn} onPress={() => Linking.openURL(`tel:${phone}`)}>
+                <Ionicons name="call" size={18} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.whatsappBtn}
+                onPress={() =>
+                  Linking.openURL(
+                    `whatsapp://send?phone=91${phone.replace(/[^0-9]/g, '')}&text=Hi ${customer}, your order is being prepared.`
+                  ).catch(() => Linking.openURL(`tel:${phone}`))
+                }
+              >
+                <Ionicons name="logo-whatsapp" size={18} color="white" />
+              </TouchableOpacity>
+            </View>
           </View>
           <View style={styles.divider} />
           <View style={styles.addressRow}>
@@ -252,6 +264,7 @@ const styles = StyleSheet.create({
   customerName: { fontSize: 16, fontWeight: '800', color: '#0f172a' },
   customerPhone: { fontSize: 13, color: '#64748b', marginTop: 2, fontWeight: '500' },
   callBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#0284c7', alignItems: 'center', justifyContent: 'center' },
+  whatsappBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#25d366', alignItems: 'center', justifyContent: 'center' },
 
   divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 16 },
   

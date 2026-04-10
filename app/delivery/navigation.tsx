@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
+import { ExpoMap } from '@/components/maps/ExpoMap';
 
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, Modal, Alert } from 'react-native';
@@ -17,10 +18,30 @@ export default function DeliveryNavigationScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      {/* Map stub overlay */}
-      <View style={styles.mapStub}>
-        <Ionicons name="map" size={80} color="#e0f0ff" />
-        <Text style={styles.mapText}>Live GPS Navigation</Text>
+      {/* Real Interactive Map */}
+      <View style={styles.mapContainer}>
+        <ExpoMap
+          style={StyleSheet.absoluteFillObject}
+          initialRegion={{
+            latitude: task?.lat ?? 12.9716,
+            longitude: task?.lng ?? 80.2210,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }}
+          showRoute={true}
+          markers={[
+            {
+              latitude: task?.lat ?? 12.9716,
+              longitude: task?.lng ?? 80.2210,
+              title: 'Customer Location',
+              color: '#ba1a1a',
+              iconType: 'home' as const
+            }
+          ]}
+          onMarkerDragEnd={(coords) => {
+             Alert.alert('Location Tapped', `Latitude: ${coords.latitude}, Longitude: ${coords.longitude}`);
+          }}
+        />
       </View>
 
       {/* Floating Header */}
@@ -109,7 +130,7 @@ export default function DeliveryNavigationScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f1f4f9', position: 'relative' },
   
-  mapStub: { ...StyleSheet.absoluteFillObject, backgroundColor: '#fdfdfd', alignItems: 'center', justifyContent: 'center' },
+  mapContainer: { ...StyleSheet.absoluteFillObject, backgroundColor: '#fdfdfd' },
   mapText: { fontSize: 20, fontWeight: '900', color: '#bfdbf7', marginTop: 10, letterSpacing: -0.5 },
   
   header: { 

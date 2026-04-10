@@ -34,7 +34,7 @@ export default function CancelOrderScreen() {
   const [selected, setSelected] = useState<string | null>(null);
 
   const orderTotal = '₹90';
-  const refundNote = 'Full refund of ₹90 will be credited to your ThanniGo Wallet within 5 mins.';
+  const refundNote = 'Full refund of ₹90 will be credited to your original payment method within 5 mins.';
 
   const handleCancel = () => {
     if (!selected) {

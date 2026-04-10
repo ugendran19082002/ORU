@@ -20,25 +20,25 @@ export default function AdminCommissionScreen() {
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />} contentContainerStyle={styles.scrollContent}>
         <Text style={styles.pageTitle}>Commission & Revenue</Text>
 
-        {/* ADMIN WALLET CARD */}
+        {/* ADMIN REVENUE CARD */}
         <LinearGradient
           colors={['#003a5c', '#00253b']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.walletCard}
+          style={styles.revenueCard}
         >
-          <Ionicons name="shield-checkmark" size={120} color="rgba(255,255,255,0.03)" style={styles.walletDecor} />
-          <View style={styles.walletTop}>
+          <Ionicons name="shield-checkmark" size={120} color="rgba(255,255,255,0.03)" style={styles.revenueDecor} />
+          <View style={styles.revenueTop}>
             <View>
-              <Text style={styles.walletLabel}>TOTAL REVENUE (ADMIN WALLET)</Text>
-              <Text style={styles.walletBalance}>₹24,840.00</Text>
+              <Text style={styles.revenueLabel}>TOTAL PLATFORM REVENUE</Text>
+              <Text style={styles.revenueBalance}>₹24,840.00</Text>
             </View>
-            <View style={styles.walletIconWrap}>
+            <View style={styles.revenueIconWrap}>
               <Ionicons name="bar-chart" size={24} color="#005d90" />
             </View>
           </View>
           <View style={styles.dividerLight} />
-          <View style={styles.walletStatsRow}>
+          <View style={styles.revenueStatsRow}>
             <View>
               <Text style={styles.statMiniLabel}>This Month</Text>
               <Text style={styles.statMiniVal}>+₹4,120.00</Text>
@@ -115,14 +115,14 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 24, paddingBottom: 100 },
   pageTitle: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, marginBottom: 24 },
   
-  walletCard: { padding: 24, borderRadius: 24, overflow: 'hidden', position: 'relative', shadowColor: '#003a5c', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 20, elevation: 8, marginBottom: 20 },
-  walletDecor: { position: 'absolute', bottom: -10, right: -10 },
-  walletTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  walletLabel: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.7)', letterSpacing: 1, marginBottom: 4 },
-  walletBalance: { fontSize: 36, fontWeight: '900', color: 'white', letterSpacing: -1 },
-  walletIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  revenueCard: { padding: 24, borderRadius: 24, overflow: 'hidden', position: 'relative', shadowColor: '#003a5c', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 20, elevation: 8, marginBottom: 20 },
+  revenueDecor: { position: 'absolute', bottom: -10, right: -10 },
+  revenueTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  revenueLabel: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.7)', letterSpacing: 1, marginBottom: 4 },
+  revenueBalance: { fontSize: 36, fontWeight: '900', color: 'white', letterSpacing: -1 },
+  revenueIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
   dividerLight: { height: 1, backgroundColor: 'rgba(255,255,255,0.1)', marginVertical: 20 },
-  walletStatsRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  revenueStatsRow: { flexDirection: 'row', justifyContent: 'space-between' },
   statMiniLabel: { fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: '600', marginBottom: 2 },
   statMiniVal: { fontSize: 16, color: 'white', fontWeight: '800' },
 

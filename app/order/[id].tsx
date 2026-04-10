@@ -104,6 +104,9 @@ export default function OrderDetailScreen() {
           <View>
             <Text style={styles.quantityLabel}>QUANTITY</Text>
             <Text style={styles.quantityValue}>{String(quantity).padStart(2, '0')}</Text>
+            {quantity >= 50 && (
+              <Text style={{ fontSize: 10, color: '#e07b00', fontWeight: '700', marginTop: 2 }}>Max 50 cans</Text>
+            )}
           </View>
           <View style={styles.quantityControls}>
             <TouchableOpacity
@@ -116,10 +119,11 @@ export default function OrderDetailScreen() {
               <Ionicons name="remove" size={22} color="#005d90" />
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.qtyBtnPlus}
+              style={[styles.qtyBtnPlus, quantity >= 50 && { opacity: 0.4 }]}
+              disabled={quantity >= 50}
               onPress={() => {
                 setSelectedShop(shop.id);
-                setQuantity(product.id, quantity + 1, shop.id);
+                setQuantity(product.id, Math.min(50, quantity + 1), shop.id);
               }}
             >
               <LinearGradient

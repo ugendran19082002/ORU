@@ -6,6 +6,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -39,6 +40,16 @@ export default function ShopEarningsScreen() {
   const deliveredRevenue = orders.filter((order) => order.status === 'delivered').reduce((sum, order) => sum + order.total, 0);
   const activeRevenue = orders.filter((order) => order.status !== 'cancelled').reduce((sum, order) => sum + order.total, 0);
 
+  // P0 Sprint 3 - End of Day Reconciliation
+  const [isReconciled, setIsReconciled] = React.useState(false);
+
+  const handleReconcile = () => {
+    setIsReconciled(true);
+    setTimeout(() => {
+      Alert.alert('End of Day Complete', 'Accounts have been fully reconciled and settled.');
+    }, 300);
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
@@ -64,22 +75,22 @@ export default function ShopEarningsScreen() {
         <Text style={styles.pageTitle}>Earnings</Text>
 
 
-        {/* SHOP WALLET CARD */}
+        {/* SHOP SALES CARD */}
         <LinearGradient
           colors={['#006878', '#004e5b']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.walletCard}
+          style={styles.salesCard}
         >
-          <Ionicons name="wallet" size={100} color="rgba(255,255,255,0.05)" style={styles.walletDecor} />
+          <Ionicons name="stats-chart" size={100} color="rgba(255,255,255,0.05)" style={styles.salesDecor} />
           
-          <View style={styles.walletTop}>
+          <View style={styles.salesTop}>
             <View>
-              <Text style={styles.walletLabel}>SHOP WALLET BALANCE</Text>
-              <Text style={styles.walletBalance}>Rs. {activeRevenue}.00</Text>
+              <Text style={styles.salesLabel}>SHOP SALES BALANCE</Text>
+              <Text style={styles.salesBalance}>Rs. {activeRevenue}.00</Text>
             </View>
-            <View style={styles.walletIconWrap}>
-              <Ionicons name="wallet-outline" size={24} color="#006878" />
+            <View style={styles.salesIconWrap}>
+              <Ionicons name="trending-up-outline" size={24} color="#006878" />
             </View>
           </View>
 
@@ -89,14 +100,24 @@ export default function ShopEarningsScreen() {
           <View style={styles.walletBottom}>
             <View style={styles.pendingBlock}>
               <View style={styles.pendingRow}>
-                <Ionicons name="alert-circle" size={14} color="#ffdad6" />
-                <Text style={styles.pendingLabel}>Pending Admin Commission (Cash Orders)</Text>
+                <Ionicons name={isReconciled ? "checkmark-circle" : "alert-circle"} size={14} color={isReconciled ? "#a7f3d0" : "#ffdad6"} />
+                <Text style={[styles.pendingLabel, isReconciled && { color: '#a7f3d0' }]}>
+                  {isReconciled ? 'All Admin Dues Cleared' : 'Pending Admin Commission (Cash Orders)'}
+                </Text>
               </View>
-              <Text style={styles.pendingAmount}>-Rs. 42.00</Text>
-              <Text style={styles.pendingSub}>Settle dues to avoid account suspension.</Text>
+              <Text style={[styles.pendingAmount, isReconciled && { color: '#a7f3d0' }]}>
+                {isReconciled ? 'Rs. 0.00' : '-Rs. 42.00'}
+              </Text>
+              <Text style={styles.pendingSub}>
+                {isReconciled ? 'Reconciliation successful.' : 'Settle dues to avoid account suspension.'}
+              </Text>
             </View>
-            <TouchableOpacity style={styles.settleBtn}>
-              <Text style={styles.settleBtnText}>Pay Admin</Text>
+            <TouchableOpacity 
+              style={[styles.settleBtn, isReconciled && { opacity: 0.5 }]} 
+              onPress={handleReconcile}
+              disabled={isReconciled}
+            >
+              <Text style={styles.settleBtnText}>{isReconciled ? 'Settled' : 'Pay Admin'}</Text>
             </TouchableOpacity>
           </View>
         </LinearGradient>
@@ -182,16 +203,16 @@ const styles = StyleSheet.create({
   roleLabel: { fontSize: 9, fontWeight: '700', color: '#006878', letterSpacing: 1.5, marginTop: 3 },
   pageTitle: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, marginTop: 10, marginBottom: 20 },
 
-  walletCard: {
+  salesCard: {
     padding: 24, borderRadius: 24, overflow: 'hidden', position: 'relative',
     shadowColor: '#006878', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 20, elevation: 8,
     marginBottom: 16,
   },
-  walletDecor: { position: 'absolute', bottom: -20, right: -20 },
-  walletTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  walletLabel: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.7)', letterSpacing: 1, marginBottom: 4 },
-  walletBalance: { fontSize: 36, fontWeight: '900', color: 'white', letterSpacing: -1 },
-  walletIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  salesDecor: { position: 'absolute', bottom: -20, right: -20 },
+  salesTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  salesLabel: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.7)', letterSpacing: 1, marginBottom: 4 },
+  salesBalance: { fontSize: 36, fontWeight: '900', color: 'white', letterSpacing: -1 },
+  salesIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
   
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.15)', marginVertical: 20 },
   

@@ -18,6 +18,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { roleAccent, roleGradients } from '@/constants/theme';
@@ -158,14 +159,29 @@ export default function LoginScreen() {
           {/* TERMS */}
           <Text style={styles.terms}>
             By continuing you agree to ThanniGo&apos;s{" "}
-            <Text style={[styles.termsLink, { color: accent }]}>
+            <Text 
+              style={[styles.termsLink, { color: accent }]}
+              onPress={() => router.push('/terms' as any)}
+            >
               Terms of Service
             </Text>{" "}
             and{" "}
-            <Text style={[styles.termsLink, { color: accent }]}>
+            <Text 
+              style={[styles.termsLink, { color: accent }]}
+              onPress={() => router.push('/privacy-policy' as any)}
+            >
               Privacy Policy
             </Text>
           </Text>
+
+          <TouchableOpacity 
+            style={{ alignSelf: 'center', marginBottom: 20 }}
+            onPress={() => Linking.openURL('whatsapp://send?phone=919876543210&text=Help with Login')}
+          >
+            <Text style={{ fontSize: 13, color: '#005d90', fontWeight: '600', textDecorationLine: 'underline' }}>
+              Facing issues? Chat with Support
+            </Text>
+          </TouchableOpacity>
 
           {/* QUICK LOGIN OPTIONS */}
           <View style={styles.dividerRow}>

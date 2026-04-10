@@ -18,6 +18,7 @@ export type Shop = {
   rating: number;
   distanceKm: number;
   eta: string;
+  phone: string;
   deliveryTime?: string;
   isOpen: boolean;
   tags: string[];
@@ -50,7 +51,7 @@ export type Order = {
   customerPhone: string;
   items: Array<{ productId: string; quantity: number }>;
   address: string;
-  paymentMethod: 'upi' | 'cod' | 'wallet';
+  paymentMethod: 'upi' | 'cod';
   status: OrderStatus;
   eta: string;
   createdAtLabel: string;
@@ -98,6 +99,8 @@ export type DeliveryTask = {
   eta: string;
   cans: number;
   amount: string;
+  lat: number;
+  lng: number;
 };
 
 export type DeliveryAgent = {

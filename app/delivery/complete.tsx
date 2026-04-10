@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  TextInput, Alert,
+  TextInput, Alert, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 
@@ -33,10 +34,26 @@ export default function DeliveryCompleteScreen() {
   const [selectedReason, setSelectedReason] = useState<FailReason | null>(null);
   const [otherText, setOtherText] = useState('');
   const [rescheduleSlot, setRescheduleSlot] = useState('');
+  const [proofUri, setProofUri] = useState<string | null>(null);
 
   const orderId = '#9831';
   const customerName = 'Ananya Sharma';
   const earnings = '₹48';
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'Sorry, we need camera permissions to capture delivery proof!');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      quality: 0.5,
+    });
+    if (!result.canceled) {
+      setProofUri(result.assets[0].uri);
+    }
+  };
 
   const handleSubmit = () => {
     if (mode === 'failed' && !selectedReason) {
@@ -57,7 +74,7 @@ export default function DeliveryCompleteScreen() {
     Alert.alert(
       mode === 'success' ? '✅ Trip Complete!' : '⚠️ Delivery Reported',
       mode === 'success'
-        ? `Order ${task?.orderId ?? orderId} marked delivered. Earnings ${earnings} added to your wallet.`
+        ? `Order ${task?.orderId ?? orderId} marked delivered. Earnings ${earnings} added to your account.`
         : `Failed delivery reported. Rescheduled for: ${rescheduleSlot}`,
       [{ text: 'OK', onPress: () => router.replace('/delivery' as any) }]
     );
@@ -127,6 +144,22 @@ export default function DeliveryCompleteScreen() {
                 <Text style={styles.earningLabel}>Distance</Text>
                 <Text style={styles.earningValue}>1.2 km</Text>
               </View>
+            </View>
+            <View style={{ paddingHorizontal: 20, paddingBottom: 20 }}>
+              <Text style={styles.sectionTitle}>Delivery Proof (Required)</Text>
+              {proofUri ? (
+                <View style={styles.proofImageWrapper}>
+                  <Image source={{ uri: proofUri }} style={styles.proofImage} />
+                  <TouchableOpacity style={styles.retakeBtn} onPress={pickImage}>
+                    <Ionicons name="camera-reverse" size={20} color="white" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity style={styles.proofBtn} onPress={pickImage}>
+                  <Ionicons name="camera" size={24} color="#005d90" />
+                  <Text style={styles.proofBtnText}>Take Photo</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         )}
@@ -239,6 +272,12 @@ const styles = StyleSheet.create({
   earningLabel: { fontSize: 11, color: '#707881', fontWeight: '600', marginBottom: 4 },
   earningValue: { fontSize: 18, fontWeight: '900', color: '#181c20' },
   earningDivider: { width: 1, backgroundColor: '#f1f4f9' },
+
+  proofBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#e0f0ff', padding: 18, borderRadius: 16, marginTop: 10, borderWidth: 2, borderColor: '#bae6fd', borderStyle: 'dashed' },
+  proofBtnText: { color: '#005d90', fontSize: 15, fontWeight: '800' },
+  proofImageWrapper: { marginTop: 10, borderRadius: 16, overflow: 'hidden', height: 160 },
+  proofImage: { width: '100%', height: '100%' },
+  retakeBtn: { position: 'absolute', bottom: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.6)', padding: 10, borderRadius: 12 },
 
   sectionTitle: { fontSize: 15, fontWeight: '800', color: '#181c20', letterSpacing: -0.3 },
 

@@ -7,6 +7,7 @@ import { Platform } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { AppRouteGuard, AppSessionProvider } from '@/providers/AppSessionProvider';
+import { NoInternetBanner } from '@/components/ui/NoInternetBanner';
 
 
 export default function RootLayout() {
@@ -21,8 +22,9 @@ export default function RootLayout() {
           <AppRouteGuard />
           <Stack screenOptions={{ headerShown: false }}>
 
-            {/* AUTH */}
+            {/* AUTH & ONBOARDING */}
             <Stack.Screen name="auth" options={{ headerShown: false, animation: 'fade' }} />
+            <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
 
             {/* CUSTOMER TABS */}
             <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
@@ -40,9 +42,12 @@ export default function RootLayout() {
             <Stack.Screen name="rewards" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="report-issue" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="emergency-help" options={{ animation: 'slide_from_right' }} />
-            <Stack.Screen name="wallet-history" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="search-map" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
             <Stack.Screen name="shop-alternatives" options={{ animation: 'slide_from_bottom' }} />
+            
+            {/* LEGAL SCREENS */}
+            <Stack.Screen name="privacy-policy" options={{ animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="terms" options={{ animation: 'slide_from_bottom' }} />
 
             {/* SHOP DETAIL — Customer view of a shop's products */}
             <Stack.Screen name="shop-detail/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
@@ -66,6 +71,7 @@ export default function RootLayout() {
             <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
 
           </Stack>
+          <NoInternetBanner />
           <StatusBar style="auto" />
         </ThemeProvider>
       </AppSessionProvider>

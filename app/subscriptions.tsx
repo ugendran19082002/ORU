@@ -166,9 +166,9 @@ export default function SubscriptionsScreen() {
                   <Ionicons name={activeSub.paused ? 'play' : 'pause'} size={16} color="#005d90" />
                   <Text style={styles.pauseBtnText}>{activeSub.paused ? 'Resume' : 'Pause'}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.rescheduleBtn}>
-                  <Ionicons name="calendar-outline" size={16} color="rgba(255,255,255,0.9)" />
-                  <Text style={styles.rescheduleBtnText}>Reschedule</Text>
+                <TouchableOpacity style={styles.rescheduleBtn} onPress={() => Alert.alert('Modify Order', 'Coming soon: Change bottle count or brand for next delivery.')}>
+                  <Ionicons name="create-outline" size={16} color="rgba(255,255,255,0.9)" />
+                  <Text style={styles.rescheduleBtnText}>Modify</Text>
                 </TouchableOpacity>
               </View>
             </LinearGradient>

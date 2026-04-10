@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity, StyleSheet, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,7 +14,42 @@ import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
 
 
-type PaymentType = 'upi' | 'cod' | 'wallet';
+type PaymentType = 'upi' | 'cod';
+
+const VALID_COUPONS: Record<string, number> = { 'WATER10': 10, 'FIRST20': 20, 'THANNI15': 15 };
+
+function CouponBlock({ subtotal }: { subtotal: number }) {
+  const [coupon, setCoupon] = useState('');
+  const [discount, setDiscount] = useState(0);
+  const [couponError, setCouponError] = useState('');
+
+  const applyCoupon = () => {
+    const pct = VALID_COUPONS[coupon.toUpperCase()];
+    if (pct) { setDiscount(Math.round(subtotal * pct / 100)); setCouponError(''); }
+    else { setDiscount(0); setCouponError('Invalid code. Try WATER10, FIRST20 or THANNI15.'); }
+  };
+
+  return (
+    <>
+      <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+        <TextInput
+          value={coupon}
+          onChangeText={(t) => { setCoupon(t); setCouponError(''); setDiscount(0); }}
+          placeholder="Enter promo code"
+          placeholderTextColor="#bfc7d1"
+          autoCapitalize="characters"
+          style={{ flex: 1, backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1.5, borderColor: discount > 0 ? '#22c55e' : '#e0e2e8', fontSize: 15, fontWeight: '700', color: '#181c20' }}
+        />
+        <TouchableOpacity onPress={applyCoupon} style={{ backgroundColor: '#005d90', borderRadius: 14, paddingHorizontal: 18, justifyContent: 'center' }}>
+          <Text style={{ color: 'white', fontWeight: '800', fontSize: 14 }}>Apply</Text>
+        </TouchableOpacity>
+      </View>
+      {couponError ? <Text style={{ color: '#ba1a1a', fontSize: 12, marginTop: 6, fontWeight: '500' }}>{couponError}</Text> : null}
+      {discount > 0 ? <Text style={{ color: '#22c55e', fontSize: 13, marginTop: 6, fontWeight: '700' }}>🎉 ₹{discount} discount applied!</Text> : null}
+    </>
+  );
+}
+
 
 const INITIAL_ADDRESSES = [
   { id: "1", type: "Home", title: "Home", fullAddress: "82nd Floor, Azure Heights, Cyber City, Sector 56...", isDefault: true },
@@ -83,16 +118,7 @@ export default function OrderCheckoutScreen() {
               <Ionicons name="phone-portrait-outline" size={20} color={payment === 'upi' ? '#005d90' : '#707881'} />
             </View>
             <Text style={[styles.paymentOptionLabel, payment === 'upi' && styles.paymentOptionLabelActive]}>UPI</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.paymentOption, payment === 'wallet' && styles.paymentOptionActive]}
-            onPress={() => { setPayment('wallet'); setPaymentMethod('wallet'); }}
-          >
-            <View style={[styles.paymentIcon, payment === 'wallet' && styles.paymentIconActive]}>
-              <Ionicons name="wallet-outline" size={20} color={payment === 'wallet' ? '#005d90' : '#707881'} />
-            </View>
-            <Text style={[styles.paymentOptionLabel, payment === 'wallet' && styles.paymentOptionLabelActive]}>Wallet</Text>
+            <Text style={styles.paymentNote}>GPay / PhonePe</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -103,6 +129,7 @@ export default function OrderCheckoutScreen() {
               <Ionicons name="cash-outline" size={20} color={payment === 'cod' ? '#005d90' : '#707881'} />
             </View>
             <Text style={[styles.paymentOptionLabel, payment === 'cod' && styles.paymentOptionLabelActive]}>Cash</Text>
+            <Text style={styles.paymentNote}>On Delivery</Text>
           </TouchableOpacity>
         </View>
 
@@ -122,6 +149,12 @@ export default function OrderCheckoutScreen() {
             <Text style={styles.editText}>Change</Text>
           </View>
         </TouchableOpacity>
+
+        {/* COUPON / PROMO CODE */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Coupon / Promo Code</Text>
+          <CouponBlock subtotal={subtotal} />
+        </View>
 
         {/* ORDER TOTALS */}
         <View style={styles.summaryCard}>
@@ -236,6 +269,7 @@ const styles = StyleSheet.create({
   paymentIconActive: { backgroundColor: '#e0f0ff' },
   paymentOptionLabel: { fontSize: 12, fontWeight: '800', color: '#707881' },
   paymentOptionLabelActive: { color: '#005d90' },
+  paymentNote: { fontSize: 10, color: '#94a3b8', fontWeight: '600' },
 
   addressCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: '#e0f7fa', borderRadius: 20, padding: 16, marginBottom: 28 },
   addressIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },

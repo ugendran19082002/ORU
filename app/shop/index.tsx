@@ -5,7 +5,10 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  StyleSheet, Alert,
+  StyleSheet,
+  Modal,
+  Alert,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -20,6 +23,14 @@ import { useShopStore } from '@/stores/shopStore';
 type OrderAction = 'accept' | 'reject' | 'delivered';
 type TabState = 'active' | 'completed';
 
+const REJECT_REASONS = [
+  'Out of stock',
+  'Shop closed / holiday',
+  'Outside delivery area',
+  'Too many active orders',
+  'Customer unreachable',
+];
+
 export default function ShopOrdersScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
   const onRefresh = React.useCallback(() => {
@@ -33,15 +44,52 @@ export default function ShopOrdersScreen() {
   const [activeTab, setActiveTab] = useState<TabState>('active');
   const [acceptingOrders, setAcceptingOrders] = useState(true);
   const [busyMode, setBusyMode] = useState(false);
+  const [rejectModalOrderId, setRejectModalOrderId] = useState<string | null>(null);
+  const [selectedRejectReason, setSelectedRejectReason] = useState<string | null>(null);
+  const [orderSearchText, setOrderSearchText] = useState('');
 
   const router = useRouter();
   const { orders, updateStatus, setActiveOrder } = useOrderStore();
   const { shops } = useShopStore();
   const shop = shops[0];
-  const activeOrders = orders.filter((order) => !['completed', 'cancelled'].includes(order.status));
-  const completedOrders = orders.filter((order) => ['completed', 'cancelled'].includes(order.status));
+  const activeOrders = orders
+    .filter((order) => !['completed', 'cancelled'].includes(order.status))
+    .filter((order) => {
+      const q = orderSearchText.toLowerCase();
+      return order.customerName.toLowerCase().includes(q) || order.id.toLowerCase().includes(q);
+    });
+  const completedOrders = orders
+    .filter((order) => ['completed', 'cancelled'].includes(order.status))
+    .filter((order) => {
+      const q = orderSearchText.toLowerCase();
+      return order.customerName.toLowerCase().includes(q) || order.id.toLowerCase().includes(q);
+    });
   const nextOrder = activeOrders[0];
   const lowStock = shop?.products.filter((product) => product.stockCount < 30) ?? [];
+
+  // P0: Delivery capacity management - auto busy mode
+  React.useEffect(() => {
+    if (activeOrders.length >= 5 && !busyMode) {
+      setBusyMode(true);
+    }
+  }, [activeOrders.length]);
+
+  // P0: 5-min auto-reminder when order not accepted
+  React.useEffect(() => {
+    const pendingCount = activeOrders.filter(o => o.status === 'pending').length;
+    if (pendingCount > 0) {
+      // In a real app we'd compare created timestamps, but here we trigger a timer. 
+      // Using 5 * 60 * 1000 for 5 minutes.
+      const timer = setTimeout(() => {
+        Alert.alert(
+          '⚠️ Unaccepted Orders',
+          `You have ${pendingCount} order(s) waiting for acceptance. Please action them immediately to avoid SLA penalties.`,
+          [{ text: 'Acknowledge' }]
+        );
+      }, 5 * 60 * 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [activeOrders]);
 
   const handleAction = (action: OrderAction, orderId?: string) => {
     setActionDone(action);
@@ -53,9 +101,7 @@ export default function ShopOrdersScreen() {
       updateStatus(orderId, 'accepted');
     }
 
-    if (action === 'reject' && orderId) {
-      updateStatus(orderId, 'cancelled');
-    }
+    // 'reject' is handled by openRejectModal — never called directly here
 
     if (action === 'delivered' && orderId) {
       updateStatus(orderId, 'completed');
@@ -71,6 +117,27 @@ export default function ShopOrdersScreen() {
     } else {
       setTimeout(() => setActionDone(null), 2000);
     }
+  };
+
+  /** P0: Reject reason is MANDATORY — opens bottom-sheet */
+  const openRejectModal = (orderId: string) => {
+    setSelectedRejectReason(null);
+    setRejectModalOrderId(orderId);
+  };
+
+  const confirmReject = () => {
+    if (!selectedRejectReason) {
+      Alert.alert('Reason Required', 'Please select a reason before rejecting this order.');
+      return;
+    }
+    if (rejectModalOrderId) {
+      setActiveOrder(rejectModalOrderId);
+      updateStatus(rejectModalOrderId, 'cancelled');
+      setActionDone('reject');
+      setTimeout(() => setActionDone(null), 2000);
+    }
+    setRejectModalOrderId(null);
+    setSelectedRejectReason(null);
   };
 
   return (
@@ -102,6 +169,23 @@ export default function ShopOrdersScreen() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
       >
         <Text style={styles.pageTitle}>Orders</Text>
+
+        {/* SEARCH BAR (P1) */}
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#707881" style={styles.searchIcon} />
+          <TextInput
+            value={orderSearchText}
+            onChangeText={setOrderSearchText}
+            placeholder="Search customer name or Order ID..."
+            placeholderTextColor="#bfc7d1"
+            style={styles.searchInput}
+          />
+          {orderSearchText ? (
+            <TouchableOpacity onPress={() => setOrderSearchText('')}>
+              <Ionicons name="close-circle" size={18} color="#bfc7d1" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
 
         {/* --- DELIVERY MODE HERO CARD --- */}
         <TouchableOpacity 
@@ -247,7 +331,7 @@ export default function ShopOrdersScreen() {
                     <Text style={styles.acceptBtnText}>ACCEPT</Text>
                   </LinearGradient>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.rejectBtn} onPress={() => handleAction('reject', nextOrder.id)}>
+                <TouchableOpacity style={styles.rejectBtn} onPress={() => openRejectModal(nextOrder.id)}>
                   <Ionicons name="close" size={18} color="#ba1a1a" />
                   <Text style={styles.rejectBtnText}>REJECT</Text>
                 </TouchableOpacity>
@@ -296,6 +380,65 @@ export default function ShopOrdersScreen() {
           )
         )}
       </ScrollView>
+
+      {/* MANDATORY REJECT REASON MODAL (P0) */}
+      <Modal
+        visible={rejectModalOrderId !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setRejectModalOrderId(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Reject Order</Text>
+              <TouchableOpacity
+                style={styles.modalCloseBtn}
+                onPress={() => setRejectModalOrderId(null)}
+              >
+                <Ionicons name="close" size={20} color="#707881" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSubtitle}>Select a reason (required)</Text>
+            <View style={{ gap: 10, width: '100%', marginBottom: 20 }}>
+              {REJECT_REASONS.map((reason) => (
+                <TouchableOpacity
+                  key={reason}
+                  style={[
+                    styles.reasonOption,
+                    selectedRejectReason === reason && styles.reasonOptionSelected,
+                  ]}
+                  onPress={() => setSelectedRejectReason(reason)}
+                >
+                  <Ionicons
+                    name={selectedRejectReason === reason ? 'radio-button-on' : 'radio-button-off'}
+                    size={20}
+                    color={selectedRejectReason === reason ? '#ba1a1a' : '#94a3b8'}
+                  />
+                  <Text
+                    style={[
+                      styles.reasonText,
+                      selectedRejectReason === reason && styles.reasonTextSelected,
+                    ]}
+                  >
+                    {reason}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity
+              style={[
+                styles.confirmRejectBtn,
+                !selectedRejectReason && { opacity: 0.4 },
+              ]}
+              onPress={confirmReject}
+            >
+              <Ionicons name="close-circle" size={18} color="white" />
+              <Text style={styles.confirmRejectText}>Confirm Rejection</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -329,7 +472,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#ba1a1a', borderRadius: 4, borderWidth: 1.5, borderColor: '#f1f4f9',
   },
 
-  pageTitle: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, marginTop: 10, marginBottom: 20 },
+  pageTitle: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, marginTop: 10, marginBottom: 12 },
+
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 24, borderWidth: 1.5, borderColor: '#f1f4f9', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
+  searchIcon: { marginRight: 10 },
+  searchInput: { flex: 1, fontSize: 14, fontWeight: '600', color: '#181c20' },
 
   tabsWrap: {
     flexDirection: 'row', backgroundColor: '#ebeef4', borderRadius: 16, padding: 4, marginBottom: 24,
@@ -402,4 +549,28 @@ const styles = StyleSheet.create({
   },
   insightsLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   insightsText: { fontSize: 13, fontWeight: '700', color: '#006878' },
+
+  // ── Reject Reason Modal ──────────────────────────────────────────
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,58,92,0.45)', justifyContent: 'flex-end' },
+  modalContent: {
+    backgroundColor: 'white', borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    padding: 24, paddingBottom: 36, alignItems: 'center',
+  },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 4 },
+  modalTitle: { fontSize: 22, fontWeight: '900', color: '#181c20' },
+  modalCloseBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center' },
+  modalSubtitle: { fontSize: 13, color: '#707881', alignSelf: 'flex-start', marginBottom: 16, fontWeight: '500' },
+  reasonOption: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    padding: 14, borderRadius: 16, borderWidth: 2, borderColor: '#f1f4f9',
+    backgroundColor: '#fafafa',
+  },
+  reasonOptionSelected: { borderColor: '#ffdad6', backgroundColor: '#fff5f4' },
+  reasonText: { fontSize: 14, color: '#404850', fontWeight: '600', flex: 1 },
+  reasonTextSelected: { color: '#ba1a1a', fontWeight: '800' },
+  confirmRejectBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: '#ba1a1a', borderRadius: 18, paddingVertical: 16, width: '100%',
+  },
+  confirmRejectText: { color: 'white', fontWeight: '800', fontSize: 15 },
 });

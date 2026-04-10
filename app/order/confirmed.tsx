@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Animated,
+  View, Text, StyleSheet, TouchableOpacity, Animated, Linking, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -8,14 +8,42 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+import { useOrderStore } from '@/stores/orderStore';
+import { useShopStore } from '@/stores/shopStore';
+import { mockProducts } from '@/utils/mockData';
 
 export default function OrderConfirmedScreen() {
   const router = useRouter();
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
+  const { orders, activeOrderId } = useOrderStore();
+  const { shops } = useShopStore();
+
+  // Get the actual just-placed order
+  const order = orders.find((o) => o.id === activeOrderId) ?? orders[0];
+  const shop = shops.find((s) => s.id === order?.shopId);
+
+  // Build item summary string
+  const itemSummary = order?.items
+    .map((item) => {
+      const product = mockProducts.find((p) => p.id === item.productId);
+      return `${item.quantity}× ${product?.name ?? 'Water Can'}`;
+    })
+    .join(', ') ?? '—';
+
+  const shopName = shop?.name ?? 'Your Water Shop';
+  const shopPhone = shop?.phone ?? '';
+  const eta = '15–20 mins';
+  const orderId = order ? `#${order.id.slice(-4).toUpperCase()}` : '—';
+  const deliveryOtp = order?.deliveryOtp ?? '—';
+  const paymentLabel = order
+    ? order.paymentMethod === 'cod'
+      ? `COD · ₹${order.total}`
+      : `UPI · ₹${order.total}`
+    : '—';
+
   useAndroidBackHandler(() => {
-    // Prevent going back to checkout once order is confirmed
     router.replace('/(tabs)');
   });
 
@@ -27,10 +55,19 @@ export default function OrderConfirmedScreen() {
     Animated.timing(opacityAnim, { toValue: 1, duration: 400, delay: 200, useNativeDriver: true }).start();
   }, []);
 
-  const otp = '4829';
-  const orderId = '#9831';
-  const shopName = 'Blue Spring Aquatics';
-  const eta = '12–15 mins';
+  const handleCallShop = () => {
+    if (!shopPhone) { Alert.alert('No contact', 'Shop phone not available.'); return; }
+    Linking.openURL(`tel:${shopPhone}`).catch(() =>
+      Alert.alert('Cannot open phone', 'Please dial the shop manually.')
+    );
+  };
+
+  const handleWhatsApp = () => {
+    if (!shopPhone) { Alert.alert('No contact', 'Shop phone not available.'); return; }
+    Linking.openURL(`whatsapp://send?phone=91${shopPhone}&text=Hi, my order ${orderId} was just placed. ETA?`).catch(() =>
+      Alert.alert('WhatsApp not found', 'Please install WhatsApp or call the shop.')
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -54,30 +91,32 @@ export default function OrderConfirmedScreen() {
         </Animated.View>
 
         {/* OTP CARD */}
-        <Animated.View style={[styles.otpCard, { opacity: opacityAnim }]}>
-          <View style={styles.otpTop}>
-            <View style={styles.otpIconWrap}>
-              <Ionicons name="lock-closed" size={18} color="#005d90" />
+        {order?.paymentMethod === 'cod' && (
+          <Animated.View style={[styles.otpCard, { opacity: opacityAnim }]}>
+            <View style={styles.otpTop}>
+              <View style={styles.otpIconWrap}>
+                <Ionicons name="lock-closed" size={18} color="#005d90" />
+              </View>
+              <View>
+                <Text style={styles.otpLabel}>DELIVERY OTP</Text>
+                <Text style={styles.otpHint}>Share only with your delivery agent</Text>
+              </View>
             </View>
-            <View>
-              <Text style={styles.otpLabel}>DELIVERY OTP</Text>
-              <Text style={styles.otpHint}>Share only with your delivery agent</Text>
+            <Text style={styles.otpValue}>{deliveryOtp}</Text>
+            <View style={styles.otpDots}>
+              {String(deliveryOtp).split('').map((_, i) => (
+                <View key={i} style={styles.otpDot} />
+              ))}
             </View>
-          </View>
-          <Text style={styles.otpValue}>{otp}</Text>
-          <View style={styles.otpDots}>
-            {otp.split('').map((_, i) => (
-              <View key={i} style={styles.otpDot} />
-            ))}
-          </View>
-        </Animated.View>
+          </Animated.View>
+        )}
 
         {/* ORDER SUMMARY MINI */}
         <Animated.View style={[styles.summaryCard, { opacity: opacityAnim }]}>
           {[
             { label: 'Shop', value: shopName, icon: 'storefront-outline' },
-            { label: 'Item', value: '1× 20L Water Can', icon: 'water-outline' },
-            { label: 'Payment', value: 'UPI · ₹50', icon: 'card-outline' },
+            { label: 'Items', value: itemSummary, icon: 'water-outline' },
+            { label: 'Payment', value: paymentLabel, icon: 'card-outline' },
             { label: 'ETA', value: eta, icon: 'time-outline' },
           ].map((row) => (
             <View key={row.label} style={styles.summaryRow}>
@@ -85,9 +124,21 @@ export default function OrderConfirmedScreen() {
                 <Ionicons name={row.icon as any} size={16} color="#005d90" />
               </View>
               <Text style={styles.summaryLabel}>{row.label}</Text>
-              <Text style={styles.summaryValue}>{row.value}</Text>
+              <Text style={styles.summaryValue} numberOfLines={1}>{row.value}</Text>
             </View>
           ))}
+        </Animated.View>
+
+        {/* QUICK CONTACT */}
+        <Animated.View style={[styles.contactRow, { opacity: opacityAnim }]}>
+          <TouchableOpacity style={styles.contactBtn} onPress={handleCallShop}>
+            <Ionicons name="call" size={18} color="#005d90" />
+            <Text style={styles.contactBtnText}>Call Shop</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.contactBtn, styles.whatsappBtn]} onPress={handleWhatsApp}>
+            <Ionicons name="logo-whatsapp" size={18} color="#25d366" />
+            <Text style={[styles.contactBtnText, { color: '#25d366' }]}>WhatsApp</Text>
+          </TouchableOpacity>
         </Animated.View>
 
         {/* ACTIONS */}
@@ -121,7 +172,7 @@ export default function OrderConfirmedScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
-  content: { flex: 1, paddingHorizontal: 24, paddingVertical: 20, alignItems: 'center', justifyContent: 'center', gap: 20 },
+  content: { flex: 1, paddingHorizontal: 24, paddingVertical: 20, alignItems: 'center', justifyContent: 'center', gap: 16 },
 
   iconWrap: { alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   iconGrad: {
@@ -160,8 +211,16 @@ const styles = StyleSheet.create({
   },
   summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   summaryIcon: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#f0f7ff', alignItems: 'center', justifyContent: 'center' },
-  summaryLabel: { flex: 1, fontSize: 13, color: '#707881', fontWeight: '600' },
-  summaryValue: { fontSize: 13, fontWeight: '800', color: '#181c20' },
+  summaryLabel: { flex: 0.4, fontSize: 13, color: '#707881', fontWeight: '600' },
+  summaryValue: { flex: 0.6, fontSize: 13, fontWeight: '800', color: '#181c20', textAlign: 'right' },
+
+  contactRow: { flexDirection: 'row', gap: 10, width: '100%' },
+  contactBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: '#e0f0ff', borderRadius: 16, paddingVertical: 12,
+  },
+  whatsappBtn: { backgroundColor: '#e8f5e9' },
+  contactBtnText: { color: '#005d90', fontWeight: '700', fontSize: 14 },
 
   actions: { width: '100%', gap: 10 },
   primaryBtn: { borderRadius: 18, overflow: 'hidden' },

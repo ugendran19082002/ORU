@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Modal,
 } from 'react-native';
+import { ExpoMap } from '@/components/maps/ExpoMap';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -94,7 +95,11 @@ export default function HomeScreen() {
   const [requestedShopIds, setRequestedShopIds] = useState<string[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [isAddressModalVisible, setIsAddressModalVisible] = useState(false);
+  const [isMapView, setIsMapView] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [favouriteIds, setFavouriteIds] = useState<string[]>([]);
   const [pendingShopId, setPendingShopId] = useState<string | null>(null);
+  const [currentAddress, setCurrentAddress] = useState('Locating...');
   const [userAddresses] = useState([
     { id: '1', type: 'Home', title: 'Home', fullAddress: '82nd Floor, Azure Heights, Cyber City...' },
     { id: '2', type: 'Office', title: 'Office', fullAddress: 'Floor 12, Tech Park Central, Sector 44...' }
@@ -139,6 +144,13 @@ export default function HomeScreen() {
       const currentLng = location.coords.longitude;
       setUserLoc({ lat: currentLat, lng: currentLng });
 
+      // Dynamic naming based on standard GPS proximity
+      if (Math.abs(currentLat - 12.97) < 0.1 && Math.abs(currentLng - 80.22) < 0.1) {
+        setCurrentAddress('Koramangala, Bangalore');
+      } else {
+        setCurrentAddress(`${currentLat.toFixed(2)}, ${currentLng.toFixed(2)}`);
+      }
+
       // Calculate distances & filter <= 3km
       // NOTE: Because simulators might be thousands of miles away from 12.97/80.22,
       // we will inject a fallback spoofed location matching Chennai/BLR area if real distance is > 3km.
@@ -173,6 +185,12 @@ export default function HomeScreen() {
   const filteredShops = nearbyShops
     .filter(s => s.calculatedDistance <= 3.0)
     .filter(s => search.trim() === '' ? true : s.name.toLowerCase().includes(search.toLowerCase()))
+    .filter(s => {
+      if (activeFilter === 'Rating 4.5+') return s.rating >= 4.5;
+      if (activeFilter === '< 2km') return s.calculatedDistance < 2.0;
+      if (activeFilter === 'Under Rs.50') return s.price < 50;
+      return true;
+    })
     .sort((a,b) => a.calculatedDistance - b.calculatedDistance);
 
   if (loadingLoc) {
@@ -201,21 +219,31 @@ export default function HomeScreen() {
             activeOpacity={0.7}
           >
             <Ionicons name="location" size={13} color="#005d90" />
-            <Text style={styles.locationText}>Koramangala, Bangalore</Text>
+            <Text style={styles.locationText}>{currentAddress}</Text>
             <Ionicons name="chevron-down" size={11} color="#005d90" />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.iconBtn}
-          onPress={() => router.push('/(tabs)/orders' as any)}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="cart-outline" size={22} color="#005d90" />
-          {/* Active order badge */}
-          <View style={styles.cartBadge}>
-            <Text style={styles.cartBadgeText}>1</Text>
-          </View>
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={() => router.push('/notifications' as any)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="notifications-outline" size={22} color="#005d90" />
+            <View style={styles.notifDot} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={() => router.push('/(tabs)/orders' as any)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="cart-outline" size={22} color="#005d90" />
+            <View style={styles.cartBadge}>
+              <Text style={styles.cartBadgeText}>1</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView 
@@ -240,7 +268,15 @@ export default function HomeScreen() {
             <Text style={styles.heroSubtitle}>
               Quickly reorder 2 cans of Mineral Water securely from your saved favorite shop.
             </Text>
-            <TouchableOpacity activeOpacity={0.88} style={styles.reorderBtn} onPress={() => router.push('/order/1')}>
+            <TouchableOpacity 
+              activeOpacity={0.88} 
+              style={styles.reorderBtn} 
+              onPress={() => {
+                const shopId = '1'; // Default shop for reorder hero
+                setSelectedShop(shopId);
+                router.push(`/order/checkout?shopId=${shopId}&qty=2` as any);
+              }}
+            >
               <Ionicons name="refresh" size={18} color="#005d90" />
               <Text style={styles.reorderBtnText}>Reorder Now</Text>
             </TouchableOpacity>
@@ -265,15 +301,33 @@ export default function HomeScreen() {
           )}
         </View>
 
+        {/* FILTER CHIPS API */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, marginBottom: 20, paddingHorizontal: 2 }}>
+           {['Rating 4.5+', '< 2km', 'Under Rs.50'].map(f => (
+             <TouchableOpacity 
+               key={f} 
+               style={{ backgroundColor: activeFilter === f ? '#005d90' : '#e0f0ff', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 }}
+               onPress={() => setActiveFilter(activeFilter === f ? null : f)}
+             >
+                <Text style={{ color: activeFilter === f ? 'white' : '#005d90', fontSize: 13, fontWeight: '700' }}>{f}</Text>
+             </TouchableOpacity>
+           ))}
+        </ScrollView>
+
         {/* SHOPS SECTION */}
         <View style={styles.sectionHeader}>
           <View>
             <Text style={styles.sectionTitle}>Shops Near You</Text>
             <Text style={styles.sectionSubtitle}>Within 3km radius</Text>
           </View>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/search' as any)}>
-            <Ionicons name="options" size={20} color="#005d90" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => setIsMapView(!isMapView)}>
+              <Ionicons name={isMapView ? "list" : "map"} size={22} color="#005d90" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/search' as any)}>
+              <Ionicons name="options" size={22} color="#005d90" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {filteredShops.length === 0 ? (
@@ -282,6 +336,35 @@ export default function HomeScreen() {
             <Text style={styles.emptyText}>
               {search.trim() !== '' ? `No shops found matching "${search}"` : 'No shops found within 3km of your location.'}
             </Text>
+          </View>
+        ) : isMapView ? (
+          <View style={{ height: 400, borderRadius: 20, overflow: 'hidden', marginTop: 10, borderColor: '#e2e8f0', borderWidth: 1 }}>
+            <ExpoMap 
+               style={{ flex: 1 }} 
+               initialRegion={{ 
+                 latitude: userLoc?.lat ?? 12.9716, 
+                 longitude: userLoc?.lng ?? 80.2210, 
+                 latitudeDelta: 0.1, 
+                 longitudeDelta: 0.1 
+               }}
+               draggable={true}
+               onMarkerDragEnd={(coords) => {
+                 router.push({ pathname: '/search-map', params: { lat: coords.latitude, lng: coords.longitude } } as any);
+               }}
+               markers={[
+                 ...(userLoc ? [{ latitude: userLoc.lat, longitude: userLoc.lng, title: 'You are here', color: 'blue' }] : []),
+                 ...filteredShops.map((s) => ({
+                   latitude: s.lat,
+                   longitude: s.lng,
+                   title: s.name,
+                   color: '#005d90',
+                   iconType: 'shop' as const
+                 }))
+               ]}
+            />
+            <View style={{ position: 'absolute', bottom: 12, left: 12, right: 12, backgroundColor: 'rgba(255,255,255,0.9)', padding: 8, borderRadius: 12, alignItems: 'center' }}>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: '#005d90' }}>Tap map to search alternative areas</Text>
+            </View>
           </View>
         ) : (
           filteredShops.map((shop) => {
@@ -300,6 +383,19 @@ export default function HomeScreen() {
                >
                  <View style={styles.shopImageContainer}>
                    <Image source={shop.image} style={styles.shopImage} contentFit="cover" transition={300} />
+                   <TouchableOpacity 
+                     style={styles.favBtn} 
+                     onPress={(e) => {
+                       e.stopPropagation();
+                       setFavouriteIds(prev => 
+                         prev.includes(shop.id) 
+                           ? prev.filter(id => id !== shop.id) 
+                           : [...prev, shop.id]
+                       );
+                     }}
+                   >
+                     <Ionicons name={favouriteIds.includes(shop.id) ? "heart" : "heart-outline"} size={20} color={favouriteIds.includes(shop.id) ? "#ef4444" : "white"} />
+                   </TouchableOpacity>
                    <View style={styles.distBadge}>
                      <Ionicons name="navigate" size={12} color="#005d90" />
                      <Text style={styles.distText}>{shop.calculatedDistance.toFixed(1)} km</Text>
@@ -422,18 +518,25 @@ const styles = StyleSheet.create({
   brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 },
   locationText: { fontSize: 13, color: '#64748b', fontWeight: '500' },
+  headerRight: { flexDirection: 'row', gap: 10 },
   iconBtn: {
-    width: 40, height: 40, borderRadius: 20,
+    width: 42, height: 42, borderRadius: 12,
     backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center',
     position: 'relative',
   },
-  cartBadge: {
-    position: 'absolute', top: -2, right: -2,
-    width: 16, height: 16, borderRadius: 8,
-    backgroundColor: '#ef4444', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: '#f7f9ff',
+  notifDot: {
+    position: 'absolute', top: 10, right: 10,
+    width: 8, height: 8, borderRadius: 4,
+    backgroundColor: '#ef4444',
+    borderWidth: 1.5, borderColor: '#f1f4f9',
   },
-  cartBadgeText: { color: 'white', fontSize: 9, fontWeight: '800' },
+  cartBadge: {
+    position: 'absolute', top: -4, right: -4,
+    width: 17, height: 17, borderRadius: 8.5,
+    backgroundColor: '#ef4444', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: '#f7f9ff',
+  },
+  cartBadgeText: { color: 'white', fontSize: 9, fontWeight: '900' },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 120 },
 
@@ -458,6 +561,7 @@ const styles = StyleSheet.create({
   shopCard: { backgroundColor: 'white', borderRadius: 24, marginBottom: 20, overflow: 'hidden', shadowColor: '#003a5c', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 16, elevation: 3 },
   shopImageContainer: { height: 160, width: '100%', position: 'relative', backgroundColor: '#e2e8f0' },
   shopImage: { width: '100%', height: '100%' },
+  favBtn: { position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.3)', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   distBadge: { position: 'absolute', bottom: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
   distText: { color: '#005d90', fontWeight: '800', fontSize: 12 },
   
@@ -489,3 +593,4 @@ const styles = StyleSheet.create({
   addAddrBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, marginTop: 8 },
   addAddrText: { fontSize: 14, fontWeight: '700', color: '#005d90' },
 });
+

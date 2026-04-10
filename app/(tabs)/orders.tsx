@@ -243,10 +243,12 @@ export default function OrdersScreen() {
                 const sourceOrder = orders.find((item) => item.id === order.id);
                 setSelectedShop(order.shopId);
                 setShop(order.shopId);
+                let totalQty = 0;
                 sourceOrder?.items.forEach((item) => {
                   setQuantity(item.productId, item.quantity, order.shopId);
+                  totalQty += item.quantity;
                 });
-                router.push(`/order/${order.shopId}`);
+                router.push(`/order/checkout?shopId=${order.shopId}&qty=${totalQty}` as any);
               }}
               onSupport={() => {
                 setActiveOrder(order.id);
