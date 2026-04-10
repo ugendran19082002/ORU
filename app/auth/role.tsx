@@ -9,7 +9,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
+
 import { Ionicons } from '@expo/vector-icons';
 import { Logo } from '@/components/ui/Logo';
 import { roleAccent, roleGradients } from '@/constants/theme';
@@ -69,8 +74,14 @@ const ROLE_DESTINATIONS: Record<Role, string> = {
 
 export default function RoleSelectScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
   const { setPreferredRole } = useAppSession();
   const [selected, setSelected] = useState<Role | null>(null);
+
+  useAndroidBackHandler(() => {
+    safeBack("/auth");
+  });
+
 
   const handleContinue = async () => {
     if (!selected) return;
@@ -91,13 +102,9 @@ export default function RoleSelectScreen() {
       <SafeAreaView style={styles.safe}>
         {/* HEADER */}
         <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backBtn} 
-            onPress={() => router.canGoBack() ? router.back() : router.replace('/auth')}
-          >
-            <Ionicons name="arrow-back" size={20} color="#005d90" />
-          </TouchableOpacity>
+          <BackButton variant="transparent" fallback="/auth" />
           <View style={styles.brandRow}>
+
             <Logo size="sm" />
             <Text style={styles.brandName}>ThanniGo</Text>
           </View>

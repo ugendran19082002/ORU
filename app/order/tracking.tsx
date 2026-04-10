@@ -14,6 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
@@ -100,16 +102,15 @@ export default function OrderTrackingScreen() {
   }, []);
 
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
   const { orders, activeOrderId } = useOrderStore();
   const { shops } = useShopStore();
 
   useAndroidBackHandler(() => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)');
-    }
+    safeBack('/(tabs)');
   });
+
 
   const activeOrder = orders.find((order) => order.id === activeOrderId) ?? orders[0];
   const shop = shops.find((item) => item.id === activeOrder?.shopId);

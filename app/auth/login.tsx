@@ -1,5 +1,8 @@
 import { Logo } from "@/components/ui/Logo";
 import { BackButton } from "@/components/ui/BackButton";
+import { useAppNavigation } from "@/hooks/use-app-navigation";
+import { useAndroidBackHandler } from "@/hooks/use-back-handler";
+
 
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,7 +32,13 @@ const ROLE_LABELS: Record<string, string> = {
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
   const { preferredRole, biometricEnabled, user, setPreferredRole } = useAppSession();
+
+  useAndroidBackHandler(() => {
+    safeBack("/auth");
+  });
+
 
   // 🔥 FIREBASE MOCKS: Temporarily suppress TS Errors before AuthContext is built
 

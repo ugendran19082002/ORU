@@ -9,12 +9,23 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
+
 
 // 2-step vendor registration
 const STEPS = ['Business Info', 'Location & Documents'];
 
 export default function VendorRegisterScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
+  useAndroidBackHandler(() => {
+    handleBack();
+  });
+
+
   const [step, setStep] = useState(0);
   const [shopName, setShopName] = useState('');
   const [ownerName, setOwnerName] = useState('');
@@ -51,11 +62,8 @@ export default function VendorRegisterScreen() {
     if (step > 0) {
       setStep(step - 1);
     } else {
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.replace('/auth/role');
-      }
+      safeBack('/auth/role');
+
     }
   };
 

@@ -5,6 +5,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+
 
 import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
 import { Logo } from '@/components/ui/Logo';
@@ -27,6 +30,8 @@ export default function ShopInventoryScreen() {
   }, []);
 
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
   
   // Implicitly, this shop only carries cat_1 and cat_2 right now
   const [shopConfigs, setShopConfigs] = useState<Record<string, { price: string }>>({
@@ -68,7 +73,7 @@ export default function ShopInventoryScreen() {
   };
 
   const handleSave = () => {
-    router.replace('/shop/settings' as any);
+    safeBack('/shop/settings');
   };
 
   return (
@@ -77,9 +82,7 @@ export default function ShopInventoryScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.replace('/shop/settings' as any)}>
-          <Ionicons name="arrow-back" size={20} color="#005d90" />
-        </TouchableOpacity>
+        <BackButton fallback="/shop/settings" />
         <View style={styles.brandRow}>
           <Logo size="sm" />
           <Text style={styles.brandName}>ThanniGo</Text>

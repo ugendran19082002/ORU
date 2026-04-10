@@ -52,11 +52,10 @@ export default function RewardsScreen() {
       <StatusBar style="dark" />
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0f172a" />
-        </TouchableOpacity>
+        <BackButton fallback="/(tabs)/profile" />
         <Text style={styles.headerTitle}>Rewards & Referrals</Text>
       </View>
+
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 

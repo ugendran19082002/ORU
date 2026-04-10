@@ -1,4 +1,6 @@
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
+
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,9 +25,8 @@ export default function DeliveryNavigationScreen() {
 
       {/* Floating Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#181c20" />
-        </TouchableOpacity>
+        <BackButton fallback="/delivery" />
+
         <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications' as any)}>
           <Ionicons name="help-buoy-outline" size={24} color="#181c20" />
         </TouchableOpacity>

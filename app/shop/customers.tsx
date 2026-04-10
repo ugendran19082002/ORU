@@ -6,7 +6,11 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
+import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { useOrderStore } from '@/stores/orderStore';
+
 
 interface Customer {
   id: string;
@@ -28,6 +32,8 @@ const PENDING_REQUESTS = [
 
 export default function ShopCustomersScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -36,27 +42,10 @@ export default function ShopCustomersScreen() {
     }, 1000);
   }, []);
 
-  const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/shop/settings');
-    }
-  };
+  useAndroidBackHandler(() => {
+    safeBack('/shop/settings');
+  });
 
-  useEffect(() => {
-    const backAction = () => {
-      handleBack();
-      return true;
-    };
-
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      backAction
-    );
-
-    return () => backHandler.remove();
-  }, []);
 
   const [search, setSearch] = useState('');
   const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
@@ -111,10 +100,9 @@ export default function ShopCustomersScreen() {
       {/* HEADER */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
-            <Ionicons name="arrow-back" size={24} color="#0f172a" />
-          </TouchableOpacity>
+          <BackButton fallback="/shop/settings" />
           <View>
+
             <View style={styles.brandRow}>
               <Logo size="md" />
               <Text style={styles.brandName}>ThanniGo</Text>

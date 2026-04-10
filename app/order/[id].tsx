@@ -15,6 +15,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
 import { useCartStore } from '@/stores/cartStore';
 import { useShopStore } from '@/stores/shopStore';
 
@@ -28,6 +31,13 @@ export default function OrderDetailScreen() {
   }, []);
 
   const router = useRouter();
+
+  const { safeBack } = useAppNavigation();
+
+  useAndroidBackHandler(() => {
+    safeBack('/(tabs)');
+  });
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const { shops, setSelectedShop } = useShopStore();
   const { items, setQuantity, setShop } = useCartStore();

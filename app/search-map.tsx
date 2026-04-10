@@ -4,11 +4,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
+
 import { useShopStore } from '@/stores/shopStore';
 
 export default function SearchMapScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
   const { shops } = useShopStore();
+
+  useAndroidBackHandler(() => {
+    safeBack('/(tabs)');
+  });
+
   const [query, setQuery] = useState('');
 
   return (
@@ -23,9 +34,8 @@ export default function SearchMapScreen() {
 
       {/* Floating Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#181c20" />
-        </TouchableOpacity>
+        <BackButton fallback="/(tabs)" />
+
         
         <View style={styles.searchBox}>
           <Ionicons name="search" size={18} color="#707881" />

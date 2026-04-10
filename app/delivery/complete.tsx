@@ -8,6 +8,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
+
 import { useDeliveryStore } from '@/stores/deliveryStore';
 import { useOrderStore } from '@/stores/orderStore';
 
@@ -66,11 +68,10 @@ export default function DeliveryCompleteScreen() {
       <StatusBar style="dark" />
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0f172a" />
-        </TouchableOpacity>
+        <BackButton fallback="/delivery" />
         <Text style={styles.headerTitle}>Trip Summary</Text>
       </View>
+
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 

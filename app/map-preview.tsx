@@ -12,7 +12,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
 import { LinearGradient } from 'expo-linear-gradient';
+
 import { ExpoMap, ExpoMarker } from '@/components/maps/ExpoMap';
 import { emitGlobalLocation } from '@/utils/locationEvents';
 
@@ -27,6 +32,13 @@ type Region = {
 
 export default function MapPreviewScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
+  useAndroidBackHandler(() => {
+    safeBack('/(tabs)');
+  });
+
+
   const { lat, lng, title, target, markers } = useLocalSearchParams<{ 
     lat: string; 
     lng: string; 
@@ -130,9 +142,10 @@ export default function MapPreviewScreen() {
             style={styles.errorBackBtn} 
             onPress={() => {
               console.log('Error UI: Go Back clicked');
-              router.back();
+              safeBack('/(tabs)');
             }}
           >
+
             <Text style={styles.errorBackBtnText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -146,10 +159,9 @@ export default function MapPreviewScreen() {
       
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#0f172a" />
-        </TouchableOpacity>
+        <BackButton fallback="/(tabs)" />
         <View style={{ flex: 1 }}>
+
           <Text style={styles.headerTitle}>Location Preview</Text>
           <Text style={styles.headerSub} numberOfLines={1}>{label}</Text>
         </View>
@@ -208,8 +220,9 @@ export default function MapPreviewScreen() {
                 style={styles.navigateBtn}
                 onPress={() => {
                   emitGlobalLocation(draftLat, draftLng);
-                  router.back();
+                  safeBack('/(tabs)');
                 }}
+
               >
                 <LinearGradient
                   colors={['#10b981', '#059669']}

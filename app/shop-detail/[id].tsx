@@ -14,7 +14,10 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
+
 import { useShopStore } from '@/stores/shopStore';
 import { useCartStore } from '@/stores/cartStore';
 import { Logo } from '@/components/ui/Logo';
@@ -27,6 +30,12 @@ const ASSET_IMAGES: Record<string, any> = {
 
 export default function ShopDetailScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
+  useAndroidBackHandler(() => {
+    safeBack('/(tabs)');
+  });
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const { shops } = useShopStore();
   const { items, setQuantity, getSubtotal, getTotal } = useCartStore();

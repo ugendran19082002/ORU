@@ -9,6 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
 
 const WALLET_HISTORY = [
   { id: '1', type: 'credit', label: 'Refund — Order #9780', sub: 'Approved by admin', amount: '₹45.00', date: 'Apr 09, 2026', icon: 'arrow-down' },
@@ -24,6 +27,12 @@ const FILTERS = ['All', 'Credits', 'Debits'];
 
 export default function WalletHistoryScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
+  useAndroidBackHandler(() => {
+    safeBack('/(tabs)/profile');
+  });
+
   const [filter, setFilter] = useState('All');
   const [search, setSearch] = useState('');
 

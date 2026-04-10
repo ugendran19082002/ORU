@@ -15,6 +15,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
+import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
 
 const { width } = Dimensions.get('window');
 
@@ -41,6 +45,8 @@ const HOURS = ['8a', '9a', '10a', '11a', '12p', '1p', '2p', '3p', '4p', '5p', '6
 
 export default function ShopAnalyticsScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
   const [period, setPeriod] = useState('Week');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -49,27 +55,10 @@ export default function ShopAnalyticsScreen() {
     setTimeout(() => setRefreshing(false), 1000);
   };
 
-  const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/shop/settings');
-    }
-  };
+  useAndroidBackHandler(() => {
+    safeBack('/shop/settings');
+  });
 
-  useEffect(() => {
-    const backAction = () => {
-      handleBack();
-      return true;
-    };
-
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      backAction
-    );
-
-    return () => backHandler.remove();
-  }, []);
 
   const maxHourly = Math.max(...HOURLY);
 
@@ -80,10 +69,9 @@ export default function ShopAnalyticsScreen() {
       {/* HEADER */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
-            <Ionicons name="arrow-back" size={24} color="#0f172a" />
-          </TouchableOpacity>
+          <BackButton fallback="/shop/settings" />
           <View>
+
             <View style={styles.brandRow}>
               <Logo size="md" />
               <Text style={styles.brandName}>ThanniGo</Text>

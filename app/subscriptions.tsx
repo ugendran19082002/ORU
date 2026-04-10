@@ -9,6 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
 
 type PlanId = 'basic' | 'standard' | 'premium';
 
@@ -73,6 +76,12 @@ interface ActiveSub {
 
 export default function SubscriptionsScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
+  useAndroidBackHandler(() => {
+    safeBack('/(tabs)/profile');
+  });
+
   const [selected, setSelected] = useState<PlanId>('standard');
   const [activeSub, setActiveSub] = useState<ActiveSub | null>({
     planId: 'standard',

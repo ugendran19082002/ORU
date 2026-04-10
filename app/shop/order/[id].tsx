@@ -4,15 +4,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BackButton } from '@/components/ui/BackButton';
+
 
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
 
 export default function ShopDeliveredOrderScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
+  useAndroidBackHandler(() => {
+    safeBack('/shop');
+  });
+
   const { id } = useLocalSearchParams();
+
   const { orders, updateStatus } = useOrderStore();
   const { shops, deliveryAgents } = useShopStore();
   const [isAssignModalOpen, setAssignModalOpen] = React.useState(false);

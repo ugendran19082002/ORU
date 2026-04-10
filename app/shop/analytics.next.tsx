@@ -1,5 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -24,6 +26,8 @@ const DAY_BARS = [
 
 export default function ShopAnalyticsScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
 
   return (
     <StitchScreenShell
@@ -31,7 +35,8 @@ export default function ShopAnalyticsScreen() {
       subtitle="Match the stitched dashboard with quick KPIs, trend cues, and daily performance insight."
       accent="#0077BE"
       screen="shopAnalytics"
-      onBack={() => router.back()}
+      onBack={() => safeBack()}
+
       rightAction={
         <TouchableOpacity style={styles.headerAction} onPress={() => router.push('/shop/earnings' as any)}>
           <Ionicons name="calendar-outline" size={18} color="#0077BE" />

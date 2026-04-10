@@ -6,6 +6,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 
 export default function OrderRatingScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
@@ -17,8 +19,13 @@ export default function OrderRatingScreen() {
   }, []);
 
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
+
+  useAndroidBackHandler(() => {
+    safeBack('/(tabs)');
+  });
 
   const submitFeedback = () => {
     // In a real app, this would submit the feedback to the backend.
@@ -31,9 +38,7 @@ export default function OrderRatingScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="close" size={24} color="#181c20" />
-        </TouchableOpacity>
+        <BackButton fallback="/(tabs)" />
         <Text style={styles.headerTitle}>Order Delivered</Text>
         <View style={{ width: 40 }} />
       </View>
@@ -41,8 +46,9 @@ export default function OrderRatingScreen() {
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />} contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 40 }}>
         
         <View style={styles.successIconWrap}>
-          <Ionicons name="checkmark-circle" size={80} color="#2e7d32" />
+          <Ionicons name="checkmark-circle" size={80} color="#10b981" />
         </View>
+        
         <Text style={styles.successTitle}>Delivery Successful!</Text>
         <Text style={styles.successSub}>Order #TN-9412 from AquaPrime has been delivered to your location.</Text>
 

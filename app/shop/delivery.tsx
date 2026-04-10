@@ -9,6 +9,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
+import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
 import { useDeliveryStore } from '@/stores/deliveryStore';
 import { useOrderStore } from '@/stores/orderStore';
 
@@ -27,7 +31,9 @@ const FILTERS = ['All', 'Active', 'Delivered', 'Failed'];
 export default function ShopDeliveryManagementScreen() {
   const { orders } = useOrderStore();
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
   const [filter, setFilter] = useState('All');
+
 
   const filtered = orders.filter((t) => {
     if (filter === 'All') return true;
@@ -37,27 +43,10 @@ export default function ShopDeliveryManagementScreen() {
     return true;
   });
 
-  const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/shop/settings');
-    }
-  };
+  useAndroidBackHandler(() => {
+    safeBack('/shop/settings');
+  });
 
-  useEffect(() => {
-    const backAction = () => {
-      handleBack();
-      return true;
-    };
-
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      backAction
-    );
-
-    return () => backHandler.remove();
-  }, []);
 
   const activeCount = orders.filter(t => ['assigned', 'accepted', 'picked'].includes(t.status)).length;
   const deliveredToday = orders.filter(t => ['delivered', 'completed'].includes(t.status)).length;
@@ -70,10 +59,9 @@ export default function ShopDeliveryManagementScreen() {
       {/* HEADER */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
-            <Ionicons name="arrow-back" size={24} color="#0f172a" />
-          </TouchableOpacity>
+          <BackButton fallback="/shop/settings" />
           <View>
+
             <View style={styles.brandRow}>
               <Logo size="md" />
               <Text style={styles.brandName}>ThanniGo</Text>

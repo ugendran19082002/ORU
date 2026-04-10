@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCartStore } from '@/stores/cartStore';
 import { useOrderStore } from '@/stores/orderStore';
@@ -28,6 +30,8 @@ export default function OrderCheckoutScreen() {
   }, []);
 
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
   const { shopId = '1' } = useLocalSearchParams<{ shopId: string; qty: string }>();
   const { paymentMethod, setPaymentMethod, getSubtotal, getDeliveryFee, getTotal, items, note, clearCart } = useCartStore();
   const { shops } = useShopStore();
@@ -41,10 +45,10 @@ export default function OrderCheckoutScreen() {
     if (showAddressModal) {
       setShowAddressModal(false);
     } else {
-      if (router.canGoBack()) router.back();
-      else router.replace('/(tabs)');
+      safeBack('/(tabs)');
     }
   });
+
 
   const shop = shops.find((item) => item.id === shopId) ?? shops[0];
   const quantity = Object.values(items).reduce((sum, qty) => sum + qty, 0);

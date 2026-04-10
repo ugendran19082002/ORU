@@ -8,6 +8,11 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
+
 
 const PLAN_TYPES = [
   { id: 'daily', label: 'Daily Drop', cans: 1, price: 50, billing: 'per day', color: '#006878', gradient: ['#006878', '#004e5b'] as [string, string] },
@@ -17,6 +22,12 @@ const PLAN_TYPES = [
 
 export default function ShopSubscriptionPlansScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
+  useAndroidBackHandler(() => {
+    safeBack('/shop/settings');
+  });
+
   const [selected, setSelected] = useState('weekly');
   const [autoRenew, setAutoRenew] = useState(true);
 
@@ -34,11 +45,10 @@ export default function ShopSubscriptionPlansScreen() {
       <StatusBar style="dark" />
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0f172a" />
-        </TouchableOpacity>
+        <BackButton fallback="/shop/settings" />
         <Text style={styles.headerTitle}>Shop Subscription Plans</Text>
       </View>
+
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 

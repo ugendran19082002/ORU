@@ -1,5 +1,8 @@
 import { Logo } from "@/components/ui/Logo";
 import { BackButton } from "@/components/ui/BackButton";
+import { useAppNavigation } from "@/hooks/use-app-navigation";
+import { useAndroidBackHandler } from "@/hooks/use-back-handler";
+
 
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -23,7 +26,13 @@ const OTP_LENGTH = 6;
 
 export default function OTPScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
   const { signIn, setPreferredRole } = useAppSession();
+
+  useAndroidBackHandler(() => {
+    safeBack("/auth/login");
+  });
+
   
   // 🔥 FIREBASE MOCKS: Temporarily suppress TS Errors before AuthContext is built
   const auth = () => ({ signInWithPhoneNumber: async (p: string) => ({}) });

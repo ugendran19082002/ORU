@@ -7,6 +7,11 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
+
 
 const EMERGENCY_TYPES = [
   { id: 'accident', label: 'Accident / Injury', icon: 'medkit-outline', color: '#c62828', bg: '#ffebee', phone: '108' },
@@ -18,6 +23,12 @@ const EMERGENCY_TYPES = [
 
 export default function EmergencyHelpScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
+  useAndroidBackHandler(() => {
+    safeBack('/(tabs)/profile');
+  });
+
   const [calling, setCalling] = useState(false);
 
   const callNumber = (number: string) => {
@@ -41,10 +52,9 @@ export default function EmergencyHelpScreen() {
 
       {/* URGENT HEADER */}
       <LinearGradient colors={['#c62828', '#ef4444']} style={styles.urgentHeader}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="rgba(255,255,255,0.9)" />
-        </TouchableOpacity>
+        <BackButton variant="transparent" fallback="/(tabs)/profile" />
         <View style={styles.urgentContent}>
+
           <View style={styles.alertIconWrap}>
             <Ionicons name="warning" size={36} color="white" />
           </View>

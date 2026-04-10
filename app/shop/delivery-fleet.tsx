@@ -4,11 +4,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+import { BackButton } from '@/components/ui/BackButton';
+
+
 import { useShopStore } from '@/stores/shopStore';
 
 export default function ShopDeliveryFleetScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
   const { deliveryAgents, addDeliveryAgent, removeDeliveryAgent } = useShopStore();
+
+  useAndroidBackHandler(() => {
+    safeBack('/shop/delivery');
+  });
+
 
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [fName, setFName] = useState('');
@@ -42,10 +53,9 @@ export default function ShopDeliveryFleetScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={20} color="#005d90" />
-        </TouchableOpacity>
+        <BackButton fallback="/shop/delivery" />
         <Text style={styles.headerTitle}>Delivery Fleet</Text>
+
         <TouchableOpacity style={styles.addBtn} onPress={() => setAddModalOpen(true)}>
           <Ionicons name="person-add" size={16} color="white" />
           <Text style={styles.addBtnText}>Add</Text>

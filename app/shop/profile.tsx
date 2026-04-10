@@ -1,7 +1,9 @@
 import { ExpoMap, ExpoMarker } from "@/components/maps/ExpoMap";
-import { Logo } from "@/components/ui/Logo";
 import { BackButton } from "@/components/ui/BackButton";
+import { Logo } from "@/components/ui/Logo";
 
+import { useAppNavigation } from "@/hooks/use-app-navigation";
+import { useAndroidBackHandler } from "@/hooks/use-back-handler";
 import {
   clearGlobalLocationListener,
   setGlobalLocationListener,
@@ -9,6 +11,7 @@ import {
 import { safeNavigate } from "@/utils/safeNavigation";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
+import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
@@ -25,10 +28,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 
 /**
  * PRODUCTION DEBUG HELPER: Validate coordinates before use
@@ -58,21 +59,11 @@ export default function ShopProfileScreen() {
   const router = useRouter();
   const [refreshing, setRefreshing] = React.useState(false);
 
-  useEffect(() => {
-    const backAction = () => {
-      if (router.canGoBack()) router.back();
-      else router.replace("/shop/settings");
-      return true;
-    };
+  const { safeBack } = useAppNavigation();
 
-
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      backAction,
-    );
-
-    return () => backHandler.remove();
-  }, []);
+  useAndroidBackHandler(() => {
+    safeBack("/shop/settings");
+  });
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -758,7 +749,12 @@ export default function ShopProfileScreen() {
 
           <TouchableOpacity
             style={styles.saveBtn}
-            onPress={() => Alert.alert("Profile Saved", "Shop profile details have been updated in this mock flow.")}
+            onPress={() =>
+              Alert.alert(
+                "Profile Saved",
+                "Shop profile details have been updated in this mock flow.",
+              )
+            }
           >
             <Text style={styles.saveBtnText}>Save Profile Changes</Text>
           </TouchableOpacity>

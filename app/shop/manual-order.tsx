@@ -8,12 +8,23 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
+
 import { useOrderStore } from '@/stores/orderStore';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
 
 // Manual order entry for shop staff
 export default function ManualOrderScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
   const { placeOrder } = useOrderStore();
+
+  useAndroidBackHandler(() => {
+    safeBack('/shop');
+  });
+
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [address, setAddress] = useState('');
@@ -56,11 +67,10 @@ export default function ManualOrderScreen() {
       <StatusBar style="dark" />
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0f172a" />
-        </TouchableOpacity>
+        <BackButton fallback="/shop" />
         <Text style={styles.headerTitle}>Manual Order Entry</Text>
       </View>
+
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 

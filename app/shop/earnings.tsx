@@ -14,8 +14,20 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
 import { Logo } from '@/components/ui/Logo';
 import { useOrderStore } from '@/stores/orderStore';
+import { useRouter } from 'expo-router';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { BackButton } from '@/components/ui/BackButton';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
 
 export default function ShopEarningsScreen() {
+  const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
+  useAndroidBackHandler(() => {
+    safeBack('/shop/settings');
+  });
+
   const [refreshing, setRefreshing] = React.useState(false);
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -33,12 +45,15 @@ export default function ShopEarningsScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <View>
-          <View style={styles.brandRow}>
-            <Logo size="md" />
-            <Text style={styles.brandName}>ThanniGo</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          <BackButton fallback="/shop/settings" />
+          <View>
+            <View style={styles.brandRow}>
+              <Logo size="md" />
+              <Text style={styles.brandName}>ThanniGo</Text>
+            </View>
+            <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
-          <Text style={styles.roleLabel}>SHOP PANEL</Text>
         </View>
       </View>
 

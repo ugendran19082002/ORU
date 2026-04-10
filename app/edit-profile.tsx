@@ -6,12 +6,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { BackButton } from '@/components/ui/BackButton';
 
 export default function EditProfileScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
 
   // Field State
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -101,11 +105,8 @@ export default function EditProfileScreen() {
 
   const saveProfile = () => {
     Alert.alert('Profile Saved!', 'Your account details have been successfully updated.');
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)/profile');
-    }
+    safeBack('/(tabs)/profile');
+
   };
 
   return (

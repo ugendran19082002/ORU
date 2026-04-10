@@ -1,6 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
+
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 
@@ -9,6 +13,13 @@ import { Button } from '@/components/ui/Button';
 
 export default function ModalScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
+  useAndroidBackHandler(() => {
+    safeBack();
+  });
+
+
 
   return (
     <View className="flex-1 items-center justify-center bg-white/90 p-6">
@@ -25,13 +36,14 @@ export default function ModalScreen() {
           <Button 
             title="Enable Now" 
             variant="primary" 
-            onPress={() => router.back()} 
+            onPress={() => safeBack()} 
           />
           <Button 
             title="Maybe Later" 
             variant="secondary" 
-            onPress={() => router.back()} 
+            onPress={() => safeBack()} 
           />
+
         </View>
       </Card>
     </View>

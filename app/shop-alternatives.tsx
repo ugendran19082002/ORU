@@ -7,6 +7,11 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
+
 
 const SHOPS = [
   { id: '1', name: 'Blue Spring Aquatics', price: 45, eta: '8 min', rating: 4.8, distance: '0.8 km', available: true, reason: '' },
@@ -17,20 +22,25 @@ const SHOPS = [
 
 export default function ShopAlternativesScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
+  useAndroidBackHandler(() => {
+    safeBack('/(tabs)');
+  });
+
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar style="dark" />
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0f172a" />
-        </TouchableOpacity>
+        <BackButton fallback="/(tabs)" />
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>Available Shops</Text>
           <Text style={styles.headerSub}>Your preferred shop is unavailable</Text>
         </View>
       </View>
+
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 

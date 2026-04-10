@@ -1,10 +1,12 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { BackButton } from '@/components/ui/BackButton';
-
 import React, { useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
 
@@ -22,7 +24,13 @@ const resolutionOptions = ['Refund', 'Replacement', 'Call Me Back'] as const;
 
 export default function ReportIssueScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
   const { orders, activeOrderId } = useOrderStore();
+
+  useAndroidBackHandler(() => {
+    safeBack('/(tabs)/profile');
+  });
+
   const { shops } = useShopStore();
   const [selectedIssue, setSelectedIssue] = useState<(typeof issueOptions)[number]>('Late Delivery');
   const [resolution, setResolution] = useState<(typeof resolutionOptions)[number]>('Refund');

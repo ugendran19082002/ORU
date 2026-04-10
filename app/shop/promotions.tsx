@@ -9,6 +9,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
+import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
 
 type Promo = {
   id: string;
@@ -51,27 +55,12 @@ export default function ShopPromotionsScreen() {
     setPromos(promos.map((p) => (p.id === id ? { ...p, active: !p.active } : p)));
   };
 
-  const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/shop/settings');
-    }
-  };
+  const { safeBack } = useAppNavigation();
 
-  useEffect(() => {
-    const backAction = () => {
-      handleBack();
-      return true;
-    };
+  useAndroidBackHandler(() => {
+    safeBack('/shop/settings');
+  });
 
-    const backHandler = BackHandler.addEventListener(
-      'hardwareBackPress',
-      backAction
-    );
-
-    return () => backHandler.remove();
-  }, []);
 
   const handleCreate = () => {
     if (!newCode.trim() || !newValue.trim()) {
@@ -106,10 +95,9 @@ export default function ShopPromotionsScreen() {
       {/* HEADER */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
-            <Ionicons name="arrow-back" size={24} color="#0f172a" />
-          </TouchableOpacity>
+          <BackButton fallback="/shop/settings" />
           <View>
+
             <View style={styles.brandRow}>
               <Logo size="md" />
               <Text style={styles.brandName}>ThanniGo</Text>

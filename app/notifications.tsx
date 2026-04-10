@@ -9,6 +9,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+
 
 type NotifType = 'order' | 'promo' | 'system' | 'complaint';
 
@@ -43,6 +46,12 @@ const FILTERS = ['All', 'Orders', 'Offers', 'Support'];
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { safeBack } = useAppNavigation();
+
+  useAndroidBackHandler(() => {
+    safeBack('/(tabs)');
+  });
+
   const [notifs, setNotifs] = useState<Notif[]>(NOTIFS);
   const [filter, setFilter] = useState('All');
 
