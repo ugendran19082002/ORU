@@ -239,7 +239,8 @@ export default function ShopDetailScreen() {
               { icon: 'cash-outline', label: 'Price per can (20L)', value: `₹${shop.pricePerCan}` },
               { icon: 'star-outline', label: 'Rating', value: `${shop.rating} / 5.0` },
             ].map((item) => (
-              <View key={item.label} style={item.infoRow}>
+              <View key={item.label} style={styles.infoRow}>
+
                 <View style={styles.infoIconWrap}>
                   <Ionicons name={item.icon as any} size={20} color="#005d90" />
                 </View>

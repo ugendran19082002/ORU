@@ -178,9 +178,10 @@ export default function SubscriptionsScreen() {
           >
             {plan.popular && (
               <View style={styles.popularBadge}>
-                <Text style={popularText}>⭐ MOST POPULAR</Text>
+                <Text style={styles.popularText}>⭐ MOST POPULAR</Text>
               </View>
             )}
+
             <View style={styles.planTop}>
               <View style={[styles.planIcon, { backgroundColor: plan.color + '18' }]}>
                 <Ionicons name="water" size={24} color={plan.color} />
