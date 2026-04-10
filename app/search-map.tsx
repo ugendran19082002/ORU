@@ -61,9 +61,9 @@ export default function SearchMapScreen() {
             color: '#ef4444' 
           },
           // Shop markers
-          ...shops.map((shop, idx) => ({
-            latitude: 12.9716 + (idx * 0.005) - 0.01, 
-            longitude: 80.2210 + (idx * 0.005) - 0.01,
+          ...shops.map((shop) => ({
+            latitude: shop.lat, 
+            longitude: shop.lng,
             title: shop.name,
             color: '#005d90',
             iconType: 'shop' as const,

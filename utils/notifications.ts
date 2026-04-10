@@ -44,6 +44,13 @@ export async function registerForPushNotificationsAsync() {
       return;
     }
     
+    // Remote push tokens are no longer supported in Expo Go for SDK 53+
+    // We check appOwnership to avoid the console error/crash
+    if (Constants.appOwnership === 'expo') {
+      console.warn('⚠️ [NOTIF] Remote push tokens require a Development Build in SDK 53+. Skipping token fetch in Expo Go.');
+      return;
+    }
+
     // Project ID from Expo config
     const projectId =
       Constants?.expoConfig?.extra?.eas?.projectId ??

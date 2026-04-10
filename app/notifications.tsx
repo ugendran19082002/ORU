@@ -96,11 +96,12 @@ export default function NotificationsScreen() {
           horizontal 
           showsHorizontalScrollIndicator={false} 
           contentContainerStyle={styles.filterRow}
+          keyboardShouldPersistTaps="handled"
         >
           {FILTERS.map((f) => (
             <TouchableOpacity
               key={f}
-              activeOpacity={0.7}
+              activeOpacity={0.9}
               style={[styles.filterPill, filter === f && styles.filterPillActive]}
               onPress={() => setFilter(f)}
               hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
@@ -111,7 +112,11 @@ export default function NotificationsScreen() {
         </ScrollView>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
         {filtered.length === 0 && (
           <View style={styles.emptyState}>
             <Ionicons name="notifications-off-outline" size={56} color="#cbd5e1" />

@@ -250,6 +250,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false} 
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
+        keyboardShouldPersistTaps="handled"
       >
         
         {/* HERO BANNER (REORDER) */}

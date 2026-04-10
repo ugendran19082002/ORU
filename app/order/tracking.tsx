@@ -202,6 +202,7 @@ export default function OrderTrackingScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
+        keyboardShouldPersistTaps="handled"
       >
         {/* ── LIVE TRACKING MAP ── */}
         <View style={styles.mapCard}>

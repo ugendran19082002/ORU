@@ -24,6 +24,8 @@ export type Shop = {
   tags: string[];
   verified: boolean;
   pricePerCan: number;
+  lat: number;
+  lng: number;
   accent: string;
   heroImage: Product['image'];
   products: Product[];

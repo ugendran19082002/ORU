@@ -12,6 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useShopStore } from '@/stores/shopStore';
+import { ExpoMap } from "@/components/maps/ExpoMap";
 
 export default function SearchScreen() {
   const router = useRouter();
@@ -45,6 +46,7 @@ export default function SearchScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.hero}>
           <Text style={styles.heroTitle}>Search smart</Text>
@@ -75,21 +77,35 @@ export default function SearchScreen() {
         </View>
 
         {mode === 'map' ? (
-          <TouchableOpacity 
-            style={styles.mapStub} 
-            activeOpacity={0.8}
-            onPress={() => router.push('/search-map' as any)}
-          >
-            <View style={styles.mapIconWrap}>
-              <Ionicons name="map-outline" size={36} color="#005d90" />
+          <View style={{ gap: 16 }}>
+            <View style={[styles.mapStub, { padding: 0, overflow: 'hidden', borderStyle: 'solid' }]}>
+              <ExpoMap 
+                style={{ width: '100%', height: 300 }}
+                initialRegion={{
+                  latitude: 12.9716,
+                  longitude: 80.2210,
+                  latitudeDelta: 0.1,
+                  longitudeDelta: 0.1,
+                }}
+                markers={filtered.map(s => ({ latitude: s.lat, longitude: s.lng, title: s.name, color: '#005d90' }))}
+                hideControls={true}
+              />
+              <TouchableOpacity 
+                style={styles.mapOverlayBtn}
+                onPress={() => router.push('/search-map' as any)}
+              >
+                <Text style={styles.mapOverlayBtnText}>Expand Map</Text>
+                <Ionicons name="expand-outline" size={16} color="white" />
+              </TouchableOpacity>
             </View>
-            <Text style={styles.mapTitle}>Interactive Map Ready</Text>
-            <Text style={styles.mapCopy}>Open the full screen map to browse shops around your specific location.</Text>
-            <View style={styles.mapBtn}>
-              <Text style={styles.mapBtnText}>Open Full Map</Text>
-              <Ionicons name="arrow-forward" size={16} color="white" />
-            </View>
-          </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.openFullBtn}
+              onPress={() => router.push('/search-map' as any)}
+            >
+              <Text style={styles.openFullBtnText}>Browse in Full Screen Map</Text>
+              <Ionicons name="arrow-forward" size={18} color="#005d90" />
+            </TouchableOpacity>
+          </View>
         ) : (
           <View style={styles.listWrap}>
             {filtered.length === 0 ? (
@@ -201,6 +217,12 @@ const styles = StyleSheet.create({
   mapCopy: { textAlign: 'center', color: '#707881', lineHeight: 22, fontSize: 14, marginBottom: 24, paddingHorizontal: 10 },
   mapBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#005d90', paddingHorizontal: 20, paddingVertical: 14, borderRadius: 16 },
   mapBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
+
+  mapOverlayBtn: { position: 'absolute', bottom: 12, right: 12, backgroundColor: 'rgba(0, 93, 144, 0.9)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  mapOverlayBtnText: { color: 'white', fontWeight: '800', fontSize: 12 },
+  
+  openFullBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16, borderTopWidth: 1, borderTopColor: '#f1f4f9' },
+  openFullBtnText: { color: '#005d90', fontWeight: '800', fontSize: 15 },
 
   listWrap: { gap: 16 },
   card: { 

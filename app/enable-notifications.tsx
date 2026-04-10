@@ -6,7 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import { LinearGradient } from 'expo-linear-gradient';
-import { registerForPushNotificationsAsync } from '@/utils/notifications';
+import { registerForPushNotificationsAsync, scheduleTestNotification } from '@/utils/notifications';
+import Toast from 'react-native-toast-message';
 
 export default function EnableNotificationsScreen() {
   const router = useRouter();
@@ -46,7 +47,15 @@ export default function EnableNotificationsScreen() {
     try {
       const token = await registerForPushNotificationsAsync();
       if (token) {
-        router.replace(next as any);
+        Toast.show({
+          type: 'success',
+          text1: 'Notifications Enabled! 🔔',
+          text2: 'You will now receive real-time order updates.',
+        });
+        await scheduleTestNotification();
+        setTimeout(() => {
+          router.replace(next as any);
+        }, 1500);
       } else {
         // Check permissions again
         const { status } = await Notifications.getPermissionsAsync();
@@ -54,7 +63,7 @@ export default function EnableNotificationsScreen() {
           setErrorMsg('Notification permission is required for order updates.');
           setDenied(true);
         } else {
-           router.replace(next as any);
+          router.replace(next as any);
         }
       }
     } catch (err) {

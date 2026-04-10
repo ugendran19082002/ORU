@@ -526,6 +526,7 @@ export default function AddressesScreen() {
         <ScrollView
           contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 }]}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Delivery Location</Text>

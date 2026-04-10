@@ -63,7 +63,11 @@ export default function CancelOrderScreen() {
       </View>
 
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
 
         {/* ORDER SUMMARY */}
         <View style={styles.orderCard}>
