@@ -8,6 +8,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
+
 
 const TIERS = [
   { name: 'Bronze', range: '1–9 orders', discount: '0%', minOrders: 1, color: '#b45309', bg: '#fef3c7', icon: 'medal-outline' },

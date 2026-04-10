@@ -8,9 +8,6 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { AppRouteGuard, AppSessionProvider } from '@/providers/AppSessionProvider';
 
-export const unstable_settings = {
-  anchor: 'auth',
-};
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -46,6 +43,9 @@ export default function RootLayout() {
             <Stack.Screen name="wallet-history" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="search-map" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
             <Stack.Screen name="shop-alternatives" options={{ animation: 'slide_from_bottom' }} />
+
+            {/* SHOP DETAIL — Customer view of a shop's products */}
+            <Stack.Screen name="shop-detail/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
 
             {/* SHARED SCREENS */}
             <Stack.Screen name="map-preview" options={{ headerShown: false, animation: 'slide_from_bottom' }} />

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 import type { Shop, DeliveryAgent } from '@/types/domain';
-import { mockShops } from '@/utils/mockData';
+import { shopApi } from '@/api/shopApi';
 
 const DEFAULT_AGENTS: DeliveryAgent[] = [
   { id: 'da_owner', name: 'Store Owner', phone: '9999999999', status: 'active', assignedOrders: 0 },
@@ -18,8 +18,11 @@ type ShopFilters = {
 
 type ShopState = {
   shops: Shop[];
+  isLoading: boolean;
+  error: string | null;
   selectedShopId: string | null;
   filters: ShopFilters;
+  loadShops: () => Promise<void>;
   setSelectedShop: (shopId: string | null) => void;
   toggleFilter: (key: keyof Omit<ShopFilters, 'maxPrice'>) => void;
   setMaxPrice: (price: number | null) => void;
@@ -39,9 +42,22 @@ const defaultFilters: ShopFilters = {
 };
 
 export const useShopStore = create<ShopState>((set) => ({
-  shops: mockShops,
-  selectedShopId: mockShops[0]?.id ?? null,
+  shops: [],
+  isLoading: false,
+  error: null,
+  selectedShopId: null,
   filters: defaultFilters,
+  
+  loadShops: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const data = await shopApi.getShops();
+      set({ shops: data, isLoading: false });
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to fetch shops', isLoading: false });
+    }
+  },
+
   setSelectedShop: (selectedShopId) => set({ selectedShopId }),
   toggleFilter: (key) =>
     set((state) => ({

@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
 
 const WALLET_HISTORY = [
   { id: '1', type: 'credit', label: 'Refund — Order #9780', sub: 'Approved by admin', amount: '₹45.00', date: 'Apr 09, 2026', icon: 'arrow-down' },
@@ -40,9 +41,8 @@ export default function WalletHistoryScreen() {
       <StatusBar style="dark" />
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0f172a" />
-        </TouchableOpacity>
+        <BackButton fallback="/(tabs)/profile" />
+
         <Text style={styles.headerTitle}>Wallet History</Text>
       </View>
 

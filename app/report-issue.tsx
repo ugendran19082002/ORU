@@ -1,5 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
+
 import React, { useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,12 +38,11 @@ export default function ReportIssueScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={18} color="#005d90" />
-          </TouchableOpacity>
+          <BackButton fallback="/(tabs)/profile" />
           <Text style={styles.title}>Report Issue</Text>
           <View style={styles.iconBtn} />
         </View>
+
 
         <View style={styles.orderCard}>
           <Text style={styles.eyebrow}>Selected Order</Text>

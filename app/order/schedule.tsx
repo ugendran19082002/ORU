@@ -8,6 +8,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
+
 
 const SLOTS = [
   'Today, 6–8 PM',
@@ -37,11 +39,10 @@ export default function ScheduleDeliveryScreen() {
       <StatusBar style="dark" />
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0f172a" />
-        </TouchableOpacity>
+        <BackButton fallback="/(tabs)/orders" />
         <Text style={styles.headerTitle}>Schedule Delivery</Text>
       </View>
+
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 

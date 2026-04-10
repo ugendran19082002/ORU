@@ -13,8 +13,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { Logo } from '@/components/ui/Logo';
+import { BackButton } from '@/components/ui/BackButton';
+
 import { ExpoMap } from '@/components/maps/ExpoMap';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
@@ -28,23 +31,8 @@ interface Step {
   status: StepStatus;
 }
 
-// Tracking map: customer + driver positions
-const TRACKING_MARKERS = [
-  {
-    latitude: 28.4595,
-    longitude: 77.0266,
-    title: '📦 Deliver Here',
-    color: '#005d90',
-    iconType: 'home' as const,
-  },
-  {
-    latitude: 28.4618,
-    longitude: 77.0281,
-    title: '🚲 Driver (Raju)',
-    color: '#006878',
-    iconType: 'bicycle' as const,
-  },
-];
+// Tracking markers computed dynamically inside component (from active order data)
+// In production, subscribe to Firebase Realtime DB for live driver coordinates
 
 const DRIVER_PHONE = '+919876543210';
 const SHOP_PHONE   = '+919123456789';
@@ -114,11 +102,29 @@ export default function OrderTrackingScreen() {
   const router = useRouter();
   const { orders, activeOrderId } = useOrderStore();
   const { shops } = useShopStore();
+
+  useAndroidBackHandler(() => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
+  });
+
   const activeOrder = orders.find((order) => order.id === activeOrderId) ?? orders[0];
   const shop = shops.find((item) => item.id === activeOrder?.shopId);
   const quantity = activeOrder?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 2;
   const deliveryFee = 20;
   const subtotal = Math.max((activeOrder?.total ?? 110) - deliveryFee, 0);
+
+  // Dynamic markers — offset by shop index until real GPS data is available
+  const shopIdx = shops.indexOf(shop ?? shops[0]);
+  const baseLat = 12.9716 + shopIdx * 0.005;
+  const baseLng = 80.2210 + shopIdx * 0.005;
+  const TRACKING_MARKERS = [
+    { latitude: baseLat, longitude: baseLng, title: `📦 ${shop?.name ?? 'Shop'}`, color: '#005d90', iconType: 'home' as const },
+    { latitude: baseLat + 0.002, longitude: baseLng + 0.002, title: `🚲 ${activeOrder?.deliveryAgentName ?? 'Driver'}`, color: '#006878', iconType: 'bicycle' as const },
+  ];
   const steps: Step[] = [
     {
       icon: 'water',
@@ -133,7 +139,7 @@ export default function OrderTrackingScreen() {
       status:
         activeOrder && ['accepted', 'preparing', 'out_for_delivery', 'delivered'].includes(activeOrder.status)
           ? 'done'
-          : activeOrder?.status === 'placed'
+          : activeOrder?.status === 'pending'
             ? 'active'
             : 'pending',
     },
@@ -164,10 +170,9 @@ export default function OrderTrackingScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={20} color="#005d90" />
-        </TouchableOpacity>
+        <BackButton fallback="/(tabs)" />
         <View style={{ flex: 1 }}>
+
           <View style={styles.brandRow}>
             <Logo size="sm" />
             <Text style={styles.brandName}>ThanniGo</Text>
@@ -189,8 +194,8 @@ export default function OrderTrackingScreen() {
           <ExpoMap
             style={styles.mapImage}
             initialRegion={{
-              latitude: 28.4607,
-              longitude: 77.0274,
+              latitude: TRACKING_MARKERS[0].latitude,
+              longitude: TRACKING_MARKERS[0].longitude,
               latitudeDelta: 0.008,
               longitudeDelta: 0.008,
             }}

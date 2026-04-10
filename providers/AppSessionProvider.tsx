@@ -1,10 +1,12 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { usePathname, useRouter, useSegments } from 'expo-router';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { AppRole, AppUser, PersistedSession, SessionStatus } from '@/types/session';
 
-const SESSION_KEY = '@thannigo/session';
+const SESSION_KEY = 'thannigo_session';
 
 type SessionContextValue = {
   status: SessionStatus;
@@ -27,7 +29,9 @@ const defaultSession: PersistedSession = {
 };
 
 async function readSession() {
-  const raw = await AsyncStorage.getItem(SESSION_KEY);
+  const raw = Platform.OS === 'web'
+    ? await AsyncStorage.getItem(SESSION_KEY)
+    : await SecureStore.getItemAsync(SESSION_KEY);
   if (!raw) return defaultSession;
 
   try {
@@ -38,7 +42,11 @@ async function readSession() {
 }
 
 async function writeSession(value: PersistedSession) {
-  await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(value));
+  if (Platform.OS === 'web') {
+    await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(value));
+  } else {
+    await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(value));
+  }
 }
 
 export function AppSessionProvider({ children }: { children: React.ReactNode }) {
@@ -136,13 +144,11 @@ export function AppRouteGuard() {
 
     const firstSegment = segments[0] ?? '';
     const isAuthRoute = firstSegment === 'auth';
-    const isCustomerTabs = firstSegment === '(tabs)';
-    const isShopRoute = firstSegment === 'shop';
-    const isAdminRoute = firstSegment === 'admin';
-    const isDeliveryRoute = firstSegment === 'delivery';
-
+    
+    // Anonymous User Handling
     if (status === 'anonymous') {
       if (!isAuthRoute) {
+        console.log('🛡️ [Guard] Redirecting anonymous user to /auth');
         router.replace('/auth');
       }
       return;
@@ -150,39 +156,35 @@ export function AppRouteGuard() {
 
     if (!user) return;
 
+    // Role-based target determination
+    let target: any = '/(tabs)';
+    if (user.role === 'shop') target = '/shop';
+    else if (user.role === 'admin') target = '/admin';
+    else if (user.role === 'delivery') target = '/delivery';
+
+    // Auth Route Escape (send logged in users away from login)
     if (isAuthRoute) {
-      if (user.role === 'shop') router.replace('/shop');
-      else if (user.role === 'admin') router.replace('/admin');
-      else if (user.role === 'delivery') router.replace('/delivery');
-      else router.replace('/(tabs)');
+      console.log(`🛡️ [Guard] Logged-in user on auth route: Redirecting to ${target}`);
+      router.replace(target);
       return;
     }
 
-    if (user.role === 'customer' && (isShopRoute || isAdminRoute || isDeliveryRoute)) {
-      router.replace('/(tabs)');
+    // Role-based Access Control (Illegal access)
+    const isIllegalCustomer = user.role === 'customer' && (segments[0] === 'shop' || segments[0] === 'admin' || segments[0] === 'delivery');
+    const isIllegalShop = user.role === 'shop' && segments[0] === 'admin';
+    const isIllegalAdmin = user.role === 'admin' && (segments[0] === '(tabs)' || segments[0] === 'shop' || segments[0] === 'delivery');
+    const isIllegalDelivery = user.role === 'delivery' && (segments[0] === '(tabs)' || segments[0] === 'shop' || segments[0] === 'admin');
+
+    if (isIllegalCustomer || isIllegalShop || isIllegalAdmin || isIllegalDelivery) {
+      console.log('🛡️ [Guard] Illegal route access: Redirecting to', target);
+      router.replace(target);
       return;
     }
 
-    if (user.role === 'shop' && isAdminRoute) {
-      router.replace('/shop');
-      return;
-    }
-
-    if (user.role === 'admin' && (isCustomerTabs || isShopRoute || isDeliveryRoute)) {
-      router.replace('/admin');
-      return;
-    }
-
-    if (user.role === 'delivery' && (isCustomerTabs || isShopRoute || isAdminRoute)) {
-      router.replace('/delivery');
-      return;
-    }
-
+    // Root Path Handling
     if (pathname === '/') {
-      if (user.role === 'shop') router.replace('/shop');
-      else if (user.role === 'admin') router.replace('/admin');
-      else if (user.role === 'delivery') router.replace('/delivery');
-      else router.replace('/(tabs)');
+      console.log(`🛡️ [Guard] Root hit: Redirecting to ${target}`);
+      router.replace(target);
     }
   }, [isHydrated, pathname, router, segments, status, user]);
 

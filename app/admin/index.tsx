@@ -6,6 +6,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -168,7 +169,7 @@ export default function AdminOverviewScreen() {
               <Text style={styles.sectionTitle}>Live Flow</Text>
               <View style={styles.liveDot} />
             </View>
-            <TouchableOpacity style={styles.viewAllBtn}>
+            <TouchableOpacity style={styles.viewAllBtn} onPress={() => Alert.alert('Admin', 'Viewing all live orders...')}>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
           </View>
@@ -202,10 +203,10 @@ export default function AdminOverviewScreen() {
                     </View>
                   </View>
                   <View style={styles.verifActions}>
-                    <TouchableOpacity style={styles.rejectBtn}>
+                    <TouchableOpacity style={styles.rejectBtn} onPress={() => Alert.alert('Admin', `Rejecting verification for ${item.shop}`)}>
                       <Text style={styles.rejectBtnText}>Reject</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.approveBtn}>
+                    <TouchableOpacity style={styles.approveBtn} onPress={() => Alert.alert('Admin', `Approving verification for ${item.shop}`)}>
                       <Text style={styles.approveBtnText}>Approve</Text>
                     </TouchableOpacity>
                   </View>
@@ -213,7 +214,7 @@ export default function AdminOverviewScreen() {
                 {index < VERIF_QUEUE.length - 1 && <View style={styles.verifDivider} />}
               </View>
             ))}
-            <TouchableOpacity style={styles.viewAllVerifBtn}>
+            <TouchableOpacity style={styles.viewAllVerifBtn} onPress={() => Alert.alert('Admin', 'Viewing all verification requests...')}>
               <Text style={styles.viewAllText}>View All Requests</Text>
             </TouchableOpacity>
           </View>
@@ -232,7 +233,7 @@ export default function AdminOverviewScreen() {
           </View>
         </ScrollView>
       {/* EMERGENCY FAB */}
-      <TouchableOpacity style={styles.emergencyFab}>
+      <TouchableOpacity style={styles.emergencyFab} onPress={() => Alert.alert('Emergency', 'Contacting admin support team...')}>
         <LinearGradient colors={['#005d90', '#0077b6']} style={styles.emergencyFabGrad}>
           <Ionicons name="headset-outline" size={24} color="white" />
         </LinearGradient>

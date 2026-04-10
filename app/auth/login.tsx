@@ -97,12 +97,7 @@ export default function LoginScreen() {
         <SafeAreaView style={styles.safe}>
           {/* HEADER */}
           <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backBtn}
-              onPress={() => router.back()}
-            >
-              <Ionicons name="arrow-back" size={20} color="#005d90" />
-            </TouchableOpacity>
+            <BackButton fallback="/auth" iconColor="#005d90" />
             <View style={styles.brandRow}>
               <Logo size="sm" />
               <Text style={styles.brandName}>ThanniGo</Text>

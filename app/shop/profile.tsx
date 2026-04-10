@@ -1,5 +1,7 @@
 import { ExpoMap, ExpoMarker } from "@/components/maps/ExpoMap";
 import { Logo } from "@/components/ui/Logo";
+import { BackButton } from "@/components/ui/BackButton";
+
 import {
   clearGlobalLocationListener,
   setGlobalLocationListener,
@@ -55,19 +57,14 @@ type Region = {
 export default function ShopProfileScreen() {
   const router = useRouter();
   const [refreshing, setRefreshing] = React.useState(false);
-  const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace("/shop/settings");
-    }
-  };
 
   useEffect(() => {
     const backAction = () => {
-      handleBack();
+      if (router.canGoBack()) router.back();
+      else router.replace("/shop/settings");
       return true;
     };
+
 
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
@@ -367,12 +364,10 @@ export default function ShopProfileScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar style="dark" />
 
-      {/* HEADER */}
       <View style={styles.header}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-          <TouchableOpacity style={styles.backBtn} onPress={handleBack}>
-            <Ionicons name="arrow-back" size={24} color="#0f172a" />
-          </TouchableOpacity>
+          <BackButton fallback="/shop/settings" />
+
           <View>
             <View style={styles.brandRow}>
               <Logo size="md" />

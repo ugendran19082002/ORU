@@ -91,7 +91,10 @@ export default function RoleSelectScreen() {
       <SafeAreaView style={styles.safe}>
         {/* HEADER */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <TouchableOpacity 
+            style={styles.backBtn} 
+            onPress={() => router.canGoBack() ? router.back() : router.replace('/auth')}
+          >
             <Ionicons name="arrow-back" size={20} color="#005d90" />
           </TouchableOpacity>
           <View style={styles.brandRow}>

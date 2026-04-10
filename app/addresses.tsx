@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { BackButton } from "@/components/ui/BackButton";
 import React, { useState, useRef, useEffect } from "react";
 import { setGlobalLocationListener, clearGlobalLocationListener } from "@/utils/locationEvents";
 import {
@@ -503,13 +504,9 @@ export default function AddressesScreen() {
       {/* HEADER */}
       <View style={styles.header}>
         <View style={styles.brandRow}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={{ marginRight: 12 }}
-          >
-            <Ionicons name="arrow-back" size={24} color="#005d90" />
-          </TouchableOpacity>
+          <BackButton fallback="/(tabs)/profile" style={{ marginRight: 12 }} />
           <Ionicons name="location" size={24} color="#008db9" />
+
           <Text style={styles.brandName}>ThanniGo</Text>
         </View>
         <Image

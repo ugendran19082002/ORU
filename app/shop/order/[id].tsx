@@ -5,6 +5,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BackButton } from '@/components/ui/BackButton';
+
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
 
@@ -39,12 +41,11 @@ export default function ShopDeliveredOrderScreen() {
       
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#0f172a" />
-        </TouchableOpacity>
+        <BackButton fallback="/shop" />
         <Text style={styles.headerTitle}>Order #{orderId}</Text>
         <View style={{ width: 44 }} />
       </View>
+
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         

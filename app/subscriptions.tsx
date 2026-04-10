@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
 
 type PlanId = 'basic' | 'standard' | 'premium';
 
@@ -101,9 +102,8 @@ export default function SubscriptionsScreen() {
       <StatusBar style="dark" />
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0f172a" />
-        </TouchableOpacity>
+        <BackButton fallback="/(tabs)/profile" />
+
         <View style={{ flex: 1, marginLeft: 12 }}>
           <Text style={styles.headerTitle}>Subscriptions</Text>
           <Text style={styles.headerSub}>Save up to ₹75/month with a plan</Text>
@@ -178,7 +178,7 @@ export default function SubscriptionsScreen() {
           >
             {plan.popular && (
               <View style={styles.popularBadge}>
-                <Text style={styles.popularText}>⭐ MOST POPULAR</Text>
+                <Text style={popularText}>⭐ MOST POPULAR</Text>
               </View>
             )}
             <View style={styles.planTop}>

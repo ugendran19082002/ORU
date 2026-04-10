@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform, Modal } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { BackButton } from '@/components/ui/BackButton';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -31,8 +32,8 @@ export default function EditProfileScreen() {
   // Load saved preferences
   useEffect(() => {
     const loadSettings = async () => {
-      const savedPin = await AsyncStorage.getItem('user_app_pin');
-      const savedBiometrics = await AsyncStorage.getItem('fingerprint_enabled');
+      const savedPin = await SecureStore.getItemAsync('user_app_pin');
+      const savedBiometrics = await SecureStore.getItemAsync('fingerprint_enabled');
       if (savedPin) setAppPin(savedPin);
       if (savedBiometrics === 'true') setFingerprintEnabled(true);
     };
@@ -45,6 +46,7 @@ export default function EditProfileScreen() {
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
 
+
       if (!hasHardware) {
         Alert.alert('Error', 'Your device does not support biometric authentication.');
         return;
@@ -55,17 +57,17 @@ export default function EditProfileScreen() {
       }
 
       setFingerprintEnabled(true);
-      await AsyncStorage.setItem('fingerprint_enabled', 'true');
+      await SecureStore.setItemAsync('fingerprint_enabled', 'true');
     } else {
       setFingerprintEnabled(false);
-      await AsyncStorage.setItem('fingerprint_enabled', 'false');
+      await SecureStore.setItemAsync('fingerprint_enabled', 'false');
     }
   };
 
   const handleUpdatePin = async (val: string) => {
     setAppPin(val);
     if (val.length === 4) {
-      await AsyncStorage.setItem('user_app_pin', val);
+      await SecureStore.setItemAsync('user_app_pin', val);
     }
   };
 
@@ -99,7 +101,11 @@ export default function EditProfileScreen() {
 
   const saveProfile = () => {
     Alert.alert('Profile Saved!', 'Your account details have been successfully updated.');
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/profile');
+    }
   };
 
   return (
@@ -108,10 +114,9 @@ export default function EditProfileScreen() {
         
         {/* HEADER */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={24} color="#1e293b" />
-          </TouchableOpacity>
+          <BackButton fallback="/(tabs)/profile" />
           <Text style={styles.headerTitle}>Edit Profile</Text>
+
           <View style={{ width: 40 }} />
         </View>
 

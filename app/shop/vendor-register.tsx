@@ -8,6 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
+import { BackButton } from '@/components/ui/BackButton';
 
 // 2-step vendor registration
 const STEPS = ['Business Info', 'Location & Documents'];
@@ -46,14 +47,25 @@ export default function VendorRegisterScreen() {
     }
   };
 
+  const handleBack = () => {
+    if (step > 0) {
+      setStep(step - 1);
+    } else {
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/auth/role');
+      }
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar style="dark" />
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => step > 0 ? setStep(step - 1) : router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0f172a" />
-        </TouchableOpacity>
+        <BackButton fallback="/auth/role" onPress={handleBack} />
+
         <View style={styles.logoRow}>
           <Logo size="sm" />
           <Text style={styles.logoText}>ThanniGo</Text>

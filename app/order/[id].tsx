@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Logo } from '@/components/ui/Logo';
+import { BackButton } from '@/components/ui/BackButton';
 import { useCartStore } from '@/stores/cartStore';
 import { useShopStore } from '@/stores/shopStore';
 
@@ -35,15 +36,15 @@ export default function OrderDetailScreen() {
   const quantity = items[product.id] ?? 2;
   const pricePerUnit = product.price;
 
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
 
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={20} color="#005d90" />
-        </TouchableOpacity>
+        <BackButton fallback="/(tabs)" iconColor="#005d90" />
+
         <View style={styles.headerCenter}>
           <Logo size="sm" />
           <View style={{ flex: 1 }}>

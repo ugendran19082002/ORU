@@ -85,7 +85,7 @@ const SAMPLE_SHOPS = [
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { setSelectedShop } = useShopStore();
+  const { setSelectedShop, loadShops } = useShopStore();
   const [search, setSearch] = useState('');
   
   const [loadingLoc, setLoadingLoc] = useState(true);
@@ -102,11 +102,13 @@ export default function HomeScreen() {
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
+    await loadShops();
     await checkLocation();
     setRefreshing(false);
   }, []);
 
   useEffect(() => {
+    loadShops();
     checkLocation();
   }, []);
 
@@ -293,11 +295,7 @@ export default function HomeScreen() {
                  style={styles.shopCard}
                  onPress={() => {
                    setSelectedShop(shop.id);
-                   if (isLinked) {
-                     router.push(`/order/${shop.id}`);
-                   } else {
-                     handleRequestLink(shop.id);
-                   }
+                   router.push(`/shop-detail/${shop.id}` as any);
                  }}
                >
                  <View style={styles.shopImageContainer}>

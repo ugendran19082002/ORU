@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { BackButton } from '@/components/ui/BackButton';
 
 type NotifType = 'order' | 'promo' | 'system' | 'complaint';
 
@@ -59,16 +60,16 @@ export default function NotificationsScreen() {
     return true;
   });
 
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
 
       {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#0f172a" />
-        </TouchableOpacity>
+        <BackButton fallback="/(tabs)" />
         <View style={{ flex: 1, marginLeft: 12 }}>
+
           <Text style={styles.headerTitle}>Notifications</Text>
           {unreadCount > 0 && (
             <Text style={styles.headerSub}>{unreadCount} unread</Text>

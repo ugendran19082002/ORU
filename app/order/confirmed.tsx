@@ -7,11 +7,17 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 
 export default function OrderConfirmedScreen() {
   const router = useRouter();
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  useAndroidBackHandler(() => {
+    // Prevent going back to checkout once order is confirmed
+    router.replace('/(tabs)');
+  });
 
   useEffect(() => {
     Animated.sequence([
