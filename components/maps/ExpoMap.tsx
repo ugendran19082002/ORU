@@ -26,8 +26,10 @@ export interface ExpoMapProps {
   onMarkerDragEnd?: (coords: { latitude: number; longitude: number }) => void;
   /** Label shown on the primary marker popup */
   markerTitle?: string;
-  /** Multiple markers for tracking view (overrides single pin) */
-  markers?: LeafletMarker[];
+  /** Multiple markers for tracking view (overrides single pin when set) */
+  markers?: (LeafletMarker & { id?: string })[];
+  /** Callback when any marker in the 'markers' array is pressed */
+  onMarkerPress?: (marker: any) => void;
   /** Draw a dashed route polyline between markers */
   showRoute?: boolean;
   /** 'standard', 'satellite', 'hybrid', 'terrain' */
@@ -57,6 +59,7 @@ export interface ExpoMarkerProps {
   draggable?: boolean;
   onDragEnd?: (e: any) => void;
   pinColor?: string;
+  onPress?: () => void;
   children?: React.ReactNode;
 }
 
@@ -105,6 +108,7 @@ export const ExpoMap = forwardRef<any, ExpoMapProps>((props, ref) => {
     onMarkerDragEnd,
     markerTitle,
     markers,
+    onMarkerPress,
     showRoute,
   } = props;
 
@@ -143,6 +147,7 @@ export const ExpoMap = forwardRef<any, ExpoMapProps>((props, ref) => {
         title={markerTitle ?? 'Location'}
         draggable={draggable}
         onMarkerDragEnd={onMarkerDragEnd}
+        onMarkerPress={onMarkerPress}
         markers={markers}
         showRoute={showRoute}
         mapType={props.mapType}
@@ -182,6 +187,15 @@ export const ExpoMap = forwardRef<any, ExpoMapProps>((props, ref) => {
         />
       )}
       {children}
+      {markers?.map((m, i) => (
+        <ExpoMarker
+          key={m.id || i}
+          coordinate={{ latitude: m.latitude, longitude: m.longitude }}
+          title={m.title}
+          pinColor={m.color}
+          onPress={() => onMarkerPress?.(m)}
+        />
+      ))}
     </NativeMapView>
   );
 });
@@ -194,7 +208,7 @@ export const ExpoMap = forwardRef<any, ExpoMapProps>((props, ref) => {
 export const ExpoMarker = (props: ExpoMarkerProps) => {
   if (!NativeMarker || !hasValidGoogleKey() || Platform.OS === 'web') return null;
 
-  const { coordinate, title, description, draggable, onDragEnd, pinColor, children } = props;
+  const { coordinate, title, description, draggable, onDragEnd, pinColor, onPress, children } = props;
   return (
     <NativeMarker
       coordinate={coordinate}
@@ -203,6 +217,7 @@ export const ExpoMarker = (props: ExpoMarkerProps) => {
       draggable={draggable}
       onDragEnd={onDragEnd}
       pinColor={pinColor}
+      onPress={onPress}
     >
       {children}
     </NativeMarker>

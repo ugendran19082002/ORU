@@ -14,6 +14,7 @@ export interface LeafletMapRef {
 }
 
 export interface LeafletMarker {
+  id?: string;
   latitude: number;
   longitude: number;
   title?: string;
@@ -31,6 +32,7 @@ interface LeafletMapProps {
   style?: any;
   draggable?: boolean;
   onMarkerDragEnd?: (coords: { latitude: number; longitude: number }) => void;
+  onMarkerPress?: (marker: LeafletMarker) => void;
   /** Pass multiple markers for tracking views (overrides single pin when set) */
   markers?: LeafletMarker[];
   /** Draw a polyline route between all marker positions */
@@ -53,6 +55,7 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
       style,
       draggable = false,
       onMarkerDragEnd,
+      onMarkerPress,
       markers,
       showRoute = false,
       mapType = 'terrain',
@@ -90,9 +93,12 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
               longitude: msg.payload.longitude,
             });
           }
+          if (msg.type === "markerPress" && onMarkerPress) {
+            onMarkerPress(msg.payload);
+          }
         } catch (e) {}
       },
-      [onMarkerDragEnd],
+      [onMarkerDragEnd, onMarkerPress],
     );
 
     // Build JS arrays for multi-marker mode
@@ -229,7 +235,12 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
       draggable: DRAGGABLE && idx === 0,
       autoPan: true
     }).addTo(map);
-    if (m.title) lm.bindPopup('<b style="font-family:-apple-system,sans-serif;font-size:13px">'+m.title+'</b>').openPopup();
+    if (m.title) lm.bindPopup('<b style="font-family:-apple-system,sans-serif;font-size:13px">'+m.title+'</b>');
+    
+    lm.on("click", function(e) {
+      send("markerPress", m);
+    });
+
     if (idx === 0) mainMarker = lm;
     latLngs.push([m.latitude, m.longitude]);
   });

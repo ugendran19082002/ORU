@@ -52,6 +52,7 @@ export default function SearchMapScreen() {
         hideControls={true}
         draggable={true}
         onMarkerDragEnd={handleMapTap}
+        onMarkerPress={(m) => router.push(`/shop-detail/${m.id}` as any)}
         markers={[
           // Current search pin
           { 
@@ -62,6 +63,7 @@ export default function SearchMapScreen() {
           },
           // Shop markers
           ...shops.map((shop) => ({
+            id: shop.id,
             latitude: shop.lat, 
             longitude: shop.lng,
             title: shop.name,
