@@ -1,75 +1,86 @@
-import React, { useState } from 'react';
+import { BackButton } from "@/components/ui/BackButton";
+import { useAppNavigation } from "@/hooks/use-app-navigation";
+import { useAndroidBackHandler } from "@/hooks/use-back-handler";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useState } from "react";
 import {
-  View,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
-import { useRouter } from 'expo-router';
-import { BackButton } from '@/components/ui/BackButton';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useAppNavigation } from '@/hooks/use-app-navigation';
-import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
+import { Logo } from "@/components/ui/Logo";
+import { roleAccent } from "@/constants/theme";
+import { useAppSession } from "@/hooks/use-app-session";
+import { Ionicons } from "@expo/vector-icons";
 
-import { Ionicons } from '@expo/vector-icons';
-import { Logo } from '@/components/ui/Logo';
-import { roleAccent, roleGradients } from '@/constants/theme';
-import { useAppSession } from '@/hooks/use-app-session';
-
-type Role = 'customer' | 'shop' | 'delivery' | 'admin';
+type Role = "customer" | "shop" | "delivery" | "admin";
 
 const ROLES = [
   {
-    id: 'customer' as Role,
-    title: 'Customer',
-    subtitle: 'Order pure water\ndelivered to your door',
-    icon: 'person-outline' as const,
+    id: "customer" as Role,
+    title: "Customer",
+    subtitle: "Order pure water\ndelivered to your door",
+    icon: "person-outline" as const,
     accent: roleAccent.customer,
-    bg: '#e0f0ff',
-    gradient: ['#005d90', '#0077b6'] as [string, string],
-    features: ['Browse nearby shops', 'Track live delivery', 'Pay via UPI / COD'],
+    bg: "#e0f0ff",
+    gradient: ["#005d90", "#0077b6"] as [string, string],
+    features: [
+      "Browse nearby shops",
+      "Track live delivery",
+      "Pay via UPI / COD",
+    ],
   },
   {
-    id: 'shop' as Role,
-    title: 'Shop Owner',
-    subtitle: 'Manage orders &\ngrow your business',
-    icon: 'storefront-outline' as const,
+    id: "shop" as Role,
+    title: "Shop Owner",
+    subtitle: "Manage orders &\ngrow your business",
+    icon: "storefront-outline" as const,
     accent: roleAccent.shop,
-    bg: '#e0f7fa',
-    gradient: ['#006878', '#005566'] as [string, string],
-    features: ['Accept/reject orders', 'Track daily earnings', 'Inventory & analytics'],
+    bg: "#e0f7fa",
+    gradient: ["#006878", "#005566"] as [string, string],
+    features: [
+      "Accept/reject orders",
+      "Track daily earnings",
+      "Inventory & analytics",
+    ],
   },
   {
-    id: 'delivery' as Role,
-    title: 'Delivery Agent',
-    subtitle: 'Deliver orders &\nearn per trip',
-    icon: 'bicycle-outline' as const,
-    accent: '#2e7d32',
-    bg: '#e8f5e9',
-    gradient: ['#2e7d32', '#388e3c'] as [string, string],
-    features: ['View assigned trips', 'Verify OTP & collect payment', 'Track shift earnings'],
+    id: "delivery" as Role,
+    title: "Delivery Agent",
+    subtitle: "Deliver orders &\nearn per trip",
+    icon: "bicycle-outline" as const,
+    accent: "#2e7d32",
+    bg: "#e8f5e9",
+    gradient: ["#2e7d32", "#388e3c"] as [string, string],
+    features: [
+      "View assigned trips",
+      "Verify OTP & collect payment",
+      "Track shift earnings",
+    ],
   },
   {
-    id: 'admin' as Role,
-    title: 'Admin',
-    subtitle: 'Oversee the entire\nThanniGo platform',
-    icon: 'shield-checkmark-outline' as const,
+    id: "admin" as Role,
+    title: "Admin",
+    subtitle: "Oversee the entire\nThanniGo platform",
+    icon: "shield-checkmark-outline" as const,
     accent: roleAccent.admin,
-    bg: '#e0f2f1',
-    gradient: ['#00796b', '#004d40'] as [string, string],
-    features: ['Live orders feed', 'Shop verification', 'Revenue analytics'],
+    bg: "#e0f2f1",
+    gradient: ["#00796b", "#004d40"] as [string, string],
+    features: ["Live orders feed", "Shop verification", "Revenue analytics"],
   },
 ];
 
 const ROLE_DESTINATIONS: Record<Role, string> = {
-  customer: '/(tabs)',
-  shop: '/shop',
-  delivery: '/delivery',
-  admin: '/admin',
+  customer: "/(tabs)",
+  shop: "/shop",
+  delivery: "/delivery",
+  admin: "/admin",
 };
 
 export default function RoleSelectScreen() {
@@ -82,15 +93,14 @@ export default function RoleSelectScreen() {
     safeBack("/auth");
   });
 
-
   const handleContinue = async () => {
     if (!selected) return;
     await setPreferredRole(selected);
     // For delivery: go directly to delivery dashboard (separate from shop)
-    if (selected === 'delivery') {
-      router.push({ pathname: '/auth/login', params: { role: selected } });
+    if (selected === "delivery") {
+      router.push({ pathname: "/auth/login", params: { role: selected } });
     } else {
-      router.push({ pathname: '/auth/login', params: { role: selected } });
+      router.push({ pathname: "/auth/login", params: { role: selected } });
     }
   };
 
@@ -104,7 +114,6 @@ export default function RoleSelectScreen() {
         <View style={styles.header}>
           <BackButton variant="transparent" fallback="/auth" />
           <View style={styles.brandRow}>
-
             <Logo size="sm" />
             <Text style={styles.brandName}>ThanniGo</Text>
           </View>
@@ -117,7 +126,10 @@ export default function RoleSelectScreen() {
         </View>
 
         {/* ROLE CARDS */}
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.roleList}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.roleList}
+        >
           {ROLES.map((role) => {
             const isSelected = selected === role.id;
             return (
@@ -131,16 +143,35 @@ export default function RoleSelectScreen() {
                 onPress={() => setSelected(role.id)}
               >
                 {/* Radio */}
-                <View style={[styles.radioOuter, isSelected && { borderColor: role.accent }]}>
-                  {isSelected && <View style={[styles.radioInner, { backgroundColor: role.accent }]} />}
+                <View
+                  style={[
+                    styles.radioOuter,
+                    isSelected && { borderColor: role.accent },
+                  ]}
+                >
+                  {isSelected && (
+                    <View
+                      style={[
+                        styles.radioInner,
+                        { backgroundColor: role.accent },
+                      ]}
+                    />
+                  )}
                 </View>
 
-                <View style={[styles.roleIconWrap, { backgroundColor: role.bg }]}>
+                <View
+                  style={[styles.roleIconWrap, { backgroundColor: role.bg }]}
+                >
                   <Ionicons name={role.icon} size={26} color={role.accent} />
                 </View>
 
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.roleTitle, isSelected && { color: role.accent }]}>
+                  <Text
+                    style={[
+                      styles.roleTitle,
+                      isSelected && { color: role.accent },
+                    ]}
+                  >
                     {role.title}
                   </Text>
                   <Text style={styles.roleSubtitle}>{role.subtitle}</Text>
@@ -148,8 +179,16 @@ export default function RoleSelectScreen() {
                     <View style={styles.featureList}>
                       {role.features.map((f) => (
                         <View key={f} style={styles.featureRow}>
-                          <Ionicons name="checkmark-circle" size={13} color={role.accent} />
-                          <Text style={[styles.featureText, { color: role.accent }]}>{f}</Text>
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={13}
+                            color={role.accent}
+                          />
+                          <Text
+                            style={[styles.featureText, { color: role.accent }]}
+                          >
+                            {f}
+                          </Text>
                         </View>
                       ))}
                     </View>
@@ -167,69 +206,140 @@ export default function RoleSelectScreen() {
           style={[styles.ctaWrap, !selected && { opacity: 0.4 }]}
         >
           <LinearGradient
-            colors={selectedRole?.gradient ?? ['#005d90', '#0077b6']}
+            colors={selectedRole?.gradient ?? ["#005d90", "#0077b6"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.ctaBtn}
           >
             <Text style={styles.ctaText}>
-              Continue as {selectedRole?.title ?? '—'}
+              Continue as {selectedRole?.title ?? "—"}
             </Text>
             <Ionicons name="arrow-forward" size={20} color="white" />
           </LinearGradient>
         </TouchableOpacity>
+
+        {/* REGISTRATION FOOTER */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>First time here?</Text>
+          <TouchableOpacity onPress={() => router.push("/onboarding")}>
+            <Text style={styles.footerLink}>Start Registering</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: "#f7f9ff" },
   safe: { flex: 1, paddingHorizontal: 24 },
 
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 14,
   },
   backBtn: {
-    width: 40, height: 40, borderRadius: 14,
-    backgroundColor: '#ebeef4', alignItems: 'center', justifyContent: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: "#ebeef4",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 20, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
+  brandRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  brandName: {
+    fontSize: 20,
+    fontWeight: "900",
+    color: "#003a5c",
+    letterSpacing: -0.5,
+  },
 
   titleBlock: { marginTop: 8, marginBottom: 16 },
-  title: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, marginBottom: 6 },
-  subtitle: { fontSize: 15, color: '#707881', fontWeight: '500' },
+  title: {
+    fontSize: 32,
+    fontWeight: "900",
+    color: "#181c20",
+    letterSpacing: -0.5,
+    marginBottom: 6,
+  },
+  subtitle: { fontSize: 15, color: "#707881", fontWeight: "500" },
 
   roleList: { gap: 12, paddingBottom: 8 },
   roleCard: {
-    backgroundColor: 'white', borderRadius: 24,
-    padding: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 14,
-    borderWidth: 1.5, borderColor: '#ebeef4',
-    shadowColor: '#003a5c', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+    backgroundColor: "white",
+    borderRadius: 24,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 14,
+    borderWidth: 1.5,
+    borderColor: "#ebeef4",
+    shadowColor: "#003a5c",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   radioOuter: {
-    width: 22, height: 22, borderRadius: 11,
-    borderWidth: 2, borderColor: '#bfc7d1',
-    alignItems: 'center', justifyContent: 'center', marginTop: 3,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: "#bfc7d1",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 3,
   },
   radioInner: { width: 10, height: 10, borderRadius: 5 },
   roleIconWrap: {
-    width: 52, height: 52, borderRadius: 16,
-    alignItems: 'center', justifyContent: 'center',
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  roleTitle: { fontSize: 18, fontWeight: '900', color: '#181c20', marginBottom: 3 },
-  roleSubtitle: { fontSize: 12, color: '#707881', lineHeight: 17 },
+  roleTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#181c20",
+    marginBottom: 3,
+  },
+  roleSubtitle: { fontSize: 12, color: "#707881", lineHeight: 17 },
   featureList: { marginTop: 10, gap: 5 },
-  featureRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  featureText: { fontSize: 12, fontWeight: '600' },
+  featureRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  featureText: { fontSize: 12, fontWeight: "600" },
 
-  ctaWrap: { paddingVertical: 16 },
+  ctaWrap: { paddingTop: 16, paddingBottom: 8 },
   ctaBtn: {
-    borderRadius: 20, paddingVertical: 18,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    shadowColor: '#005d90', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.28, shadowRadius: 14, elevation: 6,
+    borderRadius: 20,
+    paddingVertical: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    shadowColor: "#005d90",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.28,
+    shadowRadius: 14,
+    elevation: 6,
   },
-  ctaText: { color: 'white', fontSize: 17, fontWeight: '900' },
+  ctaText: { color: "white", fontSize: 17, fontWeight: "900" },
+
+  footer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+    paddingBottom: 32,
+    marginTop: 10,
+  },
+  footerText: { fontSize: 13, color: "#707881", fontWeight: "500" },
+  footerLink: {
+    fontSize: 13,
+    color: "#005d90",
+    fontWeight: "800",
+    textDecorationLine: "underline",
+  },
 });

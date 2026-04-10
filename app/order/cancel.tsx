@@ -81,7 +81,7 @@ export default function CancelOrderScreen() {
 
         {/* REFUND INFO */}
         <View style={styles.refundCard}>
-          <Ionicons name="wallet-outline" size={22} color="#2e7d32" />
+          <Ionicons name="card-outline" size={22} color="#2e7d32" />
           <View style={{ flex: 1 }}>
             <Text style={styles.refundTitle}>Refund Details</Text>
             <Text style={styles.refundText}>{refundNote}</Text>

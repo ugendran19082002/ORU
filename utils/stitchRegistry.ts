@@ -25,8 +25,6 @@ export const stitchRegistry = {
   emergency_help: "emergency_help",
   inventory_management: "inventory_management",
   manual_order_entry: "manual_order_entry",
-  my_wallet: "my_wallet",
-  wallet_history: "same_additiona_scrrens/wallet_history",
   onboarding_slide_1: "onboarding_slide_1",
   onboarding_slide_2: "onboarding_slide_2",
   onboarding_slide_3: "onboarding_slide_3",

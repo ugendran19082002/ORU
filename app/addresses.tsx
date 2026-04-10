@@ -108,6 +108,7 @@ export default function AddressesScreen() {
   // Add / Edit Address State
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deliveryInstructions, setDeliveryInstructions] = useState("");
   const [newType, setNewType] = useState<AddressType>("Home");
   const [newTitle, setNewTitle] = useState("");
 
@@ -117,6 +118,7 @@ export default function AddressesScreen() {
   // Coordinate storage
   const [currentLat, setCurrentLat] = useState<number>(28.4595);
   const [currentLng, setCurrentLng] = useState<number>(77.0266);
+  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid' | 'terrain' | 'none'>('terrain');
   const [isNewDefault, setIsNewDefault] = useState(false);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [region, setRegion] = useState<Region>({
@@ -149,6 +151,7 @@ export default function AddressesScreen() {
     setEditingId(null);
     setSearchQuery("");
     setFormFlat("");
+    setDeliveryInstructions("");
     setFormLandmark("");
     setNewType("Home");
     setNewTitle("");
@@ -489,11 +492,11 @@ export default function AddressesScreen() {
   const getIconForType = (type: AddressType) => {
     switch (type) {
       case "Home":
-        return { icon: "home" as const, bg: "#cffafe", color: "#0d9488" };
+        return { icon: "home-sharp" as const, color: "#10b981", bg: "#f0fdf4" };
       case "Office":
-        return { icon: "briefcase" as const, bg: "#e0f2fe", color: "#0284c7" };
+        return { icon: "business-sharp" as const, color: "#0ea5e9", bg: "#f0f9ff" };
       default:
-        return { icon: "time" as const, bg: "#e2e8f0", color: "#64748b" };
+        return { icon: "location-sharp" as const, color: "#6366f1", bg: "#f5f3ff" };
     }
   };
 
@@ -574,6 +577,10 @@ export default function AddressesScreen() {
               draggable
               markerTitle="Deliver Here"
               onMarkerDragEnd={handleMarkerDragEnd}
+              mapType={mapType}
+              showsTraffic={true}
+              showsBuildings={true}
+              hideControls={true}
             >
               <ExpoMarker
                 coordinate={{ latitude: currentLat, longitude: currentLng }}
@@ -585,18 +592,33 @@ export default function AddressesScreen() {
             </ExpoMap>
             
             {Platform.OS !== 'web' && accuracy !== null && (
-              <View style={styles.mapOverlay}>
+              <View style={styles.accuracyOverlay}>
                 <View style={styles.accuracyTag}>
                   <View style={[styles.accuracyDot, {
                     backgroundColor: accuracy < 15 ? '#10b981' : '#f59e0b'
                   }]} />
                   <Text style={styles.accuracyLabel}>
-                    {accuracy < 15 ? `High Precision (±${Math.round(accuracy)}m)` : `GPS: ±${Math.round(accuracy)}m`}
+                    {accuracy < 15 ? `High Precision` : `GPS: ±${Math.round(accuracy)}m`}
                   </Text>
                 </View>
               </View>
             )}
             <Text style={styles.liveMapText}>TAP MAP OR DRAG PIN TO PINPOINT</Text>
+
+            {/* TOP RIGHT: MAP TYPE INDICATOR */}
+            <View style={styles.typeSelectorOverlay}>
+              <TouchableOpacity onPress={() => {
+                const types: any[] = ['standard', 'satellite', 'terrain'];
+                const nextIdx = (types.indexOf(mapType) + 1) % 3;
+                setMapType(types[nextIdx]);
+              }} style={styles.mapActionBtnMini}>
+                <Ionicons 
+                  name={mapType === 'satellite' ? 'images' : mapType === 'terrain' ? 'earth' : 'map'} 
+                  size={18} 
+                  color="#005d90" 
+                />
+              </TouchableOpacity>
+            </View>
             
             <View style={styles.mapOverlayActions}>
               <TouchableOpacity
@@ -610,40 +632,31 @@ export default function AddressesScreen() {
                   });
                 }}
               >
-                <Ionicons name="eye-outline" size={20} color="#005d90" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.mapActionBtn, { marginTop: 8 }]}
-                onPress={handleUseCurrentLocation}
-              >
-                <Ionicons 
-                  name="locate" 
-                  size={20} 
-                  color={isFetchingLocation ? "#bfc7d1" : "#005d90"} 
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.mapActionBtn, { marginTop: 8 }]}
-                onPress={shareAddress as any}
-              >
-                <Ionicons name="share-social-outline" size={20} color="#005d90" />
+                <Ionicons name="expand-outline" size={20} color="#005d90" />
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* 3. USER CURRENT LOCATION BUTTON */}
-          <TouchableOpacity
-            style={styles.gpsBtn}
-            onPress={handleUseCurrentLocation}
-            disabled={isFetchingLocation}
-          >
-            {isFetchingLocation ? (
-              <ActivityIndicator size="small" color="#ffffff" />
-            ) : (
-              <Ionicons name="locate" size={20} color="#ffffff" />
-            )}
-            <Text style={styles.gpsBtnText}>Use current location</Text>
-          </TouchableOpacity>
+          {/* 3. QUICK ACTIONS ROW (OUTSIDE MAP) */}
+          <View style={styles.mapUtilityRow}>
+            <TouchableOpacity
+              style={styles.utilityBtn}
+              onPress={handleUseCurrentLocation}
+              disabled={isFetchingLocation}
+            >
+              {isFetchingLocation ? (
+                <ActivityIndicator size="small" color="#005d90" />
+              ) : (
+                <Ionicons name="location-sharp" size={18} color="#005d90" />
+              )}
+              <Text style={styles.utilityBtnText}>Locate Me</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.utilityBtn} onPress={shareAddress as any}>
+              <Ionicons name="share-social-outline" size={18} color="#005d90" />
+              <Text style={styles.utilityBtnText}>Share</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* 4. FORM */}
           {isAdding && (
@@ -665,36 +678,33 @@ export default function AddressesScreen() {
                 multiline
               />
 
-              <Text style={styles.formInputLabel}>Landmark (Optional)</Text>
+              <Text style={styles.formInputLabel}>Delivery Instructions (Optional)</Text>
               <TextInput
-                style={styles.detailInput}
-                placeholder="e.g. Near City Mall"
-                value={formLandmark}
-                onChangeText={setFormLandmark}
+                style={[styles.detailInput, { height: 60, textAlignVertical: "top" }]}
+                placeholder="e.g. Please leave at the gate or ring the bell"
+                value={deliveryInstructions}
+                onChangeText={setDeliveryInstructions}
+                multiline
               />
 
-              <Text style={styles.formLabel}>Save As:</Text>
-              <View style={styles.typeRow}>
-                {(["Home", "Office", "Other"] as AddressType[]).map((t) => (
-                  <TouchableOpacity
-                    key={t}
-                    style={[styles.typePill, newType === t && styles.typePillActive]}
-                    onPress={() => setNewType(t)}
-                  >
-                    <Text style={[styles.typePillText, newType === t && styles.typePillTextActive]}>
-                      {t}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.formInputLabel}>Latitude</Text>
+                  <TextInput
+                    style={[styles.detailInput, { backgroundColor: '#f1f5f9', color: '#64748b' }]}
+                    value={currentLat.toFixed(6)}
+                    editable={false}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.formInputLabel}>Longitude</Text>
+                  <TextInput
+                    style={[styles.detailInput, { backgroundColor: '#f1f5f9', color: '#64748b' }]}
+                    value={currentLng.toFixed(6)}
+                    editable={false}
+                  />
+                </View>
               </View>
-              {newType === "Other" && (
-                <TextInput
-                  style={[styles.searchInput, { backgroundColor: "#f1f5f9", marginTop: 10, borderRadius: 12, padding: 12 }]}
-                  placeholder="e.g. Grandma's House"
-                  value={newTitle}
-                  onChangeText={setNewTitle}
-                />
-              )}
 
               {/* 5. CONFIRM & CANCEL */}
               <TouchableOpacity style={styles.saveActionBtn} onPress={saveAddress}>
@@ -726,19 +736,8 @@ export default function AddressesScreen() {
               key={item.id}
               style={[styles.listItem, item.isDefault && styles.listItemDefault]}
             >
-              <TouchableOpacity 
-                style={styles.selectionIndicator}
-                onPress={() => toggleDefault(item.id)}
-              >
-                <Ionicons
-                  name={item.isDefault ? "radio-button-on" : "radio-button-off"}
-                  size={22}
-                  color={item.isDefault ? "#0ea5e9" : "#cbd5e1"}
-                />
-              </TouchableOpacity>
-
               <View style={[styles.iconWrap, { backgroundColor: uiOpts.bg }]}>
-                <Ionicons name={uiOpts.icon} size={20} color={uiOpts.color} />
+                <Ionicons name={uiOpts.icon} size={22} color={uiOpts.color} />
               </View>
               
               <TouchableOpacity 
@@ -759,16 +758,6 @@ export default function AddressesScreen() {
               >
                 <View style={styles.listTitleRow}>
                   <Text style={styles.listTitle}>{item.title}</Text>
-                  {item.isDefault && (
-                    <View style={styles.defaultBadge}>
-                      <Text style={styles.defaultBadgeText}>DEFAULT</Text>
-                    </View>
-                  )}
-                  {item.isFavorite && (
-                    <View style={styles.favBadge}>
-                      <Text style={styles.favBadgeText}>FAVORITE</Text>
-                    </View>
-                  )}
                 </View>
                 <Text style={styles.listSub} numberOfLines={2}>
                   {item.fullAddress}
@@ -979,15 +968,20 @@ const styles = StyleSheet.create({
     borderColor: "#e2e8f0",
   },
   mapView: { flex: 1 },
-  mapOverlay: {
+  accuracyOverlay: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+  },
+  typeSelectorOverlay: {
     position: "absolute",
     top: 12,
     right: 12,
   },
   mapOverlayActions: {
     position: "absolute",
-    bottom: 16,
-    right: 16,
+    bottom: 12,
+    right: 12,
     gap: 8,
   },
   mapActionBtn: {
@@ -1002,6 +996,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 5,
     elevation: 4,
+  },
+  mapActionBtnMini: {
+    backgroundColor: "rgba(255,255,255,0.95)",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "#f1f5f9",
   },
   accuracyTag: {
     flexDirection: "row",
@@ -1049,6 +1058,29 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 1,
+  },
+  miniTypeSelector: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    zIndex: 10,
+  },
+  miniTypeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
+    borderWidth: 1, borderColor: '#f1f5f9',
+  },
+  miniTypeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#005d90',
+    letterSpacing: 0.5,
   },
 
   listHeaderRow: {
@@ -1140,6 +1172,33 @@ const styles = StyleSheet.create({
     color: "#0f766e",
     lineHeight: 20,
     fontWeight: "500",
+  },
+  mapUtilityRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  utilityBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: 'white',
+    paddingVertical: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#f1f5f9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  utilityBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#005d90',
   },
 
   // SUGGESTIONS STYLES

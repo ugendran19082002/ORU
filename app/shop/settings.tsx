@@ -21,7 +21,7 @@ type NavItem = {
 
 const SHOP_MENU: NavItem[] = [
   { label: 'Shop Analytics & Trends', icon: 'bar-chart-outline', route: '/shop/analytics' },
-  { label: 'Revenue & Earnings', icon: 'wallet-outline', route: '/shop/earnings' },
+  { label: 'Revenue & Earnings', icon: 'cash-outline', route: '/shop/earnings' },
   { label: 'Shop Profile & Address', icon: 'storefront-outline', route: '/shop/profile' },
   { label: 'Promotions & Coupons', icon: 'pricetag-outline', route: '/shop/promotions', badge: 'NEW' },
   { label: 'Delivery Management', icon: 'bicycle-outline', route: '/shop/delivery' },

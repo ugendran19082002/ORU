@@ -30,6 +30,23 @@ export interface ExpoMapProps {
   markers?: LeafletMarker[];
   /** Draw a dashed route polyline between markers */
   showRoute?: boolean;
+  /** 'standard', 'satellite', 'hybrid', 'terrain' */
+  mapType?: 'standard' | 'satellite' | 'hybrid' | 'terrain' | 'none';
+  /** Show traffic overlay */
+  showsTraffic?: boolean;
+  /** Enable zoom controls (native +/- buttons) */
+  zoomControlEnabled?: boolean;
+  /** Enable compass */
+  showsCompass?: boolean;
+  /** Enable 3D buildings */
+  showsBuildings?: boolean;
+  /** Hide internal map controls (MapType switcher, etc.) */
+  hideControls?: boolean;
+  /** Interaction controls */
+  scrollEnabled?: boolean;
+  zoomEnabled?: boolean;
+  pitchEnabled?: boolean;
+  rotateEnabled?: boolean;
 }
 
 
@@ -128,6 +145,8 @@ export const ExpoMap = forwardRef<any, ExpoMapProps>((props, ref) => {
         onMarkerDragEnd={onMarkerDragEnd}
         markers={markers}
         showRoute={showRoute}
+        mapType={props.mapType}
+        hideControls={props.hideControls}
       />
     );
 
@@ -144,13 +163,24 @@ export const ExpoMap = forwardRef<any, ExpoMapProps>((props, ref) => {
       region={region}
       onRegionChangeComplete={onRegionChangeComplete}
       showsUserLocation={showsUserLocation}
-      mapType="none"
+      showsMyLocationButton={!props.hideControls}
+      showsCompass={!props.hideControls && (props.showsCompass ?? true)}
+      showsTraffic={props.showsTraffic}
+      showsBuildings={props.showsBuildings}
+      mapType={props.mapType ?? "terrain"}
+      scrollEnabled={props.scrollEnabled ?? true}
+      zoomEnabled={props.zoomEnabled ?? true}
+      zoomControlEnabled={!props.hideControls && (props.zoomControlEnabled ?? true)}
+      pitchEnabled={props.pitchEnabled ?? true}
+      rotateEnabled={props.rotateEnabled ?? true}
     >
-      <UrlTile
-        urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        maximumZ={19}
-        flipY={false}
-      />
+      {props.mapType === 'none' && (
+        <UrlTile
+          urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maximumZ={19}
+          flipY={false}
+        />
+      )}
       {children}
     </NativeMapView>
   );

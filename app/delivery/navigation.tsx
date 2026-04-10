@@ -21,6 +21,7 @@ export default function DeliveryNavigationScreen() {
       {/* Real Interactive Map */}
       <View style={styles.mapContainer}>
         <ExpoMap
+          hideControls={true}
           style={StyleSheet.absoluteFillObject}
           initialRegion={{
             latitude: task?.lat ?? 12.9716,

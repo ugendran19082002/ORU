@@ -49,6 +49,7 @@ export default function MapPreviewScreen() {
 
   const [draftLat, setDraftLat] = React.useState(parseFloat(lat || '0'));
   const [draftLng, setDraftLng] = React.useState(parseFloat(lng || '0'));
+  const [mapType, setMapType] = React.useState<'standard' | 'satellite' | 'hybrid' | 'terrain' | 'none'>('terrain');
   const [parsedMarkers, setParsedMarkers] = React.useState<any[]>([]);
   const label = title || 'Location';
 
@@ -185,6 +186,8 @@ export default function MapPreviewScreen() {
           onMarkerDragEnd={handleMarkerDragEnd}
           markers={parsedMarkers.length > 0 ? parsedMarkers : undefined}
           showRoute={parsedMarkers.length > 1}
+          mapType={mapType}
+          showsTraffic={true}
         >
           {parsedMarkers.length === 0 && (
             <ExpoMarker
@@ -199,12 +202,26 @@ export default function MapPreviewScreen() {
         {/* FLOATING ACTION BOX */}
         <View style={styles.floatingActionBox}>
           <LinearGradient
-            colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,1)']}
+            colors={['rgba(255,255,255,0.92)', 'rgba(255,255,255,1)']}
             style={styles.actionCard}
           >
             <View style={styles.locationInfo}>
-              <View style={styles.iconCircle}>
-                <Ionicons name="location" size={24} color="#005d90" />
+              <View style={styles.miniMapWrap}>
+                <ExpoMap 
+                  style={styles.miniMap}
+                  initialRegion={{
+                    latitude: draftLat,
+                    longitude: draftLng,
+                    latitudeDelta: 0.002,
+                    longitudeDelta: 0.002,
+                  }}
+                  scrollEnabled={false}
+                  zoomEnabled={false}
+                  pitchEnabled={false}
+                  rotateEnabled={false}
+                  hideControls={true}
+                  mapType="satellite"
+                />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.locationTitle}>{target === 'select' ? "Confirm Location" : label}</Text>
@@ -222,7 +239,6 @@ export default function MapPreviewScreen() {
                   emitGlobalLocation(draftLat, draftLng);
                   safeBack('/(tabs)');
                 }}
-
               >
                 <LinearGradient
                   colors={['#10b981', '#059669']}
@@ -265,6 +281,31 @@ export default function MapPreviewScreen() {
               </View>
             )}
           </LinearGradient>
+        </View>
+
+        {/* MAP TYPE SELECTOR */}
+        <View style={styles.typeSelectorWrap}>
+           <TouchableOpacity 
+              style={[styles.typeBtn, mapType === 'standard' && styles.typeBtnActive]} 
+              onPress={() => setMapType('standard')}
+           >
+              <Ionicons name="map-outline" size={18} color={mapType === 'standard' ? 'white' : '#64748b'} />
+              <Text style={[styles.typeBtnText, mapType === 'standard' && { color: 'white' }]}>Standard</Text>
+           </TouchableOpacity>
+           <TouchableOpacity 
+              style={[styles.typeBtn, mapType === 'satellite' && styles.typeBtnActive]} 
+              onPress={() => setMapType('satellite')}
+           >
+              <Ionicons name="images-outline" size={18} color={mapType === 'satellite' ? 'white' : '#64748b'} />
+              <Text style={[styles.typeBtnText, mapType === 'satellite' && { color: 'white' }]}>Satellite</Text>
+           </TouchableOpacity>
+           <TouchableOpacity 
+              style={[styles.typeBtn, mapType === 'terrain' && styles.typeBtnActive]} 
+              onPress={() => setMapType('terrain')}
+           >
+              <Ionicons name="earth-outline" size={18} color={mapType === 'terrain' ? 'white' : '#64748b'} />
+              <Text style={[styles.typeBtnText, mapType === 'terrain' && { color: 'white' }]}>Terrain</Text>
+           </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -355,13 +396,18 @@ const styles = StyleSheet.create({
     gap: 16,
     marginBottom: 20,
   },
-  iconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 18,
-    backgroundColor: '#e0f0ff',
-    alignItems: 'center',
-    justifyContent: 'center',
+  miniMapWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  miniMap: {
+    width: '100%',
+    height: '100%',
   },
   locationTitle: { fontSize: 18, fontWeight: '800', color: '#0f172a', marginBottom: 4 },
   locationCoords: { fontSize: 13, color: '#64748b', fontWeight: '500', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
@@ -412,5 +458,37 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '800',
+  },
+  typeSelectorWrap: {
+    position: 'absolute',
+    top: 90,
+    right: 20,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 16,
+    padding: 6,
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  typeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  typeBtnActive: {
+    backgroundColor: '#005d90',
+  },
+  typeBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748b',
   },
 });

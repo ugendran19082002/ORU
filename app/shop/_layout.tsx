@@ -139,7 +139,7 @@ export default function ShopLayout() {
         options={{
           tabBarIcon: ({ focused, color }) => (
             <TabIcon
-              name={focused ? "wallet" : "wallet-outline"}
+              name={focused ? "bar-chart" : "bar-chart-outline"}
               focused={focused}
               color={color}
               label="Earnings"

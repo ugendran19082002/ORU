@@ -3,6 +3,10 @@ import { usePathname, useRouter, useSegments } from 'expo-router';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { registerForPushNotificationsAsync } from '@/utils/notifications';
+import * as LocalAuthentication from 'expo-local-authentication';
+import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 
 import type { AppRole, AppUser, PersistedSession, SessionStatus } from '@/types/session';
 
@@ -14,6 +18,8 @@ type SessionContextValue = {
   user: AppUser | null;
   preferredRole: AppRole | null;
   biometricEnabled: boolean;
+  isBiometricVerified: boolean;
+  setIsBiometricVerified: (verified: boolean) => void;
   setPreferredRole: (role: AppRole | null) => Promise<void>;
   setBiometricEnabled: (enabled: boolean) => Promise<void>;
   signIn: (params: { role: AppRole; phone: string; name?: string }) => Promise<void>;
@@ -55,6 +61,7 @@ export function AppSessionProvider({ children }: { children: React.ReactNode }) 
   const [user, setUser] = useState<AppUser | null>(null);
   const [preferredRole, setPreferredRoleState] = useState<AppRole | null>(null);
   const [biometricEnabled, setBiometricEnabledState] = useState(false);
+  const [isBiometricVerified, setIsBiometricVerified] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -118,8 +125,10 @@ export function AppSessionProvider({ children }: { children: React.ReactNode }) 
           biometricEnabled,
         });
       },
+      isBiometricVerified,
+      setIsBiometricVerified,
     }),
-    [biometricEnabled, isHydrated, preferredRole, status, user]
+    [biometricEnabled, isBiometricVerified, isHydrated, preferredRole, status, user]
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
@@ -137,17 +146,18 @@ export function AppRouteGuard() {
   const router = useRouter();
   const pathname = usePathname();
   const segments = useSegments();
-  const { isHydrated, status, user } = useAppSession();
+  const { isHydrated, status, user, biometricEnabled, isBiometricVerified, setIsBiometricVerified } = useAppSession() as any;
 
   useEffect(() => {
     if (!isHydrated) return;
 
     const firstSegment = segments[0] ?? '';
     const isAuthRoute = firstSegment === 'auth';
+    const isOnboardingRoute = firstSegment === 'onboarding';
     
     // Anonymous User Handling
     if (status === 'anonymous') {
-      if (!isAuthRoute) {
+      if (!isAuthRoute && !isOnboardingRoute) {
         console.log('🛡️ [Guard] Redirecting anonymous user to /auth');
         router.replace('/auth');
       }
@@ -156,37 +166,83 @@ export function AppRouteGuard() {
 
     if (!user) return;
 
-    // Role-based target determination
-    let target: any = '/(tabs)';
-    if (user.role === 'shop') target = '/shop';
-    else if (user.role === 'admin') target = '/admin';
-    else if (user.role === 'delivery') target = '/delivery';
+    // --- CHECKLIST: SECURITY & PERMISSIONS ---
+    
+    const runChecklist = async () => {
+      // 1. Biometric Check
+      if (biometricEnabled && !isBiometricVerified) {
+        const hasHardware = await LocalAuthentication.hasHardwareAsync();
+        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+        
+        if (hasHardware && isEnrolled) {
+          const result = await LocalAuthentication.authenticateAsync({
+            promptMessage: 'Unlock ThanniGo',
+            fallbackLabel: 'Use PIN',
+          });
+          if (result.success) {
+            setIsBiometricVerified(true);
+          } else {
+            return; // Stay here or show error
+          }
+        } else {
+          setIsBiometricVerified(true); // No hardware, skip
+        }
+      }
 
-    // Auth Route Escape (send logged in users away from login)
-    if (isAuthRoute) {
-      console.log(`🛡️ [Guard] Logged-in user on auth route: Redirecting to ${target}`);
-      router.replace(target);
-      return;
-    }
+      // 2. Location Check (Only for Customer/Shop/Delivery)
+      if (user.role !== 'admin' && firstSegment !== 'location' && firstSegment !== 'enable-notifications') {
+        const { status: locStatus } = await Location.getForegroundPermissionsAsync();
+        if (locStatus !== 'granted') {
+          console.log('🛡️ [Guard] Location not granted: Redirecting to /location');
+          router.replace('/location');
+          return;
+        }
+      }
 
-    // Role-based Access Control (Illegal access)
-    const isIllegalCustomer = user.role === 'customer' && (segments[0] === 'shop' || segments[0] === 'admin' || segments[0] === 'delivery');
-    const isIllegalShop = user.role === 'shop' && segments[0] === 'admin';
-    const isIllegalAdmin = user.role === 'admin' && (segments[0] === '(tabs)' || segments[0] === 'shop' || segments[0] === 'delivery');
-    const isIllegalDelivery = user.role === 'delivery' && (segments[0] === '(tabs)' || segments[0] === 'shop' || segments[0] === 'admin');
+      // 3. Notification Check
+      if (firstSegment !== 'enable-notifications' && firstSegment !== 'location') {
+        const { status: notifStatus } = await Notifications.getPermissionsAsync();
+        if (notifStatus !== 'granted') {
+          console.log('🛡️ [Guard] Notifications not granted: Redirecting to /enable-notifications');
+          router.replace({ pathname: '/enable-notifications', params: { next: pathname } } as any);
+          return;
+        }
+      }
 
-    if (isIllegalCustomer || isIllegalShop || isIllegalAdmin || isIllegalDelivery) {
-      console.log('🛡️ [Guard] Illegal route access: Redirecting to', target);
-      router.replace(target);
-      return;
-    }
+      // Role-based target determination
+      let target: any = '/(tabs)';
+      if (user.role === 'shop') target = '/shop';
+      else if (user.role === 'admin') target = '/admin';
+      else if (user.role === 'delivery') target = '/delivery';
 
-    // Root Path Handling
-    if (pathname === '/') {
-      console.log(`🛡️ [Guard] Root hit: Redirecting to ${target}`);
-      router.replace(target);
-    }
-  }, [isHydrated, pathname, router, segments, status, user]);
+      // Auth Route Escape (send logged in users away from login)
+      if (isAuthRoute) {
+        console.log(`🛡️ [Guard] Logged-in user on auth route: Redirecting to ${target}`);
+        router.replace(target);
+        return;
+      }
+
+      // Role-based Access Control
+      const isIllegalCustomer = user.role === 'customer' && (segments[0] === 'shop' || segments[0] === 'admin' || segments[0] === 'delivery');
+      const isIllegalShop = user.role === 'shop' && segments[0] === 'admin';
+      const isIllegalAdmin = user.role === 'admin' && (segments[0] === '(tabs)' || segments[0] === 'shop' || segments[0] === 'delivery');
+      const isIllegalDelivery = user.role === 'delivery' && (segments[0] === '(tabs)' || segments[0] === 'shop' || segments[0] === 'admin');
+
+      if (isIllegalCustomer || isIllegalShop || isIllegalAdmin || isIllegalDelivery) {
+        console.log('🛡️ [Guard] Illegal route access: Redirecting to', target);
+        router.replace(target);
+        return;
+      }
+
+      // Root Path Handling
+      if (pathname === '/') {
+        console.log(`🛡️ [Guard] Root hit: Redirecting to ${target}`);
+        router.replace(target);
+      }
+    };
+
+    runChecklist();
+  }, [isHydrated, pathname, router, segments, status, user, biometricEnabled, isBiometricVerified]);
 
   return null;
 }

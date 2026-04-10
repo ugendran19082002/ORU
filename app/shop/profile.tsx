@@ -407,20 +407,6 @@ export default function ShopProfileScreen() {
         >
           <Text style={styles.pageTitle}>Shop Profile</Text>
 
-          {/* PROFILE BANNER */}
-          <View style={styles.bannerContainer}>
-            <Image
-              source={{ uri: "https://picsum.photos/seed/shopbanner/800/400" }}
-              style={styles.bannerImg}
-            />
-            <View style={styles.bannerOverlay} />
-            <View style={styles.avatarWrap}>
-              <Ionicons name="storefront" size={32} color="#005d90" />
-            </View>
-            <TouchableOpacity style={styles.uploadBtn}>
-              <Ionicons name="camera" size={16} color="white" />
-            </TouchableOpacity>
-          </View>
 
           {/* SHOP INFO */}
           <Text style={styles.sectionTitle}>Business Details</Text>
@@ -465,6 +451,7 @@ export default function ShopProfileScreen() {
                 draggable
                 markerTitle={shopName}
                 onMarkerDragEnd={handleMarkerDragEnd}
+                hideControls={true}
               >
                 <ExpoMarker
                   coordinate={{ latitude: currentLat, longitude: currentLng }}
@@ -473,7 +460,7 @@ export default function ShopProfileScreen() {
                   title={shopName}
                 />
               </ExpoMap>
-              <View style={styles.mapOverlay}>
+              <View style={styles.mapOverlayTopRight}>
                 <TouchableOpacity
                   style={styles.mapActionBtn}
                   onPress={() => {
@@ -492,32 +479,32 @@ export default function ShopProfileScreen() {
                     }
                   }}
                 >
-                  <Ionicons name="eye-outline" size={20} color="#005d90" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.mapActionBtn, { marginTop: 8 }]}
-                  onPress={shareShopLocation}
-                >
-                  <Ionicons
-                    name="share-social-outline"
-                    size={20}
-                    color="#005d90"
-                  />
+                  <Ionicons name="expand-outline" size={20} color="#005d90" />
                 </TouchableOpacity>
               </View>
             </View>
 
-            <TouchableOpacity
-              style={[styles.gpsBtn, { marginBottom: 16 }]}
-              onPress={handleUseCurrentLocation}
-            >
-              {isFetchingLocation ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <Ionicons name="locate" size={20} color="#ffffff" />
-              )}
-              <Text style={styles.gpsBtnText}>Use current location</Text>
-            </TouchableOpacity>
+            {/* QUICK ACTIONS ROW */}
+            <View style={styles.mapUtilityRow}>
+              <TouchableOpacity
+                style={styles.utilityBtn}
+                onPress={handleUseCurrentLocation}
+                disabled={isFetchingLocation}
+              >
+                {isFetchingLocation ? (
+                  <ActivityIndicator size="small" color="#005d90" />
+                ) : (
+                  <Ionicons name="location-sharp" size={18} color="#005d90" />
+                )}
+                <Text style={styles.utilityBtnText}>Locate Me</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.utilityBtn} onPress={shareShopLocation}>
+                <Ionicons name="share-social-outline" size={18} color="#005d90" />
+                <Text style={styles.utilityBtnText}>Share</Text>
+              </TouchableOpacity>
+            </View>
+
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Shop / Building / Floor No.</Text>
@@ -529,14 +516,23 @@ export default function ShopProfileScreen() {
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Landmark (Optional)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. Near BDA Complex"
-                value={landmark}
-                onChangeText={setLandmark}
-              />
+            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.label}>Latitude</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: '#f1f5f9', color: '#64748b' }]}
+                  value={currentLat.toFixed(6)}
+                  editable={false}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.label}>Longitude</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: '#f1f5f9', color: '#64748b' }]}
+                  value={currentLng.toFixed(6)}
+                  editable={false}
+                />
+              </View>
             </View>
             <View style={styles.inputGroup}>
               <View
@@ -960,7 +956,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   map: { width: "100%", height: "100%" },
-  mapOverlay: { position: "absolute", bottom: 12, right: 12 },
+  mapOverlayTopRight: { position: "absolute", top: 12, right: 12 },
   mapActionBtn: {
     backgroundColor: "white",
     width: 44,
@@ -974,21 +970,34 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 4,
   },
-  liveMapText: {
-    position: "absolute",
-    bottom: 12,
-    left: 12,
-    color: "#005d90",
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1,
-    backgroundColor: "rgba(255,255,255,0.85)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    overflow: "hidden",
+  mapUtilityRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+    marginTop: 8,
   },
-  mapActionText: { color: "#005d90", fontWeight: "800", fontSize: 12 },
+  utilityBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: 'white',
+    paddingVertical: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#f1f5f9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  utilityBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#005d90',
+  },
 
   // SUGGESTIONS STYLES
   suggestionsContainer: {

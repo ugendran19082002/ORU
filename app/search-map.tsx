@@ -49,6 +49,7 @@ export default function SearchMapScreen() {
           longitudeDelta: 0.05,
         }}
         showRoute={false}
+        hideControls={true}
         draggable={true}
         onMarkerDragEnd={handleMapTap}
         markers={[

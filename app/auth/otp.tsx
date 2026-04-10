@@ -110,9 +110,15 @@ export default function OTPScreen() {
       }).start();
 
       setTimeout(() => {
-        if (role === "shop") router.replace("/shop" as any);
-        else if (role === "admin") router.replace("/admin" as any);
-        else router.replace("/(tabs)" as any);
+        let next: any = "/(tabs)";
+        if (role === "shop") next = "/shop";
+        else if (role === "admin") next = "/admin";
+        else if (role === "delivery") next = "/delivery";
+
+        router.replace({
+          pathname: "/enable-notifications",
+          params: { next }
+        } as any);
       }, 1200);
     }
   };

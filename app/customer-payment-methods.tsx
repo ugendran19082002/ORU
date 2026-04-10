@@ -130,10 +130,6 @@ const styles = StyleSheet.create({
   headerSub: { fontSize: 12, color: '#64748b', fontWeight: '500' },
   content: { padding: 20, gap: 20, paddingBottom: 60 },
   
-  walletCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: '#e0f0ff', borderRadius: 20, padding: 16, borderWidth: 1.5, borderColor: '#005d90' },
-  walletIconWrap: { width: 48, height: 48, borderRadius: 14, backgroundColor: '#005d90', alignItems: 'center', justifyContent: 'center' },
-  walletTitle: { fontSize: 16, fontWeight: '800', color: '#005d90', marginBottom: 2 },
-  walletSub: { fontSize: 13, color: '#0077b6', fontWeight: '600' },
 
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: -10, marginTop: 10 },
   sectionTitle: { fontSize: 16, fontWeight: '800', color: '#181c20' },

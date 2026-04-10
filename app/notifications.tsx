@@ -91,18 +91,25 @@ export default function NotificationsScreen() {
         )}
       </View>
 
-      {/* FILTER PILLS */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-        {FILTERS.map((f) => (
-          <TouchableOpacity
-            key={f}
-            style={[styles.filterPill, filter === f && styles.filterPillActive]}
-            onPress={() => setFilter(f)}
-          >
-            <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>{f}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <View style={styles.filterContainer}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={styles.filterRow}
+        >
+          {FILTERS.map((f) => (
+            <TouchableOpacity
+              key={f}
+              activeOpacity={0.7}
+              style={[styles.filterPill, filter === f && styles.filterPillActive]}
+              onPress={() => setFilter(f)}
+              hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+            >
+              <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>{f}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         {filtered.length === 0 && (
@@ -185,10 +192,35 @@ const styles = StyleSheet.create({
   markAllBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, borderWidth: 1, borderColor: '#bfdbf7' },
   markAllText: { fontSize: 12, color: '#005d90', fontWeight: '700' },
 
-  filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingVertical: 12 },
-  filterPill: { paddingHorizontal: 16, paddingVertical: 7, borderRadius: 20, backgroundColor: 'white', borderWidth: 1, borderColor: '#e0e2e8' },
-  filterPillActive: { backgroundColor: '#005d90', borderColor: '#005d90' },
-  filterText: { fontSize: 13, fontWeight: '700', color: '#707881' },
+  filterContainer: {
+    backgroundColor: 'white',
+    height: 64,
+  },
+  filterRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center',
+    paddingHorizontal: 20, 
+    height: '100%',
+    gap: 12, 
+  },
+  filterPill: { 
+    paddingHorizontal: 20, 
+    paddingVertical: 9, 
+    borderRadius: 22, 
+    backgroundColor: '#f1f5f9', 
+    borderWidth: 1.5, 
+    borderColor: 'transparent' 
+  },
+  filterPillActive: { 
+    backgroundColor: '#005d90', 
+    borderColor: '#005d90',
+    shadowColor: '#005d90',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  filterText: { fontSize: 13, fontWeight: '800', color: '#64748b' },
   filterTextActive: { color: 'white' },
 
   content: { padding: 20, gap: 12, paddingBottom: 100 },

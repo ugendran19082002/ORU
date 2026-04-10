@@ -96,6 +96,7 @@ const callNumber = (phone: string, label: string) => {
 
 export default function OrderTrackingScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
+  const [mapType, setMapType] = React.useState<'standard' | 'satellite' | 'hybrid' | 'terrain' | 'none'>('terrain');
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 1000);
@@ -106,6 +107,8 @@ export default function OrderTrackingScreen() {
 
   const { orders, activeOrderId } = useOrderStore();
   const { shops } = useShopStore();
+
+  const mapRef = useRef<any>(null);
 
   useAndroidBackHandler(() => {
     safeBack('/(tabs)');
@@ -203,6 +206,7 @@ export default function OrderTrackingScreen() {
         {/* ── LIVE TRACKING MAP ── */}
         <View style={styles.mapCard}>
           <ExpoMap
+            ref={mapRef}
             style={styles.mapImage}
             initialRegion={{
               latitude: TRACKING_MARKERS[0].latitude,
@@ -212,6 +216,9 @@ export default function OrderTrackingScreen() {
             }}
             markers={TRACKING_MARKERS}
             showRoute
+            mapType={mapType}
+            showsTraffic={true}
+            hideControls={true}
           />
 
           {/* Map Controls */}
@@ -231,11 +238,17 @@ export default function OrderTrackingScreen() {
                 } as any);
               }}
             >
-              <Ionicons name="eye-outline" size={20} color="#005d90" />
+              <Ionicons name="expand-outline" size={20} color="#005d90" />
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.mapIconBtn, { marginTop: 8 }]}
               onPress={() => {
+                mapRef.current?.animateToRegion({
+                  latitude: TRACKING_MARKERS[1].latitude,
+                  longitude: TRACKING_MARKERS[1].longitude,
+                  latitudeDelta: 0.008,
+                  longitudeDelta: 0.008,
+                });
                 Alert.alert('Tracking', 'Re-centering on your live delivery position...');
               }}
             >
@@ -243,13 +256,27 @@ export default function OrderTrackingScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Overlay gradient at bottom */}
           <View style={styles.mapOverlay} pointerEvents="none" />
 
           {/* ETA chip */}
           <View style={styles.etaChip}>
             <Ionicons name="time-outline" size={14} color="#005d90" />
             <Text style={styles.etaText}>{activeOrder?.eta ?? '~5 mins away'}</Text>
+          </View>
+
+          {/* Map Layer Controls */}
+          <View style={styles.mapLayerControls}>
+             <TouchableOpacity style={styles.miniTypeBtn} onPress={() => {
+                const types: any[] = ['standard', 'satellite', 'terrain'];
+                const nextIdx = (types.indexOf(mapType) + 1) % 3;
+                setMapType(types[nextIdx]);
+             }}>
+                <Ionicons 
+                  name={mapType === 'satellite' ? 'images' : mapType === 'terrain' ? 'earth' : 'map'} 
+                  size={14} 
+                  color="#005d90" 
+                />
+             </TouchableOpacity>
           </View>
 
           {/* Driver info card overlaid on map */}
@@ -495,4 +522,16 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#e0e2e8',
   },
   rateBtnText: { color: '#005d90', fontWeight: '700', fontSize: 14 },
+  mapLayerControls: {
+    position: 'absolute',
+    top: 14,
+    left: 14,
+    zIndex: 10,
+  },
+  miniTypeBtn: {
+    width: 32, height: 32, borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
+  },
 });

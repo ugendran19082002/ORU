@@ -97,7 +97,7 @@ export default function ShopEarningsScreen() {
           <View style={styles.divider} />
 
           {/* Business Logic: Pending Admin Commission from Cash Orders */}
-          <View style={styles.walletBottom}>
+          <View style={styles.reconciliationRow}>
             <View style={styles.pendingBlock}>
               <View style={styles.pendingRow}>
                 <Ionicons name={isReconciled ? "checkmark-circle" : "alert-circle"} size={14} color={isReconciled ? "#a7f3d0" : "#ffdad6"} />
@@ -156,7 +156,7 @@ export default function ShopEarningsScreen() {
         {/* RECENT TRANSACTIONS */}
         <Text style={styles.sectionHeader}>Recent Transactions</Text>
         <View style={styles.trxList}>
-          {/* UPI Order Math: ₹50 order -> ₹48 shop wallet, ₹2 Admin auto split */}
+          {/* UPI Order Math: ₹50 order -> ₹48 shop balance, ₹2 Admin auto split */}
           <View style={styles.trxItem}>
             <View style={[styles.trxIconWrap, { backgroundColor: '#e8f5e9' }]}>
               <Ionicons name="arrow-down-outline" size={16} color="#2e7d32" />
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.15)', marginVertical: 20 },
   
-  walletBottom: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' },
+  reconciliationRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' },
   pendingBlock: { flex: 1, paddingRight: 12 },
   pendingRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
   pendingLabel: { fontSize: 11, fontWeight: '700', color: '#ffdad6', flex: 1 },

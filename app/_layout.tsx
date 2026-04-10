@@ -25,6 +25,7 @@ export default function RootLayout() {
             {/* AUTH & ONBOARDING */}
             <Stack.Screen name="auth" options={{ headerShown: false, animation: 'fade' }} />
             <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
+            <Stack.Screen name="enable-notifications" options={{ headerShown: false, animation: 'fade' }} />
 
             {/* CUSTOMER TABS */}
             <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />

@@ -340,6 +340,7 @@ export default function HomeScreen() {
         ) : isMapView ? (
           <View style={{ height: 400, borderRadius: 20, overflow: 'hidden', marginTop: 10, borderColor: '#e2e8f0', borderWidth: 1 }}>
             <ExpoMap 
+               hideControls={true}
                style={{ flex: 1 }} 
                initialRegion={{ 
                  latitude: userLoc?.lat ?? 12.9716, 

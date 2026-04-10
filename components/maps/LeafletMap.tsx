@@ -35,6 +35,10 @@ interface LeafletMapProps {
   markers?: LeafletMarker[];
   /** Draw a polyline route between all marker positions */
   showRoute?: boolean;
+  /** 'standard' or 'satellite' */
+  mapType?: 'standard' | 'satellite' | 'hybrid' | 'terrain' | 'none';
+  /** Hide internal MapType switcher and zoom buttons */
+  hideControls?: boolean;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -51,6 +55,8 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
       onMarkerDragEnd,
       markers,
       showRoute = false,
+      mapType = 'terrain',
+      hideControls = false,
     },
     ref,
   ) => {
@@ -61,6 +67,15 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
         webviewRef.current?.injectJavaScript(`panTo(${lat}, ${lng}); true;`);
       },
     }));
+
+    // Sync mapType prop to internal WebView
+    React.useEffect(() => {
+      let internalMode = 'std';
+      if (mapType === 'satellite' || mapType === 'hybrid') internalMode = 'sat';
+      if (mapType === 'terrain') internalMode = 'ter';
+      
+      webviewRef.current?.injectJavaScript(`if(typeof switchLayer === 'function') switchLayer('${internalMode}'); true;`);
+    }, [mapType]);
 
     const handleMessage = useCallback(
       (event: any) => {
@@ -99,10 +114,11 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
     #map{height:100vh;width:100vw}
     .leaflet-control-attribution{display:none!important}
     /* ThanniGo Zoom Controls */
-    .leaflet-bar { border: none !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; border-radius: 12px !important; overflow: hidden; margin-top: 16px !important; margin-left: 16px !important; }
-    .leaflet-bar a { background-color: rgba(255,255,255,0.95) !important; color: #005d90 !important; width: 44px !important; height: 44px !important; line-height: 44px !important; font-size: 20px !important; font-weight: 700 !important; }
-    .leaflet-bar a:hover { background-color: #f1f4f9 !important; }
-    .leaflet-control-zoom-in { border-bottom: 1px solid #e2e8f0 !important; }
+    /* Layer Toggle */
+    .layer-ctrl { position: absolute; bottom: 24px; right: 16px; background: white; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; z-index: 1000; border: 1.5px solid #e2e8f0; }
+    .layer-btn { padding: 10px 14px; font-size: 11px; font-weight: 800; color: #64748b; text-align: center; border: none; background: white; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; }
+    .layer-btn.active { background: #005d90; color: white; }
+    .layer-btn:not(:last-child) { border-bottom: 1.5px solid #f1f4f9; }
     /* Pin marker */
     .cpw{display:flex;flex-direction:column;align-items:center}
     .cpc{width:38px;height:38px;border-radius:50%;border:3px solid white;box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center}
@@ -116,6 +132,11 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
 </head>
 <body>
 <div id="map"></div>
+<div class="layer-ctrl" style="\${HIDE_CONTROLS ? 'display:none' : ''}">
+  <button id="btn-std" class="layer-btn \${INITIAL_MODE === 'std' ? 'active' : ''}" onclick="switchLayer('std')">Map</button>
+  <button id="btn-sat" class="layer-btn \${INITIAL_MODE === 'sat' ? 'active' : ''}" onclick="switchLayer('sat')">Sat</button>
+  <button id="btn-ter" class="layer-btn \${INITIAL_MODE === 'ter' ? 'active' : ''}" onclick="switchLayer('ter')">Terr</button>
+</div>
 <script>
   var MARKERS = ${markersJs};
   var DRAGGABLE = ${draggable ? "true" : "false"};
@@ -123,9 +144,54 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
   var LAT = ${latitude};
   var LNG = ${longitude};
   var ZOOM = ${zoom};
+  var HIDE_CONTROLS = ${hideControls};
+  var INITIAL_MODE = 'std';
+  if ('${mapType}' === 'satellite' || '${mapType}' === 'hybrid') INITIAL_MODE = 'sat';
+  if ('${mapType}' === 'terrain') INITIAL_MODE = 'ter';
 
-  var map = L.map('map',{attributionControl:false,tap:true}).setView([LAT,LNG],ZOOM);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,subdomains:['a','b','c']}).addTo(map);
+  var map = L.map('map',{attributionControl:false,tap:true,zoomControl:false}).setView([LAT,LNG],ZOOM);
+  if (!HIDE_CONTROLS) {
+    L.control.zoom({ position: 'topleft' }).addTo(map);
+  }
+
+  var standardLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,subdomains:['a','b','c']});
+  var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19,
+    attribution: 'Tiles &copy; Esri'
+  });
+  var terrainLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19,
+    attribution: 'Tiles &copy; Esri'
+  });
+
+  if (INITIAL_MODE === 'sat') {
+    satelliteLayer.addTo(map);
+  } else if (INITIAL_MODE === 'ter') {
+    terrainLayer.addTo(map);
+  } else {
+    standardLayer.addTo(map);
+  }
+
+  function switchLayer(type) {
+    map.removeLayer(standardLayer);
+    map.removeLayer(satelliteLayer);
+    map.removeLayer(terrainLayer);
+    
+    document.getElementById('btn-std').classList.remove('active');
+    document.getElementById('btn-sat').classList.remove('active');
+    document.getElementById('btn-ter').classList.remove('active');
+
+    if (type === 'sat') {
+      satelliteLayer.addTo(map);
+      document.getElementById('btn-sat').classList.add('active');
+    } else if (type === 'ter') {
+      terrainLayer.addTo(map);
+      document.getElementById('btn-ter').classList.add('active');
+    } else {
+      standardLayer.addTo(map);
+      document.getElementById('btn-std').classList.add('active');
+    }
+  }
 
   function makeIcon(m) {
     var color = m.color || '#005d90';

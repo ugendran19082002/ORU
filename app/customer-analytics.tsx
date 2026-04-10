@@ -39,7 +39,7 @@ export default function CustomerAnalyticsScreen() {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <View style={[styles.statIconWrap, { backgroundColor: '#e0f0ff' }]}>
-              <Ionicons name="wallet-outline" size={20} color="#005d90" />
+              <Ionicons name="stats-chart-outline" size={20} color="#005d90" />
             </View>
             <Text style={styles.statValue}>₹2,970</Text>
             <Text style={styles.statLabel}>Total Spent (YTD)</Text>
