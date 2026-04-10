@@ -6,7 +6,6 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
-import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
 import { useOrderStore } from '@/stores/orderStore';
 
 interface Customer {
@@ -104,7 +103,6 @@ export default function ShopCustomersScreen() {
 
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.pageTitle}>My Customers</Text>
-        <StitchScreenNote screen="customer_management_shop" />
 
         {/* PENDING REQUESTS */}
         {pendingReqs.length > 0 && (

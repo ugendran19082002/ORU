@@ -1,7 +1,12 @@
 import { create } from 'zustand';
 
-import type { Shop } from '@/types/domain';
+import type { Shop, DeliveryAgent } from '@/types/domain';
 import { mockShops } from '@/utils/mockData';
+
+const DEFAULT_AGENTS: DeliveryAgent[] = [
+  { id: 'da_1', name: 'Ravi Kumar', phone: '9876543210', status: 'active', assignedOrders: 2 },
+  { id: 'da_2', name: 'Suresh M', phone: '9123456789', status: 'offline', assignedOrders: 0 },
+];
 
 type ShopFilters = {
   openNow: boolean;
@@ -18,6 +23,11 @@ type ShopState = {
   toggleFilter: (key: keyof Omit<ShopFilters, 'maxPrice'>) => void;
   setMaxPrice: (price: number | null) => void;
   resetFilters: () => void;
+  
+  // Fleet Management
+  deliveryAgents: DeliveryAgent[];
+  addDeliveryAgent: (payload: { name: string; phone: string }) => void;
+  removeDeliveryAgent: (id: string) => void;
 };
 
 const defaultFilters: ShopFilters = {
@@ -47,4 +57,21 @@ export const useShopStore = create<ShopState>((set) => ({
       },
     })),
   resetFilters: () => set({ filters: defaultFilters }),
+
+  deliveryAgents: DEFAULT_AGENTS,
+  addDeliveryAgent: (payload) => set((state) => ({
+    deliveryAgents: [
+      ...state.deliveryAgents,
+      {
+        id: `da_${Date.now()}`,
+        name: payload.name,
+        phone: payload.phone,
+        status: 'offline',
+        assignedOrders: 0,
+      }
+    ]
+  })),
+  removeDeliveryAgent: (id) => set((state) => ({
+    deliveryAgents: state.deliveryAgents.filter(a => a.id !== id)
+  })),
 }));

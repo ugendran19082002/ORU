@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Switch, Animated,
+  StyleSheet, Switch, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useDeliveryStore } from '@/stores/deliveryStore';
+import { useAppSession } from '@/hooks/use-app-session';
 
 const TRIPS = [
   { id: 't1', orderId: '#9831', customer: 'Ananya Sharma', address: 'Flat 4B, Emerald Heights, Sector 42', distance: '1.2 km', eta: '8 min', priority: 'Urgent', cans: 1, amount: '₹50', status: 'assigned' },
@@ -18,6 +19,7 @@ const TRIPS = [
 
 export default function DeliveryDashboardScreen() {
   const router = useRouter();
+  const { user, signOut } = useAppSession();
   const { tasks, online, toggleOnline, assignCurrentTask } = useDeliveryStore();
   const [trips] = useState(TRIPS);
 
@@ -42,14 +44,44 @@ export default function DeliveryDashboardScreen() {
               <Text style={styles.onlineStatus}>{online ? 'Online — ready for trips' : 'Offline'}</Text>
             </View>
           </View>
-          <View style={styles.toggleWrap}>
-            <Text style={styles.toggleLabel}>{online ? 'GO\nOFFLINE' : 'GO\nONLINE'}</Text>
-            <Switch
-              value={online}
-              onValueChange={toggleOnline}
-              trackColor={{ false: '#94a3b8', true: '#bfdbf7' }}
-              thumbColor={online ? 'white' : '#94a3b8'}
-            />
+          <View style={styles.headerRight}>
+            {user?.role === 'shop' && (
+              <TouchableOpacity
+                style={styles.shopBackBtn}
+                onPress={() => Alert.alert(
+                  'Exit Delivery Mode',
+                  'Return to the Shop Panel?',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Go to Shop', onPress: () => router.replace('/shop' as any) },
+                  ]
+                )}
+              >
+                <Ionicons name="storefront-outline" size={14} color="rgba(255,255,255,0.85)" />
+                <Text style={styles.shopBackBtnText}>Shop Panel</Text>
+              </TouchableOpacity>
+            )}
+            {user?.role === 'delivery' && (
+              <TouchableOpacity
+                style={[styles.shopBackBtn, { backgroundColor: 'rgba(255,255,255,0.15)' }]}
+                onPress={async () => {
+                  await signOut();
+                  router.replace('/auth' as any);
+                }}
+              >
+                <Ionicons name="log-out-outline" size={14} color="rgba(255,255,255,0.9)" />
+                <Text style={styles.shopBackBtnText}>Sign Out</Text>
+              </TouchableOpacity>
+            )}
+            <View style={styles.toggleWrap}>
+              <Text style={styles.toggleLabel}>{online ? 'GO\nOFFLINE' : 'GO\nONLINE'}</Text>
+              <Switch
+                value={online}
+                onValueChange={toggleOnline}
+                trackColor={{ false: '#94a3b8', true: '#bfdbf7' }}
+                thumbColor={online ? 'white' : '#94a3b8'}
+              />
+            </View>
           </View>
         </View>
 
@@ -198,6 +230,9 @@ const styles = StyleSheet.create({
   onlineRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   onlineDot: { width: 8, height: 8, borderRadius: 4 },
   onlineStatus: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: '600' },
+  headerRight: { alignItems: 'flex-end', gap: 12 },
+  shopBackBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
+  shopBackBtnText: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.85)' },
   toggleWrap: { alignItems: 'center', gap: 4 },
   toggleLabel: { fontSize: 10, color: 'rgba(255,255,255,0.7)', fontWeight: '800', letterSpacing: 0.5, textAlign: 'center' },
 

@@ -391,7 +391,7 @@ export default function ShopProfileScreen() {
           contentContainerStyle={{ paddingBottom: 120 }}
         >
           <Text style={styles.pageTitle}>Shop Profile</Text>
-          <StitchScreenNote screen="shop_settings_profile" />
+
 
           {/* PROFILE BANNER */}
           <View style={styles.bannerContainer}>

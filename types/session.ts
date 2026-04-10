@@ -1,4 +1,4 @@
-export type AppRole = 'customer' | 'shop' | 'admin';
+export type AppRole = 'customer' | 'shop' | 'admin' | 'delivery';
 
 export type SessionStatus = 'loading' | 'anonymous' | 'authenticated';
 

@@ -4,6 +4,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -14,7 +15,7 @@ import { Logo } from '@/components/ui/Logo';
 import { roleAccent, roleGradients } from '@/constants/theme';
 import { useAppSession } from '@/hooks/use-app-session';
 
-type Role = 'customer' | 'shop' | 'admin';
+type Role = 'customer' | 'shop' | 'delivery' | 'admin';
 
 const ROLES = [
   {
@@ -24,6 +25,7 @@ const ROLES = [
     icon: 'person-outline' as const,
     accent: roleAccent.customer,
     bg: '#e0f0ff',
+    gradient: ['#005d90', '#0077b6'] as [string, string],
     features: ['Browse nearby shops', 'Track live delivery', 'Pay via UPI / COD'],
   },
   {
@@ -33,7 +35,18 @@ const ROLES = [
     icon: 'storefront-outline' as const,
     accent: roleAccent.shop,
     bg: '#e0f7fa',
-    features: ['Accept/reject orders', 'Track daily earnings', 'View delivery map'],
+    gradient: ['#006878', '#005566'] as [string, string],
+    features: ['Accept/reject orders', 'Track daily earnings', 'Inventory & analytics'],
+  },
+  {
+    id: 'delivery' as Role,
+    title: 'Delivery Agent',
+    subtitle: 'Deliver orders &\nearn per trip',
+    icon: 'bicycle-outline' as const,
+    accent: '#2e7d32',
+    bg: '#e8f5e9',
+    gradient: ['#2e7d32', '#388e3c'] as [string, string],
+    features: ['View assigned trips', 'Verify OTP & collect payment', 'Track shift earnings'],
   },
   {
     id: 'admin' as Role,
@@ -42,9 +55,17 @@ const ROLES = [
     icon: 'shield-checkmark-outline' as const,
     accent: roleAccent.admin,
     bg: '#e0f2f1',
+    gradient: ['#00796b', '#004d40'] as [string, string],
     features: ['Live orders feed', 'Shop verification', 'Revenue analytics'],
   },
 ];
+
+const ROLE_DESTINATIONS: Record<Role, string> = {
+  customer: '/(tabs)',
+  shop: '/shop',
+  delivery: '/delivery',
+  admin: '/admin',
+};
 
 export default function RoleSelectScreen() {
   const router = useRouter();
@@ -54,13 +75,19 @@ export default function RoleSelectScreen() {
   const handleContinue = async () => {
     if (!selected) return;
     await setPreferredRole(selected);
-    router.push({ pathname: '/auth/login', params: { role: selected } });
+    // For delivery: go directly to delivery dashboard (separate from shop)
+    if (selected === 'delivery') {
+      router.push({ pathname: '/auth/login', params: { role: selected } });
+    } else {
+      router.push({ pathname: '/auth/login', params: { role: selected } });
+    }
   };
+
+  const selectedRole = ROLES.find((r) => r.id === selected);
 
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
-
       <SafeAreaView style={styles.safe}>
         {/* HEADER */}
         <View style={styles.header}>
@@ -80,7 +107,7 @@ export default function RoleSelectScreen() {
         </View>
 
         {/* ROLE CARDS */}
-        <View style={styles.roleList}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.roleList}>
           {ROLES.map((role) => {
             const isSelected = selected === role.id;
             return (
@@ -93,7 +120,7 @@ export default function RoleSelectScreen() {
                 ]}
                 onPress={() => setSelected(role.id)}
               >
-                {/* Selection indicator */}
+                {/* Radio */}
                 <View style={[styles.radioOuter, isSelected && { borderColor: role.accent }]}>
                   {isSelected && <View style={[styles.radioInner, { backgroundColor: role.accent }]} />}
                 </View>
@@ -121,7 +148,7 @@ export default function RoleSelectScreen() {
               </TouchableOpacity>
             );
           })}
-        </View>
+        </ScrollView>
 
         {/* CTA */}
         <TouchableOpacity
@@ -130,13 +157,13 @@ export default function RoleSelectScreen() {
           style={[styles.ctaWrap, !selected && { opacity: 0.4 }]}
         >
           <LinearGradient
-            colors={[roleGradients.customer.start, roleGradients.customer.end]}
+            colors={selectedRole?.gradient ?? ['#005d90', '#0077b6']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.ctaBtn}
           >
             <Text style={styles.ctaText}>
-              Continue as {selected ? ROLES.find((r) => r.id === selected)?.title : '—'}
+              Continue as {selectedRole?.title ?? '—'}
             </Text>
             <Ionicons name="arrow-forward" size={20} color="white" />
           </LinearGradient>
@@ -161,14 +188,14 @@ const styles = StyleSheet.create({
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   brandName: { fontSize: 20, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
 
-  titleBlock: { marginTop: 8, marginBottom: 20 },
+  titleBlock: { marginTop: 8, marginBottom: 16 },
   title: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, marginBottom: 6 },
   subtitle: { fontSize: 15, color: '#707881', fontWeight: '500' },
 
-  roleList: { gap: 14, flex: 1 },
+  roleList: { gap: 12, paddingBottom: 8 },
   roleCard: {
     backgroundColor: 'white', borderRadius: 24,
-    padding: 18, flexDirection: 'row', alignItems: 'flex-start', gap: 14,
+    padding: 16, flexDirection: 'row', alignItems: 'flex-start', gap: 14,
     borderWidth: 1.5, borderColor: '#ebeef4',
     shadowColor: '#003a5c', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
@@ -188,7 +215,7 @@ const styles = StyleSheet.create({
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   featureText: { fontSize: 12, fontWeight: '600' },
 
-  ctaWrap: { paddingVertical: 20 },
+  ctaWrap: { paddingVertical: 16 },
   ctaBtn: {
     borderRadius: 20, paddingVertical: 18,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,

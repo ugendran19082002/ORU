@@ -153,6 +153,7 @@ export function AppRouteGuard() {
     if (isAuthRoute) {
       if (user.role === 'shop') router.replace('/shop');
       else if (user.role === 'admin') router.replace('/admin');
+      else if (user.role === 'delivery') router.replace('/delivery');
       else router.replace('/(tabs)');
       return;
     }
@@ -175,6 +176,7 @@ export function AppRouteGuard() {
     if (pathname === '/') {
       if (user.role === 'shop') router.replace('/shop');
       else if (user.role === 'admin') router.replace('/admin');
+      else if (user.role === 'delivery') router.replace('/delivery');
       else router.replace('/(tabs)');
     }
   }, [isHydrated, pathname, router, segments, status, user]);

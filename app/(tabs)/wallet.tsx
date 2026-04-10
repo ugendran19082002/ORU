@@ -5,9 +5,6 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-
-import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
-
 const TRANSACTIONS = [
   { id: '1', type: 'debit', title: 'Order #TN-9412', date: 'Today, 10:45 AM', amount: '110', method: 'UPI' },
   { id: '2', type: 'debit', title: 'Order #TN-9344', date: 'Yesterday, 04:30 PM', amount: '90', method: 'Wallet' },
@@ -43,7 +40,6 @@ export default function CustomerWalletScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
       >
-        <StitchScreenNote screen="my_wallet" />
         
         {/* WALLET CARD */}
         <LinearGradient

@@ -15,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
 import { Logo } from '@/components/ui/Logo';
 import { useAppSession } from '@/hooks/use-app-session';
 
@@ -71,7 +70,6 @@ export default function ProfileScreen() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
       >
-        <StitchScreenNote screen="customer_profile" />
         {/* PROFILE CARD */}
         <LinearGradient
           colors={['#005d90', '#0077b6']}

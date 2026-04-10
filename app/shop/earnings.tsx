@@ -47,7 +47,7 @@ export default function ShopEarningsScreen() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
       >
         <Text style={styles.pageTitle}>Earnings</Text>
-        <StitchScreenNote screen="shop_earnings" />
+
 
         {/* SHOP WALLET CARD */}
         <LinearGradient

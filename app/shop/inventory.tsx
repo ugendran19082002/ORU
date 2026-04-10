@@ -98,7 +98,7 @@ export default function ShopInventoryScreen() {
             <Text style={styles.addBtnText}>Add Product</Text>
           </TouchableOpacity>
         </View>
-        <StitchScreenNote screen="inventory_management" />
+
 
         <View style={styles.listContainer}>
           {activeShopItems.length === 0 ? (

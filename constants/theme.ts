@@ -26,12 +26,14 @@ export const roleGradients = {
   customer: { start: '#005D90', end: '#0077B6' },
   shop: { start: '#006878', end: '#008E9B' },
   admin: { start: '#23616B', end: '#2D828F' },
+  delivery: { start: '#2e7d32', end: '#388E3C' },
 } as const;
 
 export const roleAccent = {
   customer: roleGradients.customer.start,
   shop: roleGradients.shop.start,
   admin: roleGradients.admin.start,
+  delivery: roleGradients.delivery.start,
 } as const;
 
 export const Colors = {

@@ -94,6 +94,14 @@ export type DeliveryTask = {
   paymentPending: boolean;
 };
 
+export type DeliveryAgent = {
+  id: string;
+  name: string;
+  phone: string;
+  status: 'active' | 'offline';
+  assignedOrders: number;
+};
+
 export type AppRoleOption = {
   id: AppRole;
   label: string;

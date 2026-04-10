@@ -1,9 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import React from "react";
-import { Text, View } from "react-native";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
 
-// Custom tab bar icon with active pill style (Unified theme)
 function TabIcon({
   name,
   focused,
@@ -20,18 +19,18 @@ function TabIcon({
       style={{
         alignItems: "center",
         justifyContent: "center",
-        paddingHorizontal: focused ? 12 : 0,
+        paddingHorizontal: focused ? 10 : 0,
         paddingVertical: 8,
         borderRadius: 20,
         backgroundColor: focused ? "#e0f4f4" : "transparent",
-        minWidth: 80, // Increased for more prominent pill
+        minWidth: 64,
         minHeight: 45,
       }}
     >
       <Ionicons name={name} size={22} color={focused ? "#006878" : "#94a3b8"} />
       <Text
         style={{
-          fontSize: 9, // Slightly smaller for 5-tab layout
+          fontSize: 9,
           fontWeight: "700",
           color: focused ? "#006878" : "#94a3b8",
           marginTop: 2,
@@ -45,6 +44,22 @@ function TabIcon({
 }
 
 export default function ShopLayout() {
+  const router = useRouter();
+
+  const handleDeliverySwitch = () => {
+    Alert.alert(
+      "Switch to Delivery Mode",
+      "You will be redirected to the Delivery Agent dashboard. Switch back anytime from the delivery menu.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Switch Now",
+          onPress: () => router.replace("/delivery" as any),
+        },
+      ]
+    );
+  };
+
   return (
     <Tabs
       screenOptions={{
@@ -65,7 +80,7 @@ export default function ShopLayout() {
           position: "absolute",
         },
         tabBarShowLabel: false,
-        tabBarActiveTintColor: "#006878", // Shop accent color
+        tabBarActiveTintColor: "#006878",
         tabBarInactiveTintColor: "#94a3b8",
         tabBarItemStyle: {
           flex: 1,
@@ -76,19 +91,14 @@ export default function ShopLayout() {
         animation: "fade",
       }}
     >
-      {/* Hide the old dashboard file from tabs / Redirect */}
+      {/* Hidden screens (no tab icon) */}
       <Tabs.Screen name="dashboard" options={{ href: null }} />
-      <Tabs.Screen name="inventory" options={{ href: null }} />
+      <Tabs.Screen name="order/[id]" options={{ href: null, tabBarStyle: { display: "none" } }} />
+      <Tabs.Screen name="vendor-register" options={{ href: null }} />
+      <Tabs.Screen name="subscription-plans" options={{ href: null }} />
+      <Tabs.Screen name="manual-order" options={{ href: null }} />
 
-      {/* Hide tab bar for specific order success screen */}
-      <Tabs.Screen
-        name="order/[id]"
-        options={{
-          href: null,
-          tabBarStyle: { display: "none" },
-        }}
-      />
-
+      {/* TAB 1 — Orders (Home) */}
       <Tabs.Screen
         name="index"
         options={{
@@ -102,19 +112,38 @@ export default function ShopLayout() {
           ),
         }}
       />
+
+      {/* TAB 2 — Inventory */}
       <Tabs.Screen
-        name="customers"
+        name="inventory"
         options={{
           tabBarIcon: ({ focused, color }) => (
             <TabIcon
-              name={focused ? "people" : "people-outline"}
+              name={focused ? "cube" : "cube-outline"}
               focused={focused}
               color={color}
-              label="Customers"
+              label="Stock"
             />
           ),
         }}
       />
+
+      {/* TAB 3 — Analytics */}
+      <Tabs.Screen
+        name="analytics"
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <TabIcon
+              name={focused ? "bar-chart" : "bar-chart-outline"}
+              focused={focused}
+              color={color}
+              label="Analytics"
+            />
+          ),
+        }}
+      />
+
+      {/* TAB 4 — Earnings */}
       <Tabs.Screen
         name="earnings"
         options={{
@@ -128,35 +157,27 @@ export default function ShopLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon
-              name={focused ? "storefront" : "storefront-outline"}
-              focused={focused}
-              color={color}
-              label="Profile"
-            />
-          ),
-        }}
-      />
+
+      {/* TAB 5 — More (Profile / Settings / Promotions / Delivery) */}
       <Tabs.Screen
         name="settings"
         options={{
           tabBarIcon: ({ focused, color }) => (
             <TabIcon
-              name={focused ? "cog" : "cog-outline"}
+              name={focused ? "grid" : "grid-outline"}
               focused={focused}
               color={color}
-              label="Settings"
+              label="More"
             />
           ),
         }}
       />
-      <Tabs.Screen name="analytics" options={{ href: null }} />
+
+      {/* Hidden but accessible via push */}
+      <Tabs.Screen name="customers" options={{ href: null }} />
       <Tabs.Screen name="promotions" options={{ href: null }} />
       <Tabs.Screen name="delivery" options={{ href: null }} />
+      <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
   );
 }

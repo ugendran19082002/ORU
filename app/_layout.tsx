@@ -9,18 +9,13 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { AppRouteGuard, AppSessionProvider } from '@/providers/AppSessionProvider';
 
 export const unstable_settings = {
-  // Start from auth welcome screen
   anchor: 'auth',
 };
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
-  console.log('📍 [APP] RootLayout mounted', {
-    platform: Platform.OS,
-    isDev: __DEV__,
-    routes: ['auth', '(tabs)', 'order/[id]', 'order/tracking', 'shop', 'admin', 'map-preview', 'addresses', 'edit-profile']
-  });
+  console.log('📍 [APP] RootLayout mounted', { platform: Platform.OS, isDev: __DEV__ });
 
   return (
     <ErrorBoundary>
@@ -28,35 +23,51 @@ export default function RootLayout() {
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <AppRouteGuard />
           <Stack screenOptions={{ headerShown: false }}>
-          {/* AUTH FLOW — entry point */}
-          <Stack.Screen name="auth" options={{ headerShown: false, animation: 'fade' }} />
 
-          {/* CUSTOMER TABS */}
-          <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
+            {/* AUTH */}
+            <Stack.Screen name="auth" options={{ headerShown: false, animation: 'fade' }} />
 
-          {/* ORDER SCREENS */}
+            {/* CUSTOMER TABS */}
+            <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
+
+            {/* ORDER SCREENS */}
             <Stack.Screen name="order/[id]" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="order/confirmed" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="order/tracking" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="order/cancel" options={{ animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="order/schedule" options={{ animation: 'slide_from_bottom' }} />
+
+            {/* CUSTOMER SCREENS */}
             <Stack.Screen name="notifications" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="subscriptions" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="rewards" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="report-issue" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="emergency-help" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="wallet-history" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="search-map" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="shop-alternatives" options={{ animation: 'slide_from_bottom' }} />
 
-          {/* ADDITIONAL SCREENS */}
-          <Stack.Screen name="map-preview" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
-          <Stack.Screen name="addresses" options={{ headerShown: false, animation: 'slide_from_right' }} />
-          <Stack.Screen name="edit-profile" options={{ headerShown: false, animation: 'slide_from_right' }} />
+            {/* SHARED SCREENS */}
+            <Stack.Screen name="map-preview" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+            <Stack.Screen name="addresses" options={{ headerShown: false, animation: 'slide_from_right' }} />
+            <Stack.Screen name="edit-profile" options={{ headerShown: false, animation: 'slide_from_right' }} />
+            <Stack.Screen name="location" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
 
-          {/* SHOP OWNER SCREENS */}
+            {/* SHOP OWNER SCREENS */}
             <Stack.Screen name="shop" options={{ headerShown: false, animation: 'fade' }} />
+            <Stack.Screen name="shop/vendor-register" options={{ headerShown: false, animation: 'slide_from_right' }} />
+            <Stack.Screen name="shop/subscription-plans" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="shop/manual-order" options={{ animation: 'slide_from_right' }} />
+
+            {/* DELIVERY SCREENS */}
             <Stack.Screen name="delivery" options={{ headerShown: false, animation: 'fade' }} />
 
-          {/* ADMIN SCREENS */}
-          <Stack.Screen name="admin" options={{ headerShown: false, animation: 'fade' }} />
+            {/* ADMIN SCREENS */}
+            <Stack.Screen name="admin" options={{ headerShown: false, animation: 'fade' }} />
 
-          {/* MODAL */}
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+            {/* MODAL */}
+            <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+
           </Stack>
           <StatusBar style="auto" />
         </ThemeProvider>

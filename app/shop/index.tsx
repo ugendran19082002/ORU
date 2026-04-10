@@ -13,7 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
-import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
 import { Logo } from '@/components/ui/Logo';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
@@ -98,7 +97,6 @@ export default function ShopOrdersScreen() {
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
       >
         <Text style={styles.pageTitle}>Orders</Text>
-        <StitchScreenNote screen="shop_dashboard_home_1" />
 
         <View style={styles.opsCard}>
           <View style={styles.opsRow}>

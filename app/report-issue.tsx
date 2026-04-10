@@ -3,8 +3,6 @@ import { useRouter } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
 
@@ -44,8 +42,6 @@ export default function ReportIssueScreen() {
           <Text style={styles.title}>Report Issue</Text>
           <View style={styles.iconBtn} />
         </View>
-
-        <StitchScreenNote screen="reportIssue" />
 
         <View style={styles.orderCard}>
           <Text style={styles.eyebrow}>Selected Order</Text>
