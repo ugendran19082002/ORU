@@ -116,7 +116,7 @@ export default function SearchScreen() {
               </View>
             ) : (
               filtered.map((shop) => (
-                <TouchableOpacity key={shop.id} style={styles.card} onPress={() => router.push(`/order/${shop.id}` as any)}>
+                <TouchableOpacity key={shop.id} style={styles.card} onPress={() => router.push(`/shop-detail/${shop.id}` as any)}>
                   <View style={styles.cardTop}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.shopName}>{shop.name}</Text>

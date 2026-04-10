@@ -124,7 +124,7 @@ export default function SearchMapScreen() {
             <TouchableOpacity 
               key={shop.id} 
               style={styles.shopCard}
-              onPress={() => router.push(`/order/${shop.id}` as any)}
+              onPress={() => router.push(`/shop-detail/${shop.id}` as any)}
             >
               <View style={styles.cardHeader}>
                 <Text style={styles.shopName} numberOfLines={1}>{shop.name}</Text>

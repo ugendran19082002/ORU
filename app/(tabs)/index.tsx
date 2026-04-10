@@ -422,9 +422,9 @@ export default function HomeScreen() {
                    {isLinked ? (
                      <TouchableOpacity style={styles.orderBtn} onPress={() => {
                        setSelectedShop(shop.id);
-                       router.push(`/order/${shop.id}`);
+                       router.push(`/shop-detail/${shop.id}` as any);
                      }}>
-                       <Text style={styles.orderBtnText}>Order Details</Text>
+                       <Text style={styles.orderBtnText}>View Details</Text>
                      </TouchableOpacity>
                    ) : isRequested ? (
                      <View style={[styles.orderBtn, { backgroundColor: '#e0f0ff', borderColor: '#e0f0ff' }]}>
