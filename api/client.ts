@@ -8,7 +8,7 @@ console.log('🔍 [System] process.env.EXPO_PUBLIC_API_URL:', process.env.EXPO_P
 
 export const apiClient = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api',
-  timeout: 10000,
+  timeout: 30000,
 });
 
 // MEMORY STORE: Synchronous token access to prevent race conditions during role changes

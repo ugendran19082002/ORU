@@ -34,7 +34,9 @@ type SessionContextValue = {
   preferredRole: AppRole | null;
   biometricEnabled: boolean;
   isBiometricVerified: boolean;
+  isLocationVerified: boolean;
   setIsBiometricVerified: (verified: boolean) => void;
+  setIsLocationVerified: (verified: boolean) => void;
   setPreferredRole: (role: AppRole | null) => Promise<void>;
   setBiometricEnabled: (enabled: boolean) => Promise<void>;
   signIn: (data: {
@@ -96,6 +98,7 @@ export function AppSessionProvider({
   const [preferredRole, setPreferredRoleState] = useState<AppRole | null>(null);
   const [biometricEnabled, setBiometricEnabledState] = useState(false);
   const [isBiometricVerified, setIsBiometricVerified] = useState(false);
+  const [isLocationVerified, setIsLocationVerified] = useState(false);
   const [nextStep, setNextStepState] = useState<any>(null);
   const [isSyncingShop, setIsSyncingShop] = useState(false);
 
@@ -239,7 +242,9 @@ export function AppSessionProvider({
       preferredRole,
       biometricEnabled,
       isBiometricVerified,
+      isLocationVerified,
       setIsBiometricVerified,
+      setIsLocationVerified,
       isSyncingShop,
       nextStep,
       async setPreferredRole(role) {
@@ -299,7 +304,16 @@ export function AppSessionProvider({
           const nextAccessToken = updatedUserFromApi.access_token || accessToken;
           
           setClientToken(nextAccessToken);
+          const isRoleSwitch = updatedUserFromApi.role !== user.role;
           const nextUser = { ...user, ...updatedUserFromApi } as AppUser;
+          
+          if (isRoleSwitch) {
+              console.log('🔄 [Session] Role switch detected. Clearing role-specific metadata.');
+              nextUser.shopStatus = 'none';
+              nextUser.onboardingStatus = 'none';
+              nextUser.onboarding_completed = false; // Reset completion state for new role
+          }
+
           delete (nextUser as any).access_token;
           delete (nextUser as any).refresh_token;
 
@@ -313,7 +327,7 @@ export function AppSessionProvider({
             refresh_token: updatedUserFromApi.refresh_token || refreshToken,
             preferredRole: nextUser.role as AppRole,
             biometricEnabled,
-            nextStep: updatedUserFromApi.next_step || (updatedUserFromApi.role !== user.role ? null : nextStep),
+            nextStep: updatedUserFromApi.next_step || (isRoleSwitch ? null : nextStep),
           });
         } catch (err) {
           console.error("Failed to update user:", err);
@@ -323,7 +337,7 @@ export function AppSessionProvider({
       refreshShopStatus,
       emergencyReset,
     }),
-    [accessToken, refreshToken, biometricEnabled, isBiometricVerified, isHydrated, preferredRole, status, user, nextStep, isSyncingShop]
+    [accessToken, refreshToken, biometricEnabled, isBiometricVerified, isLocationVerified, isHydrated, preferredRole, status, user, nextStep, isSyncingShop]
   );
 
   return (
@@ -350,7 +364,9 @@ export function AppRouteGuard() {
     user,
     biometricEnabled,
     isBiometricVerified,
+    isLocationVerified,
     setIsBiometricVerified,
+    setIsLocationVerified,
     isSyncingShop,
     nextStep
   } = session;
@@ -358,16 +374,35 @@ export function AppRouteGuard() {
   const lastRedirectRef = React.useRef<string | null>(null);
   const guardGenerationRef = React.useRef<number>(0);
 
+  const lastLoggedSyncPauseRef = React.useRef<boolean>(false);
+  
   useEffect(() => {
-    if (!isHydrated || isSyncingShop) {
-        if (isSyncingShop) console.log('🛡️ [Guard] Syncing shop status... Pausing redirection.');
+    // Proactive Pause: If we are hydrating or if we are a shop owner who hasn't synced their shop status yet,
+    // we MUST pause the guard to avoid incorrect redirections (like a false-positive Location check).
+    const needsShopSync = user?.role === 'shop_owner' && user.shopStatus === undefined;
+    const isPaused = !isHydrated || isSyncingShop || needsShopSync;
+
+    if (isPaused) {
+        if ((isSyncingShop || needsShopSync) && !lastLoggedSyncPauseRef.current) {
+            console.log('🛡️ [Guard] Shop status sync in progress. Pausing redirection.');
+            lastLoggedSyncPauseRef.current = true;
+        }
         return;
     }
+    
+    // Reset log ref when we are no longer paused
+    lastLoggedSyncPauseRef.current = false;
 
     const firstSegment = segments[0] ?? "";
+    const currentPath = pathname || "";
     const isAuthRoute = firstSegment === "auth";
     const isOnboardingRoute = firstSegment === "onboarding";
-    const isSecurityRoute = firstSegment === "location" || firstSegment === "enable-notifications";
+    
+    // Expand security routes to include ANY location picker or permission screen
+    const isSecurityRoute = firstSegment === "location" || 
+                            firstSegment === "enable-notifications" ||
+                            currentPath.includes("location");
+
     const isPriorityRoute = isSecurityRoute || isAuthRoute;
 
     if (status === "anonymous") {
@@ -387,10 +422,17 @@ export function AppRouteGuard() {
       if (currentGeneration < guardGenerationRef.current) return;
 
       let hasRedirected = false;
+      const normalize = (path: string) => path.split('/').filter(s => !s.startsWith('(')).join('/');
+
       const navigate = (target: string, reason: string) => {
         // Validation: If a newer generation is running, or we already navigated, stop.
         if (hasRedirected || currentGeneration < guardGenerationRef.current) return;
-        if (pathname === target || lastRedirectRef.current === target) {
+        
+        // Strip out route groups (e.g., (onboarding)) for comparison logic
+        const currentNorm = normalize(pathname);
+        const targetNorm = normalize(target);
+
+        if (currentNorm === targetNorm || normalize(lastRedirectRef.current || "") === targetNorm) {
           hasRedirected = true;
           return;
         }
@@ -415,12 +457,14 @@ export function AppRouteGuard() {
       }
 
       // 2. Location
-      if (user.role !== "admin" && !isSecurityRoute) {
+      if (user.role !== "admin" && !isSecurityRoute && !isLocationVerified) {
         const { status: locStatus } = await Location.getForegroundPermissionsAsync();
         if (currentGeneration < guardGenerationRef.current) return; // ABA check
         if (locStatus !== "granted") {
           navigate("/location", "Location required");
           return;
+        } else {
+          setIsLocationVerified(true);
         }
       }
 
@@ -475,8 +519,16 @@ export function AppRouteGuard() {
       if (isAuthRoute) {
         navigate(idealRoute, "Escaping Auth");
       } else if (!user.onboarding_completed && !isPriorityRoute) {
-        // Enforce the ideal onboarding screen even if we are already on some other onboarding page
-        navigate(idealRoute, "Enforcing Onboarding");
+        // Enforce the ideal onboarding screen
+        // Optimization: If we are already in the correct onboarding flow (customer or shop), 
+        // don't force redirect if the user is navigate to a sub-step.
+        const currentPath = pathname || "";
+        const isCurrentlyInExpectedFlow = (user.role === 'customer' && currentPath.startsWith('/onboarding/customer')) ||
+                                           (user.role === 'shop_owner' && currentPath.startsWith('/onboarding/shop'));
+
+        if (!isCurrentlyInExpectedFlow || currentPath === '/onboarding/shop' || currentPath === '/onboarding/customer') {
+            navigate(idealRoute, "Enforcing Onboarding");
+        }
       } else if (pathname === "/") {
         navigate(idealRoute, "Root Redirection");
       }

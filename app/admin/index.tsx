@@ -12,6 +12,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { ActivityIndicator } from 'react-native';
+import { useAppSession } from '@/providers/AppSessionProvider';
 import { Logo } from '@/components/ui/Logo';
 
 /* ---- DATA ---- */
@@ -141,6 +144,23 @@ function LiveOrderRow({ order }: { order: typeof LIVE_ORDERS[0] }) {
 
 /* ---- SCREEN ---- */
 export default function AdminOverviewScreen() {
+  const router = useRouter();
+  const { user, status } = useAppSession();
+  
+  // 0. Role Bouncer
+  if (status === 'loading') {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#005d90" />
+      </View>
+    );
+  }
+
+  if (status === 'authenticated' && user?.role !== 'admin') {
+     // If briefly landing here without admin role, bounce back
+     return null; 
+  }
+
   const [refreshing, setRefreshing] = React.useState(false);
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
