@@ -439,22 +439,18 @@ export function AppRouteGuard() {
         // B. Onboarding Path
         const backendNextStep = nextStep as any;
         if (user.role === "shop_owner") {
-          // For merchants, we always pivot through the waitlist if not active
-          // unless they are explicitly in the middle of a sub-onboarding screen.
-          const isOnboardingSubScreen =
-            pathname.includes("/onboarding/shop/") &&
-            pathname !== "/onboarding/shop/waitlist";
-
-          if (isOnboardingSubScreen) {
-            idealRoute = pathname;
-          } else if (user.shopStatus === "rejected") {
+          // Prioritize Status-based routing once a shop exists
+          if (user.shopStatus === "rejected") {
             idealRoute = "/onboarding/shop/rejected";
-          } else if (user.shopStatus) {
-            // Only send to waitlist if a shop actually exists in review
+          } else if (user.shopStatus === "pending_review") {
             idealRoute = "/onboarding/shop/waitlist";
+          } else if (user.shopStatus === "in_progress") {
+            // Stay on current sub-screen if already there (Business, GST, etc.)
+            const isOnboardingSubScreen = pathname.startsWith("/onboarding/shop/") && pathname !== "/onboarding/shop/waitlist";
+            idealRoute = isOnboardingSubScreen ? pathname : "/onboarding/shop";
           } else {
-            // New merchant: follow the prescribed next step or checklist
-            idealRoute = backendNextStep?.screen_route || "/onboarding/shop";
+            // No shop found in session yet: follow the backend's prescribed route or default to create
+            idealRoute = backendNextStep?.screen_route || "/onboarding/shop/create";
           }
         } else if (backendNextStep?.screen_route) {
           // Backend dictated step takes priority for other roles

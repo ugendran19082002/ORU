@@ -84,24 +84,23 @@ export const onboardingApi = {
   },
 
   /**
-   * Upload a file for a specific shop step (Logo, Banner, or Document)
+   * Upload a shop document (FSSAI, GST, Bank, etc.)
    */
-  uploadFile: async (shopId: number, stepKey: string, fileUri: string): Promise<OnboardingResponse<{ document_url: string }>> => {
+  uploadShopDocument: async (
+    stepKey: string, 
+    shopId: number, 
+    file: { uri: string; name: string; type: string }
+  ): Promise<OnboardingResponse<{ document_url: string; status: string }>> => {
     const formData = new FormData();
     formData.append('shop_id', shopId.toString());
     
-    // Create the file object from the URI
-    const filename = fileUri.split('/').pop();
-    const match = /\.(\w+)$/.exec(filename || '');
-    const type = match ? `image/${match[1]}` : `image`;
-
     formData.append('file', {
-      uri: fileUri,
-      name: filename,
-      type,
+      uri: file.uri,
+      name: file.name,
+      type: file.type,
     } as any);
 
-    const response = await apiClient.post<OnboardingResponse<{ document_url: string }>>(
+    const response = await apiClient.post<OnboardingResponse<{ document_url: string; status: string }>>(
       `/onboarding/shop/steps/${stepKey}/upload`,
       formData,
       {
@@ -111,6 +110,22 @@ export const onboardingApi = {
       }
     );
     return response.data;
+  },
+
+  /**
+   * Legacy upload for images (Profile, Banner)
+   * @deprecated Use uploadShopDocument for more flexibility
+   */
+  uploadFile: async (shopId: number, stepKey: string, fileUri: string): Promise<OnboardingResponse<{ document_url: string }>> => {
+    const filename = fileUri.split('/').pop() || 'image.jpg';
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1]}` : `image/jpeg`;
+
+    return onboardingApi.uploadShopDocument(stepKey, shopId, {
+      uri: fileUri,
+      name: filename,
+      type
+    }) as any;
   },
 
   /**

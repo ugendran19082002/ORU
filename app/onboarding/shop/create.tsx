@@ -13,7 +13,7 @@ import { useAppSession } from '@/hooks/use-app-session';
 
 export default function CreateShopScreen() {
   const router = useRouter();
-  const { user } = useAppSession();
+  const { user, refreshShopStatus } = useAppSession();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -35,6 +35,7 @@ export default function CreateShopScreen() {
       });
 
       if (res.status === 1) {
+        await refreshShopStatus();
         Alert.alert('Success', 'Shop profile created! Now let\'s verify your business.');
         router.replace('/onboarding/shop' as any);
       }

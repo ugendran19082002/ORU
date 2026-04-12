@@ -75,10 +75,15 @@ export default function ShopFSSAIScreen() {
     try {
       setLoading(true);
       
-      // In a real app, you would upload the file to S3/Cloudinary first
-      // For this demo, we pass the filename as metadata
+      const fileUri = document.assets[0].uri;
       const fileName = document.assets[0].name;
-      const res = await onboardingApi.completeShopStep('fssai_document', shopId, { fileName });
+      const fileType = document.assets[0].mimeType || 'application/octet-stream';
+
+      const res = await onboardingApi.uploadShopDocument('fssai_document', shopId, {
+        uri: fileUri,
+        name: fileName,
+        type: fileType,
+      });
       
       if (res.status === 1) {
         Alert.alert('Submitted', 'Your FSSAI document is under review.');

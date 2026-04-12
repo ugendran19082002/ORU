@@ -78,8 +78,15 @@ export default function ShopGSTScreen() {
 
     try {
       setLoading(true);
+      const fileUri = document.assets[0].uri;
       const fileName = document.assets[0].name;
-      const res = await onboardingApi.completeShopStep('gst_details', shopId, { fileName });
+      const fileType = document.assets[0].mimeType || 'application/octet-stream';
+
+      const res = await onboardingApi.uploadShopDocument('gst_details', shopId, {
+        uri: fileUri,
+        name: fileName,
+        type: fileType,
+      });
       
       if (res.status === 1) {
         router.replace('/onboarding/shop');
