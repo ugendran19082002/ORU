@@ -41,7 +41,7 @@ export default function AdminShopsScreen() {
   }, [statusFilter]);
 
   const handleShopPress = (id: number) => {
-    router.push(`/admin/shops/${id}`);
+    router.push(`/admin/shops/${id}` as any);
   };
 
   return (

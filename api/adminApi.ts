@@ -4,16 +4,20 @@ export interface AdminShop {
   id: number;
   uuid: string;
   name: string;
-  contact_number: string;
-  shop_type: 'individual' | 'company';
-  status: 'pending_review' | 'active' | 'rejected' | 'suspended';
-  is_verified: boolean;
-  admin_notes: string | null;
+  phone?: string;
+  shop_type?: string;
+  status: string;
+  delivery_radius_km?: string;
+  gstin?: string | null;
+  bank_account_no?: string | null;
+  bank_ifsc?: string | null;
+  is_verified?: boolean;
+  admin_notes?: string | null;
   created_at: string;
   owner?: {
     name: string;
     phone: string;
-    email: string;
+    email: string | null;
   };
 }
 
