@@ -15,8 +15,9 @@ import { BackButton } from '@/components/ui/BackButton';
 
 export default function ShopOnboardingDashboard() {
   const router = useRouter();
-  const { user, updateUser, status } = useAppSession();
+  const { user, updateUser, status, refreshShopStatus } = useAppSession();
   const [loading, setLoading] = useState(true);
+  const [resubmitting, setResubmitting] = useState(false);
   const [data, setData] = useState<OnboardingStatus | null>(null);
 
   // 0. Role Bouncer
@@ -83,6 +84,29 @@ export default function ShopOnboardingDashboard() {
     }
   };
 
+  const handleResubmit = async () => {
+    if (user?.shopStatus !== 'rejected') return;
+    
+    try {
+      setResubmitting(true);
+      // We fetch the shop ID from the loaded data
+      const shopRes = await onboardingApi.getMerchantShop();
+      const shopId = shopRes.data.id;
+
+      const res = await onboardingApi.resubmitShop(shopId);
+      if (res.status === 1) {
+        Alert.alert('Success', 'Your application has been resubmitted for review.');
+        await refreshShopStatus();
+        router.replace('/onboarding/shop/waitlist');
+      }
+    } catch (error: any) {
+      console.error('[Resubmit] Error:', error);
+      Alert.alert('Error', error.response?.data?.message || 'Failed to resubmit application.');
+    } finally {
+      setResubmitting(false);
+    }
+  };
+
   if (loading && !data) {
     return (
       <View style={styles.loadingContainer}>
@@ -91,7 +115,9 @@ export default function ShopOnboardingDashboard() {
     );
   }
 
-  const progressPercent = data ? (data.completed_steps / data.total_steps) * 100 : 0;
+  const progressPercent = data ? (data.completed_mandatory / data.total_mandatory) * 100 : 0;
+  const isPendingReview = user?.shopStatus === 'pending_review';
+  const canShowSubmit = (data?.is_ready_for_review && !isPendingReview);
 
   return (
     <View style={styles.container}>
@@ -117,7 +143,7 @@ export default function ShopOnboardingDashboard() {
             <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
           </View>
           <Text style={styles.progressStatus}>
-            {data?.completed_steps} of {data?.total_steps} requirements met
+            {data?.completed_mandatory} of {data?.total_mandatory} mandatory requirements met
           </Text>
         </LinearGradient>
 
@@ -126,6 +152,30 @@ export default function ShopOnboardingDashboard() {
           contentContainerStyle={styles.scrollContent}
           refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchStatus} />}
         >
+          {user?.shopStatus === 'rejected' && (
+            <View style={styles.rejectionBanner}>
+              <View style={styles.rejectionIcon}>
+                <Ionicons name="alert-circle" size={24} color="#ba1a1a" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rejectionTitle}>Action Required: Changes Needed</Text>
+                <Text style={styles.rejectionMsg}>Please correct the items marked and resubmit for approval.</Text>
+              </View>
+            </View>
+          )}
+
+          {isPendingReview && (
+            <View style={[styles.rejectionBanner, { backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }]}>
+              <View style={[styles.rejectionIcon, { backgroundColor: '#e0f2fe' }]}>
+                <Ionicons name="time" size={24} color="#0369a1" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.rejectionTitle, { color: '#0369a1' }]}>Under Review</Text>
+                <Text style={[styles.rejectionMsg, { color: '#0c4a6e' }]}>We are currently verifying your business details. We'll notify you once approved.</Text>
+              </View>
+            </View>
+          )}
+
           <Text style={styles.sectionTitle}>Verification Checklist</Text>
           
           {data?.steps.map((step) => {
@@ -165,13 +215,39 @@ export default function ShopOnboardingDashboard() {
               </TouchableOpacity>
             );
           })}
-
           <View style={styles.infoBox}>
             <Ionicons name="information-circle-outline" size={18} color="#64748b" />
             <Text style={styles.infoText}>
               Verification typically takes 24-48 hours once all documents are submitted.
             </Text>
           </View>
+
+          {canShowSubmit && (
+            <TouchableOpacity 
+              style={styles.resubmitBtn} 
+              onPress={handleResubmit}
+              disabled={resubmitting}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#006878', '#004a55']}
+                style={styles.resubmitGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                {resubmitting ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <>
+                    <Text style={styles.resubmitText}>
+                      {user?.shopStatus === 'rejected' ? 'Submit for Final Review' : 'Submit Application'}
+                    </Text>
+                    <Ionicons name="send-outline" size={18} color="white" />
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -220,5 +296,24 @@ const styles = StyleSheet.create({
   reviewTag: { fontSize: 11, fontWeight: '800', color: '#d97706', marginTop: 4, textTransform: 'uppercase' },
 
   infoBox: { flexDirection: 'row', gap: 10, backgroundColor: '#f1f5f9', padding: 16, borderRadius: 12, marginTop: 20 },
-  infoText: { flex: 1, fontSize: 12, color: '#64748b', lineHeight: 18 }
+  infoText: { flex: 1, fontSize: 12, color: '#64748b', lineHeight: 18 },
+
+  rejectionBanner: {
+    backgroundColor: '#fff5f5',
+    padding: 16,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: '#feb2b2',
+    gap: 12
+  },
+  rejectionIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#ffe4e4', alignItems: 'center', justifyContent: 'center' },
+  rejectionTitle: { fontSize: 14, fontWeight: '800', color: '#ba1a1a' },
+  rejectionMsg: { fontSize: 12, color: '#7f1d1d', marginTop: 2 },
+
+  resubmitBtn: { marginTop: 32, shadowColor: '#005d90', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 15, elevation: 8 },
+  resubmitGradient: { height: 60, borderRadius: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
+  resubmitText: { color: 'white', fontSize: 16, fontWeight: '800' }
 });

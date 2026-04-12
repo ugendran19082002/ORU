@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
+import { Platform, DeviceEventEmitter } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Local development baseURL. Accessing via Expo Public environment variables.
@@ -63,7 +63,24 @@ apiClient.interceptors.response.use(
     }
 
     if (error.response?.status === 401) {
-      console.error('[API] Unauthorized entry detected.');
+      console.error('[API] Unauthorized entry detected. Purging session storage.');
+      
+      // 1. Reactive Store Cleanup
+      try {
+        if (Platform.OS === 'web') {
+          AsyncStorage.removeItem('thannigo_session');
+        } else {
+          SecureStore.deleteItemAsync('thannigo_session');
+        }
+      } catch (storageErr) {
+        console.error('[API] Failed to purge session storage:', storageErr);
+      }
+
+      // 2. Global Event Signal (Native DeviceEventEmitter)
+      DeviceEventEmitter.emit('thannigo:unauthorized', {
+        code: error.response?.data?.code || 'UNAUTHORIZED',
+        message: error.response?.data?.message || 'Unauthorized access'
+      });
     }
     return Promise.reject(error);
   }

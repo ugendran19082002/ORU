@@ -21,6 +21,9 @@ export interface OnboardingStatus {
   onboarding_completed: boolean;
   total_steps: number;
   completed_steps: number;
+  total_mandatory: number;
+  completed_mandatory: number;
+  is_ready_for_review: boolean;
   current_step: OnboardingStep | null;
   steps: OnboardingStep[];
 }

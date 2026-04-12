@@ -11,7 +11,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { Platform } from "react-native";
+import { Platform, DeviceEventEmitter } from "react-native";
 
 import { onboardingApi } from "@/api/onboardingApi";
 import type {
@@ -130,8 +130,10 @@ export function AppSessionProvider({
         };
         setUser(nextUser);
       }
-    } catch (err) {
-      console.error("[Session] Refresh Shop Status Error:", err);
+    } catch (err: any) {
+      if (err.response?.status !== 404) {
+        console.error("[Session] Refresh Shop Status Error:", err);
+      }
     }
   };
 
@@ -146,6 +148,34 @@ export function AppSessionProvider({
       return () => clearInterval(interval);
     }
   }, [user?.role, user?.shopStatus, status]);
+  
+  const handleSignOut = async () => {
+    setUser(null);
+    setAccessToken(null);
+    setRefreshToken(null);
+    setNextStepState(null);
+    setStatus("anonymous");
+    await writeSession({
+      user: null,
+      access_token: null,
+      refresh_token: null,
+      preferredRole,
+      biometricEnabled,
+      nextStep: null,
+    });
+  };
+
+  // 401 / TOKEN_EXPIRED: Reactive Recovery
+  useEffect(() => {
+    const handleUnauthorized = (data: any) => {
+      const { code, message } = data || {};
+      console.warn(`🛡️ [Session] Unauthorized signal received (${code})! Forced logout triggered.`);
+      handleSignOut();
+    };
+
+    const subscription = DeviceEventEmitter.addListener('thannigo:unauthorized', handleUnauthorized);
+    return () => subscription.remove();
+  }, []);
 
   const value = useMemo<SessionContextValue>(
     () => ({
@@ -224,26 +254,14 @@ export function AppSessionProvider({
                 nextStep: resNextStep || null,
               });
             }
-          } catch (e) {
-            console.error("[Session] Post-SignIn Shop Check Fail:", e);
+          } catch (err: any) {
+            if (err.response?.status !== 404) {
+              console.error("[Session] Post-SignIn Shop Check Fail:", err);
+            }
           }
         }
       },
-      async signOut() {
-        setUser(null);
-        setAccessToken(null);
-        setRefreshToken(null);
-        setNextStepState(null);
-        setStatus("anonymous");
-        await writeSession({
-          user: null,
-          access_token: null,
-          refresh_token: null,
-          preferredRole,
-          biometricEnabled,
-          nextStep: null,
-        });
-      },
+      signOut: handleSignOut,
       async updateUser(partialUser) {
         if (!user) return;
 
@@ -403,8 +421,13 @@ export function AppRouteGuard() {
         // A. Final Destination: Standard role-based dashboards
         if (user.role === "shop_owner") {
           // Gated by Shop Approval Status
-          idealRoute =
-            user.shopStatus === "active" ? "/shop" : "/onboarding/shop/waitlist";
+          if (user.shopStatus === "active") {
+            idealRoute = "/shop";
+          } else if (user.shopStatus === "rejected") {
+            idealRoute = "/onboarding/shop/rejected";
+          } else {
+            idealRoute = "/onboarding/shop/waitlist";
+          }
         } else if (user.role === "admin") {
           idealRoute = "/admin";
         } else if (user.role === "delivery") {
@@ -424,8 +447,14 @@ export function AppRouteGuard() {
 
           if (isOnboardingSubScreen) {
             idealRoute = pathname;
-          } else {
+          } else if (user.shopStatus === "rejected") {
+            idealRoute = "/onboarding/shop/rejected";
+          } else if (user.shopStatus) {
+            // Only send to waitlist if a shop actually exists in review
             idealRoute = "/onboarding/shop/waitlist";
+          } else {
+            // New merchant: follow the prescribed next step or checklist
+            idealRoute = backendNextStep?.screen_route || "/onboarding/shop";
           }
         } else if (backendNextStep?.screen_route) {
           // Backend dictated step takes priority for other roles
@@ -437,7 +466,13 @@ export function AppRouteGuard() {
         }
       }
 
-      // 5. Redirection Logic (with Role Sanitizer)
+      // 5. Normalization & Redirection Logic (with Role Sanitizer)
+      
+      // A. Path Normalization: Strip Expo Router Group parentheses BUT KEEP content (e.g. /(onboarding)/ -> /onboarding/)
+      // This ensures backend paths resolve correctly to physical directories.
+      if (typeof idealRoute === "string") {
+        idealRoute = idealRoute.replace(/\(([^)]+)\)/g, "$1");
+      }
 
       // A. Role-Route Mismatch Sanitizer
       // If the backend nextStep route belongs to a DIFFERENT role, override it.

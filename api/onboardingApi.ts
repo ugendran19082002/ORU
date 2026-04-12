@@ -112,4 +112,12 @@ export const onboardingApi = {
     );
     return response.data;
   },
+  
+  /**
+   * Resubmit a rejected shop application for review
+   */
+  resubmitShop: async (shopId: number): Promise<OnboardingResponse<{ status: string }>> => {
+    const response = await apiClient.post<OnboardingResponse<{ status: string }>>(`/onboarding/shop/${shopId}/resubmit`);
+    return response.data;
+  },
 };
