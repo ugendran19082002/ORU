@@ -46,9 +46,10 @@ export default function ShopBankDetailsScreen() {
           router.replace('/onboarding/shop/create');
         }
       } catch (err: any) {
-        console.error('[Bank Details] ID Resolution Error:', err);
         if (err.response?.status === 404) {
           router.replace('/onboarding/shop/create');
+        } else {
+          console.error('[Bank Details] ID Resolution Error:', err);
         }
       } finally {
         setFetchingShop(false);

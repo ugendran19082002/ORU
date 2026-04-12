@@ -63,8 +63,10 @@ apiClient.interceptors.response.use(
 
     logMethod(`\n${isExpected404 ? '⚠️' : '❌'} [API ${isExpected404 ? 'Info' : 'Error'}] ${error.response?.status || 'Network'} ${error.config?.url} (${duration}ms)`);
     if (error.response) {
-      logMethod(`📃 Headers:`, JSON.stringify(error.response.headers, null, 2));
-      logMethod(`📥 Data:`, JSON.stringify(error.response.data, null, 2));
+      if (!isExpected404) {
+        logMethod(`📃 Headers:`, JSON.stringify(error.response.headers, null, 2));
+        logMethod(`📥 Data:`, JSON.stringify(error.response.data, null, 2));
+      }
     } else {
       console.error(`‼️ Message:`, error.message);
     }

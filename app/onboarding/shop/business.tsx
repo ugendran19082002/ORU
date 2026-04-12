@@ -42,9 +42,10 @@ export default function ShopBusinessDetailsScreen() {
           router.replace('/onboarding/shop/create');
         }
       } catch (err: any) {
-        console.error('[Shop Details] ID Resolution Error:', err);
         if (err.response?.status === 404) {
           router.replace('/onboarding/shop/create');
+        } else {
+          console.error('[Shop Details] ID Resolution Error:', err);
         }
       } finally {
         setFetchingShop(false);

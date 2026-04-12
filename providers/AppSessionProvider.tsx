@@ -352,6 +352,7 @@ export function AppRouteGuard() {
   } = session;
 
   const lastRedirectRef = React.useRef<string | null>(null);
+  const guardGenerationRef = React.useRef<number>(0);
 
   useEffect(() => {
     if (!isHydrated || isSyncingShop) {
@@ -373,11 +374,18 @@ export function AppRouteGuard() {
     }
 
     if (!user) return;
+    
+    // Increment generation ID to identify this specific useEffect run
+    const currentGeneration = ++guardGenerationRef.current;
 
     const runChecklist = async () => {
+      // 0. Pre-check: If a newer generation has already started, abort this one immediately
+      if (currentGeneration < guardGenerationRef.current) return;
+
       let hasRedirected = false;
       const navigate = (target: string, reason: string) => {
-        if (hasRedirected) return;
+        // Validation: If a newer generation is running, or we already navigated, stop.
+        if (hasRedirected || currentGeneration < guardGenerationRef.current) return;
         if (pathname === target || lastRedirectRef.current === target) {
           hasRedirected = true;
           return;
@@ -394,6 +402,7 @@ export function AppRouteGuard() {
         const isEnrolled = await LocalAuthentication.isEnrolledAsync();
         if (hasHardware && isEnrolled) {
           const result = await LocalAuthentication.authenticateAsync({ promptMessage: "Unlock ThanniGo" });
+          if (currentGeneration < guardGenerationRef.current) return; // ABA check
           if (result.success) setIsBiometricVerified(true);
           else return;
         } else {
@@ -404,6 +413,7 @@ export function AppRouteGuard() {
       // 2. Location
       if (user.role !== "admin" && !isSecurityRoute) {
         const { status: locStatus } = await Location.getForegroundPermissionsAsync();
+        if (currentGeneration < guardGenerationRef.current) return; // ABA check
         if (locStatus !== "granted") {
           navigate("/location", "Location required");
           return;
@@ -433,6 +443,10 @@ export function AppRouteGuard() {
             // No shop created yet
             idealRoute = backendNextStep?.screen_route || "/onboarding/shop/business";
           }
+        } else if (user.role === "admin") {
+          idealRoute = "/admin";
+        } else if (user.role === "delivery") {
+          idealRoute = "/delivery";
         } else if (backendNextStep?.screen_route) {
           idealRoute = backendNextStep.screen_route;
         } else {

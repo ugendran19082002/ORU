@@ -37,9 +37,10 @@ export default function ShopGSTScreen() {
           router.replace('/onboarding/shop/create');
         }
       } catch (err: any) {
-        console.error('[GST] ID Resolution Error:', err);
         if (err.response?.status === 404) {
           router.replace('/onboarding/shop/create');
+        } else {
+          console.error('[GST] ID Resolution Error:', err);
         }
       } finally {
         setFetchingShop(false);
