@@ -11,6 +11,18 @@ export const apiClient = axios.create({
   timeout: 10000,
 });
 
+// MEMORY STORE: Synchronous token access to prevent race conditions during role changes
+let authToken: string | null = null;
+
+/**
+ * Synchronously update the token used for all API requests.
+ * This should be called immediately after login or role selection.
+ */
+export const setClientToken = (token: string | null) => {
+  authToken = token;
+  console.log('🔑 [API Client] Auth Token updated in memory');
+};
+
 console.log('🌐 [API Client] Initialized with baseURL:', apiClient.defaults.baseURL);
 
 // Automatically inject session data if available
@@ -18,23 +30,12 @@ apiClient.interceptors.request.use(
   async (config) => {
     (config as any).metadata = { startTime: new Date() };
     console.log(`\n🚀 [API Request] ${config.method?.toUpperCase()} ${config.url}`);
-    console.log(`📃 Headers:`, JSON.stringify(config.headers, null, 2));
-    if (config.data) console.log(`📦 Body:`, JSON.stringify(config.data, null, 2));
     
-    try {
-      const sessionData = Platform.OS === 'web'
-        ? await AsyncStorage.getItem('thannigo_session')
-        : await SecureStore.getItemAsync('thannigo_session');
-      
-      if (sessionData) {
-        const parsed = JSON.parse(sessionData);
-        if (parsed.access_token) {
-          config.headers.Authorization = `Bearer ${parsed.access_token}`;
-        }
-      }
-    } catch (e) {
-      console.warn('[API] Could not retrieve session for headers', e);
+    // Set token from memory (sync and reliable)
+    if (authToken) {
+      config.headers.Authorization = `Bearer ${authToken}`;
     }
+    
     return config;
   },
   (error) => Promise.reject(error)

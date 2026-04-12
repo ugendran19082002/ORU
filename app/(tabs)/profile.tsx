@@ -27,7 +27,7 @@ const MENU_ITEMS = [
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { signOut } = useAppSession();
+  const { signOut, emergencyReset } = useAppSession();
   const [refreshing, setRefreshing] = React.useState(false);
 
   const onRefresh = React.useCallback(() => {
@@ -40,6 +40,24 @@ export default function ProfileScreen() {
   const handleSignOut = async () => {
     await signOut();
     router.replace('/auth' as any);
+  };
+
+  const handleResetData = () => {
+    Alert.alert(
+      'Reset All Data',
+      'This will clear your local session, cache, and log you out. This is useful if you are experiencing navigation or login issues. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Reset Everything', 
+          style: 'destructive',
+          onPress: async () => {
+            await emergencyReset();
+            router.replace('/auth' as any);
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -173,6 +191,21 @@ export default function ProfileScreen() {
           <Text style={styles.logoutText}>Sign Out</Text>
         </TouchableOpacity>
 
+        {/* MAINTENANCE */}
+        <View style={{ marginTop: 10, marginBottom: 20 }}>
+          <Text style={styles.sectionTitle}>Maintenance</Text>
+          <TouchableOpacity 
+            style={styles.maintenanceBtn} 
+            onPress={handleResetData}
+            activeOpacity={0.7}
+          >
+            <View style={styles.maintenanceIcon}>
+              <Ionicons name="trash-outline" size={18} color="#64748b" />
+            </View>
+            <Text style={styles.maintenanceText}>Clear App Cache & Data</Text>
+          </TouchableOpacity>
+        </View>
+
         <Text style={styles.footer}>ThanniGo v1.0.0 · Made with 💧 in India</Text>
       </ScrollView>
     </SafeAreaView>
@@ -221,5 +254,29 @@ const styles = StyleSheet.create({
 
   logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#ffdad6', borderRadius: 16, paddingVertical: 14, marginBottom: 20 },
   logoutText: { color: '#ba1a1a', fontWeight: '700', fontSize: 15 },
+  
+  maintenanceBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 12, 
+    backgroundColor: '#f1f5f9', 
+    borderRadius: 16, 
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  maintenanceIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  maintenanceText: { 
+    color: '#64748b', 
+    fontWeight: '700', 
+    fontSize: 14 
+  },
   footer: { textAlign: 'center', fontSize: 12, color: '#bfc7d1', marginBottom: 8 },
 });

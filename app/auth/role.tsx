@@ -91,11 +91,11 @@ export default function RoleSelectScreen() {
       const response = await userApi.updateProfile({ role: selectedRole });
 
       if (response.status === 1) {
-        // 2. Update local session state
+        // 2. Update local session state with fresh tokens (essential for role change)
         await signIn({
           user: response.data,
-          access_token: null, // Keep existing token
-          refresh_token: null,
+          access_token: response.data.access_token ?? null,
+          refresh_token: response.data.refresh_token ?? null,
         });
 
         // 3. Navigation - Guard will take care of final routing,

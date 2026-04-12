@@ -4,7 +4,11 @@ import type { AppUser } from '@/types/session';
 export interface UserUpdateResponse {
   status: number;
   message: string;
-  data: AppUser;
+  data: AppUser & {
+    access_token?: string;
+    refresh_token?: string;
+    next_step?: any;
+  };
 }
 
 export const userApi = {

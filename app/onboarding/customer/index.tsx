@@ -31,9 +31,18 @@ export default function CustomerOnboardingScreen() {
       if (res.status === 1) {
         setData(res.data);
         
-        // If suddenly completed, update session and move to home
-        if (res.data.onboarding_completed && user) {
+        // If completed by steps, update session and move to home
+        // ADDED: Double check that we aren't already marked as completed to avoid loops
+        if (res.data.onboarding_completed && user && !user.onboarding_completed) {
+          console.log('[Onboarding] Completion detected. Syncing session...');
           await updateUser({ onboarding_completed: true });
+          
+          // Small delay to allow session state to propagate before redirecting
+          setTimeout(() => {
+            router.replace('/(tabs)');
+          }, 100);
+        } else if (res.data.onboarding_completed) {
+          // Already synced, just move if we are somehow stuck here
           router.replace('/(tabs)');
         }
       }
