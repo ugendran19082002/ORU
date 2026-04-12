@@ -41,7 +41,7 @@ export default function AdminComplaintsScreen() {
                      <Text style={styles.orderId}>Order {item.order}</Text>
                      <View style={[styles.statusBadge, item.status === 'open' ? styles.statusOpen : styles.statusResolved]}>
                        <Text style={[styles.statusText, item.status === 'open' ? styles.statusTextOpen : styles.statusTextResolved]}>
-                         {item.status.toUpperCase()}
+                         {(item.status || 'pending').toUpperCase()}
                        </Text>
                      </View>
                   </View>

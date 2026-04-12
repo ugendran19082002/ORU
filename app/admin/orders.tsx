@@ -64,7 +64,7 @@ export default function AdminOrdersScreen() {
                       styles.statusText,
                       order.status === 'delivered' ? styles.statusTextDelivered :
                       order.status === 'active' ? styles.statusTextActive : styles.statusTextRejected
-                    ]}>{order.status.toUpperCase()}</Text>
+                    ]}>{ (order.status || 'pending').toUpperCase()}</Text>
                   </View>
                 </View>
               </View>

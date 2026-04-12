@@ -146,7 +146,7 @@ export default function AdminShopReviewScreen() {
                 <Ionicons name="ribbon" size={20} color="#64748b" />
                 <View style={styles.infoTextGroup}>
                   <Text style={styles.label}>Type</Text>
-                  <Text style={styles.value}>{shop.shop_type.toUpperCase()}</Text>
+                  <Text style={styles.value}>{(shop.shop_type || 'Unknown').toUpperCase()}</Text>
                 </View>
               </View>
             </View>
@@ -159,7 +159,7 @@ export default function AdminShopReviewScreen() {
               <View key={step.id} style={styles.docRow}>
                 <View style={styles.docInfo}>
                   <Text style={styles.docLabel}>{step.title}</Text>
-                  <Text style={styles.docStatus}>{(step.status || 'Pending').replace('_', ' ')}</Text>
+                  <Text style={styles.docStatus}>{(step.status || 'Pending').toString().replace('_', ' ')}</Text>
                 </View>
                 
                 <TouchableOpacity 

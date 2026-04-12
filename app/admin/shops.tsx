@@ -105,7 +105,7 @@ export default function AdminShopsScreen() {
                           styles.pillText, 
                           { color: shop.status === 'active' ? "#2e7d32" : "#e65100" }
                         ]}>
-                          {shop.status.replace('_', ' ')}
+                          {(shop.status || 'pending').replace('_', ' ')}
                         </Text>
                       </View>
                     </View>
