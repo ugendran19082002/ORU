@@ -48,6 +48,7 @@ type SessionContextValue = {
   refreshShopStatus: () => Promise<void>;
   emergencyReset: () => Promise<void>;
   nextStep: any;
+  isSyncingShop: boolean;
 };
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -96,12 +97,14 @@ export function AppSessionProvider({
   const [biometricEnabled, setBiometricEnabledState] = useState(false);
   const [isBiometricVerified, setIsBiometricVerified] = useState(false);
   const [nextStep, setNextStepState] = useState<any>(null);
+  const [isSyncingShop, setIsSyncingShop] = useState(false);
 
-  // Sync Token to Axios Defaults
+  // Sync Token to Axios Defaults (Memory Store)
   useEffect(() => {
     setClientToken(accessToken);
   }, [accessToken]);
 
+  // Hydration logic
   useEffect(() => {
     let active = true;
 
@@ -125,9 +128,10 @@ export function AppSessionProvider({
     };
   }, []);
 
-  // MERCHANT STATUS POLLING / REFRESH
+  // MERCHANT STATUS SYNC
   const refreshShopStatus = async () => {
     if (!user || user.role !== "shop_owner") return;
+    setIsSyncingShop(true);
     try {
       const res = await onboardingApi.getMerchantShop();
       if (res.data) {
@@ -137,30 +141,50 @@ export function AppSessionProvider({
           adminNotes: res.data.admin_notes,
         };
         setUser(nextUser);
+        // Persist to storage so status survives navigation
+        await writeSession({
+            user: nextUser,
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            preferredRole,
+            biometricEnabled,
+            nextStep
+        });
       }
     } catch (err: any) {
-      if (err.response?.status !== 404) {
+      if (err.response?.status === 404) {
+        const nextUser = { ...user, shopStatus: 'none' };
+        setUser(nextUser);
+        await writeSession({
+            user: nextUser,
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            preferredRole,
+            biometricEnabled,
+            nextStep
+        });
+      } else {
         console.error("[Session] Refresh Shop Status Error:", err);
       }
+    } finally {
+      setIsSyncingShop(false);
     }
   };
 
-  // --- MERCHANT STATUS SYNC ---
-  // A dedicated effect to fetch shop status exactly once when a shop owner logs in
-  // or switches roles. This replaces the aggressive polling and redundant manual calls.
+  // Sync shop status automatically when role changes or upon login
   useEffect(() => {
-    if (status === "authenticated" && user?.role === "shop_owner" && !user.shopStatus) {
-      console.log('🔄 [Session] Authenticated Shop Owner detected. Syncing shop status...');
+    if (status === "authenticated" && user?.role === "shop_owner" && !user.shopStatus && !isSyncingShop) {
       refreshShopStatus();
     }
-  }, [status, user?.role, user?.shopStatus]);
-  
+  }, [status, user?.role, user?.shopStatus, isSyncingShop]);
+
   const handleSignOut = async () => {
     setUser(null);
     setAccessToken(null);
     setRefreshToken(null);
     setNextStepState(null);
     setStatus("anonymous");
+    setClientToken(null);
     await writeSession({
       user: null,
       access_token: null,
@@ -191,11 +215,10 @@ export function AppSessionProvider({
     }
   };
 
-  // 401 / TOKEN_EXPIRED: Reactive Recovery
+  // 401: Reactive Recovery
   useEffect(() => {
-    const handleUnauthorized = (data: any) => {
-      const { code, message } = data || {};
-      console.warn(`🛡️ [Session] Unauthorized signal received (${code})! Forced logout triggered.`);
+    const handleUnauthorized = () => {
+      console.warn(`🛡️ [Session] Unauthorized signal received! Forced logout.`);
       handleSignOut();
     };
 
@@ -212,6 +235,10 @@ export function AppSessionProvider({
       refresh_token: refreshToken,
       preferredRole,
       biometricEnabled,
+      isBiometricVerified,
+      setIsBiometricVerified,
+      isSyncingShop,
+      nextStep,
       async setPreferredRole(role) {
         const next = {
           user,
@@ -234,31 +261,27 @@ export function AppSessionProvider({
         setBiometricEnabledState(enabled);
         await writeSession(next);
       },
-      async signIn({
-        user,
-        access_token,
-        refresh_token,
-        nextStep: resNextStep,
-      }) {
-        const nextUser = user;
+      async signIn({ user: rawUser, access_token, refresh_token, nextStep: resNextStep }) {
         const nextAccessToken = access_token || accessToken;
-        const nextRefreshToken = refresh_token || refreshToken;
-
-        // Push token to client instantly to prevent race conditions
         setClientToken(nextAccessToken);
+        
+        // Map snake_case shop_status from API to camelCase shopStatus
+        const user = {
+            ...rawUser,
+            shopStatus: (rawUser as any).shop_status || rawUser.shopStatus
+        };
 
-        setUser(nextUser);
+        setUser(user);
         setAccessToken(nextAccessToken);
-        setRefreshToken(nextRefreshToken);
+        setRefreshToken(refresh_token || refreshToken);
         setNextStepState(resNextStep || null);
-        setPreferredRoleState(nextUser.role as AppRole);
         setStatus(nextAccessToken ? "authenticated" : "anonymous");
 
         await writeSession({
-          user: nextUser,
+          user,
           access_token: nextAccessToken,
-          refresh_token: nextRefreshToken,
-          preferredRole: nextUser.role as AppRole,
+          refresh_token: refresh_token || refreshToken,
+          preferredRole: user.role as AppRole,
           biometricEnabled,
           nextStep: resNextStep || null,
         });
@@ -269,31 +292,24 @@ export function AppSessionProvider({
         try {
           const response = await userApi.updateProfile(partialUser);
           const updatedUserFromApi = response.data;
+          const nextAccessToken = updatedUserFromApi.access_token || accessToken;
           
-          // Sync tokens if the API returned new ones (e.g. after role change)
-          const newAccessToken = updatedUserFromApi.access_token || accessToken;
-          const newRefreshToken = updatedUserFromApi.refresh_token || refreshToken;
-
+          setClientToken(nextAccessToken);
           const nextUser = { ...user, ...updatedUserFromApi } as AppUser;
-          
-          // Remove internal token fields from user object before state updates
           delete (nextUser as any).access_token;
           delete (nextUser as any).refresh_token;
 
           setUser(nextUser);
-          if (updatedUserFromApi.access_token) {
-            setAccessToken(updatedUserFromApi.access_token);
-            setClientToken(updatedUserFromApi.access_token);
-          }
+          setAccessToken(nextAccessToken);
           if (updatedUserFromApi.refresh_token) setRefreshToken(updatedUserFromApi.refresh_token);
 
           await writeSession({
             user: nextUser,
-            access_token: newAccessToken,
-            refresh_token: newRefreshToken,
+            access_token: nextAccessToken,
+            refresh_token: updatedUserFromApi.refresh_token || refreshToken,
             preferredRole: nextUser.role as AppRole,
             biometricEnabled,
-            nextStep: response.data.next_step || (updatedUserFromApi.role !== user.role ? null : nextStep),
+            nextStep: updatedUserFromApi.next_step || (updatedUserFromApi.role !== user.role ? null : nextStep),
           });
         } catch (err) {
           console.error("Failed to update user:", err);
@@ -302,21 +318,8 @@ export function AppSessionProvider({
       },
       refreshShopStatus,
       emergencyReset,
-      isBiometricVerified,
-      setIsBiometricVerified,
-      nextStep,
     }),
-    [
-      accessToken,
-      refreshToken,
-      biometricEnabled,
-      isBiometricVerified,
-      isHydrated,
-      preferredRole,
-      status,
-      user,
-      nextStep,
-    ],
+    [accessToken, refreshToken, biometricEnabled, isBiometricVerified, isHydrated, preferredRole, status, user, nextStep, isSyncingShop]
   );
 
   return (
@@ -336,7 +339,7 @@ export function AppRouteGuard() {
   const router = useRouter();
   const pathname = usePathname();
   const segments = useSegments();
-  const session = useAppSession() as any;
+  const session = useAppSession();
   const {
     isHydrated,
     status,
@@ -344,277 +347,122 @@ export function AppRouteGuard() {
     biometricEnabled,
     isBiometricVerified,
     setIsBiometricVerified,
+    isSyncingShop,
+    nextStep
   } = session;
-  const nextStep = session.nextStep;
-  
-  // REDIRECT MEMORY: Prevent "double time" redirects by tracking the last destination
+
   const lastRedirectRef = React.useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated || isSyncingShop) {
+        if (isSyncingShop) console.log('🛡️ [Guard] Syncing shop status... Pausing redirection.');
+        return;
+    }
 
     const firstSegment = segments[0] ?? "";
     const isAuthRoute = firstSegment === "auth";
     const isOnboardingRoute = firstSegment === "onboarding";
+    const isSecurityRoute = firstSegment === "location" || firstSegment === "enable-notifications";
+    const isPriorityRoute = isSecurityRoute || isAuthRoute;
 
-    // Anonymous User Handling
     if (status === "anonymous") {
       if (!isAuthRoute && !isOnboardingRoute) {
-        console.log("🛡️ [Guard] Redirecting anonymous user to /auth");
         router.replace("/auth");
       }
       return;
     }
 
-    // CRITICAL: If we are on a security or auth screen, STOP other competing redirects.
-    // This prevents the infinite loop where the guard fights with onboarding enforcement.
-    const isSecurityRoute = firstSegment === "location" || firstSegment === "enable-notifications";
-    const isActuallyAuthRoute = firstSegment === "auth";
-    const isPriorityRoute = isSecurityRoute || isActuallyAuthRoute;
-
     if (!user) return;
 
-    // --- CHECKLIST: SECURITY & PERMISSIONS ---
-
     const runChecklist = async () => {
-      // 1. Biometric Check
+      let hasRedirected = false;
+      const navigate = (target: string, reason: string) => {
+        if (hasRedirected) return;
+        if (pathname === target || lastRedirectRef.current === target) {
+          hasRedirected = true;
+          return;
+        }
+        console.log(`🛡️ [Guard] ${reason}: Redirecting to ${target}`);
+        lastRedirectRef.current = target;
+        hasRedirected = true;
+        router.replace(target as any);
+      };
+
+      // 1. Biometrics
       if (biometricEnabled && !isBiometricVerified) {
         const hasHardware = await LocalAuthentication.hasHardwareAsync();
         const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-
         if (hasHardware && isEnrolled) {
-          const result = await LocalAuthentication.authenticateAsync({
-            promptMessage: "Unlock ThanniGo",
-            fallbackLabel: "Use PIN",
-          });
-          if (result.success) {
-            setIsBiometricVerified(true);
-          } else {
-            return; // Stay here or show error
-          }
+          const result = await LocalAuthentication.authenticateAsync({ promptMessage: "Unlock ThanniGo" });
+          if (result.success) setIsBiometricVerified(true);
+          else return;
         } else {
-          setIsBiometricVerified(true); // No hardware, skip
+          setIsBiometricVerified(true);
         }
       }
 
-      // 2. Location Check (Only for Customer/Shop/Delivery)
-      if (
-        user.role !== "admin" &&
-        firstSegment !== "location" &&
-        firstSegment !== "enable-notifications"
-      ) {
-        const { status: locStatus } =
-          await Location.getForegroundPermissionsAsync();
+      // 2. Location
+      if (user.role !== "admin" && !isSecurityRoute) {
+        const { status: locStatus } = await Location.getForegroundPermissionsAsync();
         if (locStatus !== "granted") {
-          if (pathname !== "/location") {
-            console.log(
-              "🛡️ [Guard] Location not granted: Redirecting to /location",
-            );
-            router.replace("/location");
-          }
+          navigate("/location", "Location required");
           return;
         }
       }
 
-      // 3. Notification Check (Skip in Expo Go SDK 53+ to avoid error)
-      if (
-        firstSegment !== "enable-notifications" &&
-        firstSegment !== "location"
-      ) {
-        if (Constants.appOwnership === "expo") {
-          console.warn(
-            "🛡️ [Guard] Skipping notification permission check in Expo Go (SDK 53+ restriction).",
-          );
-        } else {
-          // Dynamic import to avoid top-level side-effects in Expo Go
-          const Notifications = require("expo-notifications");
-          const { status: notifStatus } =
-            await Notifications.getPermissionsAsync();
-          if (notifStatus !== "granted") {
-            console.log(
-              "🛡️ [Guard] Notifications not granted: Redirecting to /enable-notifications",
-            );
-            router.replace({
-              pathname: "/enable-notifications",
-              params: { next: pathname },
-            } as any);
-            return;
-          }
-        }
-      }
-
-      // 4. Determination of Ideal Destination
+      // 3. Destinations
       let idealRoute: any = "/(tabs)";
-
       if (user.onboarding_completed) {
-        // A. Final Destination: Standard role-based dashboards
         if (user.role === "shop_owner") {
-          // Gated by Shop Approval Status
-          if (user.shopStatus === "active") {
-            idealRoute = "/shop";
-          } else if (user.shopStatus === "rejected") {
-            idealRoute = "/onboarding/shop/rejected";
-          } else {
-            idealRoute = "/onboarding/shop/waitlist";
-          }
-        } else if (user.role === "admin") {
-          idealRoute = "/admin";
-        } else if (user.role === "delivery") {
-          idealRoute = "/delivery";
-        } else {
-          idealRoute = "/(tabs)";
-        }
+          if (user.shopStatus === "active") idealRoute = "/shop";
+          else if (user.shopStatus === "rejected") idealRoute = "/onboarding/shop/rejected";
+          else idealRoute = "/onboarding/shop/waitlist";
+        } else if (user.role === "admin") idealRoute = "/admin";
+        else if (user.role === "delivery") idealRoute = "/delivery";
+        else idealRoute = "/(tabs)";
       } else {
-        // B. Onboarding Path
         const backendNextStep = nextStep as any;
         if (user.role === "shop_owner") {
-          // Prioritize Status-based routing once a shop exists
-          if (user.shopStatus === "rejected") {
-            idealRoute = "/onboarding/shop/rejected";
-          } else if (user.shopStatus === "pending_review") {
-            idealRoute = "/onboarding/shop/waitlist";
-          } else if (user.shopStatus === "in_progress") {
-            // Stay on current sub-screen if already there (Business, GST, etc.)
+          if (user.shopStatus === "active") idealRoute = "/shop";
+          else if (user.shopStatus === "rejected") idealRoute = "/onboarding/shop/rejected";
+          else if (user.shopStatus === "pending_review" || user.shopStatus === "under_review") idealRoute = "/onboarding/shop/waitlist";
+          else if (user.shopStatus === "in_progress") {
             const isOnboardingSubScreen = pathname.startsWith("/onboarding/shop/") && pathname !== "/onboarding/shop/waitlist";
-            idealRoute = isOnboardingSubScreen ? pathname : "/onboarding/shop";
+            idealRoute = isOnboardingSubScreen ? pathname : "/onboarding/shop/business";
           } else {
-            // No shop found in session yet: follow the backend's prescribed route or default to create
-            idealRoute = backendNextStep?.screen_route || "/onboarding/shop/create";
+            // No shop created yet
+            idealRoute = backendNextStep?.screen_route || "/onboarding/shop/business";
           }
         } else if (backendNextStep?.screen_route) {
-          // Backend dictated step takes priority for other roles
           idealRoute = backendNextStep.screen_route;
         } else {
-          // Fallback Force onboarding flow
-          if (user.role === "customer") idealRoute = "/onboarding/customer";
-          else idealRoute = "/auth/role";
+          // Alignment with seeded flow as last resort
+          idealRoute = user.role === "customer" ? "/onboarding/customer/profile" : "/auth/role";
         }
       }
 
-      // 5. Normalization & Redirection Logic (with Role Sanitizer)
-      
-      // A. Path Normalization: Standardize routes for navigation.
-      // We avoid stripping parentheses as they are needed for Stack names in _layout.tsx.
-      if (typeof idealRoute === "string" && idealRoute.includes("(tabs)")) {
-        // No-op normalization, preserve the parentheses to match Stack.Screen name="(tabs)"
-      }
-
-      // A. Role-Route Mismatch Sanitizer
-      // If the backend nextStep route belongs to a DIFFERENT role, override it.
+      // Role check
       if (!user.onboarding_completed) {
         const routeIsShop = idealRoute.includes("/shop/");
         const routeIsCustomer = idealRoute.includes("/customer/");
-
-        if (
-          (user.role === "customer" && routeIsShop) ||
-          (user.role === "shop_owner" && routeIsCustomer)
-        ) {
-          console.warn(
-            `🛡️ [Guard] Role Mismatch! Overriding ${idealRoute} for role ${user.role}`,
-          );
-          idealRoute =
-            user.role === "customer"
-              ? "/onboarding/customer"
-              : "/onboarding/shop";
+        if ((user.role === "customer" && routeIsShop) || (user.role === "shop_owner" && routeIsCustomer)) {
+          idealRoute = user.role === "customer" ? "/onboarding/customer" : "/onboarding/shop";
         }
       }
 
-      // B. Escape from Auth Route (Login/Register/OTP)
+      // Execute
       if (isAuthRoute) {
-        if (pathname !== idealRoute) {
-          console.log(
-            `🛡️ [Guard] Escaping auth route to ideal destination: ${idealRoute}`,
-          );
-          router.replace(idealRoute);
-        }
-        return;
-      }
-
-      // B. Enforcement (If not on onboarding/auth but onboarding is incomplete)
-      if (!user.onboarding_completed && !isOnboardingRoute && !isPriorityRoute) {
-        if (pathname !== idealRoute) {
-          console.log(
-            `🛡️ [Guard] Enforcing onboarding checklist: ${idealRoute}`,
-          );
-          router.replace(idealRoute);
-        }
-        return;
-      }
-
-      // C. Role-based Access Control (Prevent customers from entering /shop etc.)
-      const currentSegment = segments[0] ?? "";
-      const isIllegalCustomer =
-        user.role === "customer" &&
-        (currentSegment === "shop" ||
-          currentSegment === "admin" ||
-          currentSegment === "delivery");
-      const isIllegalShop = user.role === "shop" && currentSegment === "admin";
-      const isIllegalAdmin =
-        user.role === "admin" &&
-        (currentSegment === "(tabs)" ||
-          currentSegment === "shop" ||
-          currentSegment === "delivery");
-      const isIllegalDelivery =
-        user.role === "delivery" &&
-        (currentSegment === "(tabs)" ||
-          currentSegment === "shop" ||
-          currentSegment === "admin");
-
-      if (
-        isIllegalCustomer ||
-        isIllegalShop ||
-        isIllegalAdmin ||
-        isIllegalDelivery
-      ) {
-        if (pathname !== idealRoute) {
-          console.log(
-            `🛡️ [Guard] Illegal access for role ${user.role}: Redirecting to ${idealRoute}`,
-          );
-          router.replace(idealRoute);
-        }
-        return;
-      }
-
-      // Root Path Handling: Decide where to go from / app/index.tsx
-      if (pathname === "/") {
-        const isInTabs = segments[0] === "(tabs)";
-        // If we want to go to tabs but aren't there yet (segments is empty or different), redirect.
-        const needsTabsRedirect = idealRoute === "/(tabs)" && !isInTabs;
-        
-        if (needsTabsRedirect || (pathname !== idealRoute && idealRoute !== "/(tabs)")) {
-          if (lastRedirectRef.current !== idealRoute) {
-            console.log(`🛡️ [Guard] Root hit: Redirecting to ${idealRoute}`);
-            lastRedirectRef.current = idealRoute;
-            router.replace(idealRoute);
-          }
-        }
+        navigate(idealRoute, "Escaping Auth");
+      } else if (!user.onboarding_completed && !isPriorityRoute) {
+        // Enforce the ideal onboarding screen even if we are already on some other onboarding page
+        navigate(idealRoute, "Enforcing Onboarding");
+      } else if (pathname === "/") {
+        navigate(idealRoute, "Root Redirection");
       }
     };
-
-    // Helper to safely navigate once
-    const safeReplace = (target: string, reason: string) => {
-      if (pathname === target || lastRedirectRef.current === target) return;
-      console.log(`🛡️ [Guard] ${reason}: Redirecting to ${target}`);
-      lastRedirectRef.current = target;
-      router.replace(target as any);
-    };
-
-    // Override router.replace in runChecklist context (optional, but for readability)
-    const originalReplace = router.replace;
-    // @ts-ignore
-    router.replace = (target: string) => safeReplace(target, "Forced");
 
     runChecklist();
-  }, [
-    isHydrated,
-    pathname,
-    router,
-    segments,
-    status,
-    user,
-    biometricEnabled,
-    isBiometricVerified,
-  ]);
+  }, [isHydrated, pathname, segments, status, user, biometricEnabled, isBiometricVerified, nextStep, isSyncingShop]);
 
   return null;
 }

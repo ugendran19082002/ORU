@@ -10,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { onboardingApi } from '@/api/onboardingApi';
 import { useAppSession } from '@/hooks/use-app-session';
+import { BackButton } from '@/components/ui/BackButton';
 
 export default function CreateShopScreen() {
   const router = useRouter();
@@ -53,6 +54,7 @@ export default function CreateShopScreen() {
       <SafeAreaView style={styles.safe}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.header}>
+            <BackButton fallback="/auth/role" style={{ marginBottom: 16 }} />
             <Text style={styles.title}>Register Your Shop</Text>
             <Text style={styles.subtitle}>Provide basic details to establish your presence on ThanniGo</Text>
           </View>

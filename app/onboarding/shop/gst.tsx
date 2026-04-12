@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import { onboardingApi } from '@/api/onboardingApi';
 import { useAppSession } from '@/hooks/use-app-session';
+import { BackButton } from '@/components/ui/BackButton';
 
 export default function ShopGSTScreen() {
   const router = useRouter();
@@ -120,17 +121,20 @@ export default function ShopGSTScreen() {
       <StatusBar style="dark" />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <TouchableOpacity 
-            style={styles.skipLink} 
-            onPress={handleSkip}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="#94a3b8" />
-            ) : (
-              <Text style={styles.skipLinkText}>Skip for now</Text>
-            )}
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <BackButton fallback="/onboarding/shop" />
+            <TouchableOpacity 
+              style={styles.skipLink} 
+              onPress={handleSkip}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#94a3b8" />
+              ) : (
+                <Text style={styles.skipLinkText}>Skip for now</Text>
+              )}
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.header}>
             <Text style={styles.title}>GST Certificate</Text>

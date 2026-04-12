@@ -10,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
+import { BackButton } from '@/components/ui/BackButton';
 
 export default function ShopBusinessDetailsScreen() {
   const router = useRouter();
@@ -84,6 +85,7 @@ export default function ShopBusinessDetailsScreen() {
         >
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <View style={styles.header}>
+              <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} />
               <Text style={styles.title}>Business Identity</Text>
               <Text style={styles.subtitle}>Tell us more about your business to build trust with customers.</Text>
             </View>

@@ -34,6 +34,9 @@ apiClient.interceptors.request.use(
     // Set token from memory (sync and reliable)
     if (authToken) {
       config.headers.Authorization = `Bearer ${authToken}`;
+      console.log(`🔑 [API Client] Using Token (last 10 chars): ...${authToken.slice(-10)}`);
+    } else {
+      console.log(`🔑 [API Client] No Auth Token in memory`);
     }
     
     return config;
@@ -55,10 +58,13 @@ apiClient.interceptors.response.use(
     const startTime = (error.config as any)?.metadata?.startTime;
     const duration = startTime ? new Date().getTime() - startTime.getTime() : 'unknown';
 
-    console.error(`\n❌ [API Error] ${error.response?.status || 'Network'} ${error.config?.url} (${duration}ms)`);
+    const isExpected404 = error.response?.status === 404;
+    const logMethod = isExpected404 ? console.warn : console.error;
+
+    logMethod(`\n${isExpected404 ? '⚠️' : '❌'} [API ${isExpected404 ? 'Info' : 'Error'}] ${error.response?.status || 'Network'} ${error.config?.url} (${duration}ms)`);
     if (error.response) {
-      console.error(`📃 Headers:`, JSON.stringify(error.response.headers, null, 2));
-      console.error(`📥 Data:`, JSON.stringify(error.response.data, null, 2));
+      logMethod(`📃 Headers:`, JSON.stringify(error.response.headers, null, 2));
+      logMethod(`📥 Data:`, JSON.stringify(error.response.data, null, 2));
     } else {
       console.error(`‼️ Message:`, error.message);
     }

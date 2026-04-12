@@ -80,6 +80,19 @@ export default function ShopWaitlistScreen() {
       };
     }
 
+    if (status === 'pending_review' || status === 'under_review') {
+      return {
+        icon: 'hourglass',
+        color: '#005d90',
+        bg: '#e0f0ff',
+        title: 'Under Review',
+        message: 'Our team is currently reviewing your shop details for quality and compliance.',
+        showReason: false,
+        actionLabel: null,
+        action: null
+      };
+    }
+
     if (shop?.onboarding_status === 'in_progress') {
       return {
         icon: 'alert-circle',
@@ -97,8 +110,8 @@ export default function ShopWaitlistScreen() {
       icon: 'hourglass',
       color: '#005d90',
       bg: '#e0f0ff',
-      title: 'Under Review',
-      message: 'Our team is currently reviewing your shop details for quality and compliance.',
+      title: 'Processing...',
+      message: 'Checking your shop status...',
       showReason: false,
       actionLabel: null,
       action: null

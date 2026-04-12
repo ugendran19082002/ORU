@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import { onboardingApi } from '@/api/onboardingApi';
 import { useAppSession } from '@/hooks/use-app-session';
+import { BackButton } from '@/components/ui/BackButton';
 
 export default function ShopFSSAIScreen() {
   const router = useRouter();
@@ -103,6 +104,7 @@ export default function ShopFSSAIScreen() {
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
+            <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} />
             <Text style={styles.title}>Food Safety License</Text>
             <Text style={styles.subtitle}>Upload your mandatory FSSAI food safety document for verification.</Text>
           </View>
