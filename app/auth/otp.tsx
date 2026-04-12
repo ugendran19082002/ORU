@@ -1,9 +1,13 @@
-import { Logo } from "@/components/ui/Logo";
 import { BackButton } from "@/components/ui/BackButton";
+import { Logo } from "@/components/ui/Logo";
 import { useAppNavigation } from "@/hooks/use-app-navigation";
 import { useAndroidBackHandler } from "@/hooks/use-back-handler";
 
-
+import { authApi } from "@/api/authApi";
+import { roleAccent, roleGradients } from "@/constants/theme";
+import { useAppSession } from "@/hooks/use-app-session";
+import type { AppRole } from "@/types/session";
+import { getOriginalDeviceId } from "@/utils/device";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -19,11 +23,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { roleAccent, roleGradients } from '@/constants/theme';
-import { useAppSession } from '@/hooks/use-app-session';
-import { useFirebaseStore } from '@/stores/firebaseStore';
-import { verifyFirebaseOTP, requestFirebaseOTP } from '@/api/firebaseAuth';
-import type { AppRole } from '@/types/session';
 
 const OTP_LENGTH = 6;
 
@@ -36,7 +35,6 @@ export default function OTPScreen() {
     safeBack("/auth/login");
   });
 
-  
   // 🔥 FIREBASE MOCKS: Temporarily suppress TS Errors before AuthContext is built
   const auth = () => ({ signInWithPhoneNumber: async (p: string) => ({}) });
   const globalStore = { setConfirmation: (c: any) => {} };
@@ -85,78 +83,75 @@ export default function OTPScreen() {
     if (code.length < OTP_LENGTH) return;
     setLoading(true);
 
-    // 🚧 DEV-ONLY BYPASS — this entire block is tree-shaken in production builds
-    if (__DEV__) {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      setLoading(false);
-      setVerified(true);
-      await setPreferredRole(role);
-      
-      Animated.spring(successAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        tension: 60,
-      }).start();
-      
-      setTimeout(() => {
-        // ALWAYS route to register page first for new user setup mock
-        router.replace("/auth/register");
-      }, 1200);
-      return;
-    }
-
-    // 🔥 PRODUCTION: Real Firebase OTP verification
     try {
-      const { confirmationResult, clearConfirmationResult } = useFirebaseStore.getState();
-      if (!confirmationResult) {
-        throw new Error('OTP session expired. Please resend.');
+      const deviceId = await getOriginalDeviceId();
+      const response = await authApi.verifyOtp(`+91${phone}`, code, deviceId);
+
+      if (response.status === 1) {
+        setLoading(false);
+        setVerified(true);
+
+        // 1. Sign in to global session
+        await signIn({
+          user: response.data.user,
+          access_token: response.data.access_token,
+          refresh_token: response.data.refresh_token,
+          nextStep: response.data.next_step,
+        });
+
+        Animated.spring(successAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 60,
+        }).start();
+
+        setTimeout(() => {
+          const { user, next_step } = response.data;
+
+          // 2. Navigation Logic
+          if (user.onboarding_completed) {
+            // Flow 1: Existing User - Go to Home
+            if (user.role === "shop_owner") router.replace("/shop" as any);
+            else if (user.role === "admin") router.replace("/admin");
+            else if (user.role === "delivery") router.replace("/delivery");
+            else router.replace("/(tabs)");
+          } else {
+            // Flow 2: New/Incomplete User - Follow next_step
+            if (next_step?.screen_route) {
+              router.replace(next_step.screen_route as any);
+            } else {
+              // Fallback to role selection if no next step (usually guest)
+              router.replace("/auth/role");
+            }
+          }
+        }, 1200);
+      } else {
+        throw new Error(response.message || "Verification failed");
       }
-
-      await verifyFirebaseOTP(confirmationResult, code);
-      clearConfirmationResult();
-
-      setLoading(false);
-      setVerified(true);
-      await setPreferredRole(role);
-      
-      Animated.spring(successAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        tension: 60,
-      }).start();
-
-      setTimeout(() => {
-        // In real backend, check if user exists. For now route to register.
-        router.replace("/auth/register");
-      }, 1200);
-
     } catch (err: any) {
       setLoading(false);
       Alert.alert(
-        'Verification Failed',
-        err?.message?.includes('Firebase') || err?.message?.includes('expired')
-          ? err.message
-          : 'Please check your OTP and try again.',
+        "Verification Failed",
+        err?.response?.data?.message ||
+          err?.message ||
+          "Please check your OTP and try again.",
       );
     }
   };
 
   const handleResendOtp = async () => {
     try {
-      if (!__DEV__) {
-        const confirmation = await requestFirebaseOTP(phone);
-        useFirebaseStore.getState().setConfirmationResult(confirmation);
+      const deviceId = await getOriginalDeviceId();
+      const response = await authApi.sendOtp(`+91${phone}`, deviceId);
+      if (response.status === 1) {
         setResendTimer(30);
         setOtp(Array(OTP_LENGTH).fill(""));
         inputRefs.current[0]?.focus();
       } else {
-        await new Promise((resolve) => setTimeout(resolve, 600));
-        setResendTimer(30);
-        setOtp(Array(OTP_LENGTH).fill(""));
-        inputRefs.current[0]?.focus();
+        throw new Error(response.message);
       }
-    } catch (err) {
-      Alert.alert('Error', 'Could not resend OTP. Try again.');
+    } catch (err: any) {
+      Alert.alert("Error", err?.message || "Could not resend OTP. Try again.");
     }
   };
 
@@ -249,13 +244,10 @@ export default function OTPScreen() {
 
         {__DEV__ && (
           <View style={styles.hintCard}>
-            <Ionicons
-              name="warning-outline"
-              size={16}
-              color="#e07b00"
-            />
-            <Text style={[styles.hintText, { color: '#e07b00' }]}>
-              DEV MODE — any 6 digits accepted. Firebase auth required in production.
+            <Ionicons name="warning-outline" size={16} color="#e07b00" />
+            <Text style={[styles.hintText, { color: "#e07b00" }]}>
+              DEV MODE — any 6 digits accepted. Firebase auth required in
+              production.
             </Text>
           </View>
         )}

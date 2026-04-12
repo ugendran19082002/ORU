@@ -10,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
 import { useAppSession } from '@/hooks/use-app-session';
+import { BackButton } from '@/components/ui/BackButton';
 
 type NavItem = {
   label: string;
@@ -94,12 +95,15 @@ export default function ShopSettingsScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <View>
-          <View style={styles.brandRow}>
-            <Logo size="md" />
-            <Text style={styles.brandName}>ThanniGo</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <BackButton fallback="/shop" />
+          <View>
+            <View style={styles.brandRow}>
+              <Logo size="md" />
+              <Text style={styles.brandName}>ThanniGo</Text>
+            </View>
+            <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
-          <Text style={styles.roleLabel}>SHOP PANEL</Text>
         </View>
         <TouchableOpacity
           style={styles.notifBtn}

@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BackButton } from '@/components/ui/BackButton';
 
 export default function EnableLocationScreen() {
   const router = useRouter();
@@ -82,6 +83,11 @@ export default function EnableLocationScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
+      
+      {/* HEADER ESCAPE */}
+      <View style={{ paddingHorizontal: 20, paddingTop: 10 }}>
+        <BackButton fallback="/auth/role" variant="transparent" />
+      </View>
       
       <View style={styles.content}>
         {/* BIG LOCATION ICON */}

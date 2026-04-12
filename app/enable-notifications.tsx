@@ -4,10 +4,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import * as Notifications from 'expo-notifications';
 import { LinearGradient } from 'expo-linear-gradient';
 import { registerForPushNotificationsAsync, scheduleTestNotification } from '@/utils/notifications';
 import Toast from 'react-native-toast-message';
+import Constants from 'expo-constants';
 
 export default function EnableNotificationsScreen() {
   const router = useRouter();
@@ -19,6 +19,9 @@ export default function EnableNotificationsScreen() {
   useEffect(() => {
     const checkStatus = async () => {
       try {
+        if (Constants.appOwnership === 'expo') return;
+
+        const Notifications = require('expo-notifications');
         const { status } = await Notifications.getPermissionsAsync();
         if (status === 'granted') {
           router.replace(next as any);
@@ -57,7 +60,13 @@ export default function EnableNotificationsScreen() {
           router.replace(next as any);
         }, 1500);
       } else {
+        if (Constants.appOwnership === 'expo') {
+          router.replace(next as any);
+          return;
+        }
+
         // Check permissions again
+        const Notifications = require('expo-notifications');
         const { status } = await Notifications.getPermissionsAsync();
         if (status !== 'granted') {
           setErrorMsg('Notification permission is required for order updates.');

@@ -1,4 +1,5 @@
-import * as Notifications from 'expo-notifications';
+// Removed top-level import to prevent Expo Go crash in SDK 53
+// import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
@@ -6,20 +7,24 @@ import Constants from 'expo-constants';
 /**
  * Configure how notifications are handled when the app is in the foreground
  */
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+if (Constants.appOwnership !== 'expo') {
+  const Notifications = require('expo-notifications');
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 /**
  * Request permissions and register for push notifications
  */
 export async function registerForPushNotificationsAsync() {
+  const Notifications = require('expo-notifications');
   let token;
 
   if (Platform.OS === 'android') {
@@ -75,6 +80,7 @@ export async function registerForPushNotificationsAsync() {
  * Manually trigger a local notification with sound (for testing)
  */
 export async function scheduleTestNotification() {
+  const Notifications = require('expo-notifications');
   await Notifications.scheduleNotificationAsync({
     content: {
       title: "ThanniGo Update 🔔",

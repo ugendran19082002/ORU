@@ -48,7 +48,7 @@ export default function DeliveryDashboardScreen() {
             </View>
           </View>
           <View style={styles.headerRight}>
-            {user?.role === 'shop' && (
+            {user?.role === 'shop_owner' && (
               <TouchableOpacity
                 style={styles.shopBackBtn}
                 onPress={() => Alert.alert(

@@ -24,9 +24,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { roleAccent, roleGradients } from '@/constants/theme';
 import { useAppSession } from '@/hooks/use-app-session';
-import { useFirebaseStore } from '@/stores/firebaseStore';
-import { requestFirebaseOTP } from '@/api/firebaseAuth';
+import { authApi } from '@/api/authApi';
 import type { AppRole } from '@/types/session';
+import { getOriginalDeviceId } from '@/utils/device';
 
 const ROLE_LABELS: Record<string, string> = {
   customer: "Customer",
@@ -46,13 +46,16 @@ export default function LoginScreen() {
 
   // 🔥 FIREBASE MOCKS: Temporarily suppress TS Errors before AuthContext is built
 
-  const { role = preferredRole ?? "customer" } = useLocalSearchParams<{ role: AppRole }>();
+  const searchParams = useLocalSearchParams<{ role: AppRole }>();
+  const [role, setRole] = useState<AppRole | null>(searchParams.role || preferredRole || null);
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const theme = roleGradients[role] ?? roleGradients.customer;
-  const accent = roleAccent[role] ?? roleAccent.customer;
-  const roleLabel = ROLE_LABELS[role] ?? "Customer";
+  // If no role, safe default for styles
+  const displayRole = role || 'customer';
+  const theme = roleGradients[displayRole] || roleGradients.customer;
+  const accent = roleAccent[displayRole] || roleAccent.customer;
+  const roleLabel = displayRole ? ROLE_LABELS[displayRole] : "Guest";
 
   // Check for Biometric Auto-Login
   useEffect(() => {
@@ -67,7 +70,7 @@ export default function LoginScreen() {
 
         if (result.success) {
           // Success! Redirect to app
-          if (role === 'shop') router.replace('/shop' as any);
+          if (role === 'shop_owner') router.replace('/shop' as any);
           else if (role === 'admin') router.replace('/admin' as any);
           else router.replace('/(tabs)' as any);
         }
@@ -76,32 +79,28 @@ export default function LoginScreen() {
     checkBiometrics();
   }, [biometricEnabled, role, router, user?.role]);
 
-  useEffect(() => {
-    setPreferredRole(role);
-  }, [role, setPreferredRole]);
+  // Remove auto-setting preferred role from URL params at this stage
+  // as the backend should dictate the role or lead to role selection.
 
   const handleSendOTP = async () => {
     if (phone.length < 10) return;
     setLoading(true);
 
     try {
-      if (!__DEV__) {
-        // 🔥 Real Firebase Integration (Production)
-        const confirmation = await requestFirebaseOTP(phone);
-        useFirebaseStore.getState().setConfirmationResult(confirmation);
+      const deviceId = await getOriginalDeviceId();
+      const response = await authApi.sendOtp(`+91${phone}`, deviceId);
+      
+      if (response.status === 1) {
         setLoading(false);
-        router.push({ pathname: "/auth/otp", params: { phone, role } });
+        router.push({ pathname: "/auth/otp", params: { phone, role: role || "" } });
       } else {
-        // 🚧 Local Dev Simulator Bypass
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setLoading(false);
-        router.push({ pathname: "/auth/otp", params: { phone, role } });
+        throw new Error(response.message || "Failed to send OTP");
       }
     } catch (err: any) {
       setLoading(false);
       Alert.alert(
         "Authentication Error",
-        err?.message || "Failed to send OTP. Please try again."
+        err?.response?.data?.message || err?.message || "Failed to send OTP. Please try again."
       );
     }
   };
@@ -124,13 +123,15 @@ export default function LoginScreen() {
             <View style={{ width: 40 }} />
           </View>
 
-          {/* ROLE BADGE */}
-          <View style={[styles.roleBadge, { backgroundColor: `${accent}15` }]}>
-            <Ionicons name="person-circle-outline" size={16} color={accent} />
-            <Text style={[styles.roleBadgeText, { color: accent }]}>
-              Signing in as {roleLabel}
-            </Text>
-          </View>
+          {/* ROLE BADGE (Only show if role was explicitly provided) */}
+          {role && (
+            <View style={[styles.roleBadge, { backgroundColor: `${accent}15` }]}>
+              <Ionicons name="person-circle-outline" size={16} color={accent} />
+              <Text style={[styles.roleBadgeText, { color: accent }]}>
+                Signing in as {roleLabel}
+              </Text>
+            </View>
+          )}
 
           {/* TITLE */}
           <View style={styles.titleBlock}>

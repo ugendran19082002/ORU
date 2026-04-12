@@ -24,16 +24,18 @@ export const thannigoPalette = {
 
 export const roleGradients = {
   customer: { start: '#005D90', end: '#0077B6' },
-  shop: { start: '#006878', end: '#008E9B' },
+  shop_owner: { start: '#006878', end: '#008E9B' },
   admin: { start: '#23616B', end: '#2D828F' },
   delivery: { start: '#2e7d32', end: '#388E3C' },
+  guest: { start: '#707881', end: '#94A3B8' },
 } as const;
 
 export const roleAccent = {
   customer: roleGradients.customer.start,
-  shop: roleGradients.shop.start,
+  shop_owner: roleGradients.shop_owner.start,
   admin: roleGradients.admin.start,
   delivery: roleGradients.delivery.start,
+  guest: roleGradients.guest.start,
 } as const;
 
 export const Colors = {

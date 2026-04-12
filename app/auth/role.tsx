@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,12 +15,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { userApi } from "@/api/userApi";
 import { Logo } from "@/components/ui/Logo";
 import { roleAccent } from "@/constants/theme";
 import { useAppSession } from "@/hooks/use-app-session";
+import type { AppRole } from "@/types/session";
 import { Ionicons } from "@expo/vector-icons";
 
-type Role = "customer" | "shop" | "delivery" | "admin";
+type Role = "customer" | "shop_owner";
 
 const ROLES = [
   {
@@ -37,11 +40,11 @@ const ROLES = [
     ],
   },
   {
-    id: "shop" as Role,
+    id: "shop_owner" as Role,
     title: "Shop Owner",
     subtitle: "Manage orders &\ngrow your business",
     icon: "storefront-outline" as const,
-    accent: roleAccent.shop,
+    accent: roleAccent.shop_owner,
     bg: "#e0f7fa",
     gradient: ["#006878", "#005566"] as [string, string],
     features: [
@@ -50,57 +53,68 @@ const ROLES = [
       "Inventory & analytics",
     ],
   },
-  {
-    id: "delivery" as Role,
-    title: "Delivery Agent",
-    subtitle: "Deliver orders &\nearn per trip",
-    icon: "bicycle-outline" as const,
-    accent: "#2e7d32",
-    bg: "#e8f5e9",
-    gradient: ["#2e7d32", "#388e3c"] as [string, string],
-    features: [
-      "View assigned trips",
-      "Verify OTP & collect payment",
-      "Track shift earnings",
-    ],
-  },
-  {
-    id: "admin" as Role,
-    title: "Admin",
-    subtitle: "Oversee the entire\nThanniGo platform",
-    icon: "shield-checkmark-outline" as const,
-    accent: roleAccent.admin,
-    bg: "#e0f2f1",
-    gradient: ["#00796b", "#004d40"] as [string, string],
-    features: ["Live orders feed", "Shop verification", "Revenue analytics"],
-  },
 ];
-
-const ROLE_DESTINATIONS: Record<Role, string> = {
-  customer: "/(tabs)",
-  shop: "/shop",
-  delivery: "/delivery",
-  admin: "/admin",
-};
 
 export default function RoleSelectScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
-  const { setPreferredRole } = useAppSession();
+  const { signIn, signOut, user } = useAppSession();
   const [selected, setSelected] = useState<Role | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSignOut = async () => {
+    Alert.alert(
+      "Sign Out",
+      "Are you sure you want to go back to the login screen?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Yes, Start Over",
+          style: "destructive",
+          onPress: async () => {
+            await signOut();
+            router.replace("/auth");
+          },
+        },
+      ],
+    );
+  };
 
   useAndroidBackHandler(() => {
     safeBack("/auth");
   });
 
-  const handleContinue = async () => {
-    if (!selected) return;
-    await setPreferredRole(selected);
-    // For delivery: go directly to delivery dashboard (separate from shop)
-    if (selected === "delivery") {
-      router.push({ pathname: "/auth/login", params: { role: selected } });
-    } else {
-      router.push({ pathname: "/auth/login", params: { role: selected } });
+  const handleRoleSelect = async (selectedRole: AppRole) => {
+    setLoading(true);
+    try {
+      // 1. Persist the role directly to the backend
+      const response = await userApi.updateProfile({ role: selectedRole });
+
+      if (response.status === 1) {
+        // 2. Update local session state
+        await signIn({
+          user: response.data,
+          access_token: null, // Keep existing token
+          refresh_token: null,
+        });
+
+        // 3. Navigation - Guard will take care of final routing,
+        // but we expedite here for better UX
+        if (selectedRole === "shop_owner") {
+          router.replace("/onboarding/shop/create" as any);
+        } else {
+          router.replace("/onboarding/customer" as any);
+        }
+      }
+    } catch (error: any) {
+      console.error("[Role Selection] Update error:", error);
+      Alert.alert(
+        "Selection Failed",
+        error.response?.data?.message ||
+          "We could not save your role choice. Please try again.",
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -202,7 +216,7 @@ export default function RoleSelectScreen() {
         {/* CTA */}
         <TouchableOpacity
           activeOpacity={selected ? 0.9 : 1}
-          onPress={handleContinue}
+          onPress={() => selected && handleRoleSelect(selected as any)}
           style={[styles.ctaWrap, !selected && { opacity: 0.4 }]}
         >
           <LinearGradient
@@ -220,9 +234,9 @@ export default function RoleSelectScreen() {
 
         {/* REGISTRATION FOOTER */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>First time here?</Text>
-          <TouchableOpacity onPress={() => router.push("/onboarding")}>
-            <Text style={styles.footerLink}>Start Registering</Text>
+          <Text style={styles.footerText}>Logged in as {user?.phone}</Text>
+          <TouchableOpacity onPress={handleSignOut}>
+            <Text style={styles.footerLink}>Not you? Sign Out</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
