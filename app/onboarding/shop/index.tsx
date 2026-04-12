@@ -85,7 +85,7 @@ export default function ShopOnboardingDashboard() {
   };
 
   const handleResubmit = async () => {
-    if (user?.shopStatus !== 'rejected') return;
+    if (!data?.is_ready_for_review || isPendingReview) return;
     
     try {
       setResubmitting(true);
