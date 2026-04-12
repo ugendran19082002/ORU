@@ -14,14 +14,16 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Alert,
-  Animated,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
   View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Animated,
 } from "react-native";
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const OTP_LENGTH = 6;
@@ -130,12 +132,11 @@ export default function OTPScreen() {
       }
     } catch (err: any) {
       setLoading(false);
-      Alert.alert(
-        "Verification Failed",
-        err?.response?.data?.message ||
-          err?.message ||
-          "Please check your OTP and try again.",
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Verification Failed',
+        text2: err?.response?.data?.message || err?.message || "Please check your OTP and try again."
+      });
     }
   };
 
@@ -151,7 +152,11 @@ export default function OTPScreen() {
         throw new Error(response.message);
       }
     } catch (err: any) {
-      Alert.alert("Error", err?.message || "Could not resend OTP. Try again.");
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: err?.message || "Could not resend OTP. Try again."
+      });
     }
   };
 

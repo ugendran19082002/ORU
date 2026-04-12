@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert, Share,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView,
+  RefreshControl, ActivityIndicator, Image, Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -123,7 +124,16 @@ export default function RewardsScreen() {
             <Text style={styles.codeValue}>{referralCode}</Text>
           </View>
           <View style={styles.referralActions}>
-            <TouchableOpacity style={styles.copyBtn} onPress={() => Alert.alert('Copied!', `${referralCode} copied to clipboard.`)}>
+            <TouchableOpacity 
+              style={styles.copyBtn} 
+              onPress={() => {
+                Toast.show({
+                  type: 'success',
+                  text1: 'Copied!',
+                  text2: `${referralCode} copied to clipboard.`
+                });
+              }}
+            >
               <Ionicons name="copy-outline" size={16} color="#005d90" />
               <Text style={styles.copyBtnText}>Copy</Text>
             </TouchableOpacity>

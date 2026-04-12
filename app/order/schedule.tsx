@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  TextInput, Alert,
+  TextInput,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,12 +27,19 @@ export default function ScheduleDeliveryScreen() {
 
   const handleConfirm = () => {
     if (!selected) {
-      Alert.alert('Select Slot', 'Please choose a delivery slot.');
+      Toast.show({
+        type: 'error',
+        text1: 'Select Slot',
+        text2: 'Please choose a delivery slot.'
+      });
       return;
     }
-    Alert.alert('Delivery Scheduled!', `Your delivery is scheduled for: ${selected}`, [
-      { text: 'Done', onPress: () => router.replace('/(tabs)/orders' as any) },
-    ]);
+    Toast.show({
+      type: 'success',
+      text1: 'Delivery Scheduled!',
+      text2: `Your delivery is scheduled for: ${selected}`
+    });
+    router.replace('/(tabs)/orders' as any);
   };
 
   return (

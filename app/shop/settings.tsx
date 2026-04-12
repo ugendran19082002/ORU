@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, RefreshControl,
-  TouchableOpacity, Switch, StyleSheet, Alert,
+  TouchableOpacity, Switch, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -76,7 +76,7 @@ export default function ShopSettingsScreen() {
 
 
   const handleSignOut = async () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out of the Shop Panel?', [
+    require('react-native').Alert.alert('Sign Out', 'Are you sure you want to sign out of the Shop Panel?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Sign Out',

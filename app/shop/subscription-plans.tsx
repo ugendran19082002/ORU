@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Alert, Switch,
+  View, Text, StyleSheet, TouchableOpacity, Switch,
   ScrollView,
 } from 'react-native';
+import React, { useState } from 'react';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,9 +35,16 @@ export default function ShopSubscriptionPlansScreen() {
   const plan = PLAN_TYPES.find((p) => p.id === selected)!;
 
   const handleSubscribe = () => {
-    Alert.alert('Subscribe Shop', `Subscribe shop to ${plan.label} at ₹${plan.price}/${plan.billing}?`, [
+    require('react-native').Alert.alert('Subscribe Shop', `Subscribe shop to ${plan.label} at ₹${plan.price}/${plan.billing}?`, [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Confirm', onPress: () => Alert.alert('Subscribed!', `Shop enrolled in ${plan.label}.`) },
+      {
+        text: 'Confirm',
+        onPress: () => Toast.show({
+          type: 'success',
+          text1: 'Subscribed!',
+          text2: `Shop enrolled in ${plan.label}.`
+        })
+      },
     ]);
   };
 

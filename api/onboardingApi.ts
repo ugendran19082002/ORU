@@ -65,7 +65,12 @@ export const onboardingApi = {
   /**
    * Specifically update bank details (Convenience method)
    */
-  updateBankDetails: async (shopId: number, data: { bank_account_no: string; bank_ifsc: string }): Promise<OnboardingResponse<any>> => {
+  updateBankDetails: async (shopId: number, data: { 
+    bank_account_no: string; 
+    bank_ifsc: string;
+    upi_id?: string;
+    bank_statement_password?: string;
+  }): Promise<OnboardingResponse<any>> => {
     return onboardingApi.completeShopStep('bank_details', shopId, data);
   },
 

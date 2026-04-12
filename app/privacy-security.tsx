@@ -1,5 +1,6 @@
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import Toast from 'react-native-toast-message';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,21 +32,37 @@ export default function PrivacySecurityScreen() {
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
 
       if (!hasHardware) {
-        Alert.alert('Error', 'Your device does not support biometric authentication.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Your device does not support biometric authentication.'
+        });
         return;
       }
       if (!isEnrolled) {
-        Alert.alert('Error', 'No biometrics found. Please set them up in your phone settings.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'No biometrics found. Please set them up in your phone settings.'
+        });
         return;
       }
 
       setFingerprintEnabled(true);
       await SecureStore.setItemAsync('fingerprint_enabled', 'true');
-      Alert.alert('Security Updated', 'Biometric login has been enabled.');
+      Toast.show({
+        type: 'success',
+        text1: 'Security Updated',
+        text2: 'Biometric login has been enabled.'
+      });
     } else {
       setFingerprintEnabled(false);
       await SecureStore.setItemAsync('fingerprint_enabled', 'false');
-      Alert.alert('Security Updated', 'Biometric login has been disabled.');
+      Toast.show({
+        type: 'success',
+        text1: 'Security Updated',
+        text2: 'Biometric login has been disabled.'
+      });
     }
   };
 
@@ -53,7 +70,11 @@ export default function PrivacySecurityScreen() {
     setAppPin(val);
     if (val.length === 4) {
       await SecureStore.setItemAsync('user_app_pin', val);
-      Alert.alert('Success', 'Security PIN has been updated.');
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Security PIN has been updated.'
+      });
     }
   };
 
@@ -149,7 +170,7 @@ export default function PrivacySecurityScreen() {
 
         <TouchableOpacity 
           style={styles.deleteBtn}
-          onPress={() => Alert.alert('Request Account Deletion', 'Our team will contact you within 24 hours to process your request.', [{ text: 'Cancel' }, { text: 'Send Request', style: 'destructive' }])}
+          onPress={() => require('react-native').Alert.alert('Request Account Deletion', 'Our team will contact you within 24 hours to process your request.', [{ text: 'Cancel' }, { text: 'Send Request', style: 'destructive' }])}
         >
           <Text style={styles.deleteBtnText}>Request Account Deletion</Text>
         </TouchableOpacity>

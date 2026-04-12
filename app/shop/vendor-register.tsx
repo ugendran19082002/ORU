@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Alert,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,22 +40,37 @@ export default function VendorRegisterScreen() {
   const handleNext = () => {
     if (step === 0) {
       if (!shopName.trim() || !ownerName.trim() || !mobile.trim()) {
-        Alert.alert('Required', 'Please fill in Shop Name, Owner Name, and Mobile.');
+        Toast.show({
+          type: 'error',
+          text1: 'Required',
+          text2: 'Please fill in Shop Name, Owner Name, and Mobile.'
+        });
         return;
       }
       setStep(1);
     } else {
       if (!area.trim() || !fssai.trim()) {
-        Alert.alert('Required', 'Please fill in Address and FSSAI number.');
+        Toast.show({
+          type: 'error',
+          text1: 'Required',
+          text2: 'Please fill in Address and FSSAI number.'
+        });
         return;
       }
       if (!agreed) {
-        Alert.alert('Agreement', 'Please agree to the terms to continue.');
+        Toast.show({
+          type: 'error',
+          text1: 'Agreement',
+          text2: 'Please agree to the terms to continue.'
+        });
         return;
       }
-      Alert.alert('Application Submitted!', 'Our team will verify your shop within 24–48 hours.', [
-        { text: 'OK', onPress: () => router.replace('/shop' as any) },
-      ]);
+      Toast.show({
+        type: 'success',
+        text1: 'Application Submitted!',
+        text2: 'Our team will verify your shop within 24–48 hours.'
+      });
+      router.replace('/shop' as any);
     }
   };
 

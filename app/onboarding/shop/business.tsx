@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert, ScrollView
+  View, Text, StyleSheet, TouchableOpacity,
+  KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView, TextInput
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,11 +11,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
+import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
 
 export default function ShopBusinessDetailsScreen() {
   const router = useRouter();
   const { user, status } = useAppSession();
+  const { handleAuthBack } = useLogoutBackHandler();
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
   const [shopId, setShopId] = useState<number | null>(null);
@@ -55,7 +58,11 @@ export default function ShopBusinessDetailsScreen() {
 
   const handleContinue = async () => {
     if (!shopId) {
-      Alert.alert('Error', 'Shop context lost. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Shop context lost. Please try again.'
+      });
       return;
     }
 
@@ -70,7 +77,11 @@ export default function ShopBusinessDetailsScreen() {
       }
     } catch (error: any) {
       console.error('[Shop Onboarding] Business Error:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Could not save details.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.response?.data?.message || 'Could not save details.'
+      });
     } finally {
       setLoading(false);
     }
@@ -86,7 +97,11 @@ export default function ShopBusinessDetailsScreen() {
         >
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <View style={styles.header}>
-              <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} />
+              <BackButton 
+                fallback="/onboarding/shop" 
+                style={{ marginBottom: 16 }} 
+                onPress={handleAuthBack}
+              />
               <Text style={styles.title}>Business Identity</Text>
               <Text style={styles.subtitle}>Tell us more about your business to build trust with customers.</Text>
             </View>
@@ -103,7 +118,7 @@ export default function ShopBusinessDetailsScreen() {
                       style={styles.input}
                       placeholder="e.g. Sree Murugan Enterprises"
                       value={formData.legal_name}
-                      onChangeText={(v) => setFormData(p => ({ ...p, legal_name: v }))}
+                      onChangeText={(v: string) => setFormData(p => ({ ...p, legal_name: v }))}
                     />
                   </View>
                 </View>
@@ -115,7 +130,7 @@ export default function ShopBusinessDetailsScreen() {
                       style={[styles.input, styles.textArea]}
                       placeholder="Briefly describe your services..."
                       value={formData.description}
-                      onChangeText={(v) => setFormData(p => ({ ...p, description: v }))}
+                      onChangeText={(v: string) => setFormData(p => ({ ...p, description: v }))}
                       multiline
                       numberOfLines={4}
                     />
@@ -130,7 +145,7 @@ export default function ShopBusinessDetailsScreen() {
                       style={styles.input}
                       placeholder="contact@business.com"
                       value={formData.email}
-                      onChangeText={(v) => setFormData(p => ({ ...p, email: v }))}
+                      onChangeText={(v: string) => setFormData(p => ({ ...p, email: v }))}
                       keyboardType="email-address"
                       autoCapitalize="none"
                     />
@@ -201,3 +216,4 @@ const styles = StyleSheet.create({
   },
   ctaText: { color: 'white', fontSize: 17, fontWeight: '800' }
 });
+

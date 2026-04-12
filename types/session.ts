@@ -12,6 +12,7 @@ export type AppUser = {
   status: string;
   onboarding_completed: boolean;
   shopStatus?: string;
+  onboardingStatus?: string;
   adminNotes?: string;
 };
 

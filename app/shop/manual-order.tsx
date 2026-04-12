@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  TextInput, Alert,
+  TextInput,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,7 +40,11 @@ export default function ManualOrderScreen() {
 
   const handlePlace = () => {
     if (!customerName.trim() || !address.trim() || !customerPhone.trim()) {
-      Alert.alert('Required', 'Please fill in customer name, phone, and address.');
+      Toast.show({
+        type: 'error',
+        text1: 'Required',
+        text2: 'Please fill in customer name, phone, and address.'
+      });
       return;
     }
 
@@ -57,9 +62,12 @@ export default function ManualOrderScreen() {
 
     placeOrder(orderPayload as any);
 
-    Alert.alert('Order Placed!', `Manual order for ${customerName} — ₹${total} (${paymentMode.toUpperCase()})`, [
-      { text: 'OK', onPress: () => router.replace('/shop' as any) },
-    ]);
+    Toast.show({
+      type: 'success',
+      text1: 'Order Placed!',
+      text2: `Manual order for ${customerName} — ₹${total} (${paymentMode.toUpperCase()})`
+    });
+    router.replace('/shop' as any);
   };
 
   return (
@@ -114,11 +122,11 @@ export default function ManualOrderScreen() {
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Quantity</Text>
           <View style={styles.qtyRow}>
-            <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuantity((q) => Math.max(1, parseInt(q || '1') - 1).toString())}>
+            <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuantity((q: string) => Math.max(1, parseInt(q || '1') - 1).toString())}>
               <Ionicons name="remove" size={20} color="#005d90" />
             </TouchableOpacity>
             <Text style={styles.qtyValue}>{quantity}</Text>
-            <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuantity((q) => (parseInt(q || '1') + 1).toString())}>
+            <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuantity((q: string) => (parseInt(q || '1') + 1).toString())}>
               <Ionicons name="add" size={20} color="#005d90" />
             </TouchableOpacity>
           </View>

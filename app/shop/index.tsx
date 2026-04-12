@@ -4,7 +4,6 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
-  Alert,
   Modal,
   RefreshControl,
   ScrollView,
@@ -14,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Logo } from "@/components/ui/Logo";
@@ -95,11 +95,11 @@ export default function ShopOrdersScreen() {
       // Using 5 * 60 * 1000 for 5 minutes.
       const timer = setTimeout(
         () => {
-          Alert.alert(
-            "⚠️ Unaccepted Orders",
-            `You have ${pendingCount} order(s) waiting for acceptance. Please action them immediately to avoid SLA penalties.`,
-            [{ text: "Acknowledge" }],
-          );
+          Toast.show({
+            type: 'info',
+            text1: '⚠️ Unaccepted Orders',
+            text2: `You have ${pendingCount} order(s) waiting for acceptance. Please action them immediately.`
+          });
         },
         5 * 60 * 1000,
       );
@@ -143,10 +143,11 @@ export default function ShopOrdersScreen() {
 
   const confirmReject = () => {
     if (!selectedRejectReason) {
-      Alert.alert(
-        "Reason Required",
-        "Please select a reason before rejecting this order.",
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Reason Required',
+        text2: 'Please select a reason before rejecting this order.'
+      });
       return;
     }
     if (rejectModalOrderId) {

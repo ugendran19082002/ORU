@@ -1,7 +1,9 @@
+import React from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert, BackHandler
+  StyleSheet, BackHandler
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -71,7 +73,11 @@ export default function ShopDeliveryManagementScreen() {
         </View>
         <TouchableOpacity
           style={styles.dispatchBtn}
-          onPress={() => Alert.alert('Dispatch Center', 'Call the dispatch team for urgent redirects.')}
+          onPress={() => Toast.show({
+            type: 'info',
+            text1: 'Dispatch Center',
+            text2: 'Call the dispatch team for urgent redirects.'
+          })}
         >
           <Ionicons name="radio-outline" size={16} color="#005d90" />
           <Text style={styles.dispatchBtnText}>Dispatch</Text>
@@ -164,7 +170,11 @@ export default function ShopDeliveryManagementScreen() {
               {trip.status === 'cancelled' && (
                 <TouchableOpacity
                   style={styles.rescheduleBtn}
-                  onPress={() => Alert.alert('History', `Order ${trip.id} was cancelled.`)}
+                  onPress={() => Toast.show({
+                    type: 'info',
+                    text1: 'History',
+                    text2: `Order ${trip.id} was cancelled.`
+                  })}
                 >
                   <Ionicons name="close-circle-outline" size={14} color="#c62828" />
                   <Text style={styles.rescheduleBtnText}>Cancelled</Text>

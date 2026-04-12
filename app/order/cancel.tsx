@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -38,10 +39,14 @@ export default function CancelOrderScreen() {
 
   const handleCancel = () => {
     if (!selected) {
-      Alert.alert('Select Reason', 'Please select a reason for cancellation.');
+      Toast.show({
+        type: 'error',
+        text1: 'Select Reason',
+        text2: 'Please select a reason for cancellation.'
+      });
       return;
     }
-    Alert.alert('Cancel Order?', 'This action cannot be undone.', [
+    require('react-native').Alert.alert('Cancel Order?', 'This action cannot be undone.', [
       { text: 'Keep Order', style: 'cancel' },
       {
         text: 'Yes, Cancel',

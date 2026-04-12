@@ -6,8 +6,8 @@ import {
   RefreshControl,
   TouchableOpacity,
   StyleSheet,
-  Alert,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -169,7 +169,11 @@ export default function AdminOverviewScreen() {
               <Text style={styles.sectionTitle}>Live Flow</Text>
               <View style={styles.liveDot} />
             </View>
-            <TouchableOpacity style={styles.viewAllBtn} onPress={() => Alert.alert('Admin', 'Viewing all live orders...')}>
+            <TouchableOpacity style={styles.viewAllBtn} onPress={() => Toast.show({
+              type: 'info',
+              text1: 'Admin',
+              text2: 'Viewing all live orders...'
+            })}>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
           </View>
@@ -203,10 +207,18 @@ export default function AdminOverviewScreen() {
                     </View>
                   </View>
                   <View style={styles.verifActions}>
-                    <TouchableOpacity style={styles.rejectBtn} onPress={() => Alert.alert('Admin', `Rejecting verification for ${item.shop}`)}>
+                    <TouchableOpacity style={styles.rejectBtn} onPress={() => Toast.show({
+                      type: 'info',
+                      text1: 'Admin',
+                      text2: `Rejecting verification for ${item.shop}`
+                    })}>
                       <Text style={styles.rejectBtnText}>Reject</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.approveBtn} onPress={() => Alert.alert('Admin', `Approving verification for ${item.shop}`)}>
+                    <TouchableOpacity style={styles.approveBtn} onPress={() => Toast.show({
+                      type: 'info',
+                      text1: 'Admin',
+                      text2: `Approving verification for ${item.shop}`
+                    })}>
                       <Text style={styles.approveBtnText}>Approve</Text>
                     </TouchableOpacity>
                   </View>
@@ -214,7 +226,11 @@ export default function AdminOverviewScreen() {
                 {index < VERIF_QUEUE.length - 1 && <View style={styles.verifDivider} />}
               </View>
             ))}
-            <TouchableOpacity style={styles.viewAllVerifBtn} onPress={() => Alert.alert('Admin', 'Viewing all verification requests...')}>
+            <TouchableOpacity style={styles.viewAllVerifBtn} onPress={() => Toast.show({
+              type: 'info',
+              text1: 'Admin',
+              text2: 'Viewing all verification requests...'
+            })}>
               <Text style={styles.viewAllText}>View All Requests</Text>
             </TouchableOpacity>
           </View>
@@ -233,7 +249,11 @@ export default function AdminOverviewScreen() {
           </View>
         </ScrollView>
       {/* EMERGENCY FAB */}
-      <TouchableOpacity style={styles.emergencyFab} onPress={() => Alert.alert('Emergency', 'Contacting admin support team...')}>
+      <TouchableOpacity style={styles.emergencyFab} onPress={() => Toast.show({
+        type: 'info',
+        text1: 'Emergency',
+        text2: 'Contacting admin support team...'
+      })}>
         <LinearGradient colors={['#005d90', '#0077b6']} style={styles.emergencyFabGrad}>
           <Ionicons name="headset-outline" size={24} color="white" />
         </LinearGradient>

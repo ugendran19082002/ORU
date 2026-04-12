@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  RefreshControl, Alert, Linking,
+  View, Text, ScrollView,
+  RefreshControl, Linking, TouchableOpacity, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -43,7 +44,7 @@ export default function ProfileScreen() {
   };
 
   const handleResetData = () => {
-    Alert.alert(
+    require('react-native').Alert.alert(
       'Reset All Data',
       'This will clear your local session, cache, and log you out. This is useful if you are experiencing navigation or login issues. Continue?',
       [
@@ -162,12 +163,16 @@ export default function ProfileScreen() {
                   } else if (item.label === 'Privacy & Security') {
                     router.push('/privacy-security' as any);
                   } else if (item.label === 'Help & Support') {
-                    Alert.alert('Help & Support', 'How would you like to reach us?', [
+                    require('react-native').Alert.alert('Help & Support', 'How would you like to reach us?', [
                       { text: 'Cancel', style: 'cancel' },
                       { text: 'Email Support', onPress: () => Linking.openURL('mailto:support@thannigo.com') },
                     ]);
                   } else if (item.label === 'About ThanniGo') {
-                    Alert.alert('ThanniGo', 'India\'s fastest 15-minute water delivery platform.\n\n© 2026 ThanniGo Pvt. Ltd.');
+                    Toast.show({
+                      type: 'info',
+                      text1: 'ThanniGo',
+                      text2: "India's fastest 15-minute water delivery platform.\n© 2026 ThanniGo Pvt. Ltd."
+                    });
                   }
                 }}
               >

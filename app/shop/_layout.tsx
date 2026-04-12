@@ -1,7 +1,7 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Tabs, useRouter } from "expo-router";
 import React from "react";
-import { Alert, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { Tabs, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 function TabIcon({
   name,
@@ -47,7 +47,7 @@ export default function ShopLayout() {
   const router = useRouter();
 
   const handleDeliverySwitch = () => {
-    Alert.alert(
+    require('react-native').Alert.alert(
       "Switch to Delivery Mode",
       "You will be redirected to the Delivery Agent dashboard. Switch back anytime from the delivery menu.",
       [
@@ -106,7 +106,7 @@ export default function ShopLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          tabBarIcon: ({ focused, color }) => (
+          tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
             <TabIcon
               name={focused ? "receipt" : "receipt-outline"}
               focused={focused}
@@ -121,7 +121,7 @@ export default function ShopLayout() {
       <Tabs.Screen
         name="inventory"
         options={{
-          tabBarIcon: ({ focused, color }) => (
+          tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
             <TabIcon
               name={focused ? "cube" : "cube-outline"}
               focused={focused}
@@ -136,7 +136,7 @@ export default function ShopLayout() {
       <Tabs.Screen
         name="earnings"
         options={{
-          tabBarIcon: ({ focused, color }) => (
+          tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
             <TabIcon
               name={focused ? "bar-chart" : "bar-chart-outline"}
               focused={focused}
@@ -151,7 +151,7 @@ export default function ShopLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          tabBarIcon: ({ focused, color }) => (
+          tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
             <TabIcon
               name={focused ? "grid" : "grid-outline"}
               focused={focused}

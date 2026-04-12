@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  TextInput, Alert, Image,
+  TextInput, Image,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -43,7 +44,11 @@ export default function DeliveryCompleteScreen() {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Sorry, we need camera permissions to capture delivery proof!');
+      Toast.show({
+        type: 'error',
+        text1: 'Permission Denied',
+        text2: 'Sorry, we need camera permissions to capture delivery proof!'
+      });
       return;
     }
     const result = await ImagePicker.launchCameraAsync({
@@ -57,11 +62,19 @@ export default function DeliveryCompleteScreen() {
 
   const handleSubmit = () => {
     if (mode === 'failed' && !selectedReason) {
-      Alert.alert('Select Reason', 'Please choose a reason for the failed delivery.');
+      Toast.show({
+        type: 'error',
+        text1: 'Select Reason',
+        text2: 'Please choose a reason for the failed delivery.'
+      });
       return;
     }
     if (mode === 'failed' && !rescheduleSlot.trim()) {
-      Alert.alert('Reschedule Required', 'Please suggest a next delivery slot.');
+      Toast.show({
+        type: 'error',
+        text1: 'Reschedule Required',
+        text2: 'Please suggest a next delivery slot.'
+      });
       return;
     }
     if (task) {
@@ -71,13 +84,15 @@ export default function DeliveryCompleteScreen() {
       updateOrderStatus(task.orderId, finalStatus);
     }
 
-    Alert.alert(
-      mode === 'success' ? '✅ Trip Complete!' : '⚠️ Delivery Reported',
-      mode === 'success'
-        ? `Order ${task?.orderId ?? orderId} marked delivered. Earnings ${earnings} added to your account.`
+    Toast.show({
+      type: mode === 'success' ? 'success' : 'info',
+      text1: mode === 'success' ? '✅ Trip Complete!' : '⚠️ Delivery Reported',
+      text2: mode === 'success'
+        ? `Order ${task?.orderId ?? orderId} marked delivered.`
         : `Failed delivery reported. Rescheduled for: ${rescheduleSlot}`,
-      [{ text: 'OK', onPress: () => router.replace('/delivery' as any) }]
-    );
+    });
+
+    router.replace('/delivery' as any);
   };
 
   return (

@@ -13,23 +13,24 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  RefreshControl,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  TextInput,
   TouchableOpacity,
   View,
+  Text,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  RefreshControl,
+  Share,
+  Platform,
+  KeyboardAvoidingView,
+  StatusBar as RNStatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from 'react-native-toast-message';
 
 /**
  * PRODUCTION DEBUG HELPER: Validate coordinates before use
@@ -188,10 +189,11 @@ export default function ShopProfileScreen() {
       console.log("Permission status:", status);
       if (status !== "granted") {
         console.warn("⛔ [SHOP GPS] Permission denied");
-        Alert.alert(
-          "Permission denied",
-          "Allow location access to pin your shop.",
-        );
+        Toast.show({
+          type: 'error',
+          text1: 'Permission denied',
+          text2: 'Allow location access to pin your shop.'
+        });
         setIsFetchingLocation(false);
         return;
       }
@@ -371,14 +373,21 @@ export default function ShopProfileScreen() {
           style={styles.editBtn}
           onPress={() => {
             console.log("=== [SHOP] Edit Click ===");
-            Alert.alert(
+            require('react-native').Alert.alert(
               "Profile Update",
               "Are you sure you want to save changes?",
               [
                 { text: "Cancel", style: "cancel" },
                 {
                   text: "Save",
-                  onPress: () => console.log("✅ [SHOP] Profile Saved (Mock)"),
+                  onPress: () => {
+                    console.log("✅ [SHOP] Profile Saved (Mock)");
+                    Toast.show({
+                      type: 'success',
+                      text1: 'Saved',
+                      text2: 'Your profile changes have been saved.'
+                    });
+                  },
                 },
               ],
             );
@@ -472,10 +481,11 @@ export default function ShopProfileScreen() {
                         target: "select",
                       });
                     } else {
-                      Alert.alert(
-                        "Error",
-                        "Invalid shop coordinates. Please pin on map again.",
-                      );
+                      Toast.show({
+                        type: 'error',
+                        text1: 'Error',
+                        text2: 'Invalid shop coordinates. Please pin on map again.'
+                      });
                     }
                   }}
                 >
@@ -746,10 +756,11 @@ export default function ShopProfileScreen() {
           <TouchableOpacity
             style={styles.saveBtn}
             onPress={() =>
-              Alert.alert(
-                "Profile Saved",
-                "Shop profile details have been updated in this mock flow.",
-              )
+              Toast.show({
+                type: 'success',
+                text1: 'Profile Saved',
+                text2: 'Shop profile details have been updated.'
+              })
             }
           >
             <Text style={styles.saveBtnText}>Save Profile Changes</Text>

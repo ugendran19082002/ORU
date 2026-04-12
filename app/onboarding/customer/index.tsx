@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, RefreshControl, Alert
+  ActivityIndicator, RefreshControl
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,11 +12,13 @@ import { useRouter } from 'expo-router';
 import { onboardingApi } from '@/api/onboardingApi';
 import type { OnboardingStatus } from '@/types/onboarding';
 import { useAppSession } from '@/hooks/use-app-session';
+import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
 
 export default function CustomerOnboardingScreen() {
   const router = useRouter();
   const { user, updateUser, status } = useAppSession();
+  const { handleAuthBack } = useLogoutBackHandler();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<OnboardingStatus | null>(null);
 
@@ -64,7 +67,11 @@ export default function CustomerOnboardingScreen() {
     if (step.screen_route) {
       router.push(step.screen_route as any);
     } else {
-      Alert.alert('Coming Soon', 'This onboarding step will be available shortly.');
+      Toast.show({
+        type: 'info',
+        text1: 'Coming Soon',
+        text2: 'This onboarding step will be available shortly.'
+      });
     }
   };
 
@@ -84,7 +91,7 @@ export default function CustomerOnboardingScreen() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         {/* HEADER */}
         <View style={styles.header}>
-          <BackButton fallback="/auth/role" />
+          <BackButton fallback="/auth/role" onPress={handleAuthBack} />
           <View style={{ marginLeft: 16, flex: 1 }}>
             <Text style={styles.welcome}>Welcome, {user?.name || 'Guest'}</Text>
             <Text style={styles.subtitle}>Complete these steps to get started</Text>
@@ -227,3 +234,4 @@ const styles = StyleSheet.create({
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 20 },
   footerText: { fontSize: 12, color: '#94a3b8', fontWeight: '500' }
 });
+

@@ -1,13 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   Platform,
   Linking,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -92,11 +92,15 @@ export default function MapPreviewScreen() {
 
   const openInExternalMaps = () => {
     if (!isValidCoord) {
-      Alert.alert("Error", "Invalid coordinates provided.");
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Invalid coordinates provided.'
+      });
       return;
     }
 
-    Alert.alert(
+    require('react-native').Alert.alert(
       'Open Navigation',
       `Would you like to open directions to "${label}" in your device's maps app?`,
       [
@@ -120,7 +124,11 @@ export default function MapPreviewScreen() {
             if (url) {
               Linking.openURL(url).catch((err) => {
                 console.error('❌ [MAP PREVIEW] External Map Fail:', err);
-                Alert.alert("Error", "Could not open map application.");
+                Toast.show({
+                  type: 'error',
+                  text1: 'Error',
+                  text2: 'Could not open map application.'
+                });
               });
             }
           },

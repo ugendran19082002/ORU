@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, RefreshControl, Alert
+  ActivityIndicator, RefreshControl
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -62,7 +63,11 @@ export default function ShopOnboardingDashboard() {
         router.replace('/onboarding/shop/create');
       } 
       else if (error.response?.status === 403) {
-        Alert.alert('Permission Denied', 'You do not have access to shop owner features.');
+        Toast.show({
+          type: 'error',
+          text1: 'Permission Denied',
+          text2: 'You do not have access to shop owner features.'
+        });
         router.replace('/auth/role');
       }
     } finally {
@@ -80,7 +85,11 @@ export default function ShopOnboardingDashboard() {
     if (step.screen_route) {
       router.push(step.screen_route as any);
     } else {
-      Alert.alert('Verification Step', `Please prepare your ${step.title} for upload.`);
+      Toast.show({
+        type: 'info',
+        text1: 'Verification Step',
+        text2: `Please prepare your ${step.title} for upload.`
+      });
     }
   };
 
@@ -95,13 +104,21 @@ export default function ShopOnboardingDashboard() {
 
       const res = await onboardingApi.resubmitShop(shopId);
       if (res.status === 1) {
-        Alert.alert('Success', 'Your application has been resubmitted for review.');
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Your application has been resubmitted for review.'
+        });
         await refreshShopStatus();
         router.replace('/onboarding/shop/waitlist');
       }
     } catch (error: any) {
       console.error('[Resubmit] Error:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to resubmit application.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.response?.data?.message || 'Failed to resubmit application.'
+      });
     } finally {
       setResubmitting(false);
     }

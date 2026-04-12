@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert, ScrollView
+  View, Text, StyleSheet, TouchableOpacity, ScrollView,
+  KeyboardAvoidingView, Platform, TextInput, ActivityIndicator,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import * as DocumentPicker from 'expo-document-picker';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
 import { BackButton } from '@/components/ui/BackButton';
@@ -18,13 +20,18 @@ export default function ShopBankDetailsScreen() {
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
   const [shopId, setShopId] = useState<number | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     bank_name: '',
     account_holder: '',
     bank_account_no: '',
     bank_ifsc: '',
+    upi_id: '',
+    bank_statement_password: '',
   });
+
+  const [statementFile, setStatementFile] = useState<any>(null);
 
   // 1. Resolve actual Shop ID
   React.useEffect(() => {
@@ -40,6 +47,8 @@ export default function ShopBankDetailsScreen() {
               account_holder: res.data.metadata?.account_holder || '',
               bank_account_no: res.data.bank_account_no,
               bank_ifsc: res.data.bank_ifsc || '',
+              upi_id: res.data.upi_id || '',
+              bank_statement_password: res.data.bank_statement_password || '',
             });
           }
         } else {
@@ -57,30 +66,75 @@ export default function ShopBankDetailsScreen() {
     })();
   }, []);
 
+  const pickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/pdf',
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const file = result.assets[0];
+        setStatementFile(file);
+      }
+    } catch (err) {
+      console.error('[Bank Details] Pick Error:', err);
+    }
+  };
+
   const handleSave = async () => {
     if (!shopId) return;
     
     // Basic Validation
     if (!formData.bank_account_no || !formData.bank_ifsc || !formData.account_holder) {
-      Alert.alert('Required', 'Please fill in all mandatory fields.');
+      Toast.show({
+        type: 'error',
+        text1: 'Required',
+        text2: 'Please fill in all mandatory account fields.'
+      });
       return;
     }
 
     try {
       setLoading(true);
+
+      let documentUrl = undefined;
+      
+      // 1. Upload Statement if selected
+      if (statementFile) {
+        const uploadRes = await onboardingApi.uploadShopDocument('bank_details', shopId, {
+          uri: statementFile.uri,
+          name: statementFile.name || 'bank_statement.pdf',
+          type: 'application/pdf',
+        });
+        documentUrl = uploadRes.data.document_url;
+      }
+
+      // 2. Save final metadata
       const res = await onboardingApi.updateBankDetails(shopId, {
         bank_name: formData.bank_name,
         account_holder: formData.account_holder,
         bank_account_no: formData.bank_account_no,
         bank_ifsc: formData.bank_ifsc,
+        upi_id: formData.upi_id,
+        bank_statement_password: formData.bank_statement_password,
       } as any);
 
       if (res.status === 1) {
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Bank details & statement saved.'
+        });
         router.replace('/onboarding/shop');
       }
     } catch (error: any) {
       console.error('[Bank Details] Save Error:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Could not save bank details.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.response?.data?.message || 'Could not save bank details.'
+      });
     } finally {
       setLoading(false);
     }
@@ -98,12 +152,12 @@ export default function ShopBankDetailsScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
           style={{ flex: 1 }}
         >
-          <ScrollView contentContainerStyle={styles.scrollContent}>
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
               <BackButton fallback="/onboarding/shop" />
               <View style={{ marginTop: 24 }}>
                 <Text style={styles.title}>Payout Settings</Text>
-                <Text style={styles.subtitle}>Where should we send your earnings? Please provide your business bank account details.</Text>
+                <Text style={styles.subtitle}>Where should we send your earnings? Please provide your business bank account or UPI details.</Text>
               </View>
             </View>
 
@@ -119,7 +173,7 @@ export default function ShopBankDetailsScreen() {
                       style={styles.input}
                       placeholder="As per bank records"
                       value={formData.account_holder}
-                      onChangeText={(v) => setFormData(p => ({ ...p, account_holder: v }))}
+                      onChangeText={(v: string) => setFormData(p => ({ ...p, account_holder: v }))}
                     />
                   </View>
                 </View>
@@ -132,7 +186,7 @@ export default function ShopBankDetailsScreen() {
                       style={styles.input}
                       placeholder="e.g. HDFC Bank"
                       value={formData.bank_name}
-                      onChangeText={(v) => setFormData(p => ({ ...p, bank_name: v }))}
+                      onChangeText={(v: string) => setFormData(p => ({ ...p, bank_name: v }))}
                     />
                   </View>
                 </View>
@@ -145,7 +199,7 @@ export default function ShopBankDetailsScreen() {
                       style={styles.input}
                       placeholder="0000 0000 0000"
                       value={formData.bank_account_no}
-                      onChangeText={(v) => setFormData(p => ({ ...p, bank_account_no: v }))}
+                      onChangeText={(v: string) => setFormData(p => ({ ...p, bank_account_no: v }))}
                       keyboardType="number-pad"
                     />
                   </View>
@@ -159,15 +213,79 @@ export default function ShopBankDetailsScreen() {
                       style={styles.input}
                       placeholder="HDFC0000123"
                       value={formData.bank_ifsc}
-                      onChangeText={(v) => setFormData(p => ({ ...p, bank_ifsc: v.toUpperCase() }))}
+                      onChangeText={(v: string) => setFormData(p => ({ ...p, bank_ifsc: v.toUpperCase() }))}
                       autoCapitalize="characters"
                     />
                   </View>
                 </View>
 
+                <View style={[styles.inputGroup, { marginTop: 8 }]}>
+                  <Text style={styles.label}>UPI ID (Optional)</Text>
+                  <View style={styles.inputWrap}>
+                    <Ionicons name="at-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. business@okaxis"
+                      value={formData.upi_id}
+                      onChangeText={(v: string) => setFormData(p => ({ ...p, upi_id: v }))}
+                      autoCapitalize="none"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Bank Statement (Last 3 Months)</Text>
+                    <TouchableOpacity 
+                        style={[styles.uploadBtn, statementFile && styles.uploadBtnActive]} 
+                        onPress={pickDocument}
+                    >
+                        {statementFile ? (
+                            <>
+                                <Ionicons name="document-text" size={24} color="#005d90" />
+                                <View style={{ flex: 1, marginLeft: 12 }}>
+                                    <Text style={styles.fileName} numberOfLines={1}>{statementFile.name}</Text>
+                                    <Text style={styles.fileSize}>{(statementFile.size / (1024 * 1024)).toFixed(2)} MB • PDF</Text>
+                                </View>
+                                <Ionicons name="checkmark-circle" size={24} color="#005d90" />
+                            </>
+                        ) : (
+                            <>
+                                <View style={styles.uploadIconCircle}>
+                                    <Ionicons name="cloud-upload-outline" size={24} color="#005d90" />
+                                </View>
+                                <View style={{ marginLeft: 12 }}>
+                                    <Text style={styles.uploadTitle}>Choose PDF File</Text>
+                                    <Text style={styles.uploadSub}>Recent 3 month history</Text>
+                                </View>
+                            </>
+                        )}
+                    </TouchableOpacity>
+                </View>
+
+                {statementFile && (
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>PDF Password (If applicable)</Text>
+                        <View style={styles.inputWrap}>
+                            <Ionicons name="lock-closed-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Unlock code for statement"
+                                value={formData.bank_statement_password}
+                                onChangeText={(v: string) => setFormData(p => ({ ...p, bank_statement_password: v }))}
+                                secureTextEntry={!showPassword}
+                            />
+                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 4 }}>
+                                <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#94a3b8" />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
+
                 <View style={styles.infoBox}>
                   <Ionicons name="shield-checkmark" size={20} color="#005d90" />
-                  <Text style={styles.infoText}>Your bank details are encrypted and stored securely. Payouts are traditionally processed within 24-48 hours of sale.</Text>
+                  <Text style={styles.infoText}>Your bank details and statements are encrypted and stored securely for payout verification purposes.</Text>
                 </View>
               </View>
             )}
@@ -183,7 +301,7 @@ export default function ShopBankDetailsScreen() {
               >
                 {loading ? <ActivityIndicator color="white" /> : (
                   <>
-                    <Text style={styles.ctaText}>Verify & Save</Text>
+                    <Text style={styles.ctaText}>Verify & Save Details</Text>
                     <Ionicons name="arrow-forward" size={20} color="white" />
                   </>
                 )}
@@ -221,6 +339,36 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: 12 },
   input: { flex: 1, fontSize: 16, color: '#1e293b', fontWeight: '700' },
 
+  divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 8 },
+
+  uploadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    borderStyle: 'dashed',
+    padding: 20,
+  },
+  uploadBtnActive: {
+    borderStyle: 'solid',
+    borderColor: '#005d90',
+    backgroundColor: '#f0f9ff'
+  },
+  uploadIconCircle: {
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+      backgroundColor: '#e0f0ff',
+      alignItems: 'center',
+      justifyContent: 'center'
+  },
+  uploadTitle: { fontSize: 16, fontWeight: '800', color: '#1e293b' },
+  uploadSub: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  fileName: { fontSize: 15, fontWeight: '700', color: '#005d90' },
+  fileSize: { fontSize: 12, color: '#64748b', marginTop: 2 },
+
   infoBox: {
     flexDirection: 'row',
     backgroundColor: '#e0f0ff',
@@ -232,7 +380,7 @@ const styles = StyleSheet.create({
   },
   infoText: { flex: 1, fontSize: 12, color: '#005d90', lineHeight: 18, fontWeight: '600' },
 
-  footer: { padding: 32, backgroundColor: 'white' },
+  footer: { paddingHorizontal: 32, paddingBottom: 32, paddingTop: 16, backgroundColor: 'white' },
   cta: {
     height: 64,
     borderRadius: 22,

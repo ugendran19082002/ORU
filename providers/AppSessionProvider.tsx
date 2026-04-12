@@ -131,6 +131,8 @@ export function AppSessionProvider({
   // MERCHANT STATUS SYNC
   const refreshShopStatus = async () => {
     if (!user || user.role !== "shop_owner") return;
+    if (isSyncingShop) return; // Prevent "double time" calls
+    
     setIsSyncingShop(true);
     try {
       const res = await onboardingApi.getMerchantShop();
@@ -138,6 +140,7 @@ export function AppSessionProvider({
         const nextUser = {
           ...user,
           shopStatus: res.data.status,
+          onboardingStatus: res.data.onboarding_status,
           adminNotes: res.data.admin_notes,
         };
         setUser(nextUser);
@@ -153,7 +156,7 @@ export function AppSessionProvider({
       }
     } catch (err: any) {
       if (err.response?.status === 404) {
-        const nextUser = { ...user, shopStatus: 'none' };
+        const nextUser = { ...user, shopStatus: 'none', onboardingStatus: 'none' };
         setUser(nextUser);
         await writeSession({
             user: nextUser,
@@ -265,10 +268,11 @@ export function AppSessionProvider({
         const nextAccessToken = access_token || accessToken;
         setClientToken(nextAccessToken);
         
-        // Map snake_case shop_status from API to camelCase shopStatus
+        // Map snake_case fields from API to camelCase for AppUser
         const user = {
             ...rawUser,
-            shopStatus: (rawUser as any).shop_status || rawUser.shopStatus
+            shopStatus: (rawUser as any).shop_status || rawUser.shopStatus,
+            onboardingStatus: (rawUser as any).onboarding_status || (rawUser as any).onboardingStatus
         };
 
         setUser(user);
@@ -433,15 +437,18 @@ export function AppRouteGuard() {
       } else {
         const backendNextStep = nextStep as any;
         if (user.role === "shop_owner") {
+          const isOnboardingSubScreen = pathname.startsWith("/onboarding/shop/") && pathname !== "/onboarding/shop/waitlist";
+
           if (user.shopStatus === "active") idealRoute = "/shop";
           else if (user.shopStatus === "rejected") idealRoute = "/onboarding/shop/rejected";
-          else if (user.shopStatus === "pending_review" || user.shopStatus === "under_review") idealRoute = "/onboarding/shop/waitlist";
-          else if (user.shopStatus === "in_progress") {
-            const isOnboardingSubScreen = pathname.startsWith("/onboarding/shop/") && pathname !== "/onboarding/shop/waitlist";
-            idealRoute = isOnboardingSubScreen ? pathname : "/onboarding/shop/business";
+          else if ((user.shopStatus === "pending_review" || user.shopStatus === "under_review") && user.onboardingStatus !== 'in_progress') {
+              idealRoute = isOnboardingSubScreen ? pathname : "/onboarding/shop/waitlist";
+          }
+          else if (user.shopStatus === "in_progress" || user.onboardingStatus === 'in_progress') {
+            idealRoute = isOnboardingSubScreen ? pathname : "/onboarding/shop";
           } else {
             // No shop created yet
-            idealRoute = backendNextStep?.screen_route || "/onboarding/shop/business";
+            idealRoute = backendNextStep?.screen_route || "/onboarding/shop";
           }
         } else if (user.role === "admin") {
           idealRoute = "/admin";

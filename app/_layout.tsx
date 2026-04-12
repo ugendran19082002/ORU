@@ -8,6 +8,8 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { AppRouteGuard, AppSessionProvider } from '@/providers/AppSessionProvider';
 import { NoInternetBanner } from '@/components/ui/NoInternetBanner';
+import Toast from 'react-native-toast-message';
+import { toastConfig } from '@/components/ui/ToastConfig';
 
 // Suppress known SDK 53 informational warning inside Expo Go for Push Notifications
 import { LogBox } from 'react-native';
@@ -77,6 +79,7 @@ export default function RootLayout() {
 
           </Stack>
           <NoInternetBanner />
+          <Toast config={toastConfig} />
           <StatusBar style="auto" />
         </ThemeProvider>
       </AppSessionProvider>

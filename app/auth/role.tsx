@@ -6,14 +6,15 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
   TouchableOpacity,
   View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from 'react-native-toast-message';
 
 import { userApi } from "@/api/userApi";
 import { Logo } from "@/components/ui/Logo";
@@ -64,12 +65,12 @@ export default function RoleSelectScreen() {
 
   const handleSignOut = async () => {
     Alert.alert(
-      "Sign Out",
-      "Are you sure you want to go back to the login screen?",
+      "Sign Out Confirmation",
+      "Are you sure you want to go back to the login screen and logout?",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Yes, Start Over",
+          text: "Yes, Logout",
           style: "destructive",
           onPress: async () => {
             await signOut();
@@ -81,7 +82,7 @@ export default function RoleSelectScreen() {
   };
 
   useAndroidBackHandler(() => {
-    safeBack("/auth");
+    handleSignOut();
   });
 
   const handleRoleSelect = async (selectedRole: AppRole) => {
@@ -108,11 +109,11 @@ export default function RoleSelectScreen() {
       }
     } catch (error: any) {
       console.error("[Role Selection] Update error:", error);
-      Alert.alert(
-        "Selection Failed",
-        error.response?.data?.message ||
-          "We could not save your role choice. Please try again.",
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Selection Failed',
+        text2: error.response?.data?.message || "We could not save your role choice. Please try again."
+      });
     } finally {
       setLoading(false);
     }
@@ -126,7 +127,7 @@ export default function RoleSelectScreen() {
       <SafeAreaView style={styles.safe}>
         {/* HEADER */}
         <View style={styles.header}>
-          <BackButton variant="transparent" fallback="/auth" />
+          <BackButton variant="transparent" fallback="/auth" onPress={handleSignOut} />
           <View style={styles.brandRow}>
             <Logo size="sm" />
             <Text style={styles.brandName}>ThanniGo</Text>
@@ -357,3 +358,4 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 });
+

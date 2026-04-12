@@ -1,15 +1,11 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-  StyleSheet,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Animated,
   Linking,
-  Alert,
+  RefreshControl,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -89,9 +85,17 @@ const callNumber = (phone: string, label: string) => {
     if (can) {
       Linking.openURL(url);
     } else {
-      Alert.alert(`Call ${label}`, `Unable to place a call. Please dial ${phone} manually.`);
+      Toast.show({
+        type: 'error',
+        text1: `Call ${label}`,
+        text2: `Unable to place a call. Please dial ${phone} manually.`
+      });
     }
-  }).catch(() => Alert.alert('Error', 'Could not initiate call.'));
+  }).catch(() => Toast.show({
+    type: 'error',
+    text1: 'Error',
+    text2: 'Could not initiate call.'
+  }));
 };
 
 export default function OrderTrackingScreen() {
@@ -210,7 +214,11 @@ export default function OrderTrackingScreen() {
           onPress={() => {
             const msg = `Track my water order #${activeOrder?.id} from ${shop?.name ?? 'ThanniGo'}: https://thannigo.app/track/${activeOrder?.id}`;
             Linking.openURL(`whatsapp://send?text=${msg}`).catch(() => 
-              Alert.alert('Share', `Copy this message: ${msg}`)
+              Toast.show({
+                type: 'info',
+                text1: 'Share',
+                text2: `Copy this message: ${msg}`
+              })
             );
           }}
         >
@@ -273,7 +281,11 @@ export default function OrderTrackingScreen() {
                   latitudeDelta: 0.008,
                   longitudeDelta: 0.008,
                 });
-                Alert.alert('Tracking', 'Re-centering on your live delivery position...');
+                Toast.show({
+                  type: 'info',
+                  text1: 'Tracking',
+                  text2: 'Re-centering on your live delivery position...'
+                });
               }}
             >
               <Ionicons name="locate" size={20} color="#005d90" />

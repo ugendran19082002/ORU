@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert, Share,
+  StyleSheet, Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -55,13 +55,13 @@ export default function NotificationsScreen() {
   const [notifs, setNotifs] = useState<Notif[]>(NOTIFS);
   const [filter, setFilter] = useState('All');
 
-  const unreadCount = notifs.filter((n) => !n.read).length;
+  const unreadCount = notifs.filter((n: Notif) => !n.read).length;
 
-  const markAllRead = () => setNotifs(notifs.map((n) => ({ ...n, read: true })));
-  const markRead = (id: string) => setNotifs(notifs.map((n) => n.id === id ? { ...n, read: true } : n));
-  const deleteNotif = (id: string) => setNotifs(notifs.filter((n) => n.id !== id));
+  const markAllRead = () => setNotifs(notifs.map((n: Notif) => ({ ...n, read: true })));
+  const markRead = (id: string) => setNotifs(notifs.map((n: Notif) => n.id === id ? { ...n, read: true } : n));
+  const deleteNotif = (id: string) => setNotifs(notifs.filter((n: Notif) => n.id !== id));
 
-  const filtered = notifs.filter((n) => {
+  const filtered = notifs.filter((n: Notif) => {
     if (filter === 'All') return true;
     if (filter === 'Orders') return n.type === 'order';
     if (filter === 'Offers') return n.type === 'promo';
@@ -125,7 +125,7 @@ export default function NotificationsScreen() {
           </View>
         )}
 
-        {filtered.map((notif) => {
+        {filtered.map((notif: Notif) => {
           const cfg = TYPE_CONFIG[notif.type];
           return (
             <TouchableOpacity

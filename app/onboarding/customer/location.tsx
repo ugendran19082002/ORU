@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Alert, Dimensions
+  ActivityIndicator, Dimensions
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -46,7 +47,11 @@ export default function CustomerLocationScreen() {
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('Permission Denied', 'We need location access to find nearby shops.');
+          Toast.show({
+            type: 'error',
+            text1: 'Permission Denied',
+            text2: 'We need location access to find nearby shops.'
+          });
           setLocating(false);
           return;
         }
@@ -103,7 +108,11 @@ export default function CustomerLocationScreen() {
       }
     } catch (error: any) {
       console.error('[Onboarding] Location Save Error:', error);
-      Alert.alert('Error', 'Failed to save your location. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to save your location. Please try again.'
+      });
     } finally {
       setLoading(false);
     }

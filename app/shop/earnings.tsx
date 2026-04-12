@@ -1,13 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
+  View, Text, ScrollView, TouchableOpacity,
+  StyleSheet, RefreshControl,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -46,7 +42,11 @@ export default function ShopEarningsScreen() {
   const handleReconcile = () => {
     setIsReconciled(true);
     setTimeout(() => {
-      Alert.alert('End of Day Complete', 'Accounts have been fully reconciled and settled.');
+      Toast.show({
+        type: 'success',
+        text1: 'End of Day Complete',
+        text2: 'Accounts have been fully reconciled and settled.'
+      });
     }, 300);
   };
 

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Alert, Linking, TextInput, Modal, Image
+  ActivityIndicator, Linking, TextInput, Modal, Image
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,7 +35,11 @@ export default function AdminShopReviewScreen() {
       if (progressRes.status === 1) setProgress(progressRes.data);
     } catch (error) {
       console.error('[Admin Review] Load Error:', error);
-      Alert.alert('Error', 'Failed to load shop details.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to load shop details.'
+      });
     } finally {
       setLoading(false);
     }
@@ -46,7 +51,7 @@ export default function AdminShopReviewScreen() {
 
   const handleApprove = async () => {
     if (!shop) return;
-    Alert.alert(
+    require('react-native').Alert.alert(
       'Approve Shop',
       `Are you sure you want to approve "${shop.name}"? This will make them active and live on the platform.`,
       [
@@ -58,11 +63,19 @@ export default function AdminShopReviewScreen() {
               setProcessing(true);
               const res = await adminApi.approveShop(shop.id);
               if (res.status === 1) {
-                Alert.alert('Success', 'Shop has been approved and is now active.');
+                Toast.show({
+                  type: 'success',
+                  text1: 'Success',
+                  text2: 'Shop has been approved and is now active.'
+                });
                 router.replace('/admin/shops');
               }
             } catch (error: any) {
-              Alert.alert('Error', error.response?.data?.message || 'Failed to approve shop.');
+              Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: error.response?.data?.message || 'Failed to approve shop.'
+              });
             } finally {
               setProcessing(false);
             }
@@ -75,7 +88,11 @@ export default function AdminShopReviewScreen() {
   const handleReject = async () => {
     if (!shop) return;
     if (!rejectionNotes.trim()) {
-      Alert.alert('Required', 'Please provide a reason for rejection.');
+      Toast.show({
+        type: 'error',
+        text1: 'Required',
+        text2: 'Please provide a reason for rejection.'
+      });
       return;
     }
 
@@ -83,11 +100,19 @@ export default function AdminShopReviewScreen() {
       setProcessing(true);
       const res = await adminApi.rejectShop(shop.id, rejectionNotes);
       if (res.status === 1) {
-        Alert.alert('Rejected', 'Application has been rejected and partner notified.');
+        Toast.show({
+          type: 'success',
+          text1: 'Rejected',
+          text2: 'Application has been rejected and partner notified.'
+        });
         router.replace('/admin/shops');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to reject application.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.response?.data?.message || 'Failed to reject application.'
+      });
     } finally {
       setProcessing(false);
     }
@@ -96,7 +121,11 @@ export default function AdminShopReviewScreen() {
   const onViewStepData = (step: any) => {
     const hasData = step.details || step.metadata;
     if (!step.document_url && (!hasData || Object.keys(hasData).length === 0)) {
-      Alert.alert('Empty', 'No document or data associated with this step.');
+      Toast.show({
+        type: 'info',
+        text1: 'Empty',
+        text2: 'No document or data associated with this step.'
+      });
       return;
     }
     setSelectedDoc(step);
@@ -316,7 +345,8 @@ export default function AdminShopReviewScreen() {
                       <Text style={styles.premiumDataTitle}>Attached Evidence</Text>
                     </View>
 
-                    {selectedDoc.document_url.match(/\.(jpeg|jpg|gif|png)$/i) || selectedDoc.document_url.includes('firebasestorage') || selectedDoc.document_url.includes('blob:') || selectedDoc.document_url.startsWith('data:image') ? (
+                    {/* Improved Regex to handle URLs with query parameters (common in cloud storage) */}
+                    {selectedDoc.document_url.match(/\.(jpeg|jpg|gif|png)(\?.*)?$/i) || selectedDoc.document_url.includes('firebasestorage') || selectedDoc.document_url.includes('blob:') || selectedDoc.document_url.startsWith('data:image') ? (
                       <View style={{ borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#f1f5f9' }}>
                         <Image source={{ uri: selectedDoc.document_url }} style={styles.docImg} resizeMode="contain" />
                       </View>

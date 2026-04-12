@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert, ScrollView
+  KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -66,7 +67,11 @@ export default function ShopTimingScreen() {
         router.replace('/onboarding/shop');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.response?.data?.message || 'Could not save timing.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.response?.data?.message || 'Could not save timing.'
+      });
     } finally {
       setLoading(false);
     }

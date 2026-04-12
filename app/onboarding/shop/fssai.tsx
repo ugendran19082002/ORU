@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Alert, ScrollView
+  ActivityIndicator, ScrollView
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -65,12 +66,20 @@ export default function ShopFSSAIScreen() {
 
   const handleSubmit = async () => {
     if (!shopId) {
-      Alert.alert('Error', 'Shop context lost. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Shop context lost. Please try again.'
+      });
       return;
     }
 
     if (!document || document.canceled) {
-      Alert.alert('Document Required', 'Please select your document to proceed.');
+      Toast.show({
+        type: 'error',
+        text1: 'Document Required',
+        text2: 'Please select your document to proceed.'
+      });
       return;
     }
 
@@ -88,12 +97,20 @@ export default function ShopFSSAIScreen() {
       });
       
       if (res.status === 1) {
-        Alert.alert('Submitted', 'Your FSSAI document is under review.');
+        Toast.show({
+          type: 'success',
+          text1: 'Submitted',
+          text2: 'Your FSSAI document is under review.'
+        });
         router.replace('/onboarding/shop');
       }
     } catch (error: any) {
       console.error('[Shop Onboarding] FSSAI Error:', error);
-      Alert.alert('Error', 'Failed to upload document.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to upload document.'
+      });
     } finally {
       setLoading(false);
     }

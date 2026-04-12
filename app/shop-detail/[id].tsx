@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   StatusBar as RNStatusBar,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -49,7 +49,11 @@ export default function ShopDetailScreen() {
 
   const handleGoToCheckout = () => {
     if (totalItems === 0) {
-      Alert.alert('Empty Cart', 'Please add at least one product before checking out.');
+      Toast.show({
+        type: 'error',
+        text1: 'Empty Cart',
+        text2: 'Please add at least one product before checking out.'
+      });
       return;
     }
     router.push({ pathname: '/order/checkout', params: { shopId: shop.id } } as any);
@@ -97,7 +101,11 @@ export default function ShopDetailScreen() {
           </View>
           <TouchableOpacity
             style={styles.shareBtn}
-            onPress={() => Alert.alert('Share', 'Sharing this shop link...')}
+            onPress={() => Toast.show({
+              type: 'info',
+              text1: 'Share',
+              text2: 'Sharing this shop link...'
+            })}
           >
             <Ionicons name="share-social-outline" size={20} color="white" />
           </TouchableOpacity>

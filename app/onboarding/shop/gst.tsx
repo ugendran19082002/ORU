@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Alert, ScrollView
+  ActivityIndicator, ScrollView
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -65,13 +66,17 @@ export default function ShopGSTScreen() {
 
   const handleSubmit = async () => {
     if (!shopId) {
-      Alert.alert('Error', 'Shop context lost. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Shop context lost. Please try again.'
+      });
       return;
     }
 
     if (!document || document.canceled) {
       // Optional field, but if they clicked submit they probably want to upload
-      Alert.alert('Skip?', 'GST is optional. Do you want to skip for now?', [
+      require('react-native').Alert.alert('Skip?', 'GST is optional. Do you want to skip for now?', [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Skip', onPress: () => router.replace('/onboarding/shop' as any) }
       ]);
@@ -94,7 +99,11 @@ export default function ShopGSTScreen() {
         router.replace('/onboarding/shop');
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to upload GST certificate.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to upload GST certificate.'
+      });
     } finally {
       setLoading(false);
     }

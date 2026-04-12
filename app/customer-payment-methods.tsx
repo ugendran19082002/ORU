@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,7 +24,7 @@ export default function CustomerPaymentMethodsScreen() {
   const [cardList, setCardList] = useState(SAVED_CARDS);
 
   const handleAddUPI = () => {
-    Alert.prompt('Add UPI ID', 'Enter your VPA (e.g., name@bank)', [
+    require('react-native').Alert.prompt('Add UPI ID', 'Enter your VPA (e.g., name@bank)', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Add', onPress: (val?: string) => {
           if (val) setUpiList([...upiList, { id: Date.now().toString(), vpa: val, app: 'Other UPI', icon: 'phone-portrait-outline' }]);
@@ -91,7 +92,11 @@ export default function CustomerPaymentMethodsScreen() {
             const cc = ['Visa', 'MasterCard', 'Amex'][Math.floor(Math.random() * 3)];
             const last4 = Math.floor(1000 + Math.random() * 9000);
             setCardList([...cardList, { id: Date.now().toString(), mask: `**** ${last4}`, brand: cc, default: false }]);
-            Alert.alert('Card Added', `Your ${cc} ending in ${last4} was saved securely.`);
+            Toast.show({
+              type: 'success',
+              text1: 'Card Added',
+              text2: `Your ${cc} ending in ${last4} was saved securely.`
+            });
           }}>
             <Text style={styles.addBtnText}>+ Add New</Text>
           </TouchableOpacity>

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert, ScrollView
+  View, Text, StyleSheet, TouchableOpacity,
+  KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView, TextInput
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,7 +29,11 @@ export default function CustomerProfileScreen() {
 
   const handleContinue = async () => {
     if (!name.trim()) {
-      Alert.alert('Details Required', 'Please enter your full name to continue.');
+      Toast.show({
+        type: 'error',
+        text1: 'Details Required',
+        text2: 'Please enter your full name to continue.'
+      });
       return;
     }
 
@@ -50,7 +55,11 @@ export default function CustomerProfileScreen() {
       }
     } catch (error: any) {
       console.error('[Onboarding] Profile Error:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Something went wrong. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.response?.data?.message || 'Something went wrong. Please try again.'
+      });
     } finally {
       setLoading(false);
     }

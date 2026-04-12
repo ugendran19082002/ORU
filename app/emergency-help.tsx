@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Linking, Platform,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -33,14 +33,14 @@ export default function EmergencyHelpScreen() {
 
   const callNumber = (number: string) => {
     const url = `tel:${number}`;
-    Alert.alert('Emergency Call', `Call ${number}?`, [
+    require('react-native').Alert.alert('Emergency Call', `Call ${number}?`, [
       { text: 'Cancel', style: 'cancel' },
       { text: `Call ${number}`, style: 'destructive', onPress: () => Linking.openURL(url) },
     ]);
   };
 
   const callSupport = () => {
-    Alert.alert('ThanniGo Support', 'Connecting you to our emergency support team.', [
+    require('react-native').Alert.alert('ThanniGo Support', 'Connecting you to our emergency support team.', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Connect', onPress: () => Linking.openURL('tel:1800-123-4567') },
     ]);

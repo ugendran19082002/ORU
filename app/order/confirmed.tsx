@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Animated, Linking, Alert,
+  View, Text, StyleSheet, TouchableOpacity, Animated, Linking,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -56,16 +57,38 @@ export default function OrderConfirmedScreen() {
   }, []);
 
   const handleCallShop = () => {
-    if (!shopPhone) { Alert.alert('No contact', 'Shop phone not available.'); return; }
+    if (!shopPhone) {
+      Toast.show({
+        type: 'error',
+        text1: 'No contact',
+        text2: 'Shop phone not available.'
+      });
+      return;
+    }
     Linking.openURL(`tel:${shopPhone}`).catch(() =>
-      Alert.alert('Cannot open phone', 'Please dial the shop manually.')
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please dial the shop manually.'
+      })
     );
   };
 
   const handleWhatsApp = () => {
-    if (!shopPhone) { Alert.alert('No contact', 'Shop phone not available.'); return; }
+    if (!shopPhone) {
+      Toast.show({
+        type: 'error',
+        text1: 'No contact',
+        text2: 'Shop phone not available.'
+      });
+      return;
+    }
     Linking.openURL(`whatsapp://send?phone=91${shopPhone}&text=Hi, my order ${orderId} was just placed. ETA?`).catch(() =>
-      Alert.alert('WhatsApp not found', 'Please install WhatsApp or call the shop.')
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please install WhatsApp or call the shop.'
+      })
     );
   };
 

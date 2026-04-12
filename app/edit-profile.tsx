@@ -1,5 +1,6 @@
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Modal } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform, Modal } from 'react-native';
+import Toast from 'react-native-toast-message';
 import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -51,7 +52,11 @@ export default function EditProfileScreen() {
 
   const handleConfirmOtp = () => {
     if (otpCode.length < 4) {
-      Alert.alert('Invalid OTP', 'Please enter a valid 4-digit OTP.');
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid OTP',
+        text2: 'Please enter a valid 4-digit OTP.'
+      });
       return;
     }
     setShowOtpModal(false);
@@ -59,9 +64,12 @@ export default function EditProfileScreen() {
   };
 
   const saveProfile = () => {
-    Alert.alert('Profile Saved!', 'Your account details have been successfully updated.');
+    Toast.show({
+      type: 'success',
+      text1: 'Profile Saved!',
+      text2: 'Your account details have been successfully updated.'
+    });
     safeBack('/(tabs)/profile');
-
   };
 
   return (

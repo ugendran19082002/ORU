@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -113,7 +114,11 @@ export default function ReportIssueScreen() {
         <TouchableOpacity
           style={styles.primaryBtn}
           onPress={() => {
-            Alert.alert('Issue Submitted', `${selectedIssue} has been logged for ${resolution.toLowerCase()}.`);
+            Toast.show({
+              type: 'success',
+              text1: 'Issue Submitted',
+              text2: `${selectedIssue} has been logged for ${resolution.toLowerCase()}.`
+            });
             router.replace('/notifications');
           }}
         >

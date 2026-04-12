@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert, ScrollView, Image
+  View, Text, StyleSheet, TouchableOpacity,
+  KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView, Image, TextInput
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,12 +11,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
+import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function ShopProfileBrandingScreen() {
   const router = useRouter();
   const { user } = useAppSession();
+  const { handleAuthBack } = useLogoutBackHandler();
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
   const [shopId, setShopId] = useState<number | null>(null);
@@ -92,7 +95,11 @@ export default function ShopProfileBrandingScreen() {
       }
     } catch (error: any) {
       console.error('[Branding] Save Error:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Could not save branding.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.response?.data?.message || 'Could not save branding.'
+      });
     } finally {
       setLoading(false);
     }
@@ -108,7 +115,7 @@ export default function ShopProfileBrandingScreen() {
         >
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <View style={styles.header}>
-              <BackButton fallback="/onboarding/shop" />
+              <BackButton fallback="/onboarding/shop" onPress={handleAuthBack} />
               <View style={{ marginTop: 24 }}>
                 <Text style={styles.title}>Shop Identity</Text>
                 <Text style={styles.subtitle}>Upload your logo and shop banner to stand out in the customer app.</Text>

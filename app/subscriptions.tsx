@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert, Switch,
+  StyleSheet, Switch,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -93,12 +94,16 @@ export default function SubscriptionsScreen() {
   const togglePause = () => {
     if (!activeSub) return;
     setActiveSub({ ...activeSub, paused: !activeSub.paused });
-    Alert.alert(activeSub.paused ? 'Resumed!' : 'Paused!', activeSub.paused ? 'Your subscription is active again.' : 'No deliveries until you resume.');
+    Toast.show({
+      type: 'success',
+      text1: activeSub.paused ? 'Resumed!' : 'Paused!',
+      text2: activeSub.paused ? 'Your subscription is active again.' : 'No deliveries until you resume.'
+    });
   };
 
   const handleSubscribe = () => {
     const plan = PLANS.find((p) => p.id === selected)!;
-    Alert.alert('Subscribe', `Activate ${plan.name} for ₹${plan.price}/month?`, [
+    require('react-native').Alert.alert('Subscribe', `Activate ${plan.name} for ₹${plan.price}/month?`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Confirm', onPress: () => setActiveSub({ planId: selected, nextDelivery: 'Tomorrow, 10 AM', remaining: plan.cans, paused: false }) },
     ]);
@@ -166,7 +171,14 @@ export default function SubscriptionsScreen() {
                   <Ionicons name={activeSub.paused ? 'play' : 'pause'} size={16} color="#005d90" />
                   <Text style={styles.pauseBtnText}>{activeSub.paused ? 'Resume Sub.' : 'Pause (Vacation)'}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.rescheduleBtn} onPress={() => Alert.alert('Modify Order', 'Change bottle count or brand for next delivery.\n\nThis feature will be available in the next update.')}>
+                <TouchableOpacity
+                  style={styles.rescheduleBtn}
+                  onPress={() => Toast.show({
+                    type: 'info',
+                    text1: 'Modify Order',
+                    text2: 'Change bottle count or brand for next delivery.\n\nThis feature will be available in the next update.'
+                  })}
+                >
                   <Ionicons name="create-outline" size={16} color="rgba(255,255,255,0.9)" />
                   <Text style={styles.rescheduleBtnText}>Modify</Text>
                 </TouchableOpacity>
@@ -174,7 +186,7 @@ export default function SubscriptionsScreen() {
               {/* Cancel subscription */}
               <TouchableOpacity
                 style={styles.cancelSubBtn}
-                onPress={() => Alert.alert(
+                onPress={() => require('react-native').Alert.alert(
                   'Cancel Subscription',
                   'Are you sure? You will lose your remaining deliveries and savings for this month.',
                   [
@@ -184,7 +196,11 @@ export default function SubscriptionsScreen() {
                       style: 'destructive',
                       onPress: () => {
                         setActiveSub(null);
-                        Alert.alert('Cancelled', 'Your subscription has been cancelled. You can subscribe again anytime.');
+                        Toast.show({
+                          type: 'success',
+                          text1: 'Cancelled',
+                          text2: 'Your subscription has been cancelled.'
+                        });
                       },
                     },
                   ]

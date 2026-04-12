@@ -1,7 +1,8 @@
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, TextInput, Switch, Alert, BackHandler
+  StyleSheet, TextInput, Switch, BackHandler
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -64,7 +65,11 @@ export default function ShopPromotionsScreen() {
 
   const handleCreate = () => {
     if (!newCode.trim() || !newValue.trim()) {
-      Alert.alert('Error', 'Please fill in the coupon code and discount value.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please fill in the coupon code and discount value.'
+      });
       return;
     }
     const promo: Promo = {

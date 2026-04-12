@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,7 +28,11 @@ export default function ShopDeliveryFleetScreen() {
 
   const handleAddAgent = () => {
     if (fName.length < 3 || fPhone.length < 10) {
-      Alert.alert('Invalid Input', 'Please enter a valid name and phone number.');
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Input',
+        text2: 'Please enter a valid name and phone number.'
+      });
       return;
     }
     addDeliveryAgent({ name: fName, phone: fPhone });
@@ -37,7 +42,7 @@ export default function ShopDeliveryFleetScreen() {
   };
 
   const handleRemoveAgent = (id: string, name: string) => {
-    Alert.alert(
+    require('react-native').Alert.alert(
       'Remove Driver',
       `Are you sure you want to remove ${name} from your delivery fleet?`,
       [

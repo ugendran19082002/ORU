@@ -19,8 +19,8 @@ import {
   TouchableOpacity,
   View,
   Linking,
-  Alert,
 } from "react-native";
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { roleAccent, roleGradients } from '@/constants/theme';
 import { useAppSession } from '@/hooks/use-app-session';
@@ -98,10 +98,11 @@ export default function LoginScreen() {
       }
     } catch (err: any) {
       setLoading(false);
-      Alert.alert(
-        "Authentication Error",
-        err?.response?.data?.message || err?.message || "Failed to send OTP. Please try again."
-      );
+      Toast.show({
+        type: 'error',
+        text1: 'Authentication Error',
+        text2: err?.response?.data?.message || err?.message || "Failed to send OTP. Please try again."
+      });
     }
   };
 

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Switch, Alert, Linking,
+  StyleSheet, Switch, Linking,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -51,7 +51,7 @@ export default function DeliveryDashboardScreen() {
             {user?.role === 'shop_owner' && (
               <TouchableOpacity
                 style={styles.shopBackBtn}
-                onPress={() => Alert.alert(
+                onPress={() => require('react-native').Alert.alert(
                   'Exit Delivery Mode',
                   'Return to the Shop Panel?',
                   [
@@ -213,7 +213,11 @@ export default function DeliveryDashboardScreen() {
                 onPress={() => {
                   const phone = trip.customerPhone ?? '+919876543210';
                   Linking.openURL(`tel:${phone}`).catch(() =>
-                    Alert.alert('Call Customer', `Dial ${phone} manually.`)
+                    Toast.show({
+                      type: 'info',
+                      text1: 'Call Customer',
+                      text2: `Dial ${phone} manually.`
+                    })
                   );
                 }}
               >

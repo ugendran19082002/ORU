@@ -3,7 +3,8 @@ import { BackButton } from '@/components/ui/BackButton';
 import { ExpoMap } from '@/components/maps/ExpoMap';
 
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Alert, Linking } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Linking } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -40,7 +41,11 @@ export default function DeliveryNavigationScreen() {
             }
           ]}
           onMarkerDragEnd={(coords) => {
-             Alert.alert('Location Tapped', `Latitude: ${coords.latitude}, Longitude: ${coords.longitude}`);
+             Toast.show({
+               type: 'info',
+               text1: 'Location Tapped',
+               text2: `Latitude: ${coords.latitude}, Longitude: ${coords.longitude}`
+             });
           }}
         />
       </View>
@@ -82,7 +87,11 @@ export default function DeliveryNavigationScreen() {
               onPress={() => {
                 const phone = task?.customerPhone ?? '+919876543210';
                 Linking.openURL(`tel:${phone}`).catch(() =>
-                  Alert.alert('Error', `Unable to call. Dial ${phone} manually.`)
+                  Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: `Unable to call. Dial ${phone} manually.`
+                  })
                 );
               }}
             >
@@ -100,7 +109,7 @@ export default function DeliveryNavigationScreen() {
         <View style={styles.actionGrid}>
           <TouchableOpacity
             style={styles.btnDanger}
-            onPress={() => Alert.alert('Cancel Trip', 'Are you sure you want to cancel this trip?')}
+            onPress={() => require('react-native').Alert.alert('Cancel Trip', 'Are you sure you want to cancel this trip?')}
           >
             <Ionicons name="close" size={20} color="#ba1a1a" />
           </TouchableOpacity>
@@ -111,7 +120,11 @@ export default function DeliveryNavigationScreen() {
             onPress={() => {
               if (task?.status === 'accepted') {
                 updateTaskStatus(task.id, 'picked');
-                Alert.alert('Picked up', 'Order items successfully picked up from shop.');
+                Toast.show({
+                  type: 'success',
+                  text1: 'Picked up',
+                  text2: 'Order items successfully picked up from shop.'
+                });
               } else if (task?.status === 'picked') {
                 updateTaskStatus(task.id, 'delivered');
                 router.push('/delivery/complete' as any);

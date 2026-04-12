@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity,
-  ScrollView, ActivityIndicator, Alert
+  View, Text, StyleSheet, TouchableOpacity,
+  KeyboardAvoidingView, Platform, ScrollView, TextInput, ActivityIndicator
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,11 +11,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { onboardingApi } from '@/api/onboardingApi';
 import { useAppSession } from '@/hooks/use-app-session';
+import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
 
 export default function CreateShopScreen() {
   const router = useRouter();
   const { user, refreshShopStatus } = useAppSession();
+  const { handleAuthBack } = useLogoutBackHandler();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -24,7 +27,11 @@ export default function CreateShopScreen() {
 
   const handleCreate = async () => {
     if (!formData.name.trim()) {
-      Alert.alert('Validation Error', 'Please enter a shop name.');
+      Toast.show({
+        type: 'error',
+        text1: 'Validation Error',
+        text2: 'Please enter a shop name.'
+      });
       return;
     }
 
@@ -37,12 +44,20 @@ export default function CreateShopScreen() {
 
       if (res.status === 1) {
         await refreshShopStatus();
-        Alert.alert('Success', 'Shop profile created! Now let\'s verify your business.');
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: "Shop profile created! Now let's verify your business."
+        });
         router.replace('/onboarding/shop' as any);
       }
     } catch (error: any) {
       console.error('[Shop Creation] Error:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Could not create shop. Please try again.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.response?.data?.message || 'Could not create shop. Please try again.'
+      });
     } finally {
       setLoading(false);
     }
@@ -54,7 +69,11 @@ export default function CreateShopScreen() {
       <SafeAreaView style={styles.safe}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.header}>
-            <BackButton fallback="/auth/role" style={{ marginBottom: 16 }} />
+            <BackButton 
+              fallback="/auth/role" 
+              style={{ marginBottom: 16 }} 
+              onPress={handleAuthBack}
+            />
             <Text style={styles.title}>Register Your Shop</Text>
             <Text style={styles.subtitle}>Provide basic details to establish your presence on ThanniGo</Text>
           </View>
@@ -68,7 +87,7 @@ export default function CreateShopScreen() {
                   style={styles.input}
                   placeholder="e.g. Sree Murugan Water Suppliers"
                   value={formData.name}
-                  onChangeText={(v) => setFormData(prev => ({ ...prev, name: v }))}
+                  onChangeText={(v: string) => setFormData(prev => ({ ...prev, name: v }))}
                 />
               </View>
             </View>
@@ -83,7 +102,7 @@ export default function CreateShopScreen() {
                   keyboardType="number-pad"
                   maxLength={10}
                   value={formData.contact_number}
-                  onChangeText={(v) => setFormData(prev => ({ ...prev, contact_number: v }))}
+                  onChangeText={(v: string) => setFormData(prev => ({ ...prev, contact_number: v }))}
                 />
               </View>
             </View>
@@ -203,3 +222,4 @@ const styles = StyleSheet.create({
   },
   ctaText: { color: 'white', fontSize: 16, fontWeight: '800' }
 });
+

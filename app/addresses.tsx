@@ -7,7 +7,6 @@ import React, { useState, useRef, useEffect } from "react";
 import { setGlobalLocationListener, clearGlobalLocationListener } from "@/utils/locationEvents";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -20,6 +19,7 @@ import {
   Share,
   KeyboardAvoidingView,
 } from "react-native";
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ExpoMap, ExpoMarker } from "@/components/maps/ExpoMap";
 import { safeNavigate } from "@/utils/safeNavigation";
@@ -168,7 +168,11 @@ export default function AddressesScreen() {
       console.log('Permission status:', status);
       if (status !== "granted") {
         console.warn('⛔ [GPS] Permission denied');
-        Alert.alert("Permission", "Need location to provide 15-min delivery.");
+        Toast.show({
+          type: 'info',
+          text1: 'Permission',
+          text2: 'Need location to provide 15-min delivery.'
+        });
         setIsFetchingLocation(false);
         return;
       }
@@ -398,13 +402,21 @@ export default function AddressesScreen() {
     
     if (!searchQuery.trim()) {
       console.warn('⛔ Save blocked: Missing address text');
-      Alert.alert("Error", "Please enter a valid area / street address.");
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please enter a valid area / street address.'
+      });
       return;
     }
 
     if (!isValidCoordinate(currentLat, currentLng)) {
       console.error('❌ Save blocked: Invalid coords');
-      Alert.alert("Error", "Internal location error. Please reset pin.");
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Internal location error. Please reset pin.'
+      });
       return;
     }
 
