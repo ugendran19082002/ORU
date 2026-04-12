@@ -125,9 +125,32 @@ export default function OrderTrackingScreen() {
   const shopIdx = shops.indexOf(shop ?? shops[0]);
   const baseLat = 12.9716 + shopIdx * 0.005;
   const baseLng = 80.2210 + shopIdx * 0.005;
+
+  const [driverPos, setDriverPos] = React.useState({ lat: baseLat + 0.002, lng: baseLng + 0.002 });
+
+  useEffect(() => {
+    // Simulate live driver movement towards destination
+    const interval = setInterval(() => {
+      setDriverPos((prev) => {
+        const dLat = (baseLat - prev.lat) * 0.1;
+        const dLng = (baseLng - prev.lng) * 0.1;
+        // If driver reached destination, wiggle around it slightly
+        if (Math.abs(dLat) < 0.0001) {
+          return {
+            lat: prev.lat + (Math.random() - 0.5) * 0.0002,
+            lng: prev.lng + (Math.random() - 0.5) * 0.0002,
+          };
+        }
+        return { lat: prev.lat + dLat, lng: prev.lng + dLng };
+      });
+    }, 3000); // Update every 3 seconds for mock live feel
+
+    return () => clearInterval(interval);
+  }, [baseLat, baseLng]);
+
   const TRACKING_MARKERS = [
     { latitude: baseLat, longitude: baseLng, title: `📦 ${shop?.name ?? 'Shop'}`, color: '#005d90', iconType: 'home' as const },
-    { latitude: baseLat + 0.002, longitude: baseLng + 0.002, title: `🚲 ${activeOrder?.deliveryAgentName ?? 'Driver'}`, color: '#006878', iconType: 'bicycle' as const },
+    { latitude: driverPos.lat, longitude: driverPos.lng, title: `🚲 ${activeOrder?.deliveryAgentName ?? 'Driver'}`, color: '#006878', iconType: 'bicycle' as const },
   ];
   const steps: Step[] = [
     {

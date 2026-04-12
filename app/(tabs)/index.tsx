@@ -100,9 +100,10 @@ export default function HomeScreen() {
   const [favouriteIds, setFavouriteIds] = useState<string[]>([]);
   const [pendingShopId, setPendingShopId] = useState<string | null>(null);
   const [currentAddress, setCurrentAddress] = useState('Locating...');
+  const [currentAddressTitle, setCurrentAddressTitle] = useState('Location');
   const [userAddresses] = useState([
-    { id: '1', type: 'Home', title: 'Home', fullAddress: '82nd Floor, Azure Heights, Cyber City...' },
-    { id: '2', type: 'Office', title: 'Office', fullAddress: 'Floor 12, Tech Park Central, Sector 44...' }
+    { id: '1', type: 'Home', title: 'Home', fullAddress: '82nd Floor, Azure Heights, Cyber City...', isDefault: true, lat: 12.9716, lng: 80.2210 },
+    { id: '2', type: 'Office', title: 'Office', fullAddress: 'Floor 12, Tech Park Central, Sector 44...', isDefault: false, lat: 12.9810, lng: 80.2310 }
   ]);
 
   const onRefresh = React.useCallback(async () => {
@@ -144,11 +145,20 @@ export default function HomeScreen() {
       const currentLng = location.coords.longitude;
       setUserLoc({ lat: currentLat, lng: currentLng });
 
-      // Dynamic naming based on standard GPS proximity
-      if (Math.abs(currentLat - 12.97) < 0.1 && Math.abs(currentLng - 80.22) < 0.1) {
-        setCurrentAddress('Koramangala, Bangalore');
+      // 🚨 Address Logic: Prioritize User's Default Address over generic GPS
+      const defaultAddr = userAddresses.find(a => a.isDefault);
+      if (defaultAddr) {
+        setCurrentAddressTitle(defaultAddr.title);
+        setCurrentAddress(defaultAddr.fullAddress.substring(0, 30) + '...');
+        setUserLoc({ lat: defaultAddr.lat, lng: defaultAddr.lng });
       } else {
-        setCurrentAddress(`${currentLat.toFixed(2)}, ${currentLng.toFixed(2)}`);
+        setCurrentAddressTitle('Current Location');
+        // Dynamic naming based on standard GPS proximity
+        if (Math.abs(currentLat - 12.97) < 0.1 && Math.abs(currentLng - 80.22) < 0.1) {
+          setCurrentAddress('Koramangala, Bangalore');
+        } else {
+          setCurrentAddress(`${currentLat.toFixed(2)}, ${currentLng.toFixed(2)}`);
+        }
       }
 
       // Calculate distances & filter <= 3km
@@ -219,8 +229,12 @@ export default function HomeScreen() {
             activeOpacity={0.7}
           >
             <Ionicons name="location" size={13} color="#005d90" />
-            <Text style={styles.locationText}>{currentAddress}</Text>
-            <Ionicons name="chevron-down" size={11} color="#005d90" />
+            <View>
+              <Text style={{ fontSize: 13, fontWeight: '800', color: '#005d90' }}>
+                {currentAddressTitle} <Ionicons name="chevron-down" size={11} color="#005d90" />
+              </Text>
+              <Text style={styles.locationText}>{currentAddress}</Text>
+            </View>
           </TouchableOpacity>
         </View>
         <View style={styles.headerRight}>

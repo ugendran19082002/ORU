@@ -737,6 +737,14 @@ export default function AddressesScreen() {
               key={item.id}
               style={[styles.listItem, item.isDefault && styles.listItemDefault]}
             >
+              <TouchableOpacity onPress={() => toggleDefault(item.id)} style={{ marginRight: 8, justifyContent: 'center' }}>
+                <Ionicons
+                  name={item.isDefault ? "radio-button-on" : "radio-button-off"}
+                  size={24}
+                  color={item.isDefault ? "#005d90" : "#cbd5e1"}
+                />
+              </TouchableOpacity>
+              
               <View style={[styles.iconWrap, { backgroundColor: uiOpts.bg }]}>
                 <Ionicons name={uiOpts.icon} size={22} color={uiOpts.color} />
               </View>
@@ -744,18 +752,7 @@ export default function AddressesScreen() {
               <TouchableOpacity 
                 style={styles.listContent}
                 activeOpacity={0.6}
-                onPress={() => {
-                  console.log('=== ADDRESS LIST ITEM CLICK ===');
-                  if (isValidCoordinate(item.lat, item.lng)) {
-                    safeNavigate("/map-preview", {
-                      lat: item.lat.toString(),
-                      lng: item.lng.toString(),
-                      title: item.title 
-                    });
-                  } else {
-                    Alert.alert("Error", "Address has invalid coordinates. Please edit and re-save.");
-                  }
-                }}
+                onPress={() => toggleDefault(item.id)}
               >
                 <View style={styles.listTitleRow}>
                   <Text style={styles.listTitle}>{item.title}</Text>
@@ -779,13 +776,6 @@ export default function AddressesScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => shareAddress(item)}>
                   <Ionicons name="share-social-outline" size={20} color="#6366f1" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => toggleFavorite(item.id)}>
-                  <Ionicons
-                    name={item.isFavorite ? "heart" : "heart-outline"}
-                    size={20}
-                    color={item.isFavorite ? "#10b981" : "#94a3b8"}
-                  />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {

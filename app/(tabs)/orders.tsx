@@ -66,7 +66,6 @@ const ORDERS = [
     isActive: false,
   },
 ];
-void ORDERS;
 
 function OrderCard({ order, onTrack, onReorder, onSupport }: {
   order: any;

@@ -3,7 +3,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { ExpoMap } from '@/components/maps/ExpoMap';
 
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Modal, Alert } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -77,7 +77,15 @@ export default function DeliveryNavigationScreen() {
               <Text style={styles.custName}>{task?.customerName ?? 'Karthik Rajan'}</Text>
               <Text style={styles.custOrder}>Order #9830 • 2 Cans</Text>
             </View>
-            <TouchableOpacity style={styles.callBtn}>
+            <TouchableOpacity
+              style={styles.callBtn}
+              onPress={() => {
+                const phone = task?.customerPhone ?? '+919876543210';
+                Linking.openURL(`tel:${phone}`).catch(() =>
+                  Alert.alert('Error', `Unable to call. Dial ${phone} manually.`)
+                );
+              }}
+            >
               <Ionicons name="call" size={18} color="white" />
             </TouchableOpacity>
           </View>

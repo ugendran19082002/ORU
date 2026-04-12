@@ -9,11 +9,15 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { AppRouteGuard, AppSessionProvider } from '@/providers/AppSessionProvider';
 import { NoInternetBanner } from '@/components/ui/NoInternetBanner';
 
+// Suppress known SDK 53 informational warning inside Expo Go for Push Notifications
+import { LogBox } from 'react-native';
+LogBox.ignoreLogs([
+  'expo-notifications: Android Push notifications',
+  'Style property \'width\' is not supported by native animated module', // Fallback ignoring if hermes caches it briefly
+]);
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-
-  console.log('📍 [APP] RootLayout mounted', { platform: Platform.OS, isDev: __DEV__ });
 
   return (
     <ErrorBoundary>

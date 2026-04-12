@@ -100,7 +100,6 @@ export default function ShopLayout() {
       <Tabs.Screen name="subscription-plans" options={{ href: null }} />
       <Tabs.Screen name="manual-order" options={{ href: null }} />
       <Tabs.Screen name="analytics" options={{ href: null }} />
-      <Tabs.Screen name="analytics.next" options={{ href: null }} />
       <Tabs.Screen name="delivery-fleet" options={{ href: null }} />
 
       {/* TAB 1 — Orders (Home) */}

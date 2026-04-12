@@ -21,6 +21,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { roleAccent, roleGradients } from '@/constants/theme';
 import { useAppSession } from '@/hooks/use-app-session';
+import { useFirebaseStore } from '@/stores/firebaseStore';
+import { verifyFirebaseOTP, requestFirebaseOTP } from '@/api/firebaseAuth';
 import type { AppRole } from '@/types/session';
 
 const OTP_LENGTH = 6;
@@ -83,26 +85,40 @@ export default function OTPScreen() {
     if (code.length < OTP_LENGTH) return;
     setLoading(true);
 
-    try {
-      // 🔥 FIREBASE INTEGRATION ZONE
-      // When Firebase is configured, confirm the real OTP:
-      // await confirm.confirm(code);
+    // 🚧 DEV-ONLY BYPASS — this entire block is tree-shaken in production builds
+    if (__DEV__) {
       await new Promise((resolve) => setTimeout(resolve, 800));
-      throw new Error("Firebase not yet configured");
-    } catch {
-      if (!__DEV__) {
-        // In production, we must have real Firebase confirm — bail out
-        setLoading(false);
-        Alert.alert('Verification Failed', 'Please check your OTP and try again.');
-        return;
-      }
-      // 🚧 DEV ONLY BYPASS — will not run in production builds
       setLoading(false);
       setVerified(true);
-
       await setPreferredRole(role);
-      await signIn({ role, phone });
+      
+      Animated.spring(successAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 60,
+      }).start();
+      
+      setTimeout(() => {
+        // ALWAYS route to register page first for new user setup mock
+        router.replace("/auth/register");
+      }, 1200);
+      return;
+    }
 
+    // 🔥 PRODUCTION: Real Firebase OTP verification
+    try {
+      const { confirmationResult, clearConfirmationResult } = useFirebaseStore.getState();
+      if (!confirmationResult) {
+        throw new Error('OTP session expired. Please resend.');
+      }
+
+      await verifyFirebaseOTP(confirmationResult, code);
+      clearConfirmationResult();
+
+      setLoading(false);
+      setVerified(true);
+      await setPreferredRole(role);
+      
       Animated.spring(successAnim, {
         toValue: 1,
         useNativeDriver: true,
@@ -110,34 +126,37 @@ export default function OTPScreen() {
       }).start();
 
       setTimeout(() => {
-        let next: any = "/(tabs)";
-        if (role === "shop") next = "/shop";
-        else if (role === "admin") next = "/admin";
-        else if (role === "delivery") next = "/delivery";
-
-        router.replace({
-          pathname: "/enable-notifications",
-          params: { next }
-        } as any);
+        // In real backend, check if user exists. For now route to register.
+        router.replace("/auth/register");
       }, 1200);
+
+    } catch (err: any) {
+      setLoading(false);
+      Alert.alert(
+        'Verification Failed',
+        err?.message?.includes('Firebase') || err?.message?.includes('expired')
+          ? err.message
+          : 'Please check your OTP and try again.',
+      );
     }
   };
 
   const handleResendOtp = async () => {
-    // Structural mock for Firebase resend
     try {
-      // 🔥 FIREBASE: Same hook as login.tsx
-      const confirmation = await auth().signInWithPhoneNumber(`+91${phone}`);
-      globalStore.setConfirmation(confirmation);
-      console.log("confirmation", confirmation);
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      throw new Error("Local dev mock bypassing Firebase Resend");
+      if (!__DEV__) {
+        const confirmation = await requestFirebaseOTP(phone);
+        useFirebaseStore.getState().setConfirmationResult(confirmation);
+        setResendTimer(30);
+        setOtp(Array(OTP_LENGTH).fill(""));
+        inputRefs.current[0]?.focus();
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        setResendTimer(30);
+        setOtp(Array(OTP_LENGTH).fill(""));
+        inputRefs.current[0]?.focus();
+      }
     } catch (err) {
-      console.log("err", err);
-      // 🚨 DEV BYPASS
-      setResendTimer(30);
-      setOtp(Array(OTP_LENGTH).fill("")); // Clear boxes on resend
-      inputRefs.current[0]?.focus();
+      Alert.alert('Error', 'Could not resend OTP. Try again.');
     }
   };
 

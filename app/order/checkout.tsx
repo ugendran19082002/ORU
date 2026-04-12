@@ -20,6 +20,7 @@ import { useAndroidBackHandler } from "@/hooks/use-back-handler";
 import { useCartStore } from "@/stores/cartStore";
 import { useOrderStore } from "@/stores/orderStore";
 import { useShopStore } from "@/stores/shopStore";
+import { useAppSession } from "@/hooks/use-app-session";
 import { LinearGradient } from "expo-linear-gradient";
 
 type PaymentType = "upi" | "cod";
@@ -173,6 +174,7 @@ export default function OrderCheckoutScreen() {
 
   const router = useRouter();
   const { safeBack } = useAppNavigation();
+  const { user } = useAppSession();
 
   const { shopId = "1" } = useLocalSearchParams<{
     shopId: string;
@@ -187,6 +189,7 @@ export default function OrderCheckoutScreen() {
     items,
     note,
     clearCart,
+    applyCoupon,
   } = useCartStore();
   const { shops } = useShopStore();
   const { placeOrder, isSubmitting } = useOrderStore();
@@ -343,7 +346,13 @@ export default function OrderCheckoutScreen() {
         {/* COUPON / PROMO CODE */}
         <View style={{ marginBottom: 28 }}>
           <Text style={styles.sectionTitle}>Coupon / Promo Code</Text>
-          <CouponBlock subtotal={subtotal} onApply={(d) => console.log('Discount applied:', d)} />
+          <CouponBlock
+            subtotal={subtotal}
+            onApply={(discount) => {
+              // ✅ Wire to cartStore so getTotal() reflects discount
+              applyCoupon(discount > 0 ? 'APPLIED' : '', discount);
+            }}
+          />
         </View>
 
         {/* ORDER TOTALS */}
@@ -381,8 +390,8 @@ export default function OrderCheckoutScreen() {
           onPress={async () => {
             await placeOrder({
               shopId: shop.id,
-              customerName: "Rahul Sharma",
-              customerPhone: "+91 98765 43210",
+              customerName: user?.name ?? 'Customer',
+              customerPhone: user?.phone ?? '+91 00000 00000',
               items: Object.entries(items)
                 .filter(([, qty]) => qty > 0)
                 .map(([productId, qty]) => ({ productId, quantity: qty })),

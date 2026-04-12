@@ -80,6 +80,8 @@ export type SubscriptionPlan = {
   price: number;
   perks: string[];
   active: boolean;
+  paused?: boolean;    // vacation mode
+  cancelled?: boolean; // hard cancel
 };
 
 export type RewardSummary = {
@@ -93,6 +95,7 @@ export type DeliveryTask = {
   id: string;
   orderId: string;
   customerName: string;
+  customerPhone?: string; // for calling customer from delivery nav
   address: string;
   priority: 'Normal' | 'Urgent';
   status: OrderStatus;

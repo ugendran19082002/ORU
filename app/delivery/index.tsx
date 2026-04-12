@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Switch, Alert,
+  StyleSheet, Switch, Alert, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -179,7 +179,7 @@ export default function DeliveryDashboardScreen() {
             </View>
 
             {/* ACTIONS */}
-            <View style={styles.tripActions}>
+              <View style={styles.tripActions}>
               {trip.status === 'assigned' ? (
                 <View style={{ flexDirection: 'row', flex: 1, gap: 10 }}>
                   <TouchableOpacity style={[styles.startBtn, { backgroundColor: '#f1f4f9', flex: 1 }]} onPress={() => handleReject(trip.id)}>
@@ -208,7 +208,15 @@ export default function DeliveryDashboardScreen() {
                   </LinearGradient>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity style={styles.callBtn}>
+              <TouchableOpacity
+                style={styles.callBtn}
+                onPress={() => {
+                  const phone = trip.customerPhone ?? '+919876543210';
+                  Linking.openURL(`tel:${phone}`).catch(() =>
+                    Alert.alert('Call Customer', `Dial ${phone} manually.`)
+                  );
+                }}
+              >
                 <Ionicons name="call-outline" size={18} color="#005d90" />
               </TouchableOpacity>
             </View>

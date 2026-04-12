@@ -19,10 +19,13 @@ import {
   TouchableOpacity,
   View,
   Linking,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { roleAccent, roleGradients } from '@/constants/theme';
 import { useAppSession } from '@/hooks/use-app-session';
+import { useFirebaseStore } from '@/stores/firebaseStore';
+import { requestFirebaseOTP } from '@/api/firebaseAuth';
 import type { AppRole } from '@/types/session';
 
 const ROLE_LABELS: Record<string, string> = {
@@ -82,20 +85,24 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      // 🔥 FIREBASE INTEGRATION ZONE
-      // 1. In production, request SMS via Firebase Auth:
-      // const confirmation = await auth().signInWithPhoneNumber(`+91${phone}`);
-      // globalStore.setConfirmation(confirmation); // Pass object via state, NOT router params
-
-      // Simulate network request...
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      // Force an error thrown here to drop into the catch bypass
-      throw new Error("Local dev mock bypassing Firebase SMS");
-    } catch {
-      // 🚨 DEV BYPASS: Allow flow to continue to OTP entry screen regardless of SMS delivery status
+      if (!__DEV__) {
+        // 🔥 Real Firebase Integration (Production)
+        const confirmation = await requestFirebaseOTP(phone);
+        useFirebaseStore.getState().setConfirmationResult(confirmation);
+        setLoading(false);
+        router.push({ pathname: "/auth/otp", params: { phone, role } });
+      } else {
+        // 🚧 Local Dev Simulator Bypass
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        setLoading(false);
+        router.push({ pathname: "/auth/otp", params: { phone, role } });
+      }
+    } catch (err: any) {
       setLoading(false);
-      router.push({ pathname: "/auth/otp", params: { phone, role } });
+      Alert.alert(
+        "Authentication Error",
+        err?.message || "Failed to send OTP. Please try again."
+      );
     }
   };
 

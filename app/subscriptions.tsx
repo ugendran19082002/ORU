@@ -164,13 +164,34 @@ export default function SubscriptionsScreen() {
               <View style={styles.activeActions}>
                 <TouchableOpacity style={styles.pauseBtn} onPress={togglePause}>
                   <Ionicons name={activeSub.paused ? 'play' : 'pause'} size={16} color="#005d90" />
-                  <Text style={styles.pauseBtnText}>{activeSub.paused ? 'Resume' : 'Pause'}</Text>
+                  <Text style={styles.pauseBtnText}>{activeSub.paused ? 'Resume Sub.' : 'Pause (Vacation)'}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.rescheduleBtn} onPress={() => Alert.alert('Modify Order', 'Coming soon: Change bottle count or brand for next delivery.')}>
+                <TouchableOpacity style={styles.rescheduleBtn} onPress={() => Alert.alert('Modify Order', 'Change bottle count or brand for next delivery.\n\nThis feature will be available in the next update.')}>
                   <Ionicons name="create-outline" size={16} color="rgba(255,255,255,0.9)" />
                   <Text style={styles.rescheduleBtnText}>Modify</Text>
                 </TouchableOpacity>
               </View>
+              {/* Cancel subscription */}
+              <TouchableOpacity
+                style={styles.cancelSubBtn}
+                onPress={() => Alert.alert(
+                  'Cancel Subscription',
+                  'Are you sure? You will lose your remaining deliveries and savings for this month.',
+                  [
+                    { text: 'Keep Plan', style: 'cancel' },
+                    {
+                      text: 'Yes, Cancel',
+                      style: 'destructive',
+                      onPress: () => {
+                        setActiveSub(null);
+                        Alert.alert('Cancelled', 'Your subscription has been cancelled. You can subscribe again anytime.');
+                      },
+                    },
+                  ]
+                )}
+              >
+                <Text style={styles.cancelSubText}>Cancel Subscription</Text>
+              </TouchableOpacity>
             </LinearGradient>
           </>
         )}
@@ -306,4 +327,11 @@ const styles = StyleSheet.create({
   subscribeBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
   subscribeBtnText: { color: 'white', fontSize: 16, fontWeight: '800', letterSpacing: -0.3 },
   disclaimer: { fontSize: 11, color: '#94a3b8', textAlign: 'center', lineHeight: 16 },
+  cancelSubBtn: {
+    marginTop: 12, paddingVertical: 10, alignItems: 'center',
+  },
+  cancelSubText: {
+    fontSize: 12, color: 'rgba(255,255,255,0.55)', fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
 });

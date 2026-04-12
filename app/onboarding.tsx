@@ -117,7 +117,7 @@ export default function OnboardingScreen() {
         showsHorizontalScrollIndicator={false}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { useNativeDriver: true, listener: handleScroll }
+          { useNativeDriver: false, listener: handleScroll }
         )}
         scrollEventThrottle={16}
         keyExtractor={(item) => item.id}

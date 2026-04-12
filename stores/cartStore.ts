@@ -9,12 +9,14 @@ type CartState = {
   scheduledSlot: string | null;
   paymentMethod: 'upi' | 'cod';
   couponCode: string;
+  couponDiscount: number;
   setShop: (shopId: string) => void;
   setQuantity: (productId: string, quantity: number, shopId: string) => void;
   setNote: (note: string) => void;
   setScheduledSlot: (slot: string | null) => void;
   setPaymentMethod: (method: 'upi' | 'cod') => void;
   setCouponCode: (code: string) => void;
+  applyCoupon: (code: string, discount: number) => void;
   clearCart: () => void;
   getSubtotal: () => number;
   getDeliveryFee: () => number;
@@ -23,11 +25,12 @@ type CartState = {
 
 const initialState = {
   shopId: null,
-  items: { P001: 2 } as Record<string, number>,
+  items: {} as Record<string, number>, // ✅ Fixed: start empty, not pre-seeded
   note: '',
   scheduledSlot: null,
   paymentMethod: 'cod' as const,
   couponCode: '',
+  couponDiscount: 0, // ✅ Added: track active discount amount
 };
 
 export const useCartStore = create<CartState>((set, get) => ({
@@ -45,6 +48,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   setScheduledSlot: (scheduledSlot) => set({ scheduledSlot }),
   setPaymentMethod: (paymentMethod) => set({ paymentMethod }),
   setCouponCode: (couponCode) => set({ couponCode }),
+  applyCoupon: (couponCode, couponDiscount) => set({ couponCode, couponDiscount }),
   clearCart: () => set(initialState),
   getSubtotal: () => {
     const items = get().items;
@@ -58,5 +62,10 @@ export const useCartStore = create<CartState>((set, get) => ({
     const shop = mockShops.find((item) => item.id === shopId);
     return shop ? (shop.distanceKm > 2 ? 25 : 20) : 20;
   },
-  getTotal: () => get().getSubtotal() + get().getDeliveryFee(),
+  getTotal: () => {
+    const subtotal = get().getSubtotal();
+    const discount = get().couponDiscount;
+    const delivery = get().getDeliveryFee();
+    return Math.max(subtotal - discount, 0) + delivery;
+  },
 }));
