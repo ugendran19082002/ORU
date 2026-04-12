@@ -112,6 +112,16 @@ export const onboardingApi = {
     );
     return response.data;
   },
+
+  /**
+   * Skip a shop onboarding step
+   */
+  skipShopStep: async (stepKey: string, shopId: number): Promise<OnboardingResponse<any>> => {
+    const response = await apiClient.post<OnboardingResponse<any>>(`/onboarding/shop/steps/${stepKey}/skip`, {
+      shop_id: shopId
+    });
+    return response.data;
+  },
   
   /**
    * Resubmit a rejected shop application for review

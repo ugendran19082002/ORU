@@ -91,13 +91,38 @@ export default function ShopGSTScreen() {
     }
   };
 
+  const handleSkip = async () => {
+    if (!shopId) return;
+    try {
+      setLoading(true);
+      const res = await onboardingApi.skipShopStep('gst_details', shopId);
+      if (res.status === 1) {
+        router.replace('/onboarding/shop');
+      }
+    } catch (err) {
+      console.error('[GST] Skip Error:', err);
+      // Fallback
+      router.replace('/onboarding/shop');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          <TouchableOpacity style={styles.skipLink} onPress={() => router.replace('/onboarding/shop')}>
-            <Text style={styles.skipLinkText}>Skip for now</Text>
+          <TouchableOpacity 
+            style={styles.skipLink} 
+            onPress={handleSkip}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#94a3b8" />
+            ) : (
+              <Text style={styles.skipLinkText}>Skip for now</Text>
+            )}
           </TouchableOpacity>
 
           <View style={styles.header}>

@@ -194,12 +194,12 @@ export default function ShopOnboardingDashboard() {
               >
                 <View style={[
                   styles.iconWrap,
-                  { backgroundColor: isCompleted ? '#ecfdf5' : isReview ? '#fff7ed' : '#f8fafc' }
+                  { backgroundColor: isCompleted ? '#ecfdf5' : isReview ? '#fff7ed' : step.status === 'skipped' ? '#f1f5f9' : '#f8fafc' }
                 ]}>
                   <Ionicons
-                    name={isCompleted ? "checkmark-circle" : isReview ? "time" : (step.icon_name as any || "document-text")}
+                    name={isCompleted ? "checkmark-circle" : isReview ? "time" : step.status === 'skipped' ? "eye-off" : (step.icon_name as any || "document-text")}
                     size={22}
-                    color={isCompleted ? "#059669" : isReview ? "#d97706" : "#006878"}
+                    color={isCompleted ? "#059669" : isReview ? "#d97706" : step.status === 'skipped' ? "#94a3b8" : "#006878"}
                   />
                 </View>
 
@@ -207,9 +207,10 @@ export default function ShopOnboardingDashboard() {
                   <Text style={styles.stepTitle}>{step.title}</Text>
                   <Text style={styles.stepDesc}>{step.description}</Text>
                   {isReview && <Text style={styles.reviewTag}>Under Admin Review</Text>}
+                  {step.status === 'skipped' && <Text style={[styles.reviewTag, { color: '#94a3b8' }]}>Skipped for now</Text>}
                 </View>
 
-                {!(isCompleted || isReview) && (
+                {!(isCompleted || isReview || step.status === 'skipped') && (
                   <Ionicons name="arrow-forward-circle-outline" size={24} color="#006878" />
                 )}
               </TouchableOpacity>
