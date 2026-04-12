@@ -94,7 +94,8 @@ export default function AdminShopReviewScreen() {
   };
 
   const onViewStepData = (step: any) => {
-    if (!step.document_url && (!step.details || Object.keys(step.details).length === 0)) {
+    const hasData = step.details || step.metadata;
+    if (!step.document_url && (!hasData || Object.keys(hasData).length === 0)) {
       Alert.alert('Empty', 'No document or data associated with this step.');
       return;
     }
@@ -209,12 +210,12 @@ export default function AdminShopReviewScreen() {
                 </View>
                 
                 <TouchableOpacity 
-                  style={[styles.viewBtn, !(step.document_url || step.details) && styles.viewBtnDisabled]}
+                  style={[styles.viewBtn, !(step.document_url || step.details || step.metadata) && styles.viewBtnDisabled]}
                   onPress={() => onViewStepData(step)}
-                  disabled={!(step.document_url || step.details)}
+                  disabled={!(step.document_url || step.details || step.metadata)}
                 >
-                  <Ionicons name="eye-outline" size={18} color={(step.document_url || step.details) ? "#005d90" : "#cbd5e1"} />
-                  <Text style={[styles.viewBtnText, !(step.document_url || step.details) && { color: '#cbd5e1' }]}>View Data</Text>
+                  <Ionicons name="eye-outline" size={18} color={(step.document_url || step.details || step.metadata) ? "#005d90" : "#cbd5e1"} />
+                  <Text style={[styles.viewBtnText, !(step.document_url || step.details || step.metadata) && { color: '#cbd5e1' }]}>View Data</Text>
                 </TouchableOpacity>
               </View>
             ))}
@@ -284,15 +285,15 @@ export default function AdminShopReviewScreen() {
               </View>
               
               <ScrollView contentContainerStyle={styles.modalScroll}>
-                {selectedDoc?.details && (
+                {(selectedDoc?.details || selectedDoc?.metadata) && (
                   <View style={styles.premiumDataContainer}>
                     <View style={styles.premiumDataHeader}>
                       <Ionicons name="document-text" size={20} color="#005d90" />
-                      <Text style={styles.premiumDataTitle}>Extraction & Details</Text>
+                      <Text style={styles.premiumDataTitle}>Extracted Metadata</Text>
                     </View>
                     
                     <View style={styles.premiumDataGrid}>
-                      {Object.entries(getParsedDetails(selectedDoc.details) || {}).map(([k, v]) => {
+                      {Object.entries(getParsedDetails(selectedDoc.details || selectedDoc.metadata) || {}).map(([k, v]) => {
                          const strVal = String(v);
                          const isLong = strVal.length > 25;
                          return (
@@ -309,14 +310,20 @@ export default function AdminShopReviewScreen() {
                 )}
 
                 {selectedDoc?.document_url && (
-                  <View style={styles.docImgWrap}>
-                    <Text style={styles.premiumDataTitle}>Attached Evidence</Text>
+                  <View style={styles.premiumDataContainer}>
+                    <View style={styles.premiumDataHeader}>
+                      <Ionicons name="image" size={20} color="#005d90" />
+                      <Text style={styles.premiumDataTitle}>Attached Evidence</Text>
+                    </View>
+
                     {selectedDoc.document_url.match(/\.(jpeg|jpg|gif|png)$/i) || selectedDoc.document_url.includes('firebasestorage') || selectedDoc.document_url.includes('blob:') || selectedDoc.document_url.startsWith('data:image') ? (
-                      <Image source={{ uri: selectedDoc.document_url }} style={styles.docImg} resizeMode="contain" />
+                      <View style={{ borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#f1f5f9' }}>
+                        <Image source={{ uri: selectedDoc.document_url }} style={styles.docImg} resizeMode="contain" />
+                      </View>
                     ) : (
                       <TouchableOpacity style={styles.linkBtn} onPress={() => Linking.openURL(selectedDoc.document_url)}>
                         <Ionicons name="open-outline" size={18} color="#fff" />
-                        <Text style={styles.linkBtnText}>Open Document Link</Text>
+                        <Text style={styles.linkBtnText}>Open Document Link Externally</Text>
                       </TouchableOpacity>
                     )}
                   </View>
