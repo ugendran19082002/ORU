@@ -1,21 +1,27 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView,
-  RefreshControl, TouchableOpacity, Switch, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  View, Text, ScrollView, RefreshControl, TouchableOpacity, 
+  StyleSheet, ActivityIndicator, TextInput, useWindowDimensions 
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-
-
-import { adminApi, AdminShop } from '@/api/adminApi';
 import { useRouter } from 'expo-router';
+import { adminApi, AdminShop } from '@/api/adminApi';
+import Toast from 'react-native-toast-message';
+
+type FilterStatus = 'all' | 'pending_review' | 'active' | 'rejected';
 
 export default function AdminShopsScreen() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const router = useRouter();
+
   const [refreshing, setRefreshing] = useState(false);
   const [shops, setShops] = useState<AdminShop[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending_review' | 'active'>('all');
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const fetchShops = async () => {
+  const fetchShops = useCallback(async () => {
     try {
       setLoading(true);
       const filter = statusFilter === 'all' ? undefined : statusFilter;
@@ -23,99 +29,124 @@ export default function AdminShopsScreen() {
       if (res.status === 1) {
         setShops(res.data);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Admin Shops] Load Error:', error);
+      Toast.show({ type: 'error', text1: 'Sync Error', text2: 'Failed to fetch partner list.' });
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
-
-  React.useEffect(() => {
-    fetchShops();
   }, [statusFilter]);
 
-  const onRefresh = React.useCallback(() => {
+  useEffect(() => {
+    fetchShops();
+  }, [fetchShops]);
+
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchShops();
-  }, [statusFilter]);
+  }, [fetchShops]);
 
-  const handleShopPress = (id: number) => {
-    router.push(`/admin/shops/${id}` as any);
+  const filteredShops = shops.filter(shop => 
+    shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    shop.owner?.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return { bg: '#ecfdf5', text: '#059669', icon: 'checkmark-circle' as const };
+      case 'pending_review': return { bg: '#fff7ed', text: '#d97706', icon: 'time' as const };
+      case 'rejected': return { bg: '#fef2f2', text: '#dc2626', icon: 'close-circle' as const };
+      default: return { bg: '#f1f5f9', text: '#64748b', icon: 'help-circle' as const };
+    }
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView 
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />} 
-        contentContainerStyle={styles.scrollContent}
-      >
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.pageTitle}>Shops</Text>
-            <Text style={styles.subtitle}>{shops.length} total partners</Text>
-          </View>
-          
-          <View style={styles.filterTabs}>
-            <TouchableOpacity 
-              style={[styles.filterTab, statusFilter === 'all' && styles.filterTabActive]}
-              onPress={() => setStatusFilter('all')}
-            >
-              <Text style={[styles.filterText, statusFilter === 'all' && styles.filterTextActive]}>All</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.filterTab, statusFilter === 'pending_review' && styles.filterTabActive]}
-              onPress={() => setStatusFilter('pending_review')}
-            >
-              <Text style={[styles.filterText, statusFilter === 'pending_review' && styles.filterTextActive]}>Pending</Text>
-            </TouchableOpacity>
-          </View>
+      <View style={[styles.header, isDesktop && { paddingHorizontal: 40, height: 80 }]}>
+        <View>
+          <Text style={[styles.pageTitle, isDesktop && { fontSize: 28 }]}>Shop Management</Text>
+          <Text style={styles.subtitle}>{shops.length} total partners registered</Text>
+        </View>
+      </View>
+
+      <View style={[styles.filterBar, isDesktop && { paddingHorizontal: 40 }]}>
+        <View style={styles.searchWrap}>
+          <Ionicons name="search" size={18} color="#94a3b8" />
+          <TextInput
+            placeholder="Search by shop or owner name..."
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholderTextColor="#94a3b8"
+          />
         </View>
 
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll} contentContainerStyle={styles.tabContent}>
+          {(['all', 'pending_review', 'active', 'rejected'] as FilterStatus[]).map((s) => (
+            <TouchableOpacity 
+              key={s} 
+              onPress={() => setStatusFilter(s)}
+              style={[styles.tab, statusFilter === s && styles.tabActive]}
+            >
+              <Text style={[styles.tabText, statusFilter === s && styles.tabTextActive]}>
+                {s.replace('_', ' ').toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      <ScrollView 
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />} 
+        contentContainerStyle={[styles.scrollContent, isDesktop && { paddingHorizontal: width * 0.1 }]}
+      >
         {loading ? (
-          <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 60 }} />
+        ) : filteredShops.length === 0 ? (
+          <View style={styles.emptyWrap}>
+            <Ionicons name="storefront-outline" size={64} color="#e2e8f0" />
+            <Text style={styles.emptyText}>No shops found matching your criteria.</Text>
+          </View>
         ) : (
-          <View style={styles.listContainer}>
-            {shops.length === 0 ? (
-              <View style={styles.emptyWrap}>
-                <Ionicons name="storefront-outline" size={48} color="#e2e8f0" />
-                <Text style={styles.emptyText}>No shops found in this category.</Text>
-              </View>
-            ) : shops.map((shop, index) => (
-              <TouchableOpacity key={shop.id} onPress={() => handleShopPress(shop.id)}>
-                <View style={styles.shopRow}>
-                  <View style={styles.iconWrap}>
-                    <Ionicons name="business" size={24} color="#005d90" />
-                  </View>
-                  <View style={styles.shopInfo}>
-                    <Text style={styles.shopName}>{shop.name}</Text>
-                    <Text style={styles.shopSub}>{shop.owner?.name || 'No Owner'} • {shop.shop_type}</Text>
-                    
-                    <View style={styles.pillRow}>
-                      <View style={[
-                        styles.pill, 
-                        { backgroundColor: shop.status === 'active' ? '#e8f5e9' : shop.status === 'pending_review' ? '#fff3e0' : '#f1f5f9' }
-                      ]}>
-                        <Ionicons 
-                          name={shop.status === 'active' ? "checkmark-circle" : "time"} 
-                          size={12} 
-                          color={shop.status === 'active' ? "#2e7d32" : "#e65100"} 
-                        />
-                        <Text style={[
-                          styles.pillText, 
-                          { color: shop.status === 'active' ? "#2e7d32" : "#e65100" }
-                        ]}>
-                          {(shop.status || 'pending').replace('_', ' ')}
-                        </Text>
-                      </View>
+          <View style={[styles.grid, isDesktop && { flexDirection: 'row', flexWrap: 'wrap', gap: 20 }]}>
+            {filteredShops.map((shop) => {
+              const theme = getStatusColor(shop.status);
+              return (
+                <TouchableOpacity 
+                  key={shop.id} 
+                  onPress={() => router.push(`/admin/shops/${shop.id}`)}
+                  style={[styles.shopCard, isDesktop && { width: '48%', marginBottom: 0 }]}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.cardTop}>
+                    <View style={styles.shopIcon}>
+                      <Ionicons name="business" size={24} color="#005d90" />
+                    </View>
+                    <View style={[styles.statusBadge, { backgroundColor: theme.bg }]}>
+                      <Ionicons name={theme.icon} size={12} color={theme.text} />
+                      <Text style={[styles.statusText, { color: theme.text }]}>{shop.status.replace('_', ' ')}</Text>
                     </View>
                   </View>
 
-                  <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
-                </View>
-                {index < shops.length - 1 && <View style={styles.divider} />}
-              </TouchableOpacity>
-            ))}
+                  <Text style={styles.shopName} numberOfLines={1}>{shop.name}</Text>
+                  <Text style={styles.ownerName}>{shop.owner?.name || 'Unknown Owner'}</Text>
+
+                  <View style={styles.cardFooter}>
+                    <View style={styles.metaItem}>
+                      <Ionicons name="location-outline" size={14} color="#94a3b8" />
+                      <Text style={styles.metaText}>{shop.shop_type || 'Retailer'}</Text>
+                    </View>
+                    <View style={styles.divider} />
+                    <View style={styles.metaItem}>
+                      <Ionicons name="calendar-outline" size={14} color="#94a3b8" />
+                      <Text style={styles.metaText}>{new Date(shop.created_at).toLocaleDateString()}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" style={{ marginLeft: 'auto' }} />
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         )}
       </ScrollView>
@@ -125,29 +156,37 @@ export default function AdminShopsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fdfdfd' },
+  header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  pageTitle: { fontSize: 24, fontWeight: '900', color: '#1e293b', letterSpacing: -0.5 },
+  subtitle: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  
+  filterBar: { paddingVertical: 16, paddingHorizontal: 24, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', gap: 16 },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f1f5f9', borderRadius: 16, paddingHorizontal: 16, height: 48 },
+  searchInput: { flex: 1, marginLeft: 10, fontSize: 14, fontWeight: '600', color: '#1e293b' },
+  
+  tabScroll: { marginTop: 4 },
+  tabContent: { gap: 8, paddingRight: 24 },
+  tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: '#f1f5f9' },
+  tabActive: { backgroundColor: '#005d90' },
+  tabText: { fontSize: 11, fontWeight: '800', color: '#64748b' },
+  tabTextActive: { color: 'white' },
+
   scrollContent: { padding: 24, paddingBottom: 100 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24 },
-  pageTitle: { fontSize: 32, fontWeight: '900', color: '#134e4a', letterSpacing: -1 },
-  subtitle: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 4 },
-  
-  filterTabs: { flexDirection: 'row', backgroundColor: '#f1f5f9', borderRadius: 12, padding: 4, gap: 4 },
-  filterTab: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  filterTabActive: { backgroundColor: 'white', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
-  filterText: { fontSize: 12, fontWeight: '700', color: '#64748b' },
-  filterTextActive: { color: '#134e4a' },
+  grid: { gap: 16 },
+  shopCard: { backgroundColor: 'white', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 10, elevation: 2 },
+  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  shopIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#f0f9ff', alignItems: 'center', justifyContent: 'center' },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  statusText: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
 
-  listContainer: { backgroundColor: 'white', borderRadius: 24, padding: 12, borderWidth: 1, borderColor: '#f1f5f9' },
-  shopRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 8, gap: 16 },
-  iconWrap: { width: 52, height: 52, borderRadius: 16, backgroundColor: '#f0f9ff', alignItems: 'center', justifyContent: 'center' },
-  shopInfo: { flex: 1 },
-  shopName: { fontSize: 16, fontWeight: '800', color: '#1e293b', marginBottom: 2 },
-  shopSub: { fontSize: 12, color: '#64748b', marginBottom: 8 },
-  
-  pillRow: { flexDirection: 'row' },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
-  pillText: { fontSize: 11, fontWeight: '800', letterSpacing: 0.3, textTransform: 'uppercase' },
+  shopName: { fontSize: 18, fontWeight: '900', color: '#1e293b', marginBottom: 4 },
+  ownerName: { fontSize: 13, fontWeight: '600', color: '#64748b', marginBottom: 16 },
 
-  emptyWrap: { alignItems: 'center', paddingVertical: 60, gap: 16 },
-  emptyText: { fontSize: 14, color: '#94a3b8', fontWeight: '600' },
-  divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 4 },
+  cardFooter: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
+  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  metaText: { fontSize: 12, fontWeight: '600', color: '#94a3b8' },
+  divider: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#cbd5e1' },
+
+  emptyWrap: { alignItems: 'center', marginTop: 100, gap: 16 },
+  emptyText: { fontSize: 15, color: '#94a3b8', fontWeight: '600' },
 });

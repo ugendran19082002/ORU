@@ -12,10 +12,12 @@ import { useRouter } from 'expo-router';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
 import { BackButton } from '@/components/ui/BackButton';
+import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 
 export default function ShopProductsScreen() {
   const router = useRouter();
   const { user, status } = useAppSession();
+  const { handleAuthBack } = useLogoutBackHandler();
   
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
@@ -29,13 +31,26 @@ export default function ShopProductsScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const [shopRes, catRes] = await Promise.all([
+        const [shopRes, catRes, stepsRes] = await Promise.all([
           onboardingApi.getMerchantShop(),
-          onboardingApi.getCategories()
+          onboardingApi.getCategories(),
+          onboardingApi.getShopSteps()
         ]);
         
         if (shopRes.data) setShopId(shopRes.data.id);
         if (catRes.data) setCategories(catRes.data);
+
+        // Prepopulate from existing step metadata
+        if (stepsRes.data?.steps) {
+          const catStep = stepsRes.data.steps.find((s: any) => s.step_key === 'product_catalog');
+          if (catStep?.metadata?.products) {
+            setProducts(catStep.metadata.products.map((p: any) => ({
+              ...p,
+              price: String(p.price || ''),
+              stock_quantity: String(p.stock_quantity || '')
+            })));
+          }
+        }
       } catch (err: any) {
         if (err.response?.status === 404) return;
       } finally {
@@ -107,7 +122,7 @@ export default function ShopProductsScreen() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
-              <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} />
+              <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} onPress={handleAuthBack} />
               <Text style={styles.title}>Inventory Setup</Text>
               <Text style={styles.subtitle}>Select categories and add products. Admin-controlled price ranges ensure fair market rates.</Text>
             </View>

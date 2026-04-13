@@ -88,7 +88,7 @@ export default function ShopOnboardingDashboard() {
   };
 
   const handleResubmit = async () => {
-    if (!data?.is_ready_for_review || isPendingReview) return;
+    if (!data?.is_ready_for_review || isSubmissionLocked) return;
     
     try {
       setResubmitting(true);
@@ -234,7 +234,7 @@ export default function ShopOnboardingDashboard() {
             </View>
           )}
 
-          {isPendingReview && (
+          {isSubmissionLocked && (
             <View style={[styles.rejectionBanner, { backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }] as any}>
               <View style={[styles.rejectionIcon, { backgroundColor: '#e0f2fe' }]}>
                 <Ionicons name="time" size={24} color="#0369a1" />

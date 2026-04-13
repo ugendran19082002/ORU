@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Linking, TextInput, Modal, Image
+  ActivityIndicator, Linking, TextInput, Modal, Image, useWindowDimensions
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +12,8 @@ import { adminApi, AdminShop } from '@/api/adminApi';
 import { BackButton } from '@/components/ui/BackButton';
 
 export default function AdminShopReviewScreen() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -176,6 +178,52 @@ export default function AdminShopReviewScreen() {
     setSelectedDoc(step);
   };
 
+  const MetadataValueRenderer = ({ value, label }: { value: any, label: string }) => {
+    if (value === null || value === undefined) return <Text style={styles.premiumDataVal}>N/A</Text>;
+
+    if (Array.isArray(value)) {
+      return (
+        <View style={styles.arrayContainer}>
+          {value.map((item, idx) => (
+            <View key={idx} style={styles.arrayItemCard}>
+              <Text style={styles.arrayItemIndex}>Item #{idx + 1}</Text>
+              {Object.entries(item).map(([k, v]) => (
+                <View key={k} style={styles.arrayItemRow}>
+                    <Text style={styles.arrayItemKey}>{k.replace(/_/g, ' ')}:</Text>
+                    <Text style={styles.arrayItemVal}>{String(v)}</Text>
+                </View>
+              ))}
+            </View>
+          ))}
+        </View>
+      );
+    }
+
+    if (typeof value === 'object') {
+        return (
+            <View style={styles.nestedObjectBox}>
+                {Object.entries(value).map(([k, v]) => (
+                    <View key={k} style={styles.nestedEntry}>
+                        <Text style={styles.nestedKey}>{k.replace(/_/g, ' ')}</Text>
+                        <Text style={styles.nestedVal}>{String(v)}</Text>
+                    </View>
+                ))}
+            </View>
+        );
+    }
+
+    if (typeof value === 'boolean') {
+        return (
+            <View style={[styles.boolBadge, { backgroundColor: value ? '#ecfdf5' : '#fef2f2' }]}>
+                <Ionicons name={value ? "checkmark-circle" : "close-circle"} size={14} color={value ? '#059669' : '#dc2626'} />
+                <Text style={[styles.boolText, { color: value ? '#059669' : '#dc2626' }]}>{value ? 'YES' : 'NO'}</Text>
+            </View>
+        );
+    }
+
+    return <Text style={styles.premiumDataVal} selectable>{String(value)}</Text>;
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -195,14 +243,13 @@ export default function AdminShopReviewScreen() {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        <View style={styles.header}>
+        <View style={[styles.header, isDesktop && { paddingHorizontal: 40, height: 80 }]}>
           <BackButton fallback="/admin" />
-          <Text style={styles.headerTitle}>Review Application</Text>
+          <Text style={[styles.headerTitle, isDesktop && { fontSize: 24 }]}>Application Review</Text>
           <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <ScrollView contentContainerStyle={[styles.scroll, isDesktop && { paddingHorizontal: width * 0.1 }]}>
           {/* Shop Identity Card */}
           <View style={styles.section}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -393,19 +440,18 @@ export default function AdminShopReviewScreen() {
                 {(selectedDoc?.details || selectedDoc?.metadata) && (
                   <View style={styles.premiumDataContainer}>
                     <View style={styles.premiumDataHeader}>
-                      <Ionicons name="document-text" size={20} color="#005d90" />
-                      <Text style={styles.premiumDataTitle}>Extracted Metadata</Text>
+                      <Ionicons name="apps" size={20} color="#005d90" />
+                      <Text style={styles.premiumDataTitle}>Step Metadata Details</Text>
                     </View>
                     
                     <View style={styles.premiumDataGrid}>
                       {Object.entries(getParsedDetails(selectedDoc.details || selectedDoc.metadata) || {}).map(([k, v]) => {
-                         const strVal = String(v);
-                         const isLong = strVal.length > 25;
+                         const isComplex = typeof v === 'object' && v !== null;
                          return (
-                           <View key={k} style={[styles.premiumDataCard, isLong && { width: '100%' }]}>
+                           <View key={k} style={[styles.premiumDataCard, (isComplex || isDesktop) && { width: '100%' }]}>
                               <Text style={styles.premiumDataKey}>{k.replace(/_/g, ' ')}</Text>
                               <View style={styles.premiumDataValWrap}>
-                                <Text style={styles.premiumDataVal} selectable>{strVal}</Text>
+                                <MetadataValueRenderer value={v} label={k} />
                               </View>
                            </View>
                          );
@@ -465,7 +511,6 @@ export default function AdminShopReviewScreen() {
                 )}
             </View>
         </Modal>
-      </SafeAreaView>
     </View>
   );
 }
@@ -550,6 +595,23 @@ const styles = StyleSheet.create({
   premiumDataKey: { fontSize: 10, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 6 },
   premiumDataValWrap: { backgroundColor: '#f8fafc', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#f1f5f9' },
   premiumDataVal: { fontSize: 14, fontWeight: '700', color: '#0f172a' },
+  
+  // Metadata Renderer Styles
+  arrayContainer: { gap: 12, marginTop: 4 },
+  arrayItemCard: { backgroundColor: 'white', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e2e8f0' },
+  arrayItemIndex: { fontSize: 9, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8 },
+  arrayItemRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#f8fafc' },
+  arrayItemKey: { fontSize: 11, fontWeight: '600', color: '#64748b' },
+  arrayItemVal: { fontSize: 11, fontWeight: '800', color: '#1e293b' },
+  
+  nestedObjectBox: { gap: 8 },
+  nestedEntry: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  nestedKey: { fontSize: 12, color: '#64748b', fontWeight: '500' },
+  nestedVal: { fontSize: 12, color: '#1e293b', fontWeight: '700' },
+  
+  boolBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  boolText: { fontSize: 10, fontWeight: '900' },
+
   docImg: { width: '100%', height: 250, borderRadius: 12, backgroundColor: '#f1f5f9' },
   zoomOverlay: { position: 'absolute', right: 12, bottom: 12, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 12, padding: 8 },
   

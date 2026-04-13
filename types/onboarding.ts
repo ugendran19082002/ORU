@@ -15,6 +15,7 @@ export interface OnboardingStep {
   admin_notes?: string | null;
   document_url?: string | null;
   completed_at?: string | null;
+  metadata?: any;
 }
 
 export interface OnboardingStatus {

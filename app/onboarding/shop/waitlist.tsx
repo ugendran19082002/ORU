@@ -29,8 +29,24 @@ export default function ShopWaitlistScreen() {
       const res = await onboardingApi.getMerchantShop();
       setShop(res.data);
       
-      if (res.data?.status === 'active') {
-        router.replace('/shop');
+      if (res.data) {
+        // 2. Immediate redirection if active
+        if (res.data.status === 'active') {
+          router.replace('/shop');
+          return;
+        }
+
+        // 3. New Requirement: Redirect if any one step is rejected
+        try {
+          const stepsRes = await onboardingApi.getShopSteps(res.data.id);
+          const hasRejectedStep = stepsRes.data?.steps.some(s => s.status === 'rejected');
+          
+          if (hasRejectedStep) {
+            router.replace('/onboarding/shop');
+          }
+        } catch (stepErr) {
+          console.error('[Waitlist] Steps Fetch Error:', stepErr);
+        }
       }
     } catch (err: any) {
       if (err.response?.status === 404) return;

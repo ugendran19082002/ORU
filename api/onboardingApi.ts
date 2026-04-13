@@ -35,7 +35,7 @@ export const onboardingApi = {
   /**
    * Get all shop onboarding steps
    */
-  getShopSteps: async (shopId: number): Promise<OnboardingResponse<OnboardingStatus>> => {
+  getShopSteps: async (shopId?: number): Promise<OnboardingResponse<OnboardingStatus>> => {
     const response = await apiClient.get<OnboardingResponse<OnboardingStatus>>(`/onboarding/shop/steps`, {
       params: { shopId }
     });

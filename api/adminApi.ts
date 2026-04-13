@@ -13,6 +13,7 @@ export interface AdminShop {
   bank_ifsc?: string | null;
   is_verified?: boolean;
   admin_notes?: string | null;
+  city?: string | null;
   created_at: string;
   owner?: {
     name: string;

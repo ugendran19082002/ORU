@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Slot, useRouter, usePathname } from 'expo-router';
@@ -7,20 +7,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { Logo } from '@/components/ui/Logo';
 import { useAppSession } from '@/hooks/use-app-session';
 
-const { width } = Dimensions.get('window');
-const isMobile = width < 768; // Simple breakpoint for web/tablet vs mobile
-
 const NAV_ITEMS = [
   { name: 'Dashboard', path: '/admin', icon: 'pie-chart' },
-  { name: 'Inventory Master', path: '/admin/inventory', icon: 'layers' },
   { name: 'Shops', path: '/admin/shops', icon: 'storefront' },
-  { name: 'Customers', path: '/admin/customers', icon: 'people' },
-  { name: 'Orders', path: '/admin/orders', icon: 'receipt' },
-  { name: 'Complaints', path: '/admin/complaints', icon: 'warning' },
-  { name: 'Commission', path: '/admin/commission', icon: 'cash' },
 ];
 
 export default function AdminLayout() {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
   const router = useRouter();
   const pathname = usePathname();
   const { signOut } = useAppSession();
@@ -36,8 +30,8 @@ export default function AdminLayout() {
     router.replace('/auth' as any);
   };
 
-  const SidebarContent = () => (
-    <View style={styles.sidebarContent}>
+  const SidebarContent = ({ inline }: { inline?: boolean }) => (
+    <View style={[styles.sidebarContent, inline && { backgroundColor: 'white', minHeight: 400 }]}>
       <View style={styles.brandBox}>
         <Logo size="sm" />
         <View style={{ marginLeft: 8 }}>
@@ -78,7 +72,7 @@ export default function AdminLayout() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, { flexDirection: isMobile ? 'column' : 'row' }]} edges={['top', 'left', 'right']}>
       <StatusBar style="dark" />
       {/* SIDEBAR (Desktop/Tablet) */}
       {!isMobile && (
@@ -91,7 +85,7 @@ export default function AdminLayout() {
       {isMobile && (
         <View style={styles.mobileHeader}>
           <TouchableOpacity onPress={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            <Ionicons name="menu" size={28} color="#005d90" />
+            <Ionicons name={mobileMenuOpen ? "close" : "menu"} size={28} color="#005d90" />
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <Logo size="xs" />
@@ -104,7 +98,7 @@ export default function AdminLayout() {
       {/* MOBILE MENU DROPDOWN */}
       {isMobile && mobileMenuOpen && (
         <View style={styles.mobileMenu}>
-          <SidebarContent />
+          <SidebarContent inline />
         </View>
       )}
 
@@ -119,7 +113,6 @@ export default function AdminLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: isMobile ? 'column' : 'row',
     backgroundColor: '#f1f4f9',
   },
   sidebar: {
@@ -131,7 +124,6 @@ const styles = StyleSheet.create({
   sidebarContent: {
     flex: 1,
     padding: 20,
-    ...(isMobile && { backgroundColor: 'white', minHeight: 400 }),
   },
   brandBox: {
     flexDirection: 'row',
