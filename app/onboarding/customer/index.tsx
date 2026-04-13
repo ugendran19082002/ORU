@@ -36,23 +36,23 @@ export default function CustomerOnboardingScreen() {
       if (res.status === 1) {
         setData(res.data);
         
-        // If completed by steps, update session and move to home
-        // ADDED: Double check that we aren't already marked as completed to avoid loops
         if (res.data.onboarding_completed && user && !user.onboarding_completed) {
-          console.log('[Onboarding] Completion detected. Syncing session...');
           await updateUser({ onboarding_completed: true });
-          
-          // Small delay to allow session state to propagate before redirecting
           setTimeout(() => {
             router.replace('/(tabs)');
           }, 100);
         } else if (res.data.onboarding_completed) {
-          // Already synced, just move if we are somehow stuck here
           router.replace('/(tabs)');
         }
       }
-    } catch (error) {
-      console.error('[Onboarding] Fetch error:', error);
+    } catch (error: any) {
+      if (error.response?.status === 404) return;
+      
+      Toast.show({
+        type: 'error',
+        text1: 'Fetch Error',
+        text2: 'Could not load onboarding status.'
+      });
     } finally {
       setLoading(false);
     }
@@ -100,7 +100,6 @@ export default function CustomerOnboardingScreen() {
                 router.replace('/auth/role');
               }
             } catch (error: any) {
-              console.error('[Role Reset] Error:', error);
               Toast.show({
                 type: 'error',
                 text1: 'Reset Failed',

@@ -76,6 +76,8 @@ export default function ShopBusinessInfoScreen() {
         router.replace('/onboarding/shop');
       }
     } catch (error: any) {
+      if (error.response?.status === 404) return;
+      
       Toast.show({
         type: 'error',
         text1: 'Error',

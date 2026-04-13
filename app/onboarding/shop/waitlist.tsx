@@ -32,8 +32,8 @@ export default function ShopWaitlistScreen() {
       if (res.data?.status === 'active') {
         router.replace('/shop');
       }
-    } catch (err) {
-      console.error('[Waitlist] Status Check Error:', err);
+    } catch (err: any) {
+      if (err.response?.status === 404) return;
     } finally {
       setLoading(false);
       setRefreshing(false);

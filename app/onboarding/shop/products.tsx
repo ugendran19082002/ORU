@@ -37,7 +37,7 @@ export default function ShopProductsScreen() {
         if (shopRes.data) setShopId(shopRes.data.id);
         if (catRes.data) setCategories(catRes.data);
       } catch (err: any) {
-        console.error('[Products] Init Error:', err);
+        if (err.response?.status === 404) return;
       } finally {
         setFetchingShop(false);
       }
@@ -87,6 +87,8 @@ export default function ShopProductsScreen() {
       
       router.replace('/onboarding/shop');
     } catch (error: any) {
+      if (error.response?.status === 404) return;
+      
       Toast.show({ type: 'error', text1: 'Error', text2: error.response?.data?.message || 'Failed to save products.' });
     } finally {
       setLoading(false);

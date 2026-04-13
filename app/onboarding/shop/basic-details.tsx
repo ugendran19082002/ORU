@@ -91,8 +91,7 @@ export default function ShopBasicDetailsScreen() {
       } catch (err: any) {
         if (err.response?.status === 404) {
           setMode('CREATE');
-        } else {
-          console.error('[Basic Details] ID Resolution Error:', err);
+          handleGetCurrentLocation();
         }
       } finally {
         setFetchingShop(false);
@@ -121,7 +120,7 @@ export default function ShopBasicDetailsScreen() {
         })));
       }
     } catch (error) {
-      console.error("Search error:", error);
+      // Silent error for photon
     } finally {
       setIsSearching(false);
     }
@@ -167,10 +166,9 @@ export default function ShopBasicDetailsScreen() {
         ].filter(Boolean);
         const addr = parts.join(', ');
         setFormData(p => ({ ...p, address_line1: addr, city: a.city || a.town || p.city }));
-        setSearchQuery(addr); // Sync search bar with pin movement
       }
     } catch (e) {
-      console.warn('Reverse Geocode failed', e);
+      // Silent error for reverse geocode
     }
   };
 
@@ -276,7 +274,8 @@ export default function ShopBasicDetailsScreen() {
         }
       }
     } catch (error: any) {
-      console.error('[Basic Details] Submit Error:', error);
+      if (error.response?.status === 404) return;
+      
       Toast.show({
         type: 'error',
         text1: 'Error',

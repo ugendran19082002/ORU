@@ -54,7 +54,8 @@ export default function CustomerProfileScreen() {
         router.replace('/onboarding/customer');
       }
     } catch (error: any) {
-      console.error('[Onboarding] Profile Error:', error);
+      if (error.response?.status === 404) return;
+      
       Toast.show({
         type: 'error',
         text1: 'Error',

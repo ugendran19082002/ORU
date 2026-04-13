@@ -64,7 +64,7 @@ export default function ShopVerificationScreen() {
         else setShopPhoto(result.assets[0].uri);
       }
     } catch (err) {
-      console.error('[Verification] Pick Error:', err);
+      // Silent error for image picker
     }
   };
 
@@ -99,6 +99,8 @@ export default function ShopVerificationScreen() {
 
       router.replace('/onboarding/shop');
     } catch (error: any) {
+      if (error.response?.status === 404) return;
+      
       Toast.show({
         type: 'error',
         text1: 'Upload Error',

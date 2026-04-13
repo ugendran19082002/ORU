@@ -65,8 +65,10 @@ export default function CustomerLocationScreen() {
         setRegion(prev => ({ ...prev, ...newCoords }));
         setMarker(newCoords);
         reverseGeocode(newCoords.latitude, newCoords.longitude);
-      } catch (error) {
-        console.error('[Location] Initial Fetch Error:', error);
+      } catch (error: any) {
+        if (error.response?.status === 404) return;
+        // Silent error for location or show toast if critical? 
+        // User said 404 is not error.
       } finally {
         setLocating(false);
       }
@@ -107,11 +109,12 @@ export default function CustomerLocationScreen() {
         router.replace('/onboarding/customer');
       }
     } catch (error: any) {
-      console.error('[Onboarding] Location Save Error:', error);
+      if (error.response?.status === 404) return;
+
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: 'Failed to save your location. Please try again.'
+        text2: error.response?.data?.message || 'Failed to save your location. Please try again.'
       });
     } finally {
       setLoading(false);

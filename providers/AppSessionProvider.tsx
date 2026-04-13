@@ -470,7 +470,7 @@ export function AppRouteGuard() {
           hasRedirected = true;
           return;
         }
-        console.log(`🛡️ [Guard] ${reason}: Redirecting to ${target}`);
+        console.log(`🛡️ [Guard] Redirecting to ${target} | Reason: ${reason} | Role: ${user?.role} | Status: ${user?.shopStatus || 'none'}`);
         lastRedirectRef.current = target;
         hasRedirected = true;
         router.replace(target as any);

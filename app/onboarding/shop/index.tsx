@@ -35,9 +35,14 @@ export default function ShopOnboardingDashboard() {
       setLoading(true);
 
       // 1. Dynamic Shop Discovery
-      const shopRes = await onboardingApi.getMerchantShop();
-      const shop = shopRes.data;
-      const shopId = shop?.id;
+      let shopId = null;
+      try {
+        const shopRes = await onboardingApi.getMerchantShop();
+        if (shopRes.data) shopId = shopRes.data.id;
+      } catch (err: any) {
+        // 404 means no shop yet, which is fine, we continue to get steps (null shopId)
+        if (err.response?.status !== 404) throw err; 
+      }
       
       // 2. Fetch steps (backend now handles null shopId by returning default pending steps)
       const res = await onboardingApi.getShopSteps(shopId);
@@ -51,7 +56,7 @@ export default function ShopOnboardingDashboard() {
         }
       }
     } catch (error: any) {
-      console.error('[Shop Onboarding] Fetch error:', error);
+      if (error.response?.status === 404) return;
       
       if (error.response?.status === 403) {
         Toast.show({
@@ -106,7 +111,8 @@ export default function ShopOnboardingDashboard() {
         router.replace('/onboarding/shop/waitlist');
       }
     } catch (error: any) {
-      console.error('[Resubmit] Error:', error);
+      if (error.response?.status === 404) return;
+      
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -141,7 +147,6 @@ export default function ShopOnboardingDashboard() {
                 router.replace('/auth/role');
               }
             } catch (error: any) {
-              console.error('[Role Reset] Error:', error);
               Toast.show({
                 type: 'error',
                 text1: 'Reset Failed',

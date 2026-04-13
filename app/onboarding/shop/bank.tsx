@@ -57,8 +57,6 @@ export default function ShopBankDetailsScreen() {
       } catch (err: any) {
         if (err.response?.status === 404) {
           router.replace('/onboarding/shop/basic-details');
-        } else {
-          console.error('[Bank Details] ID Resolution Error:', err);
         }
       } finally {
         setFetchingShop(false);
@@ -78,7 +76,7 @@ export default function ShopBankDetailsScreen() {
         setStatementFile(file);
       }
     } catch (err) {
-      console.error('[Bank Details] Pick Error:', err);
+      // Silent error for document picker
     }
   };
 
@@ -129,7 +127,8 @@ export default function ShopBankDetailsScreen() {
         router.replace('/onboarding/shop');
       }
     } catch (error: any) {
-      console.error('[Bank Details] Save Error:', error);
+      if (error.response?.status === 404) return;
+      
       Toast.show({
         type: 'error',
         text1: 'Error',

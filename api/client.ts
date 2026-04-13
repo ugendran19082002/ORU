@@ -58,20 +58,20 @@ apiClient.interceptors.response.use(
     const startTime = (error.config as any)?.metadata?.startTime;
     const duration = startTime ? new Date().getTime() - startTime.getTime() : 'unknown';
 
-    const isExpected404 = error.response?.status === 404;
-    const logMethod = isExpected404 ? console.warn : console.error;
+    const is404 = error.response?.status === 404;
+    const is401 = error.response?.status === 401;
 
-    logMethod(`\n${isExpected404 ? '⚠️' : '❌'} [API ${isExpected404 ? 'Info' : 'Error'}] ${error.response?.status || 'Network'} ${error.config?.url} (${duration}ms)`);
-    if (error.response) {
-      if (!isExpected404) {
-        logMethod(`📃 Headers:`, JSON.stringify(error.response.headers, null, 2));
-        logMethod(`📥 Data:`, JSON.stringify(error.response.data, null, 2));
+    // Only log real errors, ignore 404 as requested
+    if (!is404) {
+      console.error(`\n❌ [API Error] ${error.response?.status || 'Network'} ${error.config?.url} (${duration}ms)`);
+      if (error.response) {
+         // Silencing headers/data logs for general cleaner feedback
+      } else {
+        console.error(`‼️ Message:`, error.message);
       }
-    } else {
-      console.error(`‼️ Message:`, error.message);
     }
 
-    if (error.response?.status === 401) {
+    if (is401) {
       console.error('[API] Unauthorized entry detected. Purging session storage.');
       
       // 1. Reactive Store Cleanup
