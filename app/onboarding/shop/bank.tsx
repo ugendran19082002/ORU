@@ -52,11 +52,11 @@ export default function ShopBankDetailsScreen() {
             });
           }
         } else {
-          router.replace('/onboarding/shop/create');
+          router.replace('/onboarding/shop/basic-details');
         }
       } catch (err: any) {
         if (err.response?.status === 404) {
-          router.replace('/onboarding/shop/create');
+          router.replace('/onboarding/shop/basic-details');
         } else {
           console.error('[Bank Details] ID Resolution Error:', err);
         }

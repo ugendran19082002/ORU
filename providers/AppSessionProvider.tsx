@@ -48,6 +48,7 @@ type SessionContextValue = {
   signOut: () => Promise<void>;
   updateUser: (data: Partial<AppUser>) => Promise<void>;
   refreshShopStatus: () => Promise<void>;
+  syncSession: (providedUser?: any) => Promise<void>;
   emergencyReset: () => Promise<void>;
   nextStep: any;
   isSyncingShop: boolean;
@@ -134,7 +135,7 @@ export function AppSessionProvider({
   // MERCHANT STATUS SYNC
   const refreshShopStatus = async () => {
     if (!user || user.role !== "shop_owner") return;
-    if (isSyncingShop) return; // Prevent "double time" calls
+    if (isSyncingShop) return;
     
     setIsSyncingShop(true);
     try {
@@ -147,7 +148,6 @@ export function AppSessionProvider({
           adminNotes: res.data.admin_notes,
         };
         setUser(nextUser);
-        // Persist to storage so status survives navigation
         await writeSession({
             user: nextUser,
             access_token: accessToken,
@@ -169,9 +169,42 @@ export function AppSessionProvider({
             biometricEnabled,
             nextStep
         });
-      } else {
-        console.error("[Session] Refresh Shop Status Error:", err);
       }
+    } finally {
+      setIsSyncingShop(false);
+    }
+  };
+  
+  const syncSession = async (providedUser?: any) => {
+    setIsSyncingShop(true);
+    try {
+      let freshUser = providedUser;
+      if (!freshUser) {
+          const res = await apiClient.get('/auth/me');
+          freshUser = res.data.data;
+      }
+      
+      if (freshUser) {
+          const nextUser = {
+              ...(user || {}),
+              ...freshUser,
+              shopStatus: freshUser.shop_status || freshUser.shopStatus || 'none',
+              onboardingStatus: freshUser.onboarding_status || freshUser.onboardingStatus || 'none'
+          } as AppUser;
+
+          setUser(nextUser);
+          await writeSession({
+            user: nextUser,
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            preferredRole: nextUser.role as AppRole,
+            biometricEnabled,
+            nextStep
+          });
+          console.log(`🛡️ [Session] Sync complete. User role is now: ${nextUser.role}`);
+      }
+    } catch (err) {
+      console.error("[Session] Sync Error:", err);
     } finally {
       setIsSyncingShop(false);
     }
@@ -335,6 +368,7 @@ export function AppSessionProvider({
         }
       },
       refreshShopStatus,
+      syncSession,
       emergencyReset,
     }),
     [accessToken, refreshToken, biometricEnabled, isBiometricVerified, isLocationVerified, isHydrated, preferredRole, status, user, nextStep, isSyncingShop]

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView, TextInput
+  KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView, TextInput,
+  Image
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,13 +13,13 @@ import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
-import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
+import { ExpoMap, ExpoMarker } from "@/components/maps/ExpoMap";
+import { useRef, useEffect } from "react";
 
 export default function ShopBasicDetailsScreen() {
   const router = useRouter();
   const { user, refreshShopStatus } = useAppSession();
-  const { handleAuthBack } = useLogoutBackHandler();
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
   const [locating, setLocating] = useState(false);
@@ -32,8 +33,24 @@ export default function ShopBasicDetailsScreen() {
     shop_type: 'individual' as any,
     address_line1: '',
     city: '',
-    latitude: null as number | null,
-    longitude: null as number | null,
+    latitude: 28.6139 as number | null, // Default New Delhi
+    longitude: 77.2090 as number | null,
+  });
+
+  // Map & Search States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [accuracy, setAccuracy] = useState<number | null>(null);
+  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'terrain'>('terrain');
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+  const mapRef = useRef<any>(null);
+
+  const [region, setRegion] = useState({
+    latitude: 28.6139,
+    longitude: 77.2090,
+    latitudeDelta: 0.005,
+    longitudeDelta: 0.005,
   });
 
   // 1. Resolve actual Shop ID & Mode
@@ -45,6 +62,9 @@ export default function ShopBasicDetailsScreen() {
           setShopId(res.data.id);
           setMode('UPDATE');
           // Pre-fill existing data
+          const lat = res.data.latitude || 28.6139;
+          const lng = res.data.longitude || 77.2090;
+
           setFormData(p => ({
             ...p,
             name: res.data.name || '',
@@ -53,11 +73,20 @@ export default function ShopBasicDetailsScreen() {
             shop_type: res.data.shop_type || 'individual',
             address_line1: res.data.address_line1 || '',
             city: res.data.city || '',
-            latitude: res.data.latitude || null,
-            longitude: res.data.longitude || null,
+            latitude: lat,
+            longitude: lng,
           }));
+
+          setRegion({
+            latitude: lat,
+            longitude: lng,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005,
+          });
         } else {
           setMode('CREATE');
+          // Start fetching location for new user immediately
+          handleGetCurrentLocation();
         }
       } catch (err: any) {
         if (err.response?.status === 404) {
@@ -71,26 +100,133 @@ export default function ShopBasicDetailsScreen() {
     })();
   }, []);
 
-  const handleGetCurrentLocation = async () => {
+  // --- PORTED SEARCH & MAP LOGIC ---
+
+  const performSearch = async (query: string) => {
+    if (query.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+    setIsSearching(true);
     try {
-      setLocating(true);
+      const photonRes = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`);
+      const photonData = await photonRes.json();
+      if (photonData.features) {
+        setSuggestions(photonData.features.map((f: any) => ({
+          title: f.properties.name || f.properties.street || "Location",
+          subtitle: [f.properties.city, f.properties.state].filter(Boolean).join(", "),
+          address: f.properties.name ? (f.properties.name + ", " + (f.properties.city || "")) : f.properties.street,
+          lat: f.geometry.coordinates[1],
+          lng: f.geometry.coordinates[0],
+        })));
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSelectSuggestion = (item: any) => {
+    setFormData(p => ({
+      ...p,
+      address_line1: item.address || item.title,
+      latitude: item.lat,
+      longitude: item.lng,
+      city: item.subtitle?.split(',')[0]?.trim() || p.city
+    }));
+    const newRegion = {
+      latitude: item.lat,
+      longitude: item.lng,
+      latitudeDelta: 0.005,
+      longitudeDelta: 0.005,
+    };
+    setRegion(newRegion);
+    mapRef.current?.animateToRegion(newRegion, 1000);
+    setSearchQuery(item.title); // Sync search bar with selection
+    setSuggestions([]);
+  };
+
+  const handleMarkerDragEnd = async (coords: { latitude: number; longitude: number }) => {
+    const { latitude, longitude } = coords;
+    setFormData(p => ({ ...p, latitude, longitude }));
+    
+    // Reverse Geocode
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=18&addressdetails=1`,
+        { headers: { 'User-Agent': 'ThanniGoApp/1.0' } }
+      );
+      const data = await res.json();
+      if (data?.address) {
+        const a = data.address;
+        const parts = [
+          a.road || a.pedestrian || a.neighbourhood,
+          a.suburb || a.quarter,
+          a.city || a.town || a.village || a.county,
+        ].filter(Boolean);
+        const addr = parts.join(', ');
+        setFormData(p => ({ ...p, address_line1: addr, city: a.city || a.town || p.city }));
+        setSearchQuery(addr); // Sync search bar with pin movement
+      }
+    } catch (e) {
+      console.warn('Reverse Geocode failed', e);
+    }
+  };
+
+  const handleGetCurrentLocation = async () => {
+    setLocating(true);
+    setAccuracy(null);
+    try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Toast.show({ type: 'error', text1: 'Permission denied', text2: 'Location access is required for GPS coordinates.' });
+      if (status !== "granted") {
+        Toast.show({ type: 'info', text1: 'Permission', text2: 'Location required for precise setup.' });
+        setLocating(false);
         return;
       }
 
-      const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      setFormData(p => ({
-        ...p,
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      }));
-      Toast.show({ type: 'success', text1: 'Location Captured', text2: `Lat: ${location.coords.latitude.toFixed(4)}, Lng: ${location.coords.longitude.toFixed(4)}` });
-    } catch (error) {
-      console.error('[Location Error]', error);
-      Toast.show({ type: 'error', text1: 'Location Error', text2: 'Could not fetch your current coordinates.' });
-    } finally {
+      let best: Location.LocationObject | null = null;
+      let count = 0;
+
+      const watcher = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          timeInterval: 500,
+          distanceInterval: 0,
+        },
+        (loc) => {
+          count++;
+          const currentAcc = loc.coords.accuracy ?? 1000;
+          const bestAcc = best?.coords.accuracy ?? 1000;
+
+          if (!best || currentAcc < bestAcc) {
+            best = loc;
+            setAccuracy(loc.coords.accuracy);
+            const newRegion = {
+              latitude: loc.coords.latitude,
+              longitude: loc.coords.longitude,
+              latitudeDelta: 0.005,
+              longitudeDelta: 0.005,
+            };
+            setRegion(newRegion);
+            mapRef.current?.animateToRegion(newRegion, 500);
+            setFormData(p => ({ ...p, latitude: loc.coords.latitude, longitude: loc.coords.longitude }));
+          }
+
+          if (count > 8 || currentAcc < 15) {
+             watcher.remove();
+             setLocating(false);
+             handleMarkerDragEnd({ latitude: best!.coords.latitude, longitude: best!.coords.longitude });
+          }
+        }
+      );
+
+      setTimeout(() => {
+        watcher.remove();
+        setLocating(false);
+      }, 6000);
+
+    } catch (err) {
       setLocating(false);
     }
   };
@@ -159,9 +295,8 @@ export default function ShopBasicDetailsScreen() {
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <View style={styles.header}>
               <BackButton 
-                fallback={mode === 'CREATE' ? "/auth/role" : "/onboarding/shop"} 
+                fallback="/onboarding/shop" 
                 style={{ marginBottom: 16 }} 
-                onPress={mode === 'CREATE' ? handleAuthBack : undefined} 
               />
               <Text style={styles.title}>{mode === 'CREATE' ? 'Register Your Shop' : 'Basic Details'}</Text>
               <Text style={styles.subtitle}>
@@ -244,38 +379,111 @@ export default function ShopBasicDetailsScreen() {
                   </View>
                 </View>
 
-                {/* Shop Address */}
+                {/* Shop Address Search */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Shop Address</Text>
+                  <Text style={styles.label}>Search Area / Landmark</Text>
+                  <View style={styles.inputWrap}>
+                    <Ionicons name="search-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Search to pin on map..."
+                      value={searchQuery}
+                      onChangeText={(t) => {
+                        setSearchQuery(t);
+                        if (searchTimeout.current) clearTimeout(searchTimeout.current);
+                        searchTimeout.current = setTimeout(() => performSearch(t), 500) as any;
+                      }}
+                    />
+                    {isSearching && <ActivityIndicator size="small" color="#006878" />}
+                  </View>
+                </View>
+
+                {/* Search Suggestions */}
+                {suggestions.length > 0 && (
+                  <View style={styles.suggestionsList}>
+                    {suggestions.map((item, idx) => (
+                      <TouchableOpacity key={idx} style={styles.suggestionItem} onPress={() => handleSelectSuggestion(item)}>
+                        <Ionicons name="location-outline" size={18} color="#64748b" />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.suggestionTitle}>{item.title}</Text>
+                          <Text style={styles.suggestionSub} numberOfLines={1}>{item.subtitle}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
+                {/* Map Preview */}
+                <View style={styles.mapContainer}>
+                  <ExpoMap
+                    ref={mapRef}
+                    style={styles.mapView}
+                    initialRegion={region}
+                    onRegionChangeComplete={setRegion}
+                    showsUserLocation
+                    markerTitle="Your Shop Location"
+                    mapType={mapType}
+                    draggable
+                    onMarkerDragEnd={(coords) => handleMarkerDragEnd(coords)}
+                  >
+                    <ExpoMarker
+                      coordinate={{ latitude: formData.latitude!, longitude: formData.longitude! }}
+                      draggable
+                      onDragEnd={(e: any) => handleMarkerDragEnd(e.nativeEvent.coordinate)}
+                      pinColor="#006878"
+                      title="Shop Location"
+                    />
+                  </ExpoMap>
+
+                  {/* Drag/Tap Hint Overlay */}
+                  {!locating && !isSearching && suggestions.length === 0 && (
+                    <View style={styles.mapHint}>
+                      <Ionicons name="hand-right-outline" size={14} color="white" />
+                      <Text style={styles.mapHintText}>Tap or Drag to Position Pin</Text>
+                    </View>
+                  )}
+
+                  {/* High Accuracy Overlay */}
+                  {accuracy !== null && (
+                    <View style={styles.accuracyOverlay}>
+                      <View style={[styles.accuracyTag, { backgroundColor: accuracy < 20 ? 'rgba(16, 185, 129, 0.9)' : 'rgba(245, 158, 11, 0.9)' }]}>
+                        <View style={styles.accuracyDot} />
+                        <Text style={styles.accuracyLabel}>GPS: ±{Math.round(accuracy)}m</Text>
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Map Actions */}
+                  <View style={styles.mapControls}>
+                    <TouchableOpacity 
+                      style={styles.mapActionBtn} 
+                      onPress={() => {
+                        const types: any[] = ['standard', 'satellite', 'terrain'];
+                        setMapType(types[(types.indexOf(mapType) + 1) % 3]);
+                      }}
+                    >
+                      <Ionicons name={mapType === 'satellite' ? 'images' : 'map'} size={20} color="#005d90" />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity style={styles.mapActionBtn} onPress={handleGetCurrentLocation} disabled={locating}>
+                      {locating ? <ActivityIndicator size="small" color="#005d90" /> : <Ionicons name="locate" size={20} color="#005d90" />}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Shop Address Display (Auto-filled by Map or Manual) */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Shop Address (Auto-filled by map/search)</Text>
                   <View style={[styles.inputWrap, styles.textAreaWrap]}>
                     <TextInput
                       style={[styles.input, styles.textArea]}
-                      placeholder="Street name, landmark..."
+                      placeholder="Verified address will appear here..."
                       value={formData.address_line1}
                       onChangeText={(v) => setFormData(p => ({ ...p, address_line1: v }))}
                       multiline
                       numberOfLines={3}
                     />
                   </View>
-                </View>
-
-                {/* GPS Location */}
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>GPS Location</Text>
-                  <TouchableOpacity onPress={handleGetCurrentLocation} disabled={locating}>
-                    <View style={[styles.inputWrap, formData.latitude && { borderColor: '#10b981', backgroundColor: '#f0fdf4' }] as any}>
-                      <Ionicons name="location-outline" size={20} color={formData.latitude ? "#10b981" : "#94a3b8"} style={styles.inputIcon} />
-                      <Text style={[styles.input, { color: formData.latitude ? '#065f46' : '#94a3b8', paddingTop: 18 }]}>
-                        {locating ? 'Fetching Location...' : formData.latitude ? 'Location Captured ✓' : 'Tap to capture GPS location'}
-                      </Text>
-                      {locating && <ActivityIndicator size="small" color="#006878" />}
-                    </View>
-                  </TouchableOpacity>
-                  {formData.latitude && (
-                    <Text style={styles.coordsLabel}>
-                      {formData.latitude.toFixed(6)}, {formData.longitude?.toFixed(6)}
-                    </Text>
-                  )}
                 </View>
 
               </View>
@@ -341,6 +549,103 @@ const styles = StyleSheet.create({
   typeBtnActive: { backgroundColor: '#006878', borderColor: '#006878' },
   typeText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
   typeTextActive: { color: 'white' },
+
+  // Location Selector Styles
+  suggestionsList: {
+    backgroundColor: 'white',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginTop: -8,
+    marginBottom: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    alignItems: 'center',
+    gap: 12,
+  },
+  suggestionTitle: { fontSize: 14, fontWeight: '700', color: '#1e293b' },
+  suggestionSub: { fontSize: 12, color: '#64748b', marginTop: 2 },
+
+  mapContainer: {
+    height: 220,
+    borderRadius: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 8,
+    position: 'relative',
+  },
+  mapView: { flex: 1 },
+  mapControls: {
+    position: 'absolute',
+    right: 12,
+    top: 12,
+    gap: 8,
+  },
+  mapActionBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  accuracyOverlay: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+  },
+  accuracyTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    gap: 6,
+  },
+  accuracyDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'white',
+  },
+  accuracyLabel: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: '900',
+  },
+  mapHint: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  mapHintText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: '700',
+  },
   
   coordsLabel: { fontSize: 12, color: '#94a3b8', marginLeft: 4, marginTop: -4 },
   footer: { padding: 32 },

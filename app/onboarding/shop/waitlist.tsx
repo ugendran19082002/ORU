@@ -10,14 +10,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
-import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
 
 export default function ShopWaitlistScreen() {
   const router = useRouter();
   const { user, signOut } = useAppSession();
-  const { handleAuthBack } = useLogoutBackHandler();
   const [shop, setShop] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -138,9 +136,8 @@ export default function ShopWaitlistScreen() {
           <View style={styles.header}>
             <View style={{ position: 'absolute', left: 0, top: 0 }}>
               <BackButton 
-                fallback="/auth/role" 
+                fallback="/onboarding/shop" 
                 variant="transparent" 
-                onPress={handleAuthBack}
               />
             </View>
             <Logo size="lg" />

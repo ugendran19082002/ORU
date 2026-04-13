@@ -11,7 +11,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
-import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
 
 const SHOP_TYPES = [
@@ -26,7 +25,6 @@ const SHOP_TYPES = [
 export default function ShopBusinessInfoScreen() {
   const router = useRouter();
   const { user, status } = useAppSession();
-  const { handleAuthBack } = useLogoutBackHandler();
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
   const [shopId, setShopId] = useState<number | null>(null);
@@ -51,11 +49,11 @@ export default function ShopBusinessInfoScreen() {
             business_experience: res.data.business_experience || '',
           }));
         } else {
-          router.replace('/onboarding/shop/create');
+          router.replace('/onboarding/shop/basic-details');
         }
       } catch (err: any) {
         if (err.response?.status === 404) {
-          router.replace('/onboarding/shop/create');
+          router.replace('/onboarding/shop/basic-details');
         }
       } finally {
         setFetchingShop(false);
@@ -95,7 +93,7 @@ export default function ShopBusinessInfoScreen() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <View style={styles.header}>
-              <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} onPress={handleAuthBack} />
+              <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} />
               <Text style={styles.title}>Business Info</Text>
               <Text style={styles.subtitle}>Help us categorize your business and verify your experience.</Text>
             </View>

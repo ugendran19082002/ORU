@@ -40,7 +40,7 @@ export default function ShopRejectedScreen() {
           {/* HEADER */}
           <View style={styles.header}>
             <View style={{ position: 'absolute', left: 0, top: 0 }}>
-              <BackButton fallback="/auth/role" variant="transparent" />
+              <BackButton fallback="/onboarding/shop" variant="transparent" />
             </View>
             <Logo size="lg" />
             <Text style={styles.brandName}>ThanniGo</Text>

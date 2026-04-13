@@ -66,10 +66,18 @@ export const authApi = {
   },
 
   /**
+   * Get current user profile (using current token)
+   */
+  getMe: async (): Promise<{ status: number; data: any }> => {
+    const response = await apiClient.get('/auth/me');
+    return response.data;
+  },
+
+  /**
    * Reset user role and erase all data
    */
-  resetRole: async (): Promise<{ status: number; message: string }> => {
-    const response = await apiClient.post<{ status: number; message: string }>('/auth/reset-role');
+  resetRole: async (): Promise<{ status: number; message: string; data: any }> => {
+    const response = await apiClient.post<{ status: number; message: string; data: any }>('/auth/reset-role');
     return response.data;
   },
 };

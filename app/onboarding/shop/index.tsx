@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, RefreshControl
+  ActivityIndicator, RefreshControl, Alert
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,14 +14,14 @@ import { authApi } from '@/api/authApi';
 import type { OnboardingStatus } from '@/types/onboarding';
 import { useAppSession } from '@/hooks/use-app-session';
 import { BackButton } from '@/components/ui/BackButton';
-import { RoleSwitchModal } from '@/components/modals/RoleSwitchModal';
+import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 
 export default function ShopOnboardingDashboard() {
   const router = useRouter();
-  const { user, updateUser, status, refreshShopStatus } = useAppSession();
+  const { user, updateUser, status, refreshShopStatus, syncSession } = useAppSession();
+  const { handleAuthBack } = useLogoutBackHandler();
   const [loading, setLoading] = useState(true);
   const [resubmitting, setResubmitting] = useState(false);
-  const [resetModalVisible, setResetModalVisible] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [data, setData] = useState<OnboardingStatus | null>(null);
 
@@ -35,25 +35,17 @@ export default function ShopOnboardingDashboard() {
       setLoading(true);
 
       // 1. Dynamic Shop Discovery
-      // We fetch the merchant's actual shop detail
       const shopRes = await onboardingApi.getMerchantShop();
       const shop = shopRes.data;
-
-      if (!shop) {
-        console.log('[Shop Onboarding] No shop data, redirecting to basic-details');
-        router.replace('/onboarding/shop/basic-details');
-        return;
-      }
-
-      const shopId = shop.id;
+      const shopId = shop?.id;
       
-      // 2. Fetch steps for the REAL shop ID
+      // 2. Fetch steps (backend now handles null shopId by returning default pending steps)
       const res = await onboardingApi.getShopSteps(shopId);
       if (res.status === 1) {
         setData(res.data);
 
         // If completed, update session and navigate
-        if (res.data.onboarding_completed) {
+        if (res.data.onboarding_completed && shopId) {
           await updateUser({ onboarding_completed: true });
           router.replace('/shop' as any);
         }
@@ -61,11 +53,7 @@ export default function ShopOnboardingDashboard() {
     } catch (error: any) {
       console.error('[Shop Onboarding] Fetch error:', error);
       
-      if (error.response?.status === 404) {
-        console.log('[Shop Onboarding] Shop not found (404), redirecting to basic-details');
-        router.replace('/onboarding/shop/basic-details');
-      } 
-      else if (error.response?.status === 403) {
+      if (error.response?.status === 403) {
         Toast.show({
           type: 'error',
           text1: 'Permission Denied',
@@ -73,6 +61,8 @@ export default function ShopOnboardingDashboard() {
         });
         router.replace('/auth/role');
       }
+      // If error is 404, we don't redirect anymore, we just let the empty state show
+      // though the backend now returns 200 with pending steps even if shop is null.
     } finally {
       setLoading(false);
     }
@@ -128,29 +118,42 @@ export default function ShopOnboardingDashboard() {
   };
 
   const handleRoleReset = async () => {
-    try {
-      setResetLoading(true);
-      const res = await authApi.resetRole();
-      if (res.status === 1) {
-        setResetModalVisible(false);
-        Toast.show({
-          type: 'success',
-          text1: 'Role Reset',
-          text2: 'Redirecting to role selection...'
-        });
-        await refreshShopStatus();
-        router.replace('/auth/role');
-      }
-    } catch (error: any) {
-      console.error('[Role Reset] Error:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Reset Failed',
-        text2: error.response?.data?.message || 'Could not reset role.'
-      });
-    } finally {
-      setResetLoading(false);
-    }
+    Alert.alert(
+      "Confirm Role Change",
+      "Are you sure you want to switch to a Customer account? All your current shop data, progress, and settings will be permanently deleted.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Yes, Reset & Switch", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setResetLoading(true);
+              const res = await authApi.resetRole();
+              if (res.status === 1) {
+                Toast.show({
+                  type: 'success',
+                  text1: 'Role Reset',
+                  text2: 'Redirecting to role selection...'
+                });
+                // Sync session with the fresh user data returned from reset
+                await syncSession(res.data);
+                router.replace('/auth/role');
+              }
+            } catch (error: any) {
+              console.error('[Role Reset] Error:', error);
+              Toast.show({
+                type: 'error',
+                text1: 'Reset Failed',
+                text2: error.response?.data?.message || 'Could not reset role.'
+              });
+            } finally {
+              setResetLoading(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   if (loading && !data) {
@@ -170,7 +173,7 @@ export default function ShopOnboardingDashboard() {
       <StatusBar style="dark" />
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <BackButton fallback="/auth/role" />
+          <BackButton fallback="/auth/role" onPress={handleAuthBack} />
           <View style={{ marginLeft: 16, flex: 1 }}>
             <Text style={styles.welcome}>Partner Onboarding</Text>
             <Text style={styles.subtitle}>Verify your business to start selling</Text>
@@ -183,7 +186,7 @@ export default function ShopOnboardingDashboard() {
         <View style={styles.roleSwitchTip}>
             <Ionicons name="help-circle-outline" size={16} color="#64748b" />
             <Text style={styles.roleSwitchText}>Wrong role?</Text>
-            <TouchableOpacity onPress={() => setResetModalVisible(true)}>
+            <TouchableOpacity onPress={handleRoleReset}>
                 <Text style={styles.roleSwitchLink}>Switch to Customer</Text>
             </TouchableOpacity>
         </View>
@@ -318,12 +321,6 @@ export default function ShopOnboardingDashboard() {
           )}
         </ScrollView>
 
-        <RoleSwitchModal 
-            visible={resetModalVisible}
-            onClose={() => setResetModalVisible(false)}
-            onConfirm={handleRoleReset}
-            loading={resetLoading}
-        />
       </SafeAreaView>
     </View>
   );

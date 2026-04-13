@@ -12,13 +12,11 @@ import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
-import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
 
 export default function ShopVerificationScreen() {
   const router = useRouter();
   const { user, status } = useAppSession();
-  const { handleAuthBack } = useLogoutBackHandler();
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
   const [shopId, setShopId] = useState<number | null>(null);
@@ -34,11 +32,11 @@ export default function ShopVerificationScreen() {
         if (res.data) {
           setShopId(res.data.id);
         } else {
-          router.replace('/onboarding/shop/create');
+          router.replace('/onboarding/shop/basic-details');
         }
       } catch (err: any) {
         if (err.response?.status === 404) {
-          router.replace('/onboarding/shop/create');
+          router.replace('/onboarding/shop/basic-details');
         }
       } finally {
         setFetchingShop(false);
@@ -118,7 +116,7 @@ export default function ShopVerificationScreen() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <View style={styles.header}>
-              <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} onPress={handleAuthBack} />
+              <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} />
               <Text style={styles.title}>Verification</Text>
               <Text style={styles.subtitle}>Upload your ID proof or a photo of your shop. This helps us verify your account faster.</Text>
             </View>

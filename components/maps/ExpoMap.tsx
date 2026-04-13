@@ -22,7 +22,7 @@ export interface ExpoMapProps {
   showsUserLocation?: boolean;
   /** Enables drag + tap-to-move on the primary pin */
   draggable?: boolean;
-  /** Called by Leaflet when user drags/taps the pin */
+  /** Called by Map/Leaflet when user drags or taps the map to move the pin */
   onMarkerDragEnd?: (coords: { latitude: number; longitude: number }) => void;
   /** Label shown on the primary marker popup */
   markerTitle?: string;
@@ -178,6 +178,11 @@ export const ExpoMap = forwardRef<any, ExpoMapProps>((props, ref) => {
       zoomControlEnabled={!props.hideControls && (props.zoomControlEnabled ?? true)}
       pitchEnabled={props.pitchEnabled ?? true}
       rotateEnabled={props.rotateEnabled ?? true}
+      onPress={(e: any) => {
+        if (draggable && onMarkerDragEnd) {
+          onMarkerDragEnd(e.nativeEvent.coordinate);
+        }
+      }}
     >
       {props.mapType === 'none' && (
         <UrlTile

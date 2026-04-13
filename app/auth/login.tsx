@@ -156,7 +156,7 @@ export default function LoginScreen() {
               onChangeText={(t) => setPhone(t.replace(/\D/g, "").slice(0, 10))}
               placeholder="98765 43210"
               placeholderTextColor="#bfc7d1"
-              keyboardType="phone-pad"
+              keyboardType="number-pad"
               maxLength={10}
               autoFocus
             />

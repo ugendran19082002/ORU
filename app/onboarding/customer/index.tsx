@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, RefreshControl
+  ActivityIndicator, RefreshControl, Alert
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { onboardingApi } from '@/api/onboardingApi';
+import { authApi } from '@/api/authApi';
 import type { OnboardingStatus } from '@/types/onboarding';
 import { useAppSession } from '@/hooks/use-app-session';
 import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
@@ -17,9 +18,10 @@ import { BackButton } from '@/components/ui/BackButton';
 
 export default function CustomerOnboardingScreen() {
   const router = useRouter();
-  const { user, updateUser, status } = useAppSession();
+  const { user, updateUser, status, syncSession } = useAppSession();
   const { handleAuthBack } = useLogoutBackHandler();
   const [loading, setLoading] = useState(true);
+  const [resetLoading, setResetLoading] = useState(false);
   const [data, setData] = useState<OnboardingStatus | null>(null);
 
   // 0. Component Bouncer - prevent incorrect roles from hitting these APIs
@@ -75,6 +77,44 @@ export default function CustomerOnboardingScreen() {
     }
   };
 
+  const handleRoleReset = async () => {
+    Alert.alert(
+      "Confirm Role Change",
+      "Are you sure you want to switch to a Partner account? This will reset your current progress as a customer.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Yes, Reset & Switch", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setResetLoading(true);
+              const res = await authApi.resetRole();
+              if (res.status === 1) {
+                Toast.show({
+                  type: 'success',
+                  text1: 'Role Reset',
+                  text2: 'Redirecting to role selection...'
+                });
+                await syncSession(res.data);
+                router.replace('/auth/role');
+              }
+            } catch (error: any) {
+              console.error('[Role Reset] Error:', error);
+              Toast.show({
+                type: 'error',
+                text1: 'Reset Failed',
+                text2: error.response?.data?.message || 'Could not reset role.'
+              });
+            } finally {
+              setResetLoading(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   if (loading && !data) {
     return (
       <View style={styles.loadingContainer}>
@@ -99,6 +139,14 @@ export default function CustomerOnboardingScreen() {
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{user?.name?.charAt(0) || 'U'}</Text>
           </View>
+        </View>
+        
+        <View style={styles.roleSwitchTip}>
+            <Ionicons name="help-circle-outline" size={16} color="#64748b" />
+            <Text style={styles.roleSwitchText}>Wrong role?</Text>
+            <TouchableOpacity onPress={handleRoleReset} disabled={resetLoading}>
+                <Text style={styles.roleSwitchLink}>Switch to Partner</Text>
+            </TouchableOpacity>
         </View>
 
         {/* PROGRESS CARD */}
@@ -232,6 +280,20 @@ const styles = StyleSheet.create({
   stepAction: { marginLeft: 8 },
 
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 20 },
-  footerText: { fontSize: 12, color: '#94a3b8', fontWeight: '500' }
+  footerText: { fontSize: 12, color: '#94a3b8', fontWeight: '500' },
+
+  roleSwitchTip: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 6, 
+    marginHorizontal: 24, 
+    marginBottom: 16, 
+    backgroundColor: '#f1f5f9', 
+    paddingHorizontal: 16, 
+    paddingVertical: 10, 
+    borderRadius: 14 
+  },
+  roleSwitchText: { fontSize: 13, color: '#64748b', fontWeight: '500' },
+  roleSwitchLink: { fontSize: 13, color: '#005d90', fontWeight: '800', textDecorationLine: 'underline' }
 });
 

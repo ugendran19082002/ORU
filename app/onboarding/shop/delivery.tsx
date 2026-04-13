@@ -11,13 +11,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
-import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
 
 export default function ShopDeliveryConfigScreen() {
   const router = useRouter();
   const { user, status } = useAppSession();
-  const { handleAuthBack } = useLogoutBackHandler();
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
   const [shopId, setShopId] = useState<number | null>(null);
@@ -30,11 +28,11 @@ export default function ShopDeliveryConfigScreen() {
         if (res.data) {
           setShopId(res.data.id);
         } else {
-          router.replace('/onboarding/shop/create');
+          router.replace('/onboarding/shop/basic-details');
         }
       } catch (err: any) {
         if (err.response?.status === 404) {
-          router.replace('/onboarding/shop/create');
+          router.replace('/onboarding/shop/basic-details');
         }
       } finally {
         setFetchingShop(false);
@@ -70,7 +68,7 @@ export default function ShopDeliveryConfigScreen() {
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
-            <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} onPress={handleAuthBack} />
+            <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} />
             <Text style={styles.title}>Delivery Flow</Text>
             <Text style={styles.subtitle}>Configure how orders reach your customers. Currently, ThanniGo supports shop-managed self-delivery.</Text>
           </View>

@@ -23,6 +23,9 @@ export const RoleSwitchModal: React.FC<Props> = ({ visible, onClose, onConfirm, 
       onRequestClose={onClose}
     >
       <Pressable style={styles.overlay} onPress={loading ? undefined : onClose}>
+        {/* Safe Fallback Background (in case BlurView fails to load) */}
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.6)' }]} />
+        
         <BlurView intensity={30} style={StyleSheet.absoluteFill} tint="dark" />
         
         <View style={styles.container}>

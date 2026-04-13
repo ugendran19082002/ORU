@@ -102,7 +102,7 @@ export default function RoleSelectScreen() {
         // 3. Navigation - Guard will take care of final routing,
         // but we expedite here for better UX
         if (selectedRole === "shop_owner") {
-          router.replace("/onboarding/shop/create" as any);
+          router.replace("/onboarding/shop" as any);
         } else {
           router.replace("/onboarding/customer" as any);
         }

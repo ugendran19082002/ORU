@@ -11,13 +11,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
-import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
 
 export default function ShopProductsScreen() {
   const router = useRouter();
   const { user, status } = useAppSession();
-  const { handleAuthBack } = useLogoutBackHandler();
   
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
@@ -102,7 +100,7 @@ export default function ShopProductsScreen() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
-              <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} onPress={handleAuthBack} />
+              <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} />
               <Text style={styles.title}>Inventory Setup</Text>
               <Text style={styles.subtitle}>Select categories and add products. Admin-controlled price ranges ensure fair market rates.</Text>
             </View>
