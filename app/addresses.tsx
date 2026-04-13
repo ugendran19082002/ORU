@@ -23,6 +23,7 @@ import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ExpoMap, ExpoMarker } from "@/components/maps/ExpoMap";
 import { safeNavigate } from "@/utils/safeNavigation";
+import { addressApi } from "@/api/addressApi";
 
 /**
  * PRODUCTION DEBUG HELPER: Validate coordinates before use
@@ -49,55 +50,24 @@ type Region = {
   longitudeDelta: number;
 };
 
-type AddressType = "Home" | "Office" | "Recent" | "Other";
-
 type Address = {
-  id: string;
-  type: AddressType;
-  title: string;
-  fullAddress: string;
-  isFavorite: boolean;
-  isDefault: boolean;
-  lat: number;
-  lng: number;
+  id: string | number;
+  label: string;
+  recipient_name?: string;
+  address_line1: string;
+  address_line2?: string;
+  city: string;
+  pincode: string;
+  latitude: number;
+  longitude: number;
+  is_default: boolean;
+  delivery_instructions?: string;
 };
-
-const INITIAL_ADDRESSES: Address[] = [
-  {
-    id: "1",
-    type: "Home",
-    title: "Home",
-    fullAddress: "82nd Floor, Azure Heights, Cyber City, Sector 56...",
-    isFavorite: true,
-    isDefault: true,
-    lat: 28.4595,
-    lng: 77.0266,
-  },
-  {
-    id: "2",
-    type: "Office",
-    title: "Office",
-    fullAddress: "Floor 12, Tech Park Central, Sector 44...",
-    isFavorite: false,
-    isDefault: false,
-    lat: 28.4411,
-    lng: 77.0526,
-  },
-  {
-    id: "3",
-    type: "Recent",
-    title: "Grand Hotel Lobby",
-    fullAddress: "Main St, Near City Square fountain...",
-    isFavorite: false,
-    isDefault: false,
-    lat: 28.468,
-    lng: 77.063,
-  },
-];
 
 export default function AddressesScreen() {
   const router = useRouter();
-  const [addresses, setAddresses] = useState<Address[]>(INITIAL_ADDRESSES);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,9 +77,10 @@ export default function AddressesScreen() {
 
   // Add / Edit Address State
   const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | number | null>(null);
   const [deliveryInstructions, setDeliveryInstructions] = useState("");
-  const [newType, setNewType] = useState<AddressType>("Home");
+  const [recipientName, setRecipientName] = useState("");
+  const [newType, setNewType] = useState<string>("Home");
   const [newTitle, setNewTitle] = useState("");
 
   const [formFlat, setFormFlat] = useState("");
@@ -131,6 +102,7 @@ export default function AddressesScreen() {
   const mapRef = useRef<any>(null);
 
   useEffect(() => {
+    fetchAddresses();
     setGlobalLocationListener((coords) => {
       console.log('=== [ADDRESSES GLOBAL LISTENER] Map Selected ===', coords);
       setCurrentLat(coords.lat);
@@ -141,10 +113,44 @@ export default function AddressesScreen() {
         latitudeDelta: 0.005,
         longitudeDelta: 0.005,
       });
-      // Optionally trigger reverse geocode here if needed
     });
     return () => clearGlobalLocationListener();
   }, []);
+
+  const fetchAddresses = async () => {
+    try {
+      setIsLoading(true);
+      const res = await addressApi.getAddresses();
+      if (res.data?.status === 1) {
+        const fetchedAddresses = res.data.data;
+        setAddresses(fetchedAddresses);
+
+        // REQUIREMENT: Centering map on default address
+        const defaultAddr = fetchedAddresses.find((a: Address) => a.is_default);
+        if (defaultAddr) {
+          const lat = Number(defaultAddr.latitude);
+          const lng = Number(defaultAddr.longitude);
+          setCurrentLat(lat);
+          setCurrentLng(lng);
+          const newRegion = {
+            latitude: lat,
+            longitude: lng,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005,
+          };
+          setRegion(newRegion);
+          // If mapRef is ready, animate to it
+          if (mapRef.current?.animateToRegion) {
+            mapRef.current.animateToRegion(newRegion, 1000);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("[Addresses] Fetch Error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const clearForm = () => {
     setIsAdding(false);
@@ -153,6 +159,7 @@ export default function AddressesScreen() {
     setFormFlat("");
     setDeliveryInstructions("");
     setFormLandmark("");
+    setRecipientName("");
     setNewType("Home");
     setNewTitle("");
     setIsNewDefault(false);
@@ -396,120 +403,83 @@ export default function AddressesScreen() {
     }
   };
 
-  const saveAddress = () => {
-    console.log('=== [WAY 2: MANUAL/CONFIRM SAVE] ===');
-    console.log('Form State:', { newType, currentLat, currentLng });
-    
+  const saveAddress = async () => {
     if (!searchQuery.trim()) {
-      console.warn('⛔ Save blocked: Missing address text');
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Please enter a valid area / street address.'
-      });
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Please enter a valid area / street address.' });
       return;
     }
 
-    if (!isValidCoordinate(currentLat, currentLng)) {
-      console.error('❌ Save blocked: Invalid coords');
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Internal location error. Please reset pin.'
-      });
-      return;
-    }
-
-    const constructedAddress = [formFlat, searchQuery, formLandmark]
-      .filter(Boolean)
-      .join(", ");
-
-    if (editingId) {
-      console.log('Updating existing address:', editingId);
-      setAddresses(
-        addresses.map((a) =>
-          a.id === editingId
-            ? {
-                ...a,
-                type: newType,
-                title: newType === "Other" ? newTitle || "Custom" : newType,
-                fullAddress: constructedAddress,
-                lat: currentLat,
-                lng: currentLng,
-              }
-            : a,
-        ),
-      );
-      setEditingId(null);
-    } else {
-      console.log('Creating new address');
-      const newAddr: Address = {
-        id: Date.now().toString(),
-        type: newType,
-        title: newType === "Other" ? newTitle || "Custom" : newType,
-        fullAddress: constructedAddress,
-        isFavorite: false,
-        isDefault: isNewDefault,
-        lat: currentLat,
-        lng: currentLng,
+    try {
+      const payload = {
+        label: newType === "Other" ? newTitle || "Other" : newType,
+        recipient_name: recipientName,
+        address_line1: searchQuery,
+        city: "Default",
+        pincode: "000000",
+        latitude: currentLat,
+        longitude: currentLng,
+        delivery_instructions: deliveryInstructions,
+        is_default: isNewDefault,
       };
-      
-      if (isNewDefault) {
-        // If this becomes default, unset others first
-        setAddresses([newAddr, ...addresses.map(a => ({ ...a, isDefault: false }))]);
+
+      if (editingId) {
+        await addressApi.updateAddress(editingId, payload);
+        Toast.show({ type: 'success', text1: 'Updated', text2: 'Address updated successfully' });
       } else {
-        setAddresses([newAddr, ...addresses]);
+        await addressApi.addAddress(payload);
+        Toast.show({ type: 'success', text1: 'Saved', text2: 'New address added' });
       }
+      
+      clearForm();
+      fetchAddresses();
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Save Failed',
+        text2: err.response?.data?.message || 'Could not save address. Try again.'
+      });
     }
-
-    clearForm();
   };
 
-  const removeAddress = (id: string) => {
-    setAddresses(addresses.filter((a) => a.id !== id));
+  const removeAddress = async (id: string | number) => {
+    try {
+      await addressApi.deleteAddress(id);
+      fetchAddresses();
+    } catch (e) {}
   };
 
-  const toggleFavorite = (id: string) => {
-    setAddresses(
-      addresses.map((a) =>
-        a.id === id ? { ...a, isFavorite: !a.isFavorite } : a,
-      ),
-    );
+  const toggleFavorite = (id: string | number) => {
+    // Backend doesn't support favorites yet, staying as visual only if we decide to add local state
   };
 
-  const toggleDefault = (id: string) => {
-    setAddresses(
-      addresses.map((a) =>
-        a.id === id ? { ...a, isDefault: true } : { ...a, isDefault: false },
-      ),
-    );
+  const toggleDefault = async (id: string | number) => {
+    try {
+      await addressApi.setDefault(id);
+      fetchAddresses();
+    } catch (e) {}
   };
 
 
 
   const shareAddress = async (item: Address) => {
     try {
-      const mapUrl = `https://www.google.com/maps/search/?api=1&query=${item.lat},${item.lng}`;
-      const message = `📍 ThanniGo Delivery Address (${item.title}):\n${item.fullAddress}\n\nView on Maps: ${mapUrl}`;
+      const mapUrl = `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`;
+      const message = `📍 ThanniGo Delivery Address (${item.label}):\n${item.address_line1}\n\nView on Maps: ${mapUrl}`;
       
       await Share.share({
         message,
-        title: `Share Location - ${item.title}`,
+        title: `Share Location - ${item.label}`,
       });
     } catch (error) {
       console.log("Sharing error:", error);
     }
   };
 
-  const getIconForType = (type: AddressType) => {
-    switch (type) {
-      case "Home":
-        return { icon: "home-sharp" as const, color: "#10b981", bg: "#f0fdf4" };
-      case "Office":
-        return { icon: "business-sharp" as const, color: "#0ea5e9", bg: "#f0f9ff" };
-      default:
-        return { icon: "location-sharp" as const, color: "#6366f1", bg: "#f5f3ff" };
-    }
+  const getIconForType = (type: string) => {
+    const t = type.toLowerCase();
+    if (t.includes('home')) return { icon: "home-sharp" as const, color: "#10b981", bg: "#f0fdf4" };
+    if (t.includes('office') || t.includes('work')) return { icon: "business-sharp" as const, color: "#0ea5e9", bg: "#f0f9ff" };
+    return { icon: "location-sharp" as const, color: "#6366f1", bg: "#f5f3ff" };
   };
 
   return (
@@ -674,6 +644,41 @@ export default function AddressesScreen() {
           {/* 4. FORM */}
           {isAdding && (
             <View style={styles.addFormWrapper}>
+              <Text style={styles.formLabel}>Save address as</Text>
+              <View style={styles.typeRow}>
+                {["Home", "Office", "Other"].map((t) => (
+                  <TouchableOpacity
+                    key={t}
+                    style={[styles.typePill, newType === t && styles.typePillActive]}
+                    onPress={() => setNewType(t)}
+                  >
+                    <Text style={[styles.typePillText, newType === t && styles.typePillTextActive]}>
+                      {t}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {newType === "Other" && (
+                <>
+                  <Text style={styles.formInputLabel}>Custom Label Name</Text>
+                  <TextInput
+                    style={styles.detailInput}
+                    placeholder="e.g. Grandma's Place, Gym"
+                    value={newTitle}
+                    onChangeText={setNewTitle}
+                  />
+                </>
+              )}
+
+              <Text style={styles.formInputLabel}>Recipient Name</Text>
+              <TextInput
+                style={styles.detailInput}
+                placeholder="e.g. Rahul Sharma"
+                value={recipientName}
+                onChangeText={setRecipientName}
+              />
+
               <Text style={styles.formInputLabel}>House / Flat / Block No.</Text>
               <TextInput
                 style={styles.detailInput}
@@ -742,18 +747,25 @@ export default function AddressesScreen() {
         </View>
 
         {/* DYNAMIC LIST MAPPING */}
-        {addresses.map((item) => {
-          const uiOpts = getIconForType(item.type);
+        {isLoading ? (
+          <ActivityIndicator color="#005d90" style={{ marginVertical: 40 }} />
+        ) : addresses.length === 0 ? (
+          <View style={{ alignItems: 'center', padding: 40 }}>
+            <Ionicons name="location-outline" size={48} color="#cbd5e1" />
+            <Text style={{ color: '#64748b', marginTop: 12 }}>No saved addresses found.</Text>
+          </View>
+        ) : addresses.map((item) => {
+          const uiOpts = getIconForType(item.label);
           return (
             <View
               key={item.id}
-              style={[styles.listItem, item.isDefault && styles.listItemDefault]}
+              style={[styles.listItem, item.is_default && styles.listItemDefault]}
             >
               <TouchableOpacity onPress={() => toggleDefault(item.id)} style={{ marginRight: 8, justifyContent: 'center' }}>
                 <Ionicons
-                  name={item.isDefault ? "radio-button-on" : "radio-button-off"}
+                  name={item.is_default ? "radio-button-on" : "radio-button-off"}
                   size={24}
-                  color={item.isDefault ? "#005d90" : "#cbd5e1"}
+                  color={item.is_default ? "#005d90" : "#cbd5e1"}
                 />
               </TouchableOpacity>
               
@@ -767,21 +779,21 @@ export default function AddressesScreen() {
                 onPress={() => toggleDefault(item.id)}
               >
                 <View style={styles.listTitleRow}>
-                  <Text style={styles.listTitle}>{item.title}</Text>
+                  <Text style={styles.listTitle}>{item.label}</Text>
+                  {item.is_default && <View style={styles.defaultBadge}><Text style={styles.defaultBadgeText}>DEFAULT</Text></View>}
                 </View>
                 <Text style={styles.listSub} numberOfLines={2}>
-                  {item.fullAddress}
+                  {item.address_line1}
                 </Text>
               </TouchableOpacity>
               <View
                 style={{ flexDirection: "row", gap: 14, paddingVertical: 4 }}
               >
                 <TouchableOpacity onPress={() => {
-                  console.log('=== VIEW MAP BUTTON CLICK ===');
                   safeNavigate("/map-preview", {
-                    lat: item.lat.toString(),
-                    lng: item.lng.toString(),
-                    title: item.title 
+                    lat: item.latitude.toString(),
+                    lng: item.longitude.toString(),
+                    title: item.label 
                   });
                 }}>
                   <Ionicons name="map-outline" size={20} color="#008db9" />
@@ -792,12 +804,13 @@ export default function AddressesScreen() {
                 <TouchableOpacity
                   onPress={() => {
                     setEditingId(item.id);
-                    // For logic simplicity, drop entire address back into SearchQuery block
-                    setSearchQuery(item.fullAddress);
-                    setFormFlat("");
-                    setFormLandmark("");
-                    setNewType(item.type);
-                    setNewTitle(item.title);
+                    setSearchQuery(item.address_line1);
+                    setDeliveryInstructions(item.delivery_instructions || "");
+                    setRecipientName(item.recipient_name || "");
+                    setNewType(["Home", "Office"].includes(item.label) ? item.label : "Other");
+                    setNewTitle(item.label);
+                    setCurrentLat(Number(item.latitude));
+                    setCurrentLng(Number(item.longitude));
                     setIsAdding(true);
                   }}
                 >

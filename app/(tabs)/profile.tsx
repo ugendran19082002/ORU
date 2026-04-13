@@ -12,31 +12,47 @@ import { useRouter } from 'expo-router';
 
 import { Logo } from '@/components/ui/Logo';
 import { useAppSession } from '@/hooks/use-app-session';
+import { addressApi } from '@/api/addressApi';
 
-const MENU_ITEMS = [
-  { icon: 'location-outline' as const, label: 'Saved Addresses', subtitle: '2 saved locations', hasArrow: true },
-  { icon: 'card-outline' as const, label: 'Payment Methods', subtitle: 'UPI, Cards', hasArrow: true },
-  { icon: 'receipt-outline' as const, label: 'Order History', subtitle: '15 past orders', hasArrow: true },
-  { icon: 'repeat-outline' as const, label: 'Subscriptions', subtitle: 'Manage scheduled deliveries', hasArrow: true },
-  { icon: 'gift-outline' as const, label: 'Rewards', subtitle: 'Referral code and loyalty points', hasArrow: true },
-  { icon: 'star-outline' as const, label: 'My Reviews', subtitle: '3 reviews written', hasArrow: true },
-  { icon: 'shield-checkmark-outline' as const, label: 'Privacy & Security', subtitle: 'Manage your data', hasArrow: true },
-  { icon: 'help-circle-outline' as const, label: 'Help & Support', subtitle: '24/7 customer service', hasArrow: true },
-  { icon: 'pie-chart-outline' as const, label: 'My Analytics', subtitle: 'Spending & usage tracking', hasArrow: true },
-  { icon: 'information-circle-outline' as const, label: 'About ThanniGo', subtitle: 'Version 1.0.0', hasArrow: true },
-];
+
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { signOut, emergencyReset } = useAppSession();
+  const { signOut, user, emergencyReset } = useAppSession();
   const [refreshing, setRefreshing] = React.useState(false);
+  const [addressCount, setAddressCount] = React.useState(0);
 
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+  const fetchAddressCount = React.useCallback(async () => {
+    try {
+      const res = await addressApi.getAddresses();
+      if (res.data?.status === 1) {
+        setAddressCount(res.data.data.length);
+      }
+    } catch (e) {
+      console.error('Error fetching address count:', e);
+    }
   }, []);
+
+  React.useEffect(() => {
+    fetchAddressCount();
+  }, [fetchAddressCount]);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await fetchAddressCount();
+    setRefreshing(false);
+  }, [fetchAddressCount]);
+
+  const menuItems = [
+    { icon: 'location-outline' as const, label: 'Saved Addresses', subtitle: `${addressCount} saved locations`, hasArrow: true },
+    { icon: 'card-outline' as const, label: 'Payment Methods', subtitle: 'UPI, Cards', hasArrow: true },
+    { icon: 'receipt-outline' as const, label: 'Order History', subtitle: 'View past orders', hasArrow: true },
+    { icon: 'repeat-outline' as const, label: 'Subscriptions', subtitle: 'Manage scheduled deliveries', hasArrow: true },
+    { icon: 'gift-outline' as const, label: 'Rewards', subtitle: 'Referral code and loyalty points', hasArrow: true },
+    { icon: 'shield-checkmark-outline' as const, label: 'Privacy & Security', subtitle: 'Manage your data', hasArrow: true },
+    { icon: 'help-circle-outline' as const, label: 'Help & Support', subtitle: '24/7 customer service', hasArrow: true },
+    { icon: 'information-circle-outline' as const, label: 'About ThanniGo', subtitle: 'Version 1.0.0', hasArrow: true },
+  ];
 
   const handleSignOut = async () => {
     await signOut();
@@ -110,8 +126,8 @@ export default function ProfileScreen() {
               <Ionicons name="camera" size={14} color="white" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.profileName}>Rahul Sharma</Text>
-          <Text style={styles.profilePhone}>+91 98765 43210</Text>
+          <Text style={styles.profileName}>{user?.name || 'User'}</Text>
+          <Text style={styles.profilePhone}>{user?.phone || 'No Phone'}</Text>
           
           <View style={styles.profileStats}>
             <View style={styles.profileStat}>
@@ -140,7 +156,7 @@ export default function ProfileScreen() {
         {/* MENU LIST */}
         <Text style={styles.sectionTitle}>Account</Text>
         <View style={styles.menuCard}>
-          {MENU_ITEMS.map((item, index) => (
+          {menuItems.map((item, index) => (
             <React.Fragment key={item.label}>
               <TouchableOpacity
                 style={styles.menuItem}
@@ -185,7 +201,7 @@ export default function ProfileScreen() {
                 </View>
                 {item.hasArrow && <Ionicons name="chevron-forward" size={16} color="#bfc7d1" />}
               </TouchableOpacity>
-              {index < MENU_ITEMS.length - 1 && <View style={styles.menuDivider} />}
+              {index < menuItems.length - 1 && <View style={styles.menuDivider} />}
             </React.Fragment>
           ))}
         </View>
