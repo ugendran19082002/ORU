@@ -90,7 +90,19 @@ export default function AdminOverviewScreen() {
   }
 
   if (status === 'authenticated' && user?.role !== 'admin') {
-     return null; 
+     return (
+       <View style={[styles.container, styles.centered]}>
+         <Ionicons name="lock-closed-outline" size={64} color="#ba1a1a" />
+         <Text style={styles.errorTitle}>Restricted Area</Text>
+         <Text style={styles.errorMsg}>You do not have administrative privileges to access this dashboard.</Text>
+         <TouchableOpacity 
+           style={styles.switchBtn} 
+           onPress={() => router.replace(user?.role === 'shop_owner' ? '/onboarding/shop' : '/(tabs)')}
+         >
+           <Text style={styles.switchBtnText}>Back to My Dashboard</Text>
+         </TouchableOpacity>
+       </View>
+     );
   }
 
   return (
@@ -228,6 +240,12 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: '#e0f0ff', borderRadius: 14,
     paddingVertical: 12, alignItems: 'center', marginTop: 8,
   },
+  centered: { justifyContent: 'center', alignItems: 'center', padding: 40 },
+  errorTitle: { fontSize: 24, fontWeight: '900', color: '#181c20', marginTop: 24, marginBottom: 12 },
+  errorMsg: { fontSize: 16, color: '#64748b', textAlign: 'center', lineHeight: 24, marginBottom: 32 },
+  switchBtn: { backgroundColor: '#005d90', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 16 },
+  switchBtnText: { color: 'white', fontWeight: '800', fontSize: 15 },
+
   emergencyFab: {
     position: 'absolute', bottom: 24, right: 20,
     borderRadius: 30, overflow: 'hidden',

@@ -13,7 +13,7 @@ import React, {
 } from "react";
 import { Platform, DeviceEventEmitter } from "react-native";
 
-import { apiClient, setClientToken } from "@/api/client";
+import { apiClient, setClientToken, getClientToken } from "@/api/client";
 import { onboardingApi } from "@/api/onboardingApi";
 import { userApi } from "@/api/userApi";
 import type {
@@ -105,7 +105,10 @@ export function AppSessionProvider({
 
   // Sync Token to Axios Defaults (Memory Store)
   useEffect(() => {
-    setClientToken(accessToken);
+    // Only update if the token in memory is different to avoid redundant logs
+    if (getClientToken() !== accessToken) {
+      setClientToken(accessToken);
+    }
   }, [accessToken]);
 
   // Hydration logic
@@ -221,14 +224,18 @@ export function AppSessionProvider({
     setUser(null);
     setAccessToken(null);
     setRefreshToken(null);
+    setIsBiometricVerified(false);
+    setIsLocationVerified(false);
+    setPreferredRoleState(null);
     setNextStepState(null);
     setStatus("anonymous");
     setClientToken(null);
+
     await writeSession({
       user: null,
       access_token: null,
       refresh_token: null,
-      preferredRole,
+      preferredRole: null,
       biometricEnabled,
       nextStep: null,
     });
@@ -248,6 +255,9 @@ export function AppSessionProvider({
       setAccessToken(null);
       setRefreshToken(null);
       setNextStepState(null);
+      setIsBiometricVerified(false);
+      setIsLocationVerified(false);
+      setPreferredRoleState(null);
       setStatus("anonymous");
     } catch (err) {
       console.error("[Session] Emergency Reset Failed:", err);
@@ -407,7 +417,7 @@ export function AppRouteGuard() {
 
   const lastRedirectRef = React.useRef<string | null>(null);
   const guardGenerationRef = React.useRef<number>(0);
-
+  const isNavigatingRef = React.useRef<boolean>(false);
   const lastLoggedSyncPauseRef = React.useRef<boolean>(false);
   
   useEffect(() => {
@@ -462,20 +472,29 @@ export function AppRouteGuard() {
 
         const navigate = (target: string, reason: string) => {
           // Validation: If a newer generation is running, or we already navigated, stop.
-          if (hasRedirected || currentGeneration < guardGenerationRef.current) return;
+          if (hasRedirected || currentGeneration < guardGenerationRef.current || isNavigatingRef.current) return;
           
           // Strip out route groups (e.g., (onboarding)) for comparison logic
           const currentNorm = normalize(pathname);
           const targetNorm = normalize(target);
+          const lastRedirectNorm = normalize(lastRedirectRef.current || "");
 
-          if (currentNorm === targetNorm || normalize(lastRedirectRef.current || "") === targetNorm) {
+          if (currentNorm === targetNorm || lastRedirectNorm === targetNorm) {
             hasRedirected = true;
             return;
           }
+          
           console.log(`🛡️ [Guard] Redirecting to ${target} | Reason: ${reason} | Role: ${user?.role} | Status: ${user?.shopStatus || 'none'}`);
           lastRedirectRef.current = target;
           hasRedirected = true;
+          isNavigatingRef.current = true;
+          
+          // Use replace and then clear the lock after a small cooldown to allow native nav to settle
           router.replace(target as any);
+          
+          setTimeout(() => {
+            isNavigatingRef.current = false;
+          }, 150);
         };
 
         // 1. Biometrics

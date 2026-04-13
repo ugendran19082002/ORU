@@ -150,25 +150,20 @@ export default function ShopBasicDetailsScreen() {
     const { latitude, longitude } = coords;
     setFormData(p => ({ ...p, latitude, longitude }));
     
-    // Reverse Geocode
+    // Native Reverse Geocode (Aligned with customer flow)
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=18&addressdetails=1`,
-        { headers: { 'User-Agent': 'ThanniGoApp/1.0' } }
-      );
-      const data = await res.json();
-      if (data?.address) {
-        const a = data.address;
-        const parts = [
-          a.road || a.pedestrian || a.neighbourhood,
-          a.suburb || a.quarter,
-          a.city || a.town || a.village || a.county,
-        ].filter(Boolean);
-        const addr = parts.join(', ');
-        setFormData(p => ({ ...p, address_line1: addr, city: a.city || a.town || p.city }));
+      const result = await Location.reverseGeocodeAsync({ latitude, longitude });
+      if (result.length > 0) {
+        const item = result[0];
+        const addr = `${item.name || ''} ${item.street || ''}, ${item.district || item.city || ''}`.trim().replace(/^,/, '');
+        setFormData(p => ({ 
+            ...p, 
+            address_line1: addr || 'Custom Location', 
+            city: item.city || item.district || p.city 
+        }));
       }
     } catch (e) {
-      // Silent error for reverse geocode
+      console.error('[ShopBasicDetails] Geocode Error:', e);
     }
   };
 

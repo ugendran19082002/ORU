@@ -23,6 +23,8 @@ export const setClientToken = (token: string | null) => {
   console.log('🔑 [API Client] Auth Token updated in memory');
 };
 
+export const getClientToken = () => authToken;
+
 console.log('🌐 [API Client] Initialized with baseURL:', apiClient.defaults.baseURL);
 
 // Automatically inject session data if available
