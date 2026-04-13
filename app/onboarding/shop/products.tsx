@@ -77,12 +77,17 @@ export default function ShopProductsScreen() {
       setLoading(true);
 
       await onboardingApi.completeShopStep('product_catalog', shopId, {
-        products: products.map(p => ({
-          subcategory_id: p.subcategory_id,
-          name: p.name,
-          price: parseFloat(p.price),
-          stock_quantity: parseInt(p.stock_quantity)
-        }))
+        products: products.map(p => {
+          const price = parseFloat(p.price);
+          const stock = parseInt(p.stock_quantity);
+
+          return {
+            subcategory_id: p.subcategory_id,
+            name: p.name,
+            price: isFinite(price) ? price : 0,
+            stock_quantity: isFinite(stock) ? stock : 0
+          };
+        })
       });
       
       router.replace('/onboarding/shop');

@@ -138,6 +138,7 @@ export default function ShopWaitlistScreen() {
               <BackButton 
                 fallback="/onboarding/shop" 
                 variant="transparent" 
+                show={(shop?.status !== 'pending_review' && shop?.status !== 'under_review' && shop?.status !== 'active')}
               />
             </View>
             <Logo size="lg" />

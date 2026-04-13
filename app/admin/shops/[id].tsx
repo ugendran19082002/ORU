@@ -197,7 +197,7 @@ export default function AdminShopReviewScreen() {
     <View style={styles.container}>
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <BackButton fallback="/admin/shops" />
+          <BackButton fallback="/admin" />
           <Text style={styles.headerTitle}>Review Application</Text>
           <View style={{ width: 40 }} />
         </View>

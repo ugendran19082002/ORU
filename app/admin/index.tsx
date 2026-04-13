@@ -237,7 +237,7 @@ export default function AdminOverviewScreen() {
             ) : pendingShops.length === 0 ? (
                 <View style={{ padding: 40, alignItems: 'center' }}>
                     <Ionicons name="checkmark-circle-outline" size={48} color="#94a3b8" />
-                    <Text style={{ mt: 12, color: '#64748b', fontWeight: '600', textAlign: 'center' }}>All clear! No pending reviews.</Text>
+                    <Text style={{ marginTop: 12, color: '#64748b', fontWeight: '600', textAlign: 'center' }}>All clear! No pending reviews.</Text>
                 </View>
             ) : (
                 pendingShops.slice(0, 5).map((item, index) => (
@@ -284,18 +284,7 @@ export default function AdminOverviewScreen() {
           </View>
          </View>
 
-          {/* SYSTEM HEALTH FOOTER */}
-          <View style={styles.sysFooter}>
-            <View style={styles.sysIndicator}>
-              <View style={styles.sysDot} />
-              <Text style={styles.sysText}>Server: Mumbai-West-1 (Stable)</Text>
-            </View>
-            <View style={styles.sysIndicator}>
-              <View style={styles.sysDot} />
-              <Text style={styles.sysText}>API Latency: 42ms</Text>
-            </View>
-            <Text style={styles.sysFooterBrand}>© 2024 ThanniGo Platform · v2.4.1</Text>
-          </View>
+
         </ScrollView>
       {/* EMERGENCY FAB */}
       <TouchableOpacity style={styles.emergencyFab} onPress={() => Toast.show({

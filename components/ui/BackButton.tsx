@@ -10,6 +10,7 @@ interface BackButtonProps {
   fallback?: string;
   variant?: 'light' | 'dark' | 'transparent';
   onPress?: () => void;
+  show?: boolean;
 }
 
 /**
@@ -22,10 +23,13 @@ export const BackButton: React.FC<BackButtonProps> = ({
   iconSize = 22,
   fallback = "/(tabs)", 
   variant = 'light',
-  onPress
+  onPress,
+  show = true
 }) => {
   const { safeBack } = useAppNavigation();
   
+  if (!show) return null;
+
   const handlePress = () => {
     if (onPress) {
       onPress();

@@ -172,15 +172,19 @@ export default function ShopOnboardingDashboard() {
   }
 
   const progressPercent = data ? (data.completed_mandatory / data.total_mandatory) * 100 : 0;
-  const isPendingReview = user?.shopStatus === 'pending_review';
-  const canShowSubmit = (data?.is_ready_for_review && !isPendingReview);
+  const isSubmissionLocked = user?.shopStatus === 'pending_review' || user?.shopStatus === 'under_review' || user?.shopStatus === 'active';
+  const canShowSubmit = (data?.is_ready_for_review && !isSubmissionLocked);
 
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <BackButton fallback="/auth/role" onPress={handleRoleReset} />
+          <BackButton 
+            fallback="/auth/role" 
+            onPress={isSubmissionLocked ? undefined : handleRoleReset} 
+            show={!isSubmissionLocked}
+          />
           <View style={{ marginLeft: 16, flex: 1 }}>
             <Text style={styles.welcome}>Partner Onboarding</Text>
             <Text style={styles.subtitle}>Verify your business to start selling</Text>
@@ -190,13 +194,15 @@ export default function ShopOnboardingDashboard() {
           </View>
         </View>
 
-        <View style={styles.roleSwitchTip}>
-            <Ionicons name="help-circle-outline" size={16} color="#64748b" />
-            <Text style={styles.roleSwitchText}>Wrong role?</Text>
-            <TouchableOpacity onPress={handleRoleReset}>
-                <Text style={styles.roleSwitchLink}>Switch to Customer</Text>
-            </TouchableOpacity>
-        </View>
+        {!isSubmissionLocked && (
+            <View style={styles.roleSwitchTip}>
+                <Ionicons name="help-circle-outline" size={16} color="#64748b" />
+                <Text style={styles.roleSwitchText}>Wrong role?</Text>
+                <TouchableOpacity onPress={handleRoleReset}>
+                    <Text style={styles.roleSwitchLink}>Switch to Customer</Text>
+                </TouchableOpacity>
+            </View>
+        )}
 
         <LinearGradient
           colors={['#006878', '#004a55']}
