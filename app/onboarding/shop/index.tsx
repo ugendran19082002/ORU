@@ -10,15 +10,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { onboardingApi } from '@/api/onboardingApi';
+import { authApi } from '@/api/authApi';
 import type { OnboardingStatus } from '@/types/onboarding';
 import { useAppSession } from '@/hooks/use-app-session';
 import { BackButton } from '@/components/ui/BackButton';
+import { RoleSwitchModal } from '@/components/modals/RoleSwitchModal';
 
 export default function ShopOnboardingDashboard() {
   const router = useRouter();
   const { user, updateUser, status, refreshShopStatus } = useAppSession();
   const [loading, setLoading] = useState(true);
   const [resubmitting, setResubmitting] = useState(false);
+  const [resetModalVisible, setResetModalVisible] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [data, setData] = useState<OnboardingStatus | null>(null);
 
   // 0. Role Bouncer
@@ -36,8 +40,8 @@ export default function ShopOnboardingDashboard() {
       const shop = shopRes.data;
 
       if (!shop) {
-        console.log('[Shop Onboarding] No shop data, redirecting to creation');
-        router.replace('/onboarding/shop/create');
+        console.log('[Shop Onboarding] No shop data, redirecting to basic-details');
+        router.replace('/onboarding/shop/basic-details');
         return;
       }
 
@@ -57,10 +61,9 @@ export default function ShopOnboardingDashboard() {
     } catch (error: any) {
       console.error('[Shop Onboarding] Fetch error:', error);
       
-      // If 404, it means the user has not created a shop yet
       if (error.response?.status === 404) {
-        console.log('[Shop Onboarding] Shop not found (404), redirecting to create');
-        router.replace('/onboarding/shop/create');
+        console.log('[Shop Onboarding] Shop not found (404), redirecting to basic-details');
+        router.replace('/onboarding/shop/basic-details');
       } 
       else if (error.response?.status === 403) {
         Toast.show({
@@ -124,6 +127,32 @@ export default function ShopOnboardingDashboard() {
     }
   };
 
+  const handleRoleReset = async () => {
+    try {
+      setResetLoading(true);
+      const res = await authApi.resetRole();
+      if (res.status === 1) {
+        setResetModalVisible(false);
+        Toast.show({
+          type: 'success',
+          text1: 'Role Reset',
+          text2: 'Redirecting to role selection...'
+        });
+        await refreshShopStatus();
+        router.replace('/auth/role');
+      }
+    } catch (error: any) {
+      console.error('[Role Reset] Error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Reset Failed',
+        text2: error.response?.data?.message || 'Could not reset role.'
+      });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   if (loading && !data) {
     return (
       <View style={styles.loadingContainer}>
@@ -149,6 +178,14 @@ export default function ShopOnboardingDashboard() {
           <View style={[styles.avatar, { backgroundColor: '#006878' }]}>
             <Ionicons name="business" size={20} color="white" />
           </View>
+        </View>
+
+        <View style={styles.roleSwitchTip}>
+            <Ionicons name="help-circle-outline" size={16} color="#64748b" />
+            <Text style={styles.roleSwitchText}>Wrong role?</Text>
+            <TouchableOpacity onPress={() => setResetModalVisible(true)}>
+                <Text style={styles.roleSwitchLink}>Switch to Customer</Text>
+            </TouchableOpacity>
         </View>
 
         <LinearGradient
@@ -182,7 +219,7 @@ export default function ShopOnboardingDashboard() {
           )}
 
           {isPendingReview && (
-            <View style={[styles.rejectionBanner, { backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }]}>
+            <View style={[styles.rejectionBanner, { backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }] as any}>
               <View style={[styles.rejectionIcon, { backgroundColor: '#e0f2fe' }]}>
                 <Ionicons name="time" size={24} color="#0369a1" />
               </View>
@@ -207,7 +244,7 @@ export default function ShopOnboardingDashboard() {
                   styles.stepCard,
                   ((isCompleted || isReview) ? styles.stepCardMuted : undefined) as any,
                   (isRejected ? styles.stepCardRejected : undefined) as any
-                ]}
+                ] as any}
                 onPress={() => handleStepPress(step)}
                 activeOpacity={(isCompleted || isReview) ? 1 : 0.7}
               >
@@ -280,6 +317,13 @@ export default function ShopOnboardingDashboard() {
             </TouchableOpacity>
           )}
         </ScrollView>
+
+        <RoleSwitchModal 
+            visible={resetModalVisible}
+            onClose={() => setResetModalVisible(false)}
+            onConfirm={handleRoleReset}
+            loading={resetLoading}
+        />
       </SafeAreaView>
     </View>
   );
@@ -351,5 +395,9 @@ const styles = StyleSheet.create({
 
   resubmitBtn: { marginTop: 32, shadowColor: '#005d90', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 15, elevation: 8 },
   resubmitGradient: { height: 60, borderRadius: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
-  resubmitText: { color: 'white', fontSize: 16, fontWeight: '800' }
+  resubmitText: { color: 'white', fontSize: 16, fontWeight: '800' },
+
+  roleSwitchTip: { flexDirection: 'row', alignItems: 'center', gap: 6, marginHorizontal: 24, marginBottom: 16, backgroundColor: '#f1f5f9', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14 },
+  roleSwitchText: { fontSize: 13, color: '#64748b', fontWeight: '500' },
+  roleSwitchLink: { fontSize: 13, color: '#006878', fontWeight: '800', textDecorationLine: 'underline' }
 });

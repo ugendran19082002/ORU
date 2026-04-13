@@ -64,4 +64,12 @@ export const authApi = {
     });
     return response.data;
   },
+
+  /**
+   * Reset user role and erase all data
+   */
+  resetRole: async (): Promise<{ status: number; message: string }> => {
+    const response = await apiClient.post<{ status: number; message: string }>('/auth/reset-role');
+    return response.data;
+  },
 };

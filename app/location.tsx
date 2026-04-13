@@ -7,9 +7,11 @@ import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppSession } from '@/hooks/use-app-session';
 
 export default function EnableLocationScreen() {
   const router = useRouter();
+  const { setIsLocationVerified } = useAppSession();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [denied, setDenied] = useState(false);
@@ -20,6 +22,7 @@ export default function EnableLocationScreen() {
         const { status } = await Location.getForegroundPermissionsAsync();
         const servicesEnabled = await Location.hasServicesEnabledAsync();
         if (status === 'granted' && servicesEnabled) {
+          setIsLocationVerified(true);
           router.replace('/(tabs)/' as any);
         }
       } catch (e) {
@@ -70,7 +73,8 @@ export default function EnableLocationScreen() {
       const location = await Location.getCurrentPositionAsync({});
       console.log('Location matched:', location.coords);
       
-      // 3. Navigate back to Home seamlessly
+      // 3. Update Session and Navigate
+      setIsLocationVerified(true);
       router.replace('/(tabs)/' as any);
     } catch (err) {
       setErrorMsg('Failed to determine your location. Please ensure GPS is turned on.');
@@ -155,6 +159,7 @@ export default function EnableLocationScreen() {
         )}
         <TouchableOpacity style={styles.skipBtn} onPress={() => {
             // Usually we must block, but providing a safe-fallback debug escape loop can help testing.
+            setIsLocationVerified(true);
             router.replace('/(tabs)/' as any);
         }}>
            <Text style={styles.skipText}>Skip (Test Mode)</Text>

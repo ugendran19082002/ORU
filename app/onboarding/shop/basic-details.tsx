@@ -17,45 +17,51 @@ import { BackButton } from '@/components/ui/BackButton';
 
 export default function ShopBasicDetailsScreen() {
   const router = useRouter();
-  const { user, status } = useAppSession();
+  const { user, refreshShopStatus } = useAppSession();
   const { handleAuthBack } = useLogoutBackHandler();
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
   const [locating, setLocating] = useState(false);
   const [shopId, setShopId] = useState<number | null>(null);
+  const [mode, setMode] = useState<'CREATE' | 'UPDATE'>('UPDATE');
 
   const [formData, setFormData] = useState({
     name: '',
     owner_name: '',
+    phone: user?.phone?.replace('+91', '') || '',
+    shop_type: 'individual' as any,
     address_line1: '',
     city: '',
     latitude: null as number | null,
     longitude: null as number | null,
   });
 
-  // 1. Resolve actual Shop ID
+  // 1. Resolve actual Shop ID & Mode
   React.useEffect(() => {
     (async () => {
       try {
         const res = await onboardingApi.getMerchantShop();
         if (res.data) {
           setShopId(res.data.id);
-          // Pre-fill existing data if any
+          setMode('UPDATE');
+          // Pre-fill existing data
           setFormData(p => ({
             ...p,
             name: res.data.name || '',
             owner_name: res.data.owner_name || '',
+            phone: (res.data.phone || user?.phone || '').replace('+91', ''),
+            shop_type: res.data.shop_type || 'individual',
             address_line1: res.data.address_line1 || '',
             city: res.data.city || '',
             latitude: res.data.latitude || null,
             longitude: res.data.longitude || null,
           }));
         } else {
-          router.replace('/onboarding/shop/create');
+          setMode('CREATE');
         }
       } catch (err: any) {
         if (err.response?.status === 404) {
-          router.replace('/onboarding/shop/create');
+          setMode('CREATE');
         } else {
           console.error('[Basic Details] ID Resolution Error:', err);
         }
@@ -90,20 +96,51 @@ export default function ShopBasicDetailsScreen() {
   };
 
   const handleContinue = async () => {
-    if (!shopId) return;
-
-    if (!formData.name || !formData.owner_name || !formData.address_line1) {
-      Toast.show({ type: 'error', text1: 'Required Fields', text2: 'Please fill in shop name, owner name and address.' });
+    if (!formData.name || !formData.phone || !formData.address_line1 || !formData.owner_name) {
+      Toast.show({ type: 'error', text1: 'Required Fields', text2: 'Please fill in all mandatory fields.' });
       return;
     }
 
     try {
       setLoading(true);
-      const res = await onboardingApi.completeShopStep('basic_details', shopId, formData);
-      if (res.status === 1) {
-        router.replace('/onboarding/shop');
+      let currentShopId = shopId;
+
+      // 1. Handle Creation if needed
+      if (mode === 'CREATE') {
+        const createRes = await onboardingApi.createShop({
+          name: formData.name,
+          contact_number: `+91${formData.phone}`,
+          shop_type: formData.shop_type
+        });
+        if (createRes.status === 1) {
+          currentShopId = createRes.data.id;
+          setShopId(currentShopId);
+          await refreshShopStatus();
+        } else {
+          throw new Error('Failed to create shop profile');
+        }
+      }
+
+      // 2. Compelete/Update basic details step
+      if (currentShopId) {
+        const res = await onboardingApi.updateBasicDetails(currentShopId, {
+            name: formData.name,
+            owner_name: formData.owner_name,
+            phone: `+91${formData.phone}`,
+            shop_type: formData.shop_type,
+            address_line1: formData.address_line1,
+            latitude: formData.latitude,
+            longitude: formData.longitude,
+            city: formData.city || 'Default'
+        });
+        
+        if (res.status === 1) {
+          Toast.show({ type: 'success', text1: 'Success', text2: 'Basic details saved!' });
+          router.replace('/onboarding/shop');
+        }
       }
     } catch (error: any) {
+      console.error('[Basic Details] Submit Error:', error);
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -121,17 +158,27 @@ export default function ShopBasicDetailsScreen() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <View style={styles.header}>
-              <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} onPress={handleAuthBack} />
-              <Text style={styles.title}>Basic Details</Text>
-              <Text style={styles.subtitle}>Provide your shop name, owner info and precise location for deliveries.</Text>
+              <BackButton 
+                fallback={mode === 'CREATE' ? "/auth/role" : "/onboarding/shop"} 
+                style={{ marginBottom: 16 }} 
+                onPress={mode === 'CREATE' ? handleAuthBack : undefined} 
+              />
+              <Text style={styles.title}>{mode === 'CREATE' ? 'Register Your Shop' : 'Basic Details'}</Text>
+              <Text style={styles.subtitle}>
+                {mode === 'CREATE' 
+                  ? 'Start by creating your business profile. This will be visible to customers.'
+                  : 'Update your shop info and precise location for better delivery accuracy.'}
+              </Text>
             </View>
 
             {fetchingShop ? (
               <ActivityIndicator size="large" color="#006878" style={{ marginTop: 40 }} />
             ) : (
               <View style={styles.form}>
+                
+                {/* Shop Name */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Shop Name</Text>
+                  <Text style={styles.label}>Shop / Business Name</Text>
                   <View style={styles.inputWrap}>
                     <Ionicons name="business-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                     <TextInput
@@ -143,6 +190,7 @@ export default function ShopBasicDetailsScreen() {
                   </View>
                 </View>
 
+                {/* Owner Name */}
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Owner Full Name</Text>
                   <View style={styles.inputWrap}>
@@ -156,6 +204,47 @@ export default function ShopBasicDetailsScreen() {
                   </View>
                 </View>
 
+                {/* Contact Number */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Contact Number</Text>
+                  <View style={styles.inputWrap}>
+                    <Text style={styles.prefix}>+91</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="9876543210"
+                      keyboardType="number-pad"
+                      maxLength={10}
+                      value={formData.phone}
+                      onChangeText={(v) => setFormData(p => ({ ...p, phone: v }))}
+                    />
+                  </View>
+                </View>
+
+                {/* Business Type */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Business Type</Text>
+                  <View style={styles.typeRow}>
+                    {['individual', 'agency', 'distributor'].map((type) => (
+                      <TouchableOpacity
+                        key={type}
+                        style={[
+                          styles.typeBtn,
+                          formData.shop_type === type && styles.typeBtnActive
+                        ]}
+                        onPress={() => setFormData(p => ({ ...p, shop_type: type as any }))}
+                      >
+                        <Text style={[
+                          styles.typeText,
+                          formData.shop_type === type && styles.typeTextActive
+                        ]}>
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Shop Address */}
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Shop Address</Text>
                   <View style={[styles.inputWrap, styles.textAreaWrap]}>
@@ -170,10 +259,11 @@ export default function ShopBasicDetailsScreen() {
                   </View>
                 </View>
 
+                {/* GPS Location */}
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>GPS Location</Text>
                   <TouchableOpacity onPress={handleGetCurrentLocation} disabled={locating}>
-                    <View style={[styles.inputWrap, formData.latitude && { borderColor: '#10b981', backgroundColor: '#f0fdf4' }]}>
+                    <View style={[styles.inputWrap, formData.latitude && { borderColor: '#10b981', backgroundColor: '#f0fdf4' }] as any}>
                       <Ionicons name="location-outline" size={20} color={formData.latitude ? "#10b981" : "#94a3b8"} style={styles.inputIcon} />
                       <Text style={[styles.input, { color: formData.latitude ? '#065f46' : '#94a3b8', paddingTop: 18 }]}>
                         {locating ? 'Fetching Location...' : formData.latitude ? 'Location Captured ✓' : 'Tap to capture GPS location'}
@@ -187,6 +277,7 @@ export default function ShopBasicDetailsScreen() {
                     </Text>
                   )}
                 </View>
+
               </View>
             )}
           </ScrollView>
@@ -196,7 +287,7 @@ export default function ShopBasicDetailsScreen() {
               <LinearGradient colors={['#006878', '#134e4a']} style={styles.cta} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                 {loading ? <ActivityIndicator color="white" /> : (
                   <>
-                    <Text style={styles.ctaText}>Save and Continue</Text>
+                    <Text style={styles.ctaText}>{mode === 'CREATE' ? 'Register & Continue' : 'Save and Continue'}</Text>
                     <Ionicons name="arrow-forward" size={20} color="white" />
                   </>
                 )}
@@ -212,10 +303,11 @@ export default function ShopBasicDetailsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'white' },
   safe: { flex: 1 },
-  scrollContent: { paddingHorizontal: 32, paddingTop: 40 },
+  scrollContent: { paddingHorizontal: 32, paddingTop: 40, paddingBottom: 40 },
   header: { marginBottom: 40 },
   title: { fontSize: 28, fontWeight: '900', color: '#134e4a', letterSpacing: -0.5 },
   subtitle: { fontSize: 15, color: '#64748b', marginTop: 12, lineHeight: 22 },
+  
   form: { gap: 24, marginBottom: 40 },
   inputGroup: { gap: 8 },
   label: { fontSize: 13, fontWeight: '800', color: '#475569', marginLeft: 4, textTransform: 'uppercase' },
@@ -231,8 +323,25 @@ const styles = StyleSheet.create({
   },
   textAreaWrap: { height: 100, alignItems: 'flex-start', paddingTop: 12 },
   inputIcon: { marginRight: 12 },
+  prefix: { fontSize: 16, fontWeight: '700', color: '#64748b', marginRight: 8 },
   input: { flex: 1, fontSize: 16, color: '#1e293b', fontWeight: '600' },
   textArea: { textAlignVertical: 'top' },
+  
+  typeRow: { flexDirection: 'row', gap: 10 },
+  typeBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  typeBtnActive: { backgroundColor: '#006878', borderColor: '#006878' },
+  typeText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
+  typeTextActive: { color: 'white' },
+  
   coordsLabel: { fontSize: 12, color: '#94a3b8', marginLeft: 4, marginTop: -4 },
   footer: { padding: 32 },
   cta: {

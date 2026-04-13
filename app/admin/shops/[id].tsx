@@ -152,6 +152,22 @@ export default function AdminShopReviewScreen() {
   const [showStepRejectModal, setShowStepRejectModal] = useState<number | null>(null);
   const [stepNotes, setStepNotes] = useState('');
 
+  const getParsedDetails = (data: any) => {
+    if (!data) return {};
+    if (typeof data === 'string') {
+      try {
+        return JSON.parse(data);
+      } catch (e) {
+        return { detail: data };
+      }
+    }
+    return data;
+  };
+
+  const onViewStepData = (step: any) => {
+    setSelectedDoc(step);
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -183,8 +199,8 @@ export default function AdminShopReviewScreen() {
           <View style={styles.section}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <Text style={styles.sectionTitle}>Business Identity</Text>
-                <View style={[styles.statusBadge, { backgroundColor: shop.status === 'active' ? '#ecfdf5' : '#fff7ed' }]}>
-                    <Text style={[styles.statusBadgeText, { color: shop.status === 'active' ? '#059669' : '#d97706' }]}>
+                <View style={[styles.statusBadge, { backgroundColor: shop.status === 'active' ? '#ecfdf5' : '#fff7ed' }] as any}>
+                    <Text style={[styles.statusBadgeText, { color: shop.status === 'active' ? '#059669' : '#d97706' }] as any}>
                         {shop.status.toUpperCase()}
                     </Text>
                 </View>
@@ -223,7 +239,11 @@ export default function AdminShopReviewScreen() {
               const isRejected = step.status === 'rejected';
 
               return (
-                <View key={step.id} style={[styles.stepCardReview, isApproved && styles.stepCardApproved, isRejected && styles.stepCardRejected]}>
+                <View key={step.id} style={[
+                  styles.stepCardReview, 
+                  isApproved ? styles.stepCardApproved : undefined, 
+                  isRejected ? styles.stepCardRejected : undefined
+                ]}>
                   <View style={styles.stepHeader}>
                     <View style={styles.stepTitleGroup}>
                         <Text style={styles.stepTitleMain}>{step.title}</Text>
@@ -418,6 +438,22 @@ export default function AdminShopReviewScreen() {
 const styles = StyleSheet.create({
   statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
   statusBadgeText: { fontSize: 11, fontWeight: '900', letterSpacing: 0.5 },
+
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc' },
+  container: { flex: 1, backgroundColor: 'white' },
+  safe: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b' },
+  
+  scroll: { paddingBottom: 100 },
+  section: { padding: 24, borderBottomWidth: 8, borderBottomColor: '#f8fafc' },
+  sectionTitle: { fontSize: 20, fontWeight: '900', color: '#1e293b', marginBottom: 16, letterSpacing: -0.5 },
+  
+  card: { backgroundColor: '#f8fafc', borderRadius: 24, padding: 20, gap: 16 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  infoTextGroup: { flex: 1 },
+  label: { fontSize: 11, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 2 },
+  value: { fontSize: 15, fontWeight: '700', color: '#1e293b' },
 
   stepCardReview: { backgroundColor: 'white', borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   stepCardApproved: { borderColor: '#d1fae5', backgroundColor: '#f0fdf4' },

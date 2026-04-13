@@ -458,13 +458,17 @@ export function AppRouteGuard() {
 
       // 2. Location
       if (user.role !== "admin" && !isSecurityRoute && !isLocationVerified) {
+        // Optimization: Perform a silent check BEFORE deciding to redirect.
+        // This avoids the "flicker loop" if permissions have been granted but state hasn't updated yet.
         const { status: locStatus } = await Location.getForegroundPermissionsAsync();
+        
         if (currentGeneration < guardGenerationRef.current) return; // ABA check
-        if (locStatus !== "granted") {
+        
+        if (locStatus === "granted") {
+          setIsLocationVerified(true);
+        } else {
           navigate("/location", "Location required");
           return;
-        } else {
-          setIsLocationVerified(true);
         }
       }
 
