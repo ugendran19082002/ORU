@@ -25,10 +25,6 @@ export default function ShopOnboardingDashboard() {
   const [resetLoading, setResetLoading] = useState(false);
   const [data, setData] = useState<OnboardingStatus | null>(null);
 
-  // 0. Role Bouncer
-  if (status === 'authenticated' && user?.role !== 'shop_owner' && user?.role !== 'admin') {
-    return null;
-  }
 
   const fetchStatus = async () => {
     try {
@@ -161,6 +157,12 @@ export default function ShopOnboardingDashboard() {
     );
   };
 
+  // 0. Component Bouncer - prevent incorrect roles from hitting these APIs
+  // Placed after hooks to comply with React Rules of Hooks
+  if (status === 'authenticated' && user?.role !== 'shop_owner' && user?.role !== 'admin') {
+    return null;
+  }
+
   if (loading && !data) {
     return (
       <View style={styles.loadingContainer}>
@@ -178,7 +180,7 @@ export default function ShopOnboardingDashboard() {
       <StatusBar style="dark" />
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <BackButton fallback="/auth/role" onPress={handleAuthBack} />
+          <BackButton fallback="/auth/role" onPress={handleRoleReset} />
           <View style={{ marginLeft: 16, flex: 1 }}>
             <Text style={styles.welcome}>Partner Onboarding</Text>
             <Text style={styles.subtitle}>Verify your business to start selling</Text>

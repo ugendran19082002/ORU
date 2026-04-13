@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,9 +14,9 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator } from 'react-native';
 import { useAppSession } from '@/providers/AppSessionProvider';
 import { Logo } from '@/components/ui/Logo';
+import { adminApi, AdminShop } from '@/api/adminApi';
 
 /* ---- DATA ---- */
 const STATS = [
@@ -147,6 +148,34 @@ export default function AdminOverviewScreen() {
   const router = useRouter();
   const { user, status } = useAppSession();
   
+  const [refreshing, setRefreshing] = useState(false);
+  const [pendingShops, setPendingShops] = useState<AdminShop[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchDashboard = useCallback(async () => {
+    try {
+      const res = await adminApi.listShops('pending_review');
+      if (res.data) {
+        setPendingShops(res.data);
+      }
+    } catch (err: any) {
+      console.error('[AdminDashboard] Fetch error:', err);
+      Toast.show({ type: 'error', text1: 'Sync Error', text2: 'Failed to fetch the verification queue.' });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchDashboard();
+  }, [fetchDashboard]);
+
   // 0. Role Bouncer
   if (status === 'loading') {
     return (
@@ -160,14 +189,6 @@ export default function AdminOverviewScreen() {
      // If briefly landing here without admin role, bounce back
      return null; 
   }
-
-  const [refreshing, setRefreshing] = React.useState(false);
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  }, []);
 
   return (
     <View style={styles.container}>
@@ -196,64 +217,72 @@ export default function AdminOverviewScreen() {
             })}>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
-          </View>
-          {LIVE_ORDERS.map((order) => (
+           {LIVE_ORDERS.map((order) => (
             <LiveOrderRow key={order.id} order={order} />
           ))}
 
           {/* VERIFICATION QUEUE */}
           <View style={[styles.sectionHeader, { marginTop: 24 }]}>
             <View style={styles.sectionTitleRow}>
-              <Text style={styles.sectionTitle}>Verification</Text>
+              <Text style={styles.sectionTitle}>Verification Queue</Text>
               <View style={styles.verifCountBadge}>
-                <Text style={styles.verifCountText}>3</Text>
+                <Text style={styles.verifCountText}>{pendingShops.length}</Text>
               </View>
             </View>
           </View>
-
+          
           <View style={styles.verifCard}>
-            {VERIF_QUEUE.map((item, index) => (
-              <View key={item.shop}>
-                <View style={styles.verifRow}>
-                  <View style={styles.verifIcon}>
-                    <Ionicons name="storefront-outline" size={18} color="#005d90" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.verifShop}>{item.shop}</Text>
-                    <Text style={styles.verifReason}>{item.reason}</Text>
-                    <View style={styles.verifDoc}>
-                      <Ionicons name="document-text-outline" size={12} color="#005d90" />
-                      <Text style={styles.verifDocText}>{item.doc}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.verifActions}>
-                    <TouchableOpacity style={styles.rejectBtn} onPress={() => Toast.show({
-                      type: 'info',
-                      text1: 'Admin',
-                      text2: `Rejecting verification for ${item.shop}`
-                    })}>
-                      <Text style={styles.rejectBtnText}>Reject</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.approveBtn} onPress={() => Toast.show({
-                      type: 'info',
-                      text1: 'Admin',
-                      text2: `Approving verification for ${item.shop}`
-                    })}>
-                      <Text style={styles.approveBtnText}>Approve</Text>
-                    </TouchableOpacity>
-                  </View>
+            {loading && pendingShops.length === 0 ? (
+                <ActivityIndicator size="small" color="#005d90" style={{ padding: 20 }} />
+            ) : pendingShops.length === 0 ? (
+                <View style={{ padding: 40, alignItems: 'center' }}>
+                    <Ionicons name="checkmark-circle-outline" size={48} color="#94a3b8" />
+                    <Text style={{ mt: 12, color: '#64748b', fontWeight: '600', textAlign: 'center' }}>All clear! No pending reviews.</Text>
                 </View>
-                {index < VERIF_QUEUE.length - 1 && <View style={styles.verifDivider} />}
-              </View>
-            ))}
-            <TouchableOpacity style={styles.viewAllVerifBtn} onPress={() => Toast.show({
-              type: 'info',
-              text1: 'Admin',
-              text2: 'Viewing all verification requests...'
-            })}>
-              <Text style={styles.viewAllText}>View All Requests</Text>
-            </TouchableOpacity>
+            ) : (
+                pendingShops.slice(0, 5).map((item, index) => (
+                    <TouchableOpacity 
+                        key={item.id} 
+                        onPress={() => router.push(`/admin/shops/${item.id}`)}
+                        activeOpacity={0.7}
+                    >
+                        <View style={styles.verifRow}>
+                            <View style={styles.verifIcon}>
+                                <Ionicons name="storefront-outline" size={18} color="#005d90" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.verifShop}>{item.name}</Text>
+                                <Text style={styles.verifReason}>{item.shop_type?.replace('_', ' ').toUpperCase() || 'New Application'}</Text>
+                                <View style={styles.verifDoc}>
+                                    <Ionicons name="time-outline" size={12} color="#005d90" />
+                                    <Text style={styles.verifDocText}>Submitted {new Date(item.created_at).toLocaleDateString()}</Text>
+                                </View>
+                            </View>
+                            <View style={styles.verifActions}>
+                                <TouchableOpacity 
+                                    style={styles.approveBtn} 
+                                    onPress={() => router.push(`/admin/shops/${item.id}`)}
+                                >
+                                    <Text style={styles.approveBtnText}>Review</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                        {index < Math.min(pendingShops.length, 5) - 1 && <View style={styles.verifDivider} />}
+                    </TouchableOpacity>
+                ))
+            )}
+            
+            {pendingShops.length > 5 && (
+                <TouchableOpacity style={styles.viewAllVerifBtn} onPress={() => Toast.show({
+                  type: 'info',
+                  text1: 'Admin',
+                  text2: 'Redirecting to full shop management...'
+                })}>
+                  <Text style={styles.viewAllText}>View All ({pendingShops.length})</Text>
+                </TouchableOpacity>
+            )}
           </View>
+         </View>
 
           {/* SYSTEM HEALTH FOOTER */}
           <View style={styles.sysFooter}>

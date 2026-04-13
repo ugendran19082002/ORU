@@ -20,7 +20,7 @@ export const onboardingApi = {
    * Get all categories and subcategories (Master Structure)
    */
   getCategories: async (): Promise<OnboardingResponse<any[]>> => {
-    const response = await apiClient.get<OnboardingResponse<any[]>>('/admin/categories'); // Using the admin endpoint for now, or we can make it public
+    const response = await apiClient.get<OnboardingResponse<any[]>>('/system/categories');
     return response.data;
   },
 

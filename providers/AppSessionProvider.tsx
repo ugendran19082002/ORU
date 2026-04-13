@@ -135,7 +135,7 @@ export function AppSessionProvider({
   // MERCHANT STATUS SYNC
   const refreshShopStatus = async () => {
     if (!user || user.role !== "shop_owner") return;
-    if (isSyncingShop) return;
+    if (isSyncingShop || !accessToken) return;
     
     setIsSyncingShop(true);
     try {
@@ -413,8 +413,9 @@ export function AppRouteGuard() {
   useEffect(() => {
     // Proactive Pause: If we are hydrating or if we are a shop owner who hasn't synced their shop status yet,
     // we MUST pause the guard to avoid incorrect redirections (like a false-positive Location check).
-    const needsShopSync = user?.role === 'shop_owner' && user.shopStatus === undefined;
-    const isPaused = !isHydrated || isSyncingShop || needsShopSync;
+    const isShopOwner = user?.role === 'shop_owner';
+    const needsShopSync = isShopOwner && user.shopStatus === undefined;
+    const isPaused = !isHydrated || (isSyncingShop && isShopOwner) || needsShopSync;
 
     if (isPaused) {
         if ((isSyncingShop || needsShopSync) && !lastLoggedSyncPauseRef.current) {
@@ -452,123 +453,121 @@ export function AppRouteGuard() {
     const currentGeneration = ++guardGenerationRef.current;
 
     const runChecklist = async () => {
-      // 0. Pre-check: If a newer generation has already started, abort this one immediately
-      if (currentGeneration < guardGenerationRef.current) return;
+      try {
+        // 0. Pre-check: If a newer generation has already started, abort this one immediately
+        if (currentGeneration < guardGenerationRef.current) return;
 
-      let hasRedirected = false;
-      const normalize = (path: string) => path.split('/').filter(s => !s.startsWith('(')).join('/');
+        let hasRedirected = false;
+        const normalize = (path: string) => path.split('/').filter(s => !s.startsWith('(')).join('/');
 
-      const navigate = (target: string, reason: string) => {
-        // Validation: If a newer generation is running, or we already navigated, stop.
-        if (hasRedirected || currentGeneration < guardGenerationRef.current) return;
-        
-        // Strip out route groups (e.g., (onboarding)) for comparison logic
-        const currentNorm = normalize(pathname);
-        const targetNorm = normalize(target);
+        const navigate = (target: string, reason: string) => {
+          // Validation: If a newer generation is running, or we already navigated, stop.
+          if (hasRedirected || currentGeneration < guardGenerationRef.current) return;
+          
+          // Strip out route groups (e.g., (onboarding)) for comparison logic
+          const currentNorm = normalize(pathname);
+          const targetNorm = normalize(target);
 
-        if (currentNorm === targetNorm || normalize(lastRedirectRef.current || "") === targetNorm) {
+          if (currentNorm === targetNorm || normalize(lastRedirectRef.current || "") === targetNorm) {
+            hasRedirected = true;
+            return;
+          }
+          console.log(`🛡️ [Guard] Redirecting to ${target} | Reason: ${reason} | Role: ${user?.role} | Status: ${user?.shopStatus || 'none'}`);
+          lastRedirectRef.current = target;
           hasRedirected = true;
-          return;
-        }
-        console.log(`🛡️ [Guard] Redirecting to ${target} | Reason: ${reason} | Role: ${user?.role} | Status: ${user?.shopStatus || 'none'}`);
-        lastRedirectRef.current = target;
-        hasRedirected = true;
-        router.replace(target as any);
-      };
+          router.replace(target as any);
+        };
 
-      // 1. Biometrics
-      if (biometricEnabled && !isBiometricVerified) {
-        const hasHardware = await LocalAuthentication.hasHardwareAsync();
-        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-        if (hasHardware && isEnrolled) {
-          const result = await LocalAuthentication.authenticateAsync({ promptMessage: "Unlock ThanniGo" });
-          if (currentGeneration < guardGenerationRef.current) return; // ABA check
-          if (result.success) setIsBiometricVerified(true);
-          else return;
-        } else {
-          setIsBiometricVerified(true);
-        }
-      }
-
-      // 2. Location
-      if (user.role !== "admin" && !isSecurityRoute && !isLocationVerified) {
-        // Optimization: Perform a silent check BEFORE deciding to redirect.
-        // This avoids the "flicker loop" if permissions have been granted but state hasn't updated yet.
-        const { status: locStatus } = await Location.getForegroundPermissionsAsync();
-        
-        if (currentGeneration < guardGenerationRef.current) return; // ABA check
-        
-        if (locStatus === "granted") {
-          setIsLocationVerified(true);
-        } else {
-          navigate("/location", "Location required");
-          return;
-        }
-      }
-
-      // 3. Destinations
-      let idealRoute: any = "/(tabs)";
-      if (user.onboarding_completed) {
-        if (user.role === "shop_owner") {
-          if (user.shopStatus === "active") idealRoute = "/shop";
-          else if (user.shopStatus === "rejected") idealRoute = "/onboarding/shop/rejected";
-          else idealRoute = "/onboarding/shop/waitlist";
-        } else if (user.role === "admin") idealRoute = "/admin";
-        else if (user.role === "delivery") idealRoute = "/delivery";
-        else idealRoute = "/(tabs)";
-      } else {
-        const backendNextStep = nextStep as any;
-        if (user.role === "shop_owner") {
-          const isOnboardingSubScreen = pathname.startsWith("/onboarding/shop/") && pathname !== "/onboarding/shop/waitlist";
-
-          if (user.shopStatus === "active") idealRoute = "/shop";
-          else if (user.shopStatus === "rejected") idealRoute = "/onboarding/shop/rejected";
-          else if ((user.shopStatus === "pending_review" || user.shopStatus === "under_review") && user.onboardingStatus !== 'in_progress') {
-              idealRoute = isOnboardingSubScreen ? pathname : "/onboarding/shop/waitlist";
-          }
-          else if (user.shopStatus === "in_progress" || user.onboardingStatus === 'in_progress') {
-            idealRoute = isOnboardingSubScreen ? pathname : "/onboarding/shop";
+        // 1. Biometrics
+        if (biometricEnabled && !isBiometricVerified) {
+          const hasHardware = await LocalAuthentication.hasHardwareAsync();
+          const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+          if (hasHardware && isEnrolled) {
+            const result = await LocalAuthentication.authenticateAsync({ promptMessage: "Unlock ThanniGo" });
+            if (currentGeneration < guardGenerationRef.current) return; // ABA check
+            if (result.success) setIsBiometricVerified(true);
+            else return;
           } else {
-            // No shop created yet
-            idealRoute = backendNextStep?.screen_route || "/onboarding/shop";
+            setIsBiometricVerified(true);
           }
-        } else if (user.role === "admin") {
-          idealRoute = "/admin";
-        } else if (user.role === "delivery") {
-          idealRoute = "/delivery";
-        } else if (backendNextStep?.screen_route) {
-          idealRoute = backendNextStep.screen_route;
+        }
+
+        // 2. Location
+        if (user.role !== "admin" && !isSecurityRoute && !isLocationVerified) {
+          const { status: locStatus } = await Location.getForegroundPermissionsAsync();
+          if (currentGeneration < guardGenerationRef.current) return; // ABA check
+          
+          if (locStatus === "granted") {
+            setIsLocationVerified(true);
+          } else {
+            navigate("/location", "Location required");
+            return;
+          }
+        }
+
+        // 3. Destinations
+        let idealRoute: any = "/(tabs)";
+        if (user.onboarding_completed) {
+          if (user.role === "shop_owner") {
+            if (user.shopStatus === "active") idealRoute = "/shop";
+            else if (user.shopStatus === "rejected") idealRoute = "/onboarding/shop/rejected";
+            else idealRoute = "/onboarding/shop/waitlist";
+          } else if (user.role === "admin") idealRoute = "/admin";
+          else if (user.role === "delivery") idealRoute = "/delivery";
+          else idealRoute = "/(tabs)";
         } else {
-          // Alignment with seeded flow as last resort
-          idealRoute = user.role === "customer" ? "/onboarding/customer/profile" : "/auth/role";
-        }
-      }
+          const backendNextStep = nextStep as any;
+          if (user.role === "shop_owner") {
+            const isOnboardingSubScreen = pathname.startsWith("/onboarding/shop/") && pathname !== "/onboarding/shop/waitlist";
 
-      // Role check
-      if (!user.onboarding_completed) {
-        const routeIsShop = idealRoute.includes("/shop/");
-        const routeIsCustomer = idealRoute.includes("/customer/");
-        if ((user.role === "customer" && routeIsShop) || (user.role === "shop_owner" && routeIsCustomer)) {
-          idealRoute = user.role === "customer" ? "/onboarding/customer" : "/onboarding/shop";
+            if (user.shopStatus === "active") idealRoute = "/shop";
+            else if (user.shopStatus === "rejected") idealRoute = "/onboarding/shop/rejected";
+            else if ((user.shopStatus === "pending_review" || user.shopStatus === "under_review") && user.onboardingStatus !== 'in_progress') {
+                idealRoute = isOnboardingSubScreen ? pathname : "/onboarding/shop/waitlist";
+            }
+            else if (user.shopStatus === "in_progress" || user.onboardingStatus === 'in_progress') {
+              idealRoute = isOnboardingSubScreen ? pathname : "/onboarding/shop";
+            } else {
+              idealRoute = backendNextStep?.screen_route || "/onboarding/shop";
+            }
+          } else if (user.role === "admin") {
+            idealRoute = "/admin";
+          } else if (user.role === "delivery") {
+            idealRoute = "/delivery";
+          } else if (backendNextStep?.screen_route) {
+            idealRoute = backendNextStep.screen_route;
+          } else {
+            idealRoute = user.role === "customer" ? "/onboarding/customer" : "/auth/role";
+          }
         }
-      }
 
-      // Execute
-      if (isAuthRoute) {
-        navigate(idealRoute, "Escaping Auth");
-      } else if (!user.onboarding_completed && !isPriorityRoute) {
-        // Enforce the ideal onboarding screen
-        // Optimization: If we are already in the correct onboarding flow (customer or shop), 
-        // don't force redirect if the user is navigate to a sub-step.
-        const currentPath = pathname || "";
-        const isCurrentlyInExpectedFlow = (user.role === 'customer' && currentPath.startsWith('/onboarding/customer')) ||
-                                           (user.role === 'shop_owner' && currentPath.startsWith('/onboarding/shop'));
-
-        if (!isCurrentlyInExpectedFlow || currentPath === '/onboarding/shop' || currentPath === '/onboarding/customer') {
-            navigate(idealRoute, "Enforcing Onboarding");
+        // Role check & Enforce flow
+        if (!user.onboarding_completed) {
+          const routeIsShop = idealRoute.includes("/shop/");
+          const routeIsCustomer = idealRoute.includes("/customer/");
+          if ((user.role === "customer" && routeIsShop) || (user.role === "shop_owner" && routeIsCustomer)) {
+            idealRoute = user.role === "customer" ? "/onboarding/customer" : "/onboarding/shop";
+          }
         }
-      } else if (pathname === "/") {
-        navigate(idealRoute, "Root Redirection");
+
+        // Execute
+        if (isAuthRoute) {
+          navigate(idealRoute, "Escaping Auth");
+        } else if (!user.onboarding_completed && !isPriorityRoute) {
+          const currentPath = pathname || "";
+          const isCurrentlyInExpectedFlow = (user.role === 'customer' && currentPath.startsWith('/onboarding/customer')) ||
+                                             (user.role === 'shop_owner' && currentPath.startsWith('/onboarding/shop'));
+
+          if (!isCurrentlyInExpectedFlow || currentPath === '/onboarding/shop' || currentPath === '/onboarding/customer') {
+              navigate(idealRoute, "Enforcing Onboarding");
+          }
+        } else if (pathname === "/") {
+          navigate(idealRoute, "Root Redirection");
+        }
+      } catch (error) {
+        console.error("🛡️ [Guard] Critical Navigation Error:", error);
+        // Fail-safe: Back to customer home
+        router.replace("/(tabs)" as any);
       }
     };
 

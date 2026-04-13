@@ -84,7 +84,16 @@ export const adminApi = {
     status: 'approved' | 'rejected'; 
     notes?: string 
   }): Promise<AdminApiResponse<any>> => {
-    const response = await apiClient.post<AdminApiResponse<any>>('/admin/shops/onboarding/review', data);
+    // Map UI 'approved' to backend 'completed'
+    const status = data.status === 'approved' ? 'completed' : 'rejected';
+    
+    const response = await apiClient.post<AdminApiResponse<any>>(
+      `/admin/shops/${data.shopId}/onboarding/${data.stepId}/review`, 
+      {
+        status,
+        admin_notes: data.notes
+      }
+    );
     return response.data;
   }
 };

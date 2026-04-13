@@ -151,6 +151,7 @@ export default function AdminShopReviewScreen() {
 
   const [showStepRejectModal, setShowStepRejectModal] = useState<number | null>(null);
   const [stepNotes, setStepNotes] = useState('');
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
 
   const getParsedDetails = (data: any) => {
     if (!data) return {};
@@ -162,6 +163,13 @@ export default function AdminShopReviewScreen() {
       }
     }
     return data;
+  };
+
+  const resolveUrl = (path: string) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    const baseUrl = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api').replace(/\/api$/, '');
+    return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
   };
 
   const onViewStepData = (step: any) => {
@@ -415,11 +423,18 @@ export default function AdminShopReviewScreen() {
 
                     {/* Improved Regex to handle URLs with query parameters (common in cloud storage) */}
                     {selectedDoc.document_url.match(/\.(jpeg|jpg|gif|png)(\?.*)?$/i) || selectedDoc.document_url.includes('firebasestorage') || selectedDoc.document_url.includes('blob:') || selectedDoc.document_url.startsWith('data:image') ? (
-                      <View style={{ borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#f1f5f9' }}>
-                        <Image source={{ uri: selectedDoc.document_url }} style={styles.docImg} resizeMode="contain" />
-                      </View>
+                      <TouchableOpacity 
+                        activeOpacity={0.9} 
+                        onPress={() => setFullScreenImage(resolveUrl(selectedDoc.document_url))}
+                        style={{ borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: '#f1f5f9' }}
+                      >
+                        <Image source={{ uri: resolveUrl(selectedDoc.document_url) }} style={styles.docImg} resizeMode="cover" />
+                        <View style={styles.zoomOverlay}>
+                            <Ionicons name="expand-outline" size={24} color="white" />
+                        </View>
+                      </TouchableOpacity>
                     ) : (
-                      <TouchableOpacity style={styles.linkBtn} onPress={() => Linking.openURL(selectedDoc.document_url)}>
+                      <TouchableOpacity style={styles.linkBtn} onPress={() => Linking.openURL(resolveUrl(selectedDoc.document_url))}>
                         <Ionicons name="open-outline" size={18} color="#fff" />
                         <Text style={styles.linkBtnText}>Open Document Link Externally</Text>
                       </TouchableOpacity>
@@ -429,6 +444,26 @@ export default function AdminShopReviewScreen() {
               </ScrollView>
             </View>
           </View>
+        </Modal>
+
+        {/* Full Screen Image Modal */}
+        <Modal visible={!!fullScreenImage} transparent animationType="fade">
+            <View style={styles.fullScreenOverlay}>
+                <TouchableOpacity 
+                    style={styles.fullScreenCloseBtn} 
+                    onPress={() => setFullScreenImage(null)}
+                >
+                    <Ionicons name="close-circle" size={40} color="white" />
+                </TouchableOpacity>
+                
+                {fullScreenImage && (
+                    <Image 
+                        source={{ uri: fullScreenImage }} 
+                        style={styles.fullScreenImg} 
+                        resizeMode="contain" 
+                    />
+                )}
+            </View>
         </Modal>
       </SafeAreaView>
     </View>
@@ -516,6 +551,12 @@ const styles = StyleSheet.create({
   premiumDataValWrap: { backgroundColor: '#f8fafc', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#f1f5f9' },
   premiumDataVal: { fontSize: 14, fontWeight: '700', color: '#0f172a' },
   docImg: { width: '100%', height: 250, borderRadius: 12, backgroundColor: '#f1f5f9' },
+  zoomOverlay: { position: 'absolute', right: 12, bottom: 12, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 12, padding: 8 },
+  
+  fullScreenOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
+  fullScreenImg: { width: '100%', height: '80%' },
+  fullScreenCloseBtn: { position: 'absolute', top: 50, right: 30, zIndex: 10 },
+  
   linkBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#005d90', padding: 14, borderRadius: 12, justifyContent: 'center', marginTop: 12 },
   linkBtnText: { color: 'white', fontWeight: '800', fontSize: 14 }
 });

@@ -24,11 +24,6 @@ export default function CustomerOnboardingScreen() {
   const [resetLoading, setResetLoading] = useState(false);
   const [data, setData] = useState<OnboardingStatus | null>(null);
 
-  // 0. Component Bouncer - prevent incorrect roles from hitting these APIs
-  if (status === 'authenticated' && user?.role !== 'customer') {
-    return null;
-  }
-
   const fetchStatus = async () => {
     try {
       setLoading(true);
@@ -114,6 +109,12 @@ export default function CustomerOnboardingScreen() {
     );
   };
 
+  // 0. Component Bouncer - prevent incorrect roles from hitting these APIs
+  // Placed after hooks to comply with React Rules of Hooks
+  if (status === 'authenticated' && user?.role !== 'customer') {
+    return null;
+  }
+
   if (loading && !data) {
     return (
       <View style={styles.loadingContainer}>
@@ -130,7 +131,7 @@ export default function CustomerOnboardingScreen() {
       <SafeAreaView style={styles.safe} edges={['top']}>
         {/* HEADER */}
         <View style={styles.header}>
-          <BackButton fallback="/auth/role" onPress={handleAuthBack} />
+          <BackButton fallback="/auth/role"  onPress={handleRoleReset}/>
           <View style={{ marginLeft: 16, flex: 1 }}>
             <Text style={styles.welcome}>Welcome, {user?.name || 'Guest'}</Text>
             <Text style={styles.subtitle}>Complete these steps to get started</Text>
