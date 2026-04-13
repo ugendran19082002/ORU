@@ -4,6 +4,7 @@ import {
   Animated,
   Linking,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -292,7 +293,7 @@ export default function OrderTrackingScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.mapOverlay} pointerEvents="none" />
+          <View style={[styles.mapOverlay, { pointerEvents: 'none' }]} />
 
           {/* ETA chip */}
           <View style={styles.etaChip}>
@@ -452,8 +453,16 @@ const styles = StyleSheet.create({
   mapCard: {
     height: 220, borderRadius: 24, marginTop: 20, marginBottom: 20,
     overflow: 'hidden', position: 'relative',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1, shadowRadius: 16, elevation: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 16,
+      },
+      android: { elevation: 5 },
+      web: { boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }
+    }),
   },
   mapImage: { width: '100%', height: '100%' },
   mapOverlay: {
@@ -467,7 +476,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: 'rgba(255,255,255,0.96)', borderRadius: 20,
     paddingHorizontal: 12, paddingVertical: 7,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 3,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 6,
+      },
+      android: { elevation: 3 },
+      web: { boxShadow: '0 2px 6px rgba(0,0,0,0.12)' }
+    }),
   },
   etaText: { fontSize: 12, fontWeight: '700', color: '#005d90' },
   mapControls: {

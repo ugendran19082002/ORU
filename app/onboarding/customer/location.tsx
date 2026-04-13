@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Dimensions
+  ActivityIndicator, Dimensions, Platform
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -149,7 +149,7 @@ export default function CustomerLocationScreen() {
         )}
       </View>
 
-      <SafeAreaView style={styles.overlay} pointerEvents="box-none">
+      <SafeAreaView style={[styles.overlay, { pointerEvents: 'box-none' }]}>
         {/* TOP HEADER */}
         <View style={styles.header}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 12 }}>
@@ -211,11 +211,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 16, 
     marginTop: 10, 
     borderRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+      },
+      android: { elevation: 4 },
+      web: { boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }
+    }),
   },
   stepContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   stepDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#e2e8f0' },

@@ -118,27 +118,39 @@ export default function AdminShopReviewScreen() {
     }
   };
 
-  const onViewStepData = (step: any) => {
-    const hasData = step.details || step.metadata;
-    if (!step.document_url && (!hasData || Object.keys(hasData).length === 0)) {
-      Toast.show({
-        type: 'info',
-        text1: 'Empty',
-        text2: 'No document or data associated with this step.'
+  const handleReviewStep = async (stepId: number, status: 'approved' | 'rejected', notes?: string) => {
+    try {
+      setProcessing(true);
+      const res = await adminApi.reviewShopOnboardingStep({
+        shopId: Number(id),
+        stepId,
+        status,
+        notes
       });
-      return;
+
+      if (res.status === 1) {
+        Toast.show({
+          type: 'success',
+          text1: status === 'approved' ? 'Step Approved' : 'Step Rejected',
+          text2: 'Onboarding progress updated.'
+        });
+        fetchDetails(); // Reload data
+        setShowStepRejectModal(null);
+        setStepNotes('');
+      }
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.response?.data?.message || 'Failed to review step.'
+      });
+    } finally {
+      setProcessing(false);
     }
-    setSelectedDoc(step);
   };
 
-  const getParsedDetails = (details: any) => {
-    if (!details) return null;
-    try {
-      return typeof details === 'string' ? JSON.parse(details) : details;
-    } catch {
-      return { raw_data: details };
-    }
-  };
+  const [showStepRejectModal, setShowStepRejectModal] = useState<number | null>(null);
+  const [stepNotes, setStepNotes] = useState('');
 
   if (loading) {
     return (
@@ -150,7 +162,12 @@ export default function AdminShopReviewScreen() {
 
   if (!shop) return null;
 
-  const isPending = shop.status === 'pending_review';
+  const steps = progress?.steps || [];
+  const allMandatoryApproved = steps
+    .filter((s: any) => s.is_mandatory)
+    .every((s: any) => s.status === 'completed');
+
+  const canActivate = shop.status === 'pending_review' && allMandatoryApproved;
 
   return (
     <View style={styles.container}>
@@ -164,7 +181,14 @@ export default function AdminShopReviewScreen() {
         <ScrollView contentContainerStyle={styles.scroll}>
           {/* Shop Identity Card */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Business Identity</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <Text style={styles.sectionTitle}>Business Identity</Text>
+                <View style={[styles.statusBadge, { backgroundColor: shop.status === 'active' ? '#ecfdf5' : '#fff7ed' }]}>
+                    <Text style={[styles.statusBadgeText, { color: shop.status === 'active' ? '#059669' : '#d97706' }]}>
+                        {shop.status.toUpperCase()}
+                    </Text>
+                </View>
+            </View>
             <View style={styles.card}>
               <View style={styles.infoRow}>
                 <Ionicons name="business" size={20} color="#64748b" />
@@ -181,126 +205,150 @@ export default function AdminShopReviewScreen() {
                 </View>
               </View>
               <View style={styles.infoRow}>
-                <Ionicons name="ribbon" size={20} color="#64748b" />
+                <Ionicons name="location" size={20} color="#64748b" />
                 <View style={styles.infoTextGroup}>
-                  <Text style={styles.label}>Type</Text>
-                  <Text style={styles.value}>{(shop.shop_type || 'Unknown').toUpperCase()}</Text>
+                  <Text style={styles.label}>Address</Text>
+                  <Text style={styles.value}>{shop.owner?.email || 'N/A'}</Text>
                 </View>
               </View>
             </View>
           </View>
 
-          {/* Operational & Financial */}
+          {/* Evidence Checklist - THE MAIN REFACTOR */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Operational & Financial</Text>
-            <View style={styles.card}>
-              <View style={styles.infoRow}>
-                <Ionicons name="map" size={20} color="#64748b" />
-                <View style={styles.infoTextGroup}>
-                  <Text style={styles.label}>Delivery Radius</Text>
-                  <Text style={styles.value}>{shop.delivery_radius_km ? `${shop.delivery_radius_km} km` : 'Not Configured'}</Text>
-                </View>
-              </View>
+            <Text style={styles.sectionTitle}>Onboarding Steps Review</Text>
+            {steps.map((step: any) => {
+              const isUnderReview = step.status === 'under_review';
+              const isApproved = step.status === 'completed';
+              const isRejected = step.status === 'rejected';
 
-              <View style={styles.cardDivider} />
-
-              <View style={styles.infoRow}>
-                <Ionicons name="receipt" size={20} color="#64748b" />
-                <View style={styles.infoTextGroup}>
-                  <Text style={styles.label}>GSTIN (Tax ID)</Text>
-                  <Text style={[styles.value, !shop.gstin && { color: '#94a3b8', fontStyle: 'italic' }]}>
-                    {shop.gstin || 'No GST Details Provided'}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.cardDivider} />
-
-              <View style={styles.infoRow}>
-                <Ionicons name="card" size={20} color="#64748b" />
-                <View style={styles.infoTextGroup}>
-                  <Text style={styles.label}>Bank Account</Text>
-                  <Text style={[styles.value, !shop.bank_account_no && { color: '#94a3b8', fontStyle: 'italic' }]}>
-                    {shop.bank_account_no ? `${shop.bank_account_no}\nIFSC: ${shop.bank_ifsc}` : 'No Banking Details Setup'}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-
-          {/* Evidence Checklist */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Document Evidence</Text>
-            {(progress?.steps || []).map((step: any) => (
-              <View key={step.id} style={styles.docRow}>
-                <View style={styles.docInfo}>
-                  <Text style={styles.docLabel}>{step.title}</Text>
-                  <Text style={styles.docStatus}>{(step.status || 'Pending').toString().replace('_', ' ')}</Text>
-                </View>
-                
-                <TouchableOpacity 
-                  style={[styles.viewBtn, !(step.document_url || step.details || step.metadata) && styles.viewBtnDisabled]}
-                  onPress={() => onViewStepData(step)}
-                  disabled={!(step.document_url || step.details || step.metadata)}
-                >
-                  <Ionicons name="eye-outline" size={18} color={(step.document_url || step.details || step.metadata) ? "#005d90" : "#cbd5e1"} />
-                  <Text style={[styles.viewBtnText, !(step.document_url || step.details || step.metadata) && { color: '#cbd5e1' }]}>View Data</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-
-          {/* Action Area */}
-          {isPending && (
-            <View style={styles.actionSection}>
-              {!showRejectInput ? (
-                <View style={styles.btnRow}>
-                  <TouchableOpacity 
-                    style={styles.rejectBtn} 
-                    onPress={() => setShowRejectInput(true)}
-                    disabled={processing}
-                  >
-                    <Text style={styles.rejectBtnText}>Reject</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity 
-                    style={styles.approveBtn} 
-                    onPress={handleApprove}
-                    disabled={processing}
-                  >
-                    <LinearGradient
-                      colors={['#005d90', '#003a5c']}
-                      style={styles.approveGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                    >
-                      {processing ? <ActivityIndicator color="white" /> : <Text style={styles.approveBtnText}>Approve Global</Text>}
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={styles.rejectForm}>
-                  <Text style={styles.inputLabel}>Reason for Rejection</Text>
-                  <TextInput
-                    style={styles.textInput}
-                    placeholder="Tell the partner what to fix (e.g. FSSAI image is blurry)..."
-                    value={rejectionNotes}
-                    onChangeText={setRejectionNotes}
-                    multiline
-                  />
-                  <View style={styles.btnRow}>
-                    <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowRejectInput(false)}>
-                      <Text style={styles.cancelBtnText}>Back</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.confirmRejectBtn} onPress={handleReject} disabled={processing}>
-                      {processing ? <ActivityIndicator color="white" /> : <Text style={styles.confirmRejectText}>Confirm Reject</Text>}
-                    </TouchableOpacity>
+              return (
+                <View key={step.id} style={[styles.stepCardReview, isApproved && styles.stepCardApproved, isRejected && styles.stepCardRejected]}>
+                  <View style={styles.stepHeader}>
+                    <View style={styles.stepTitleGroup}>
+                        <Text style={styles.stepTitleMain}>{step.title}</Text>
+                        {step.is_mandatory && <Text style={styles.mandatoryTag}>Mandatory</Text>}
+                    </View>
+                    
+                    <View style={[styles.stepStatusBadge, { 
+                        backgroundColor: isApproved ? '#ecfdf5' : isRejected ? '#fef2f2' : isUnderReview ? '#fff7ed' : '#f1f5f9' 
+                    }]}>
+                        <Text style={[styles.stepStatusText, { 
+                            color: isApproved ? '#059669' : isRejected ? '#dc2626' : isUnderReview ? '#d97706' : '#64748b' 
+                        }]}>
+                            {step.status.replace('_', ' ')}
+                        </Text>
+                    </View>
                   </View>
+
+                  <View style={styles.stepActionRow}>
+                    <TouchableOpacity 
+                      style={styles.viewDataBtn}
+                      onPress={() => onViewStepData(step)}
+                    >
+                      <Ionicons name="eye-outline" size={16} color="#005d90" />
+                      <Text style={styles.viewDataBtnText}>View Data</Text>
+                    </TouchableOpacity>
+
+                    {isUnderReview && (
+                        <View style={styles.decisionGroup}>
+                            <TouchableOpacity 
+                                style={styles.miniBtnReject} 
+                                onPress={() => setShowStepRejectModal(step.id)}
+                                disabled={processing}
+                            >
+                                <Ionicons name="close-circle-outline" size={18} color="#dc2626" />
+                                <Text style={styles.miniBtnRejectText}>Reject</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity 
+                                style={styles.miniBtnApprove} 
+                                onPress={() => handleReviewStep(step.id, 'approved')}
+                                disabled={processing}
+                            >
+                                <LinearGradient
+                                    colors={['#059669', '#047857']}
+                                    style={styles.miniBtnApproveGrad}
+                                >
+                                    <Ionicons name="checkmark-circle-outline" size={18} color="white" />
+                                    <Text style={styles.miniBtnApproveText}>Approve</Text>
+                                </LinearGradient>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                  </View>
+
+                  {isRejected && step.admin_notes && (
+                      <View style={styles.adminNotesBox}>
+                          <Text style={styles.adminNotesLabel}>Admin Note:</Text>
+                          <Text style={styles.adminNotesText}>{step.admin_notes}</Text>
+                      </View>
+                  )}
                 </View>
-              )}
-            </View>
-          )}
+              );
+            })}
+          </View>
+
+          {/* Global Action Area */}
+          <View style={styles.globalActionBox}>
+              <Text style={styles.globalActionHint}>
+                  {allMandatoryApproved 
+                    ? "All mandatory steps are approved. You can now activate this shop." 
+                    : "Some mandatory steps are still pending approval."}
+              </Text>
+
+              <TouchableOpacity 
+                style={[styles.activateBtn, !canActivate && styles.activateBtnDisabled]} 
+                onPress={handleApprove}
+                disabled={!canActivate || processing}
+              >
+                <LinearGradient
+                  colors={canActivate ? ['#005d90', '#003a5c'] : ['#e2e8f0', '#cbd5e1']}
+                  style={styles.activateGradient}
+                >
+                  {processing ? <ActivityIndicator color="white" /> : (
+                      <>
+                        <Ionicons name="rocket" size={20} color="white" />
+                        <Text style={styles.activateBtnText}>Activate & Publish Shop</Text>
+                      </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+          </View>
         </ScrollView>
+
+        {/* Individual Step Rejection Modal */}
+        <Modal visible={showStepRejectModal !== null} transparent animationType="slide">
+            <View style={styles.modalOverlay}>
+                <View style={styles.bottomSheet}>
+                    <Text style={styles.modalSubTitle}>Reject Step</Text>
+                    <Text style={styles.modalDesc}>Please provide a specific reason for rejection. This will be shown to the merchant.</Text>
+                    
+                    <TextInput
+                        style={styles.modalInput}
+                        placeholder="e.g. FSSAI document is expired or blurry."
+                        value={stepNotes}
+                        onChangeText={setStepNotes}
+                        multiline
+                        numberOfLines={4}
+                    />
+
+                    <View style={styles.modalBtnRow}>
+                        <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowStepRejectModal(null)}>
+                            <Text style={styles.modalCancelText}>Cancel</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            style={styles.modalConfirmBtn} 
+                            onPress={() => showStepRejectModal && handleReviewStep(showStepRejectModal, 'rejected', stepNotes)}
+                            disabled={processing || !stepNotes.trim()}
+                        >
+                            <Text style={styles.modalConfirmText}>Confirm Rejection</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+        </Modal>
 
         {/* Document Viewer Modal */}
         <Modal visible={!!selectedDoc} transparent animationType="fade" onRequestClose={() => setSelectedDoc(null)}>
@@ -368,69 +416,57 @@ export default function AdminShopReviewScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  safe: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9'
-  },
-  headerTitle: { fontSize: 17, fontWeight: '800', color: '#1e293b' },
-  scroll: { padding: 24, paddingBottom: 60 },
-  
-  section: { marginBottom: 32 },
-  sectionTitle: { fontSize: 13, fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 },
-  
-  card: { backgroundColor: '#f8fafc', borderRadius: 24, padding: 20, gap: 20 },
-  cardDivider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: -4 },
-  infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
-  infoTextGroup: { flex: 1 },
-  label: { fontSize: 11, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 4 },
-  value: { fontSize: 15, color: '#1e293b', fontWeight: '700' },
+  statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  statusBadgeText: { fontSize: 11, fontWeight: '900', letterSpacing: 0.5 },
 
-  docRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-    marginBottom: 12
-  },
-  docInfo: { flex: 1 },
-  docLabel: { fontSize: 14, fontWeight: '700', color: '#1e293b' },
-  docStatus: { fontSize: 11, color: '#64748b', marginTop: 2, textTransform: 'capitalize' },
+  stepCardReview: { backgroundColor: 'white', borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  stepCardApproved: { borderColor: '#d1fae5', backgroundColor: '#f0fdf4' },
+  stepCardRejected: { borderColor: '#fee2e2', backgroundColor: '#fef2f2' },
   
-  viewBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f0f9ff', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
-  viewBtnDisabled: { backgroundColor: '#f8fafc' },
-  viewBtnText: { fontSize: 13, fontWeight: '800', color: '#005d90' },
-
-  actionSection: { marginTop: 20, paddingTop: 32, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
-  btnRow: { flexDirection: 'row', gap: 12 },
-  approveBtn: { flex: 2 },
-  approveGradient: { height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  approveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
+  stepHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
+  stepTitleGroup: { flex: 1, gap: 4 },
+  stepTitleMain: { fontSize: 16, fontWeight: '800', color: '#1e293b' },
+  mandatoryTag: { fontSize: 9, fontWeight: '900', color: '#005d90', textTransform: 'uppercase', letterSpacing: 1 },
   
-  rejectBtn: { flex: 1, height: 60, borderRadius: 20, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
-  rejectBtnText: { color: '#ef4444', fontSize: 16, fontWeight: '800' },
+  stepStatusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  stepStatusText: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
 
-  rejectForm: { gap: 16 },
-  inputLabel: { fontSize: 14, fontWeight: '700', color: '#1e293b' },
-  textInput: { backgroundColor: '#f8fafc', borderRadius: 16, padding: 16, height: 120, textAlignVertical: 'top', borderWidth: 1, borderColor: '#e2e8f0' },
-  cancelBtn: { flex: 1, height: 50, borderRadius: 16, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
-  cancelBtnText: { color: '#64748b', fontWeight: '700' },
-  confirmRejectBtn: { flex: 2, height: 50, borderRadius: 16, backgroundColor: '#ef4444', alignItems: 'center', justifyContent: 'center' },
-  confirmRejectText: { color: 'white', fontWeight: '800' },
+  stepActionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
+  viewDataBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f0f9ff', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
+  viewDataBtnText: { fontSize: 13, fontWeight: '800', color: '#005d90' },
 
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: 'white', borderRadius: 24, overflow: 'hidden', maxHeight: '80%' },
+  decisionGroup: { flexDirection: 'row', gap: 10 },
+  miniBtnReject: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'white', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: '#fee2e2' },
+  miniBtnRejectText: { fontSize: 12, fontWeight: '800', color: '#dc2626' },
+  
+  miniBtnApprove: { borderRadius: 10, overflow: 'hidden' },
+  miniBtnApproveGrad: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8 },
+  miniBtnApproveText: { fontSize: 12, fontWeight: '800', color: 'white' },
+
+  adminNotesBox: { marginTop: 16, padding: 12, backgroundColor: 'rgba(220, 38, 38, 0.05)', borderRadius: 12, borderLeftWidth: 3, borderLeftColor: '#dc2626' },
+  adminNotesLabel: { fontSize: 10, fontWeight: '900', color: '#dc2626', marginBottom: 4, textTransform: 'uppercase' },
+  adminNotesText: { fontSize: 13, color: '#991b1b', lineHeight: 18, fontWeight: '600' },
+
+  globalActionBox: { marginTop: 8, padding: 32, backgroundColor: '#f8fafc', borderRadius: 32, alignItems: 'center', gap: 20 },
+  globalActionHint: { fontSize: 13, color: '#64748b', textAlign: 'center', lineHeight: 20, fontWeight: '600' },
+  
+  activateBtn: { width: '100%', shadowColor: '#005d90', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 15, elevation: 8 },
+  activateBtnDisabled: { shadowOpacity: 0, elevation: 0 },
+  activateGradient: { height: 64, borderRadius: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
+  activateBtnText: { color: 'white', fontSize: 18, fontWeight: '800' },
+
+  bottomSheet: { backgroundColor: 'white', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 32, paddingBottom: 40, width: '100%', position: 'absolute', bottom: 0 },
+  modalSubTitle: { fontSize: 24, fontWeight: '900', color: '#1e293b', marginBottom: 12 },
+  modalDesc: { fontSize: 15, color: '#64748b', lineHeight: 22, marginBottom: 24 },
+  modalInput: { backgroundColor: '#f1f5f9', borderRadius: 20, padding: 20, height: 120, fontSize: 16, color: '#1e293b', textAlignVertical: 'top', marginBottom: 24 },
+  modalBtnRow: { flexDirection: 'row', gap: 12 },
+  modalCancelBtn: { flex: 1, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f5f9' },
+  modalCancelText: { fontSize: 16, fontWeight: '800', color: '#64748b' },
+  modalConfirmBtn: { flex: 2, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#dc2626' },
+  modalConfirmText: { fontSize: 16, fontWeight: '800', color: 'white' },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center' },
+  modalContent: { backgroundColor: 'white', borderRadius: 24, overflow: 'hidden', maxHeight: '80%', margin: 20 },
   modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   modalTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b' },
   modalScroll: { padding: 20 },
@@ -443,9 +479,8 @@ const styles = StyleSheet.create({
   premiumDataKey: { fontSize: 10, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 6 },
   premiumDataValWrap: { backgroundColor: '#f8fafc', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#f1f5f9' },
   premiumDataVal: { fontSize: 14, fontWeight: '700', color: '#0f172a' },
-
-  docImgWrap: { backgroundColor: '#f8fafc', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#e2e8f0' },
   docImg: { width: '100%', height: 250, borderRadius: 12, backgroundColor: '#f1f5f9' },
   linkBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#005d90', padding: 14, borderRadius: 12, justifyContent: 'center', marginTop: 12 },
   linkBtnText: { color: 'white', fontWeight: '800', fontSize: 14 }
 });
+

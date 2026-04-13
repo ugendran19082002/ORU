@@ -73,5 +73,18 @@ export const adminApi = {
       params: { shopId }
     });
     return response.data;
+  },
+
+  /**
+   * Review (Approve/Reject) a specific onboarding step
+   */
+  reviewShopOnboardingStep: async (data: { 
+    shopId: number; 
+    stepId: number; 
+    status: 'approved' | 'rejected'; 
+    notes?: string 
+  }): Promise<AdminApiResponse<any>> => {
+    const response = await apiClient.post<AdminApiResponse<any>>('/admin/shops/onboarding/review', data);
+    return response.data;
   }
 };

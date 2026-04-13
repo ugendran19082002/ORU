@@ -1,4 +1,4 @@
-export type OnboardingStepStatus = 'pending' | 'in_progress' | 'under_review' | 'completed' | 'skipped' | 'failed';
+export type OnboardingStepStatus = 'pending' | 'in_progress' | 'under_review' | 'completed' | 'skipped' | 'failed' | 'rejected';
 
 export interface OnboardingStep {
   id: number;

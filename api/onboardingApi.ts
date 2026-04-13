@@ -17,6 +17,14 @@ export const onboardingApi = {
   },
 
   /**
+   * Get all categories and subcategories (Master Structure)
+   */
+  getCategories: async (): Promise<OnboardingResponse<any[]>> => {
+    const response = await apiClient.get<OnboardingResponse<any[]>>('/admin/categories'); // Using the admin endpoint for now, or we can make it public
+    return response.data;
+  },
+
+  /**
    * Complete a customer onboarding step
    */
   completeCustomerStep: async (stepKey: string, metadata?: any): Promise<OnboardingResponse<any>> => {
@@ -63,29 +71,43 @@ export const onboardingApi = {
   },
 
   /**
-   * Specifically update bank details (Convenience method)
+   * Specifically update payment setup (Convenience method)
    */
-  updateBankDetails: async (shopId: number, data: { 
+  updatePaymentSetup: async (shopId: number, data: { 
     bank_account_no: string; 
     bank_ifsc: string;
     upi_id?: string;
     bank_statement_password?: string;
   }): Promise<OnboardingResponse<any>> => {
-    return onboardingApi.completeShopStep('bank_details', shopId, data);
+    return onboardingApi.completeShopStep('payment_setup', shopId, data);
+  },
+
+  /**
+   * Specifically update delivery setup
+   */
+  updateDeliverySetup: async (shopId: number, data: { is_self_delivery: boolean }): Promise<OnboardingResponse<any>> => {
+    return onboardingApi.completeShopStep('delivery_setup', shopId, data);
+  },
+
+  /**
+   * Specifically update basic details
+   */
+  updateBasicDetails: async (shopId: number, data: any): Promise<OnboardingResponse<any>> => {
+    return onboardingApi.completeShopStep('basic_details', shopId, data);
+  },
+
+  /**
+   * Specifically update store branding
+   */
+  updateStoreBranding: async (shopId: number, data: any): Promise<OnboardingResponse<any>> => {
+    return onboardingApi.completeShopStep('business_info', shopId, data);
   },
 
   /**
    * Specifically update store timing
    */
-  updateStoreTiming: async (shopId: number, data: { opening_time: string; closing_time: string; holiday_dates?: any }): Promise<OnboardingResponse<any>> => {
-    return onboardingApi.completeShopStep('store_timing', shopId, data);
-  },
-
-  /**
-   * Specifically update store branding/profile
-   */
-  updateStoreBranding: async (shopId: number, data: { logo_url?: string; banner_url?: string; description?: string }): Promise<OnboardingResponse<any>> => {
-    return onboardingApi.completeShopStep('store_profile', shopId, data);
+  updateStoreTiming: async (shopId: number, data: any): Promise<OnboardingResponse<any>> => {
+    return onboardingApi.completeShopStep('business_info', shopId, data);
   },
 
   /**

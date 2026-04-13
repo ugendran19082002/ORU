@@ -102,7 +102,7 @@ export default function ShopBankDetailsScreen() {
       
       // 1. Upload Statement if selected
       if (statementFile) {
-        const uploadRes = await onboardingApi.uploadShopDocument('bank_details', shopId, {
+        const uploadRes = await onboardingApi.uploadShopDocument('payment_setup', shopId, {
           uri: statementFile.uri,
           name: statementFile.name || 'bank_statement.pdf',
           type: 'application/pdf',
@@ -111,7 +111,7 @@ export default function ShopBankDetailsScreen() {
       }
 
       // 2. Save final metadata
-      const res = await onboardingApi.updateBankDetails(shopId, {
+      const res = await onboardingApi.updatePaymentSetup(shopId, {
         bank_name: formData.bank_name,
         account_holder: formData.account_holder,
         bank_account_no: formData.bank_account_no,

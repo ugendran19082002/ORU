@@ -198,37 +198,50 @@ export default function ShopOnboardingDashboard() {
           {data?.steps.map((step) => {
             const isCompleted = step.status === 'completed';
             const isReview = step.status === 'under_review';
+            const isRejected = step.status === 'rejected';
             
             return (
               <TouchableOpacity
                 key={step.id}
                 style={[
                   styles.stepCard,
-                  (isCompleted || isReview) && styles.stepCardMuted
+                  ((isCompleted || isReview) ? styles.stepCardMuted : undefined) as any,
+                  (isRejected ? styles.stepCardRejected : undefined) as any
                 ]}
                 onPress={() => handleStepPress(step)}
                 activeOpacity={(isCompleted || isReview) ? 1 : 0.7}
               >
                 <View style={[
                   styles.iconWrap,
-                  { backgroundColor: isCompleted ? '#ecfdf5' : isReview ? '#fff7ed' : step.status === 'skipped' ? '#f1f5f9' : '#f8fafc' }
+                  { backgroundColor: isCompleted ? '#ecfdf5' : isReview ? '#fff7ed' : isRejected ? '#fef2f2' : step.status === 'skipped' ? '#f1f5f9' : '#f8fafc' }
                 ]}>
                   <Ionicons
-                    name={isCompleted ? "checkmark-circle" : isReview ? "time" : step.status === 'skipped' ? "eye-off" : (step.icon_name as any || "document-text")}
+                    name={isCompleted ? "checkmark-circle" : isReview ? "time" : isRejected ? "close-circle" : step.status === 'skipped' ? "eye-off" : (step.icon_name as any || "document-text")}
                     size={22}
-                    color={isCompleted ? "#059669" : isReview ? "#d97706" : step.status === 'skipped' ? "#94a3b8" : "#006878"}
+                    color={isCompleted ? "#059669" : isReview ? "#d97706" : isRejected ? "#dc2626" : step.status === 'skipped' ? "#94a3b8" : "#006878"}
                   />
                 </View>
 
                 <View style={styles.stepInfo}>
-                  <Text style={styles.stepTitle}>{step.title}</Text>
+                  <Text style={[styles.stepTitle, isRejected ? { color: '#991b1b' } : undefined]}>{step.title}</Text>
                   <Text style={styles.stepDesc}>{step.description}</Text>
+                  
                   {isReview && <Text style={styles.reviewTag}>Under Admin Review</Text>}
+                  {isRejected && (
+                      <View style={styles.notesBox}>
+                          <Text style={styles.notesLabel}>REJECTION NOTE:</Text>
+                          <Text style={styles.notesText}>{step.admin_notes || "Information incomplete or incorrect."}</Text>
+                      </View>
+                  )}
                   {step.status === 'skipped' && <Text style={[styles.reviewTag, { color: '#94a3b8' }]}>Skipped for now</Text>}
                 </View>
 
                 {!(isCompleted || isReview || step.status === 'skipped') && (
-                  <Ionicons name="arrow-forward-circle-outline" size={24} color="#006878" />
+                  <Ionicons 
+                    name={isRejected ? "refresh-circle" : "arrow-forward-circle-outline"} 
+                    size={24} 
+                    color={isRejected ? "#dc2626" : "#006878"} 
+                  />
                 )}
               </TouchableOpacity>
             );
@@ -307,11 +320,16 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   stepCardMuted: { opacity: 0.8, backgroundColor: '#f8fafc' },
+  stepCardRejected: { borderColor: '#fecaca', backgroundColor: '#fffafb' },
   iconWrap: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   stepInfo: { flex: 1, marginLeft: 16 },
   stepTitle: { fontSize: 15, fontWeight: '700', color: '#334155' },
   stepDesc: { fontSize: 13, color: '#64748b', marginTop: 2 },
   reviewTag: { fontSize: 11, fontWeight: '800', color: '#d97706', marginTop: 4, textTransform: 'uppercase' },
+
+  notesBox: { backgroundColor: '#fef2f2', padding: 12, borderRadius: 12, marginTop: 10, borderWidth: 1, borderColor: '#fee2e2' },
+  notesLabel: { fontSize: 9, fontWeight: '900', color: '#dc2626', letterSpacing: 1 },
+  notesText: { fontSize: 13, color: '#991b1b', marginTop: 4, fontWeight: '600', lineHeight: 18 },
 
   infoBox: { flexDirection: 'row', gap: 10, backgroundColor: '#f1f5f9', padding: 16, borderRadius: 12, marginTop: 20 },
   infoText: { flex: 1, fontSize: 12, color: '#64748b', lineHeight: 18 },
