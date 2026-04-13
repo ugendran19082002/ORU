@@ -218,23 +218,18 @@ export default function HomeScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <View>
-          <View style={styles.brandRow}>
-            <Logo size="md" />
-            <Text style={styles.brandName}>ThanniGo</Text>
-          </View>
+        <View style={{ gap: 2 }}>
+          <Text style={styles.brandName}>ThanniGo</Text>
           <TouchableOpacity
             style={styles.locationRow}
             onPress={() => router.push('/addresses' as any)}
             activeOpacity={0.7}
           >
-            <Ionicons name="location" size={13} color="#005d90" />
-            <View>
-              <Text style={{ fontSize: 13, fontWeight: '800', color: '#005d90' }}>
-                {currentAddressTitle} <Ionicons name="chevron-down" size={11} color="#005d90" />
-              </Text>
-              <Text style={styles.locationText}>{currentAddress}</Text>
-            </View>
+            <Ionicons name="location" size={12} color="#005d90" />
+            <Text style={styles.locationText} numberOfLines={1}>
+              {currentAddress}
+            </Text>
+            <Ionicons name="chevron-down" size={10} color="#005d90" />
           </TouchableOpacity>
         </View>
         <View style={styles.headerRight}>
@@ -528,12 +523,12 @@ const styles = StyleSheet.create({
 
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 24, paddingVertical: 14, backgroundColor: 'rgba(255,255,255,0.92)',
+    paddingHorizontal: 24, paddingVertical: 12, backgroundColor: 'rgba(255,255,255,0.92)',
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
-  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 },
-  locationText: { fontSize: 13, color: '#64748b', fontWeight: '500' },
+  brandName: { fontSize: 20, fontWeight: '900', color: '#003a5c', letterSpacing: -0.8 },
+  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  locationText: { fontSize: 12, color: '#64748b', fontWeight: '700', maxWidth: 180 },
   headerRight: { flexDirection: 'row', gap: 10 },
   iconBtn: {
     width: 42, height: 42, borderRadius: 12,

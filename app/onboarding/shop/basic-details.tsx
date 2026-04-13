@@ -62,8 +62,8 @@ export default function ShopBasicDetailsScreen() {
           setShopId(res.data.id);
           setMode('UPDATE');
           // Pre-fill existing data
-          const lat = res.data.latitude || 28.6139;
-          const lng = res.data.longitude || 77.2090;
+          const lat = res.data.latitude ? Number(res.data.latitude) : 28.6139;
+          const lng = res.data.longitude ? Number(res.data.longitude) : 77.2090;
 
           setFormData(p => ({
             ...p,
@@ -101,49 +101,13 @@ export default function ShopBasicDetailsScreen() {
 
   // --- PORTED SEARCH & MAP LOGIC ---
 
-  const performSearch = async (query: string) => {
-    if (query.length < 3) {
-      setSuggestions([]);
-      return;
+  const handleOpenMap = () => {
+    // If shop doesn't exist, create it first
+    if (mode === 'CREATE') {
+        handleContinue(true); // create then navigate
+    } else {
+        router.push('/onboarding/shop/location');
     }
-    setIsSearching(true);
-    try {
-      const photonRes = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`);
-      const photonData = await photonRes.json();
-      if (photonData.features) {
-        setSuggestions(photonData.features.map((f: any) => ({
-          title: f.properties.name || f.properties.street || "Location",
-          subtitle: [f.properties.city, f.properties.state].filter(Boolean).join(", "),
-          address: f.properties.name ? (f.properties.name + ", " + (f.properties.city || "")) : f.properties.street,
-          lat: f.geometry.coordinates[1],
-          lng: f.geometry.coordinates[0],
-        })));
-      }
-    } catch (error) {
-      // Silent error for photon
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const handleSelectSuggestion = (item: any) => {
-    setFormData(p => ({
-      ...p,
-      address_line1: item.address || item.title,
-      latitude: item.lat,
-      longitude: item.lng,
-      city: item.subtitle?.split(',')[0]?.trim() || p.city
-    }));
-    const newRegion = {
-      latitude: item.lat,
-      longitude: item.lng,
-      latitudeDelta: 0.005,
-      longitudeDelta: 0.005,
-    };
-    setRegion(newRegion);
-    mapRef.current?.animateToRegion(newRegion, 1000);
-    setSearchQuery(item.title); // Sync search bar with selection
-    setSuggestions([]);
   };
 
   const handleMarkerDragEnd = async (coords: { latitude: number; longitude: number }) => {
@@ -224,9 +188,9 @@ export default function ShopBasicDetailsScreen() {
     }
   };
 
-  const handleContinue = async () => {
-    if (!formData.name || !formData.phone || !formData.address_line1 || !formData.owner_name) {
-      Toast.show({ type: 'error', text1: 'Required Fields', text2: 'Please fill in all mandatory fields.' });
+  const handleContinue = async (thenGoToMap = false) => {
+    if (!formData.name || !formData.phone || !formData.owner_name) {
+      Toast.show({ type: 'error', text1: 'Required Fields', text2: 'Please fill name and contact.' });
       return;
     }
 
@@ -234,7 +198,6 @@ export default function ShopBasicDetailsScreen() {
       setLoading(true);
       let currentShopId = shopId;
 
-      // 1. Handle Creation if needed
       if (mode === 'CREATE') {
         const createRes = await onboardingApi.createShop({
           name: formData.name,
@@ -245,37 +208,33 @@ export default function ShopBasicDetailsScreen() {
           currentShopId = createRes.data.id;
           setShopId(currentShopId);
           await refreshShopStatus();
-        } else {
-          throw new Error('Failed to create shop profile');
+          setMode('UPDATE');
         }
       }
 
-      // 2. Compelete/Update basic details step
       if (currentShopId) {
         const res = await onboardingApi.updateBasicDetails(currentShopId, {
             name: formData.name,
             owner_name: formData.owner_name,
             phone: `+91${formData.phone}`,
             shop_type: formData.shop_type,
-            address_line1: formData.address_line1,
-            latitude: formData.latitude,
-            longitude: formData.longitude,
+            address_line1: formData.address_line1 || 'Pending Location',
+            latitude: formData.latitude || 0,
+            longitude: formData.longitude || 0,
             city: formData.city || 'Default'
         });
         
         if (res.status === 1) {
-          Toast.show({ type: 'success', text1: 'Success', text2: 'Basic details saved!' });
-          router.replace('/onboarding/shop');
+           if (thenGoToMap) {
+               router.push('/onboarding/shop/location');
+               return;
+           }
+           Toast.show({ type: 'success', text1: 'Success', text2: 'Basic details saved!' });
+           router.replace('/onboarding/shop');
         }
       }
     } catch (error: any) {
-      if (error.response?.status === 404) return;
-      
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: error.response?.data?.message || 'Could not save details.'
-      });
+       Toast.show({ type: 'error', text1: 'Error', text2: 'Could not save details.' });
     } finally {
       setLoading(false);
     }
@@ -373,111 +332,52 @@ export default function ShopBasicDetailsScreen() {
                   </View>
                 </View>
 
-                {/* Shop Address Search */}
+                {/* Shop Location Section */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Search Area / Landmark</Text>
-                  <View style={styles.inputWrap}>
-                    <Ionicons name="search-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Search to pin on map..."
-                      value={searchQuery}
-                      onChangeText={(t) => {
-                        setSearchQuery(t);
-                        if (searchTimeout.current) clearTimeout(searchTimeout.current);
-                        searchTimeout.current = setTimeout(() => performSearch(t), 500) as any;
-                      }}
-                    />
-                    {isSearching && <ActivityIndicator size="small" color="#006878" />}
-                  </View>
-                </View>
-
-                {/* Search Suggestions */}
-                {suggestions.length > 0 && (
-                  <View style={styles.suggestionsList}>
-                    {suggestions.map((item, idx) => (
-                      <TouchableOpacity key={idx} style={styles.suggestionItem} onPress={() => handleSelectSuggestion(item)}>
-                        <Ionicons name="location-outline" size={18} color="#64748b" />
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.suggestionTitle}>{item.title}</Text>
-                          <Text style={styles.suggestionSub} numberOfLines={1}>{item.subtitle}</Text>
+                  <Text style={styles.label}>Shop Location</Text>
+                  
+                  {formData.latitude && formData.latitude !== 28.6139 ? (
+                    <View style={styles.activeLocationCard}>
+                        <View style={styles.locationIconWrap}>
+                            <Ionicons name="location" size={24} color="#006878" />
                         </View>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                )}
-
-                {/* Map Preview */}
-                <View style={styles.mapContainer}>
-                  <ExpoMap
-                    ref={mapRef}
-                    style={styles.mapView}
-                    initialRegion={region}
-                    onRegionChangeComplete={setRegion}
-                    showsUserLocation
-                    markerTitle="Your Shop Location"
-                    mapType={mapType}
-                    draggable
-                    onMarkerDragEnd={(coords) => handleMarkerDragEnd(coords)}
-                  >
-                    <ExpoMarker
-                      coordinate={{ latitude: formData.latitude!, longitude: formData.longitude! }}
-                      draggable
-                      onDragEnd={(e: any) => handleMarkerDragEnd(e.nativeEvent.coordinate)}
-                      pinColor="#006878"
-                      title="Shop Location"
-                    />
-                  </ExpoMap>
-
-                  {/* Drag/Tap Hint Overlay */}
-                  {!locating && !isSearching && suggestions.length === 0 && (
-                    <View style={styles.mapHint}>
-                      <Ionicons name="hand-right-outline" size={14} color="white" />
-                      <Text style={styles.mapHintText}>Tap or Drag to Position Pin</Text>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.locationAddr} numberOfLines={2}>{formData.address_line1 || 'Point selected on map'}</Text>
+                            <Text style={styles.locationCoords}>
+                                {Number(formData.latitude).toFixed(6)}, {Number(formData.longitude).toFixed(6)}
+                            </Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                            <TouchableOpacity style={styles.editLocBtn} onPress={handleOpenMap}>
+                                <Ionicons name="expand-outline" size={18} color="#006878" />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.editLocBtn} onPress={handleOpenMap}>
+                                <Ionicons name="pencil" size={18} color="#006878" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                  )}
-
-                  {/* High Accuracy Overlay */}
-                  {accuracy !== null && (
-                    <View style={styles.accuracyOverlay}>
-                      <View style={[styles.accuracyTag, { backgroundColor: accuracy < 20 ? 'rgba(16, 185, 129, 0.9)' : 'rgba(245, 158, 11, 0.9)' }]}>
-                        <View style={styles.accuracyDot} />
-                        <Text style={styles.accuracyLabel}>GPS: ±{Math.round(accuracy)}m</Text>
-                      </View>
-                    </View>
-                  )}
-
-                  {/* Map Actions */}
-                  <View style={styles.mapControls}>
-                    <TouchableOpacity 
-                      style={styles.mapActionBtn} 
-                      onPress={() => {
-                        const types: any[] = ['standard', 'satellite', 'terrain'];
-                        setMapType(types[(types.indexOf(mapType) + 1) % 3]);
-                      }}
-                    >
-                      <Ionicons name={mapType === 'satellite' ? 'images' : 'map'} size={20} color="#005d90" />
+                  ) : (
+                    <TouchableOpacity style={styles.setLocBtn} onPress={handleOpenMap}>
+                        <LinearGradient 
+                            colors={['#f0fdfa', '#f8fafc']} 
+                            style={styles.setLocInner}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                        >
+                            <View style={styles.setLocIcon}>
+                                <Ionicons name="map-outline" size={22} color="#0d9488" />
+                            </View>
+                            <View>
+                                <Text style={styles.setLocTitle}>Set Location on Map</Text>
+                                <Text style={styles.setLocSub}>Required for delivery radius</Text>
+                            </View>
+                            <View style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                <Ionicons name="expand-outline" size={16} color="#94a3b8" />
+                                <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
+                            </View>
+                        </LinearGradient>
                     </TouchableOpacity>
-                    
-                    <TouchableOpacity style={styles.mapActionBtn} onPress={handleGetCurrentLocation} disabled={locating}>
-                      {locating ? <ActivityIndicator size="small" color="#005d90" /> : <Ionicons name="locate" size={20} color="#005d90" />}
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* Shop Address Display (Auto-filled by Map or Manual) */}
-                <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Shop Address (Auto-filled by map/search)</Text>
-                  <View style={[styles.inputWrap, styles.textAreaWrap]}>
-                    <TextInput
-                      style={[styles.input, styles.textArea]}
-                      placeholder="Verified address will appear here..."
-                      value={formData.address_line1}
-                      onChangeText={(v) => setFormData(p => ({ ...p, address_line1: v }))}
-                      multiline
-                      numberOfLines={3}
-                    />
-                  </View>
+                  )}
                 </View>
 
               </View>
@@ -485,7 +385,7 @@ export default function ShopBasicDetailsScreen() {
           </ScrollView>
 
           <View style={styles.footer}>
-            <TouchableOpacity onPress={handleContinue} disabled={loading} activeOpacity={0.8}>
+            <TouchableOpacity onPress={() => handleContinue()} disabled={loading} activeOpacity={0.8}>
               <LinearGradient colors={['#006878', '#134e4a']} style={styles.cta} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                 {loading ? <ActivityIndicator color="white" /> : (
                   <>
@@ -651,5 +551,66 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
   },
-  ctaText: { color: 'white', fontSize: 17, fontWeight: '800' }
+  ctaText: { color: 'white', fontSize: 17, fontWeight: '800' },
+
+  // New Location Picker Styles
+  setLocBtn: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: '#ccfbf1',
+    marginTop: 4,
+  },
+  setLocInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 16,
+  },
+  setLocIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0d9488',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  setLocTitle: { fontSize: 15, fontWeight: '800', color: '#134e4a' },
+  setLocSub: { fontSize: 12, color: '#64748b', marginTop: 2 },
+
+  activeLocationCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0fdfa',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#ccfbf1',
+    gap: 16,
+  },
+  locationIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  locationAddr: { fontSize: 14, fontWeight: '700', color: '#134e4a', lineHeight: 20 },
+  locationCoords: { fontSize: 11, color: '#0d9488', fontWeight: '800', marginTop: 4, opacity: 0.7 },
+  editLocBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  }
 });

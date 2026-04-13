@@ -17,20 +17,22 @@ import { BackButton } from '@/components/ui/BackButton';
 
 const { width } = Dimensions.get('window');
 
-export default function CustomerLocationScreen() {
+export default function ShopLocationScreen() {
   const router = useRouter();
-  const { user, updateUser, status } = useAppSession();
+  const { user, status } = useAppSession();
   const mapRef = useRef<any>(null);
 
   // 0. Role Bouncer
-  if (status === 'authenticated' && user?.role !== 'customer') {
+  if (status === 'authenticated' && user?.role !== 'shop_owner') {
     return null;
   }
   
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(true);
+  const [shopId, setShopId] = useState<number | null>(null);
+  
   const [region, setRegion] = useState({
-    latitude: 12.9716, // Default to Chennai/India area if locator fails
+    latitude: 12.9716, // Default
     longitude: 80.2210,
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
@@ -39,19 +41,39 @@ export default function CustomerLocationScreen() {
     latitude: 12.9716,
     longitude: 80.2210,
   });
-  const [address, setAddress] = useState('Locating you...');
+  const [address, setAddress] = useState('Locating your shop...');
+  const [city, setCity] = useState('');
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'terrain'>('terrain');
 
-  // 1. Initial Location Fetch
+  // 1. Initial Data Fetch
   useEffect(() => {
     (async () => {
       try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
+        // Find existing shop id first
+        const shopRes = await onboardingApi.getMerchantShop();
+        if (shopRes.data) {
+            setShopId(shopRes.data.id);
+            if (shopRes.data.latitude && shopRes.data.longitude) {
+                const existingCoords = {
+                    latitude: Number(shopRes.data.latitude),
+                    longitude: Number(shopRes.data.longitude),
+                };
+                setRegion(prev => ({ ...prev, ...existingCoords }));
+                setMarker(existingCoords);
+                setAddress(shopRes.data.address_line1 || '');
+                setCity(shopRes.data.city || '');
+                setLocating(false);
+                return;
+            }
+        }
+
+        // Otherwise get GPS
+        let { status: pStatus } = await Location.requestForegroundPermissionsAsync();
+        if (pStatus !== 'granted') {
           Toast.show({
             type: 'error',
             text1: 'Permission Denied',
-            text2: 'We need location access to find nearby shops.'
+            text2: 'We need location access to find your shop.'
           });
           setLocating(false);
           return;
@@ -67,9 +89,7 @@ export default function CustomerLocationScreen() {
         setMarker(newCoords);
         reverseGeocode(newCoords.latitude, newCoords.longitude);
       } catch (error: any) {
-        if (error.response?.status === 404) return;
-        // Silent error for location or show toast if critical? 
-        // User said 404 is not error.
+        console.error('[ShopLocation] Init Error:', error);
       } finally {
         setLocating(false);
       }
@@ -83,6 +103,7 @@ export default function CustomerLocationScreen() {
         const item = result[0];
         const addr = `${item.name || ''} ${item.street || ''}, ${item.district || item.city || ''}`.trim().replace(/^,/, '');
         setAddress(addr || 'Custom Location');
+        setCity(item.city || item.district || '');
       }
     } catch (e) {
       setAddress('Pinned Location');
@@ -118,27 +139,30 @@ export default function CustomerLocationScreen() {
   };
 
   const handleConfirm = async () => {
+    if (!shopId) {
+        Toast.show({ type: 'error', text1: 'Shop not found', text2: 'Please start from basic details.' });
+        return;
+    }
+
     try {
       setLoading(true);
       
-      const res = await onboardingApi.completeCustomerStep('set_location', {
+      const res = await onboardingApi.updateBasicDetails(shopId, {
         latitude: marker.latitude,
         longitude: marker.longitude,
-        address: address,
+        address_line1: address,
+        city: city || 'Default'
       });
       
       if (res.status === 1) {
-        // Technically this is the last step for customer
-        // The checklist will now see 'onboarding_completed: true'
-        router.replace('/onboarding/customer');
+        Toast.show({ type: 'success', text1: 'Location Set', text2: 'Shop location updated.' });
+        router.replace('/onboarding/shop/basic-details');
       }
     } catch (error: any) {
-      if (error.response?.status === 404) return;
-
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: error.response?.data?.message || 'Failed to save your location. Please try again.'
+        text2: error.response?.data?.message || 'Failed to save location.'
       });
     } finally {
       setLoading(false);
@@ -149,12 +173,11 @@ export default function CustomerLocationScreen() {
     <View style={styles.container}>
       <StatusBar style="dark" />
       
-      {/* MAP BACKGROUND */}
       <View style={styles.mapContainer}>
         {locating ? (
           <View style={styles.loader}>
-            <ActivityIndicator size="large" color="#005d90" />
-            <Text style={styles.loaderText}>Finding your position...</Text>
+            <ActivityIndicator size="large" color="#006878" />
+            <Text style={styles.loaderText}>Centering map...</Text>
           </View>
         ) : (
           <ExpoMap
@@ -164,14 +187,14 @@ export default function CustomerLocationScreen() {
             region={region}
             mapType={mapType}
             draggable={true}
-            markerTitle="Delivery Point"
+            markerTitle="Shop Location"
             onMarkerDragEnd={handleMarkerDrag}
             markers={[{
-                id: 'delivery-pin',
+                id: 'shop-pin',
                 latitude: marker.latitude,
                 longitude: marker.longitude,
-                title: 'Deliver Here',
-                color: '#005d90'
+                title: 'Shop Position',
+                color: '#006878'
             }]}
           />
         )}
@@ -185,52 +208,50 @@ export default function CustomerLocationScreen() {
               setMapType(types[(types.indexOf(mapType) + 1) % 3]);
             }}
           >
-            <Ionicons name={mapType === 'satellite' ? 'images' : 'map'} size={20} color="#005d90" />
+            <Ionicons name={mapType === 'satellite' ? 'images' : 'map'} size={20} color="#006878" />
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.mapActionBtn} onPress={handleLocate} disabled={locating}>
-            {locating ? <ActivityIndicator size="small" color="#005d90" /> : <Ionicons name="locate" size={20} color="#005d90" />}
+            {locating ? <ActivityIndicator size="small" color="#006878" /> : <Ionicons name="locate" size={20} color="#006878" />}
           </TouchableOpacity>
         </View>
       </View>
 
       <SafeAreaView style={[styles.overlay, { pointerEvents: 'box-none' }]}>
-        {/* TOP HEADER */}
         <View style={styles.header}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 12 }}>
-                <BackButton fallback="/onboarding/customer" variant="transparent" />
+                <BackButton fallback="/onboarding/shop/basic-details" variant="transparent" />
                 <View style={[styles.stepContainer, { marginBottom: 0, flex: 1 }]}>
                     <View style={styles.stepDot} />
                     <View style={styles.stepLine} />
                     <View style={[styles.stepDot, styles.stepDotActive]} />
                 </View>
             </View>
-            <Text style={styles.title}>Delivery Address</Text>
-            <Text style={styles.subtitle}>Drag the pin to your exact building</Text>
+            <Text style={styles.title}>Pin Shop Location</Text>
+            <Text style={styles.subtitle}>Help customers find you accurately</Text>
         </View>
 
-        {/* BOTTOM PANEL */}
         <View style={styles.footer}>
           <View style={styles.addressCard}>
             <View style={styles.addressIcon}>
-                <Ionicons name="location" size={24} color="#005d90" />
+                <Ionicons name="business" size={24} color="#006878" />
             </View>
             <View style={styles.addressInfo}>
-                <Text style={styles.addressLabel}>Selected Location</Text>
+                <Text style={styles.addressLabel}>Shop Address</Text>
                 <Text style={styles.addressText} numberOfLines={2}>{address}</Text>
             </View>
           </View>
 
           <TouchableOpacity onPress={handleConfirm} disabled={loading || locating} activeOpacity={0.8}>
             <LinearGradient
-              colors={['#005d90', '#0077b6']}
+              colors={['#006878', '#134e4a']}
               style={styles.cta}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
             >
               {loading ? <ActivityIndicator color="white" /> : (
                 <>
-                  <Text style={styles.ctaText}>Confirm Location</Text>
+                  <Text style={styles.ctaText}>Confirm Shop Location</Text>
                 </>
               )}
             </LinearGradient>
@@ -246,9 +267,7 @@ const styles = StyleSheet.create({
   mapContainer: { flex: 1 },
   loader: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.8)', justifyContent: 'center', alignItems: 'center' },
   loaderText: { marginTop: 12, color: '#64748b', fontWeight: '600' },
-  
   overlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'space-between' },
-  
   header: { 
     padding: 24, 
     backgroundColor: 'rgba(255,255,255,0.95)', 
@@ -256,23 +275,16 @@ const styles = StyleSheet.create({
     marginTop: 10, 
     borderRadius: 24,
     ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-      },
-      android: { elevation: 4 },
-      web: { boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }
-    }),
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10 },
+      android: { elevation: 4 }
+    })
   },
   stepContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   stepDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#e2e8f0' },
-  stepDotActive: { backgroundColor: '#005d90', width: 20 },
+  stepDotActive: { backgroundColor: '#006878', width: 20 },
   stepLine: { width: 20, height: 2, backgroundColor: '#f1f5f9', marginHorizontal: 6 },
-  title: { fontSize: 22, fontWeight: '900', color: '#0f172a' },
+  title: { fontSize: 22, fontWeight: '900', color: '#134e4a' },
   subtitle: { fontSize: 13, color: '#64748b', marginTop: 4 },
-
   footer: { padding: 24, paddingBottom: 40, backgroundColor: 'transparent' },
   addressCard: {
     flexDirection: 'row',
@@ -281,29 +293,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginBottom: 20,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20, elevation: 10,
   },
-  addressIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#f0f9ff', alignItems: 'center', justifyContent: 'center', marginRight: 16 },
+  addressIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#f0fdfa', alignItems: 'center', justifyContent: 'center', marginRight: 16 },
   addressInfo: { flex: 1 },
   addressLabel: { fontSize: 11, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 },
   addressText: { fontSize: 15, color: '#1e293b', fontWeight: '700', marginTop: 2 },
-
   cta: {
-    height: 60,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    shadowColor: '#005d90',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
-    elevation: 8,
+    height: 60, borderRadius: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12,
+    shadowColor: '#006878', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 15, elevation: 8,
   },
   ctaText: { color: 'white', fontSize: 17, fontWeight: '800', letterSpacing: 0.5 },
   mapControls: {
