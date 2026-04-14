@@ -206,6 +206,38 @@ export default function AdminOverviewScreen() {
                         <Text style={{ marginTop: 8, fontSize: 13, color: '#64748b', textAlign: 'center' }}>All services are running smoothly. Security protocols active.</Text>
                     </View>
                 </View>
+
+                <TouchableOpacity 
+                    style={[styles.verifCard, { padding: 20, marginTop: 16, backgroundColor: '#f0f4ff', borderWidth: 1, borderColor: '#d0d7ff' }]}
+                    onPress={() => router.push('/admin/growth')}
+                >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        <LinearGradient colors={['#005d90', '#0077b6']} style={{ width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+                             <Ionicons name="ribbon-outline" size={24} color="white" />
+                        </LinearGradient>
+                        <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: 15, fontWeight: '800', color: '#181c20' }}>Growth Master</Text>
+                            <Text style={{ fontSize: 12, color: '#707881' }}>Manage Loyalty & Referrals</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={18} color="#005d90" />
+                    </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                    style={[styles.verifCard, { padding: 20, marginTop: 12, backgroundColor: '#fff8f7', borderWidth: 1, borderColor: '#ffdad6' }]}
+                    onPress={() => router.push('/admin/coupons')}
+                >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        <LinearGradient colors={['#ba1a1a', '#e35252']} style={{ width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+                             <Ionicons name="ticket-outline" size={24} color="white" />
+                        </LinearGradient>
+                        <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: 15, fontWeight: '800', color: '#181c20' }}>Platform Coupons</Text>
+                            <Text style={{ fontSize: 12, color: '#707881' }}>Global Promotion Codes</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={18} color="#ba1a1a" />
+                    </View>
+                </TouchableOpacity>
             </View>
         </View>
       </ScrollView>
@@ -281,3 +313,5 @@ const styles = StyleSheet.create({
     width: 56, height: 56, alignItems: 'center', justifyContent: 'center', borderRadius: 28,
   },
 });
+
+

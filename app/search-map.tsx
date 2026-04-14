@@ -192,3 +192,5 @@ const styles = StyleSheet.create({
   },
   searchThisAreaText: { color: 'white', fontWeight: '800', fontSize: 13 },
 });
+
+

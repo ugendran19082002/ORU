@@ -313,3 +313,5 @@ const styles = StyleSheet.create({
   funnelCount: { fontSize: 15, fontWeight: '900', color: '#181c20' },
   funnelArrow: { position: 'absolute', left: 10, bottom: -8 },
 });
+
+

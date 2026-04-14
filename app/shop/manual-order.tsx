@@ -227,3 +227,5 @@ const styles = StyleSheet.create({
   placeBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
   placeBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
 });
+
+

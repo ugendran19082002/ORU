@@ -1035,3 +1035,5 @@ const styles = StyleSheet.create({
   suggestionTitle: { fontSize: 14, fontWeight: "700", color: "#181c20" },
   suggestionSubtitle: { fontSize: 12, color: "#707881", marginTop: 2 },
 });
+
+

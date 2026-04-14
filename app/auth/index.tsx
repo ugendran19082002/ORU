@@ -176,3 +176,5 @@ const styles = StyleSheet.create({
 
   footer: { textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 11 },
 });
+
+

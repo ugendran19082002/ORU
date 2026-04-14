@@ -1022,3 +1022,5 @@ const styles = StyleSheet.create({
   },
   confirmRejectText: { color: "white", fontWeight: "800", fontSize: 15 },
 });
+
+

@@ -12,6 +12,7 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from 'react-native-toast-message';
@@ -61,6 +62,7 @@ export default function RoleSelectScreen() {
   const { safeBack } = useAppNavigation();
   const { signIn, signOut, user } = useAppSession();
   const [selected, setSelected] = useState<Role | null>(null);
+  const [referralCode, setReferralCode] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSignOut = async () => {
@@ -89,7 +91,10 @@ export default function RoleSelectScreen() {
     setLoading(true);
     try {
       // 1. Persist the role directly to the backend
-      const response = await userApi.updateProfile({ role: selectedRole });
+      const response = await userApi.updateProfile({ 
+        role: selectedRole,
+        referral_code: referralCode || undefined
+      } as any);
 
       if (response.status === 1) {
         // 2. Update local session state with fresh tokens (essential for role change)
@@ -213,6 +218,27 @@ export default function RoleSelectScreen() {
             );
           })}
         </ScrollView>
+
+        {/* REFERRAL CODE */}
+        <View style={styles.referralSection}>
+          <View style={styles.referralInputWrap}>
+            <Ionicons
+              name="gift-outline"
+              size={18}
+              color={selectedRole?.accent || "#334155"}
+              style={styles.referralIcon}
+            />
+            <TextInput
+              style={styles.referralInput}
+              placeholder="Have a Referral Code? (Optional)"
+              placeholderTextColor="#94a3b8"
+              value={referralCode}
+              onChangeText={setReferralCode}
+              autoCapitalize="characters"
+              autoCorrect={false}
+            />
+          </View>
+        </View>
 
         {/* CTA */}
         <TouchableOpacity
@@ -357,5 +383,32 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     textDecorationLine: "underline",
   },
+  
+  // REFERRAL STYLES
+  referralSection: {
+    paddingVertical: 12,
+  },
+  referralInputWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: "#ebeef4",
+    paddingHorizontal: 16,
+    height: 54,
+  },
+  referralIcon: {
+    marginRight: 10,
+  },
+  referralInput: {
+    flex: 1,
+    fontSize: 14,
+    color: "#1e293b",
+    fontWeight: "600",
+    fontFamily: "System",
+  },
 });
+
+
 

@@ -50,7 +50,6 @@ export default function OTPScreen() {
   const accent = roleAccent[role] ?? roleAccent.customer;
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
-  const [referralCode, setReferralCode] = useState("");
   const [verified, setVerified] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
@@ -88,7 +87,7 @@ export default function OTPScreen() {
 
     try {
       const deviceId = await getOriginalDeviceId();
-      const response = await authApi.verifyOtp(`+91${phone}`, code, deviceId, referralCode);
+      const response = await authApi.verifyOtp(`+91${phone}`, code, deviceId);
 
       if (response.status === 1) {
         setLoading(false);
@@ -219,22 +218,6 @@ export default function OTPScreen() {
               selectTextOnFocus
             />
           ))}
-        </View>
-
-        {/* REFERRAL CODE */}
-        <View style={styles.referralSection}>
-            <View style={styles.referralInputWrap}>
-                <Ionicons name="gift-outline" size={18} color={accent} style={styles.referralIcon} />
-                <TextInput
-                    style={styles.referralInput}
-                    placeholder="Have a Referral Code? (Optional)"
-                    placeholderTextColor="#94a3b8"
-                    value={referralCode}
-                    onChangeText={setReferralCode}
-                    autoCapitalize="characters"
-                    autoCorrect={false}
-                />
-            </View>
         </View>
 
         {/* SUCCESS ANIMATION */}
@@ -456,3 +439,5 @@ const styles = StyleSheet.create({
   },
   ctaText: { color: "white", fontSize: 17, fontWeight: "900" },
 });
+
+

@@ -260,3 +260,4 @@ const styles = StyleSheet.create({
   signOutText: { color: '#ba1a1a', fontWeight: '800', fontSize: 15 },
   version: { fontSize: 11, color: '#94a3b8', textAlign: 'center', fontWeight: '500' },
 });
+

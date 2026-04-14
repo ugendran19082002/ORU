@@ -252,3 +252,5 @@ const styles = StyleSheet.create({
   secondaryBtn: { paddingVertical: 14, alignItems: 'center', borderRadius: 18, backgroundColor: 'white', borderWidth: 1, borderColor: '#e0e2e8' },
   secondaryBtnText: { fontSize: 15, fontWeight: '700', color: '#64748b' },
 });
+
+

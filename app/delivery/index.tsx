@@ -310,3 +310,5 @@ const styles = StyleSheet.create({
   endShiftBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: '#ffebee' },
   endShiftText: { color: '#c62828', fontWeight: '800', fontSize: 12 },
 });
+
+

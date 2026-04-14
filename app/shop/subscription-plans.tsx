@@ -173,3 +173,5 @@ const styles = StyleSheet.create({
   subscribeBtnGrad: { paddingVertical: 17, alignItems: 'center' },
   subscribeBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
 });
+
+

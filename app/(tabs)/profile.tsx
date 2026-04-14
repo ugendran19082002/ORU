@@ -136,19 +136,19 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.profileStatDivider} />
             <View style={styles.profileStat}>
-              <Text style={styles.profileStatVal}>4.9</Text>
-              <Text style={styles.profileStatLabel}>Rating</Text>
+              <Text style={styles.profileStatVal}>{user?.loyalty_points || 0}</Text>
+              <Text style={styles.profileStatLabel}>Points</Text>
             </View>
           </View>
         </LinearGradient>
 
         <TouchableOpacity style={styles.memberBadge} onPress={() => router.push('/rewards' as any)}>
           <View style={styles.memberBadgeIcon}>
-            <Ionicons name="diamond-outline" size={20} color="#0077b6" />
+            <Ionicons name="ribbon-outline" size={20} color="#0077b6" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.memberBadgeTitle}>ThanniGo Plus Member</Text>
-            <Text style={styles.memberBadgeSub}>Free delivery on all orders · Priority support</Text>
+            <Text style={styles.memberBadgeTitle}>Earn Free Deliveries</Text>
+            <Text style={styles.memberBadgeSub}>Refer friends and earn up to 500 bonus points</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color="#005d90" />
         </TouchableOpacity>
@@ -301,3 +301,5 @@ const styles = StyleSheet.create({
   },
   footer: { textAlign: 'center', fontSize: 12, color: '#bfc7d1', marginBottom: 8 },
 });
+
+

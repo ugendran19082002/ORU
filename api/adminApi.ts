@@ -96,5 +96,61 @@ export const adminApi = {
       }
     );
     return response.data;
+  },
+
+  /**
+   * Get all growth engine settings (Loyalty & Referral)
+   */
+  getGrowthSettings: async (): Promise<AdminApiResponse<any>> => {
+    const response = await apiClient.get<AdminApiResponse<any>>('/admin/growth/settings');
+    return response.data;
+  },
+
+  /**
+   * Update growth engine settings
+   */
+  updateGrowthSettings: async (data: any): Promise<AdminApiResponse<any>> => {
+    const response = await apiClient.put<AdminApiResponse<any>>('/admin/growth/settings', data);
+    return response.data;
+  },
+
+  /**
+   * Get all loyalty levels
+   */
+  getLoyaltyLevels: async (): Promise<AdminApiResponse<any[]>> => {
+    const response = await apiClient.get<AdminApiResponse<any[]>>('/admin/growth/levels');
+    return response.data;
+  },
+
+  /**
+   * Update or create a loyalty level
+   */
+  updateLoyaltyLevel: async (id: number | 'new', data: any): Promise<AdminApiResponse<any>> => {
+    const response = await apiClient.put<AdminApiResponse<any>>(`/admin/growth/levels/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * List all platform coupons
+   */
+  listPlatformCoupons: async (): Promise<AdminApiResponse<any[]>> => {
+    const response = await apiClient.get<AdminApiResponse<any[]>>('/admin/coupons');
+    return response.data;
+  },
+
+  /**
+   * Create a platform coupon
+   */
+  createPlatformCoupon: async (data: any): Promise<AdminApiResponse<any>> => {
+    const response = await apiClient.post<AdminApiResponse<any>>('/admin/coupons', data);
+    return response.data;
+  },
+
+  /**
+   * Delete a platform coupon
+   */
+  deletePlatformCoupon: async (id: number): Promise<AdminApiResponse<any>> => {
+    const response = await apiClient.delete<AdminApiResponse<any>>(`/admin/coupons/${id}`);
+    return response.data;
   }
 };

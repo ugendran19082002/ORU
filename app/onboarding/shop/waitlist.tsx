@@ -278,3 +278,5 @@ const styles = StyleSheet.create({
   logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   logoutText: { fontSize: 14, fontWeight: '800', color: '#ba1a1a' },
 });
+
+

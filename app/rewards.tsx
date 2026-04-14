@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  RefreshControl, ActivityIndicator, Image, Share,
+  RefreshControl, ActivityIndicator, Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -10,43 +10,67 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
-
-
-const TIERS = [
-  { name: 'Bronze', range: '1–9 orders', discount: '0%', minOrders: 1, color: '#b45309', bg: '#fef3c7', icon: 'medal-outline' },
-  { name: 'Silver', range: '10–24 orders', discount: '5%', minOrders: 10, color: '#64748b', bg: '#f1f5f9', icon: 'medal-outline' },
-  { name: 'Gold', range: '25–49 orders', discount: '10%', minOrders: 25, color: '#d97706', bg: '#fffbeb', icon: 'ribbon-outline' },
-  { name: 'Diamond', range: '50+ orders', discount: '15%', minOrders: 50, color: '#7c3aed', bg: '#ede9fe', icon: 'diamond-outline' },
-];
-
-const HISTORY = [
-  { id: '1', event: 'Referral Bonus — Priya joined', points: +250, date: 'Apr 9' },
-  { id: '2', event: 'Order #9823 Completed', points: +15, date: 'Apr 8' },
-  { id: '3', event: 'Subscription Month 2', points: +100, date: 'Apr 1' },
-  { id: '4', event: 'Redeemed ₹50 voucher', points: -500, date: 'Mar 28' },
-  { id: '5', event: 'Order #9790 Completed', points: +15, date: 'Mar 25' },
-];
-
-const VOUCHERS = [
-  { code: 'LOYAL50', value: '₹50 off', expiry: 'Apr 30', minOrder: '₹200' },
-  { code: 'FREE5L', value: '5L can free', expiry: 'May 15', minOrder: '₹300' },
-];
+import { useAppSession } from '@/hooks/use-app-session';
+import { addressApi } from '@/api/addressApi';
 
 export default function RewardsScreen() {
   const router = useRouter();
-  const currentPoints = 1380;
-  const totalOrders = 28;
-  const currentTier = TIERS.find((t) => totalOrders >= t.minOrders && (TIERS.indexOf(t) === TIERS.length - 1 || totalOrders < TIERS[TIERS.indexOf(t) + 1].minOrders)) || TIERS[0];
-  const nextTier = TIERS[TIERS.indexOf(currentTier) + 1];
-  const ordersToNext = nextTier ? nextTier.minOrders - totalOrders : 0;
-  const tierProgress = nextTier ? (totalOrders - currentTier.minOrders) / (nextTier.minOrders - currentTier.minOrders) : 1;
-  const referralCode = 'THANNIGO-U238';
+  const { user } = useAppSession();
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  // Dynamic State
+  const [history, setHistory] = useState<any[]>([]);
+  const [tiers, setTiers] = useState<any[]>([]);
+  const [settings, setSettings] = useState<any>(null);
+  const [coupons, setCoupons] = useState<any[]>([]);
+
+  const fetchRewardsData = useCallback(async () => {
+    try {
+      const [historyRes, tierRes, settingRes, couponRes] = await Promise.all([
+        addressApi.apiClient.get('/promotion/loyalty/ledger'),
+        addressApi.apiClient.get('/promotion/loyalty/levels'),
+        addressApi.apiClient.get('/promotion/loyalty/settings'),
+        addressApi.apiClient.get('/promotion/coupons')
+      ]);
+
+      if (historyRes.data.status === 1) setHistory(historyRes.data.data);
+      if (tierRes.data.status === 1) setTiers(tierRes.data.data);
+      if (settingRes.data.status === 1) setSettings(settingRes.data.data);
+      if (couponRes.data.status === 1) setCoupons(couponRes.data.data.filter((c: any) => c.is_active));
+    } catch (err) {
+      console.error('Failed to fetch rewards data', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchRewardsData(); }, [fetchRewardsData]);
+
+  const currentPoints = user?.loyalty_points || 0;
+  // Note: For total orders, we'd ideally fetch from an analytics endpoint.
+  // Using points as a proxy for progress if levels are point-based.
+  const currentTier = tiers.find(t => currentPoints >= t.min_points && (!t.max_points || currentPoints <= t.max_points)) || tiers[0] || { name: 'Bronze', discount_percentage: 0, min_points: 0 };
+  const nextTier = tiers.find(t => t.min_points > currentPoints);
+  
+  const pointsToNext = nextTier ? nextTier.min_points - currentPoints : 0;
+  const tierProgress = nextTier ? (currentPoints / nextTier.min_points) : 1;
+  const referralCode = user?.referral_code || 'THANNIGO-INVITE';
 
   const handleShare = async () => {
     await Share.share({
-      message: `🌊 Join ThanniGo — pure water delivered in 15 mins!\nUse my code ${referralCode} and get ₹50 off your first order.\nhttps://thannigo.app`,
+      message: `🌊 Join ThanniGo — pure water delivered in 15 mins!\nUse my code ${referralCode} and get a special discount on your first order.\nhttps://thannigo.app`,
     });
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#005d90" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -57,12 +81,14 @@ export default function RewardsScreen() {
         <Text style={styles.headerTitle}>Rewards & Referrals</Text>
       </View>
 
-
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-
+      <ScrollView 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchRewardsData(); }} />}
+      >
         {/* HERO LOYALTY CARD */}
         <LinearGradient
-          colors={[currentTier.color, currentTier.color + 'cc']}
+          colors={['#005d90', '#0077b6']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroCard}
@@ -70,10 +96,10 @@ export default function RewardsScreen() {
           <Ionicons name="ribbon" size={100} color="rgba(255,255,255,0.06)" style={styles.heroDecor} />
           <View style={styles.heroTop}>
             <View style={[styles.tierBadge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-              <Ionicons name={currentTier.icon as any} size={16} color="white" />
+              <Ionicons name="medal-outline" size={16} color="white" />
               <Text style={styles.tierBadgeText}>{currentTier.name} Member</Text>
             </View>
-            <Text style={styles.discountChip}>{currentTier.discount} OFF</Text>
+            <Text style={styles.discountChip}>{currentTier.discount_percentage}% OFF</Text>
           </View>
           <Text style={styles.heroPoints}>{currentPoints.toLocaleString()}</Text>
           <Text style={styles.heroPointsLabel}>Total Points</Text>
@@ -81,7 +107,7 @@ export default function RewardsScreen() {
           {nextTier && (
             <View style={styles.progressSection}>
               <View style={styles.progressHeader}>
-                <Text style={styles.progressLabel}>{ordersToNext} orders to {nextTier.name}</Text>
+                <Text style={styles.progressLabel}>{pointsToNext} pts to {nextTier.name}</Text>
                 <Text style={styles.progressPct}>{Math.round(tierProgress * 100)}%</Text>
               </View>
               <View style={styles.progressTrack}>
@@ -92,18 +118,18 @@ export default function RewardsScreen() {
 
           <View style={styles.heroStats}>
             <View style={styles.heroStat}>
-              <Text style={styles.heroStatVal}>{totalOrders}</Text>
-              <Text style={styles.heroStatLabel}>Orders</Text>
+              <Text style={styles.heroStatVal}>{settings?.min_order_amount_for_redeem || 200}</Text>
+              <Text style={styles.heroStatLabel}>Min Order</Text>
             </View>
             <View style={styles.heroStatDivider} />
             <View style={styles.heroStat}>
-              <Text style={styles.heroStatVal}>₹320</Text>
-              <Text style={styles.heroStatLabel}>Saved</Text>
+              <Text style={styles.heroStatVal}>{settings ? (1 / settings.points_to_currency_ratio) : '10'}</Text>
+              <Text style={styles.heroStatLabel}>Pts = ₹1</Text>
             </View>
             <View style={styles.heroStatDivider} />
             <View style={styles.heroStat}>
-              <Text style={styles.heroStatVal}>3</Text>
-              <Text style={styles.heroStatLabel}>Referred</Text>
+              <Text style={styles.heroStatVal}>{settings?.max_points_percentage_per_order || 20}%</Text>
+              <Text style={styles.heroStatLabel}>Max Discount</Text>
             </View>
           </View>
         </LinearGradient>
@@ -115,8 +141,8 @@ export default function RewardsScreen() {
               <Ionicons name="people" size={24} color="#005d90" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.referralTitle}>Invite & Earn ₹250</Text>
-              <Text style={styles.referralSub}>You get 250 points per referral. They get ₹50 off.</Text>
+              <Text style={styles.referralTitle}>Invite & Earn Points</Text>
+              <Text style={styles.referralSub}>Share your code and earn points on their first signup and order.</Text>
             </View>
           </View>
           <View style={styles.codeBox}>
@@ -147,18 +173,18 @@ export default function RewardsScreen() {
         </View>
 
         {/* VOUCHERS */}
-        {VOUCHERS.length > 0 && (
+        {coupons.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>Your Vouchers</Text>
-            {VOUCHERS.map((v) => (
-              <TouchableOpacity key={v.code} style={styles.voucherCard} activeOpacity={0.8}>
+            <Text style={styles.sectionTitle}>Available Coupons</Text>
+            {coupons.map((v) => (
+              <TouchableOpacity key={v.id} style={styles.voucherCard} activeOpacity={0.8}>
                 <View style={styles.voucherLeft}>
-                  <Text style={styles.voucherValue}>{v.value}</Text>
-                  <Text style={styles.voucherMeta}>Min order {v.minOrder} · Expires {v.expiry}</Text>
+                  <Text style={styles.voucherValue}>{v.type === 'percentage' ? `${v.discount_value}%` : `₹${v.discount_value}`} OFF</Text>
+                  <Text style={styles.voucherMeta}>Min order ₹{v.min_order_value} · Expires {new Date(v.valid_until).toLocaleDateString()}</Text>
                 </View>
                 <View style={styles.voucherCode}>
                   <Text style={styles.voucherCodeText}>{v.code}</Text>
-                  <Text style={styles.voucherApply}>Apply →</Text>
+                  <Text style={styles.voucherApply}>Use at checkout →</Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -168,19 +194,19 @@ export default function RewardsScreen() {
         {/* LOYALTY TIERS */}
         <Text style={styles.sectionTitle}>Loyalty Tiers</Text>
         <View style={styles.tiersList}>
-          {TIERS.map((tier) => (
-            <View key={tier.name} style={[styles.tierRow, tier.name === currentTier.name && styles.tierRowActive]}>
-              <View style={[styles.tierIcon, { backgroundColor: tier.bg }]}>
-                <Ionicons name={tier.icon as any} size={18} color={tier.color} />
+          {tiers.map((tier) => (
+            <View key={tier.id} style={[styles.tierRow, tier.id === currentTier.id && styles.tierRowActive]}>
+              <View style={[styles.tierIcon, { backgroundColor: '#eff6ff' }]}>
+                <Ionicons name="medal-outline" size={18} color="#005d90" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.tierName, { color: tier.color }]}>{tier.name}</Text>
-                <Text style={styles.tierRange}>{tier.range}</Text>
+                <Text style={[styles.tierName, { color: '#1a1c1e' }]}>{tier.name}</Text>
+                <Text style={styles.tierRange}>{tier.min_points}+ lifetime points</Text>
               </View>
-              <Text style={[styles.tierDiscount, { color: tier.color }]}>{tier.discount} off</Text>
-              {tier.name === currentTier.name && (
-                <View style={[styles.currentChip, { backgroundColor: tier.color + '18' }]}>
-                  <Text style={[styles.currentChipText, { color: tier.color }]}>CURRENT</Text>
+              <Text style={[styles.tierDiscount, { color: '#005d90' }]}>{tier.discount_percentage}% off</Text>
+              {tier.id === currentTier.id && (
+                <View style={[styles.currentChip, { backgroundColor: '#005d9018' }]}>
+                  <Text style={[styles.currentChipText, { color: '#005d90' }]}>CURRENT</Text>
                 </View>
               )}
             </View>
@@ -190,14 +216,17 @@ export default function RewardsScreen() {
         {/* POINTS HISTORY */}
         <Text style={styles.sectionTitle}>Points History</Text>
         <View style={styles.historyCard}>
-          {HISTORY.map((h, i) => (
-            <View key={h.id} style={[styles.historyRow, i < HISTORY.length - 1 && styles.historyDivider]}>
+          {history.length === 0 && (
+            <Text style={{ textAlign: 'center', color: '#94a3b8', padding: 20 }}>No transactions yet</Text>
+          )}
+          {history.map((h, i) => (
+            <View key={h.id} style={[styles.historyRow, i < history.length - 1 && styles.historyDivider]}>
               <View style={[styles.historyIcon, { backgroundColor: h.points > 0 ? '#e8f5e9' : '#ffebee' }]}>
                 <Ionicons name={h.points > 0 ? 'arrow-up' : 'arrow-down'} size={14} color={h.points > 0 ? '#2e7d32' : '#c62828'} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.historyEvent}>{h.event}</Text>
-                <Text style={styles.historyDate}>{h.date}</Text>
+                <Text style={styles.historyEvent}>{h.description || h.source}</Text>
+                <Text style={styles.historyDate}>{new Date(h.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</Text>
               </View>
               <Text style={[styles.historyPoints, { color: h.points > 0 ? '#2e7d32' : '#c62828' }]}>
                 {h.points > 0 ? '+' : ''}{h.points}
@@ -212,13 +241,13 @@ export default function RewardsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: '#fcfdff' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     paddingHorizontal: 20, paddingVertical: 14,
     backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
   },
-  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
   content: { padding: 20, gap: 16, paddingBottom: 120 },
 
@@ -248,6 +277,7 @@ const styles = StyleSheet.create({
   referralCard: {
     backgroundColor: 'white', borderRadius: 20, padding: 18,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+    borderWidth: 1, borderColor: '#f1f4f9'
   },
   referralTop: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 16 },
   referralIconWrap: { width: 48, height: 48, borderRadius: 14, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
@@ -282,23 +312,27 @@ const styles = StyleSheet.create({
     backgroundColor: 'white', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
-  tierRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  tierRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   tierRowActive: { backgroundColor: '#f8fafc', borderRadius: 14, paddingHorizontal: 8, marginHorizontal: -8 },
   tierIcon: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   tierName: { fontSize: 15, fontWeight: '800', marginBottom: 2 },
   tierRange: { fontSize: 11, color: '#707881', fontWeight: '600' },
   tierDiscount: { fontSize: 14, fontWeight: '900' },
-  currentChip: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  currentChip: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, marginLeft: 10 },
   currentChipText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
 
   historyCard: {
-    backgroundColor: 'white', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8,
+    backgroundColor: 'white', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, marginBottom: 40,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
-  historyRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
+  historyRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
   historyDivider: { borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   historyIcon: { width: 32, height: 32, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   historyEvent: { fontSize: 13, fontWeight: '700', color: '#181c20', marginBottom: 2 },
   historyDate: { fontSize: 11, color: '#707881', fontWeight: '500' },
   historyPoints: { fontSize: 15, fontWeight: '800' },
 });
+ 15, fontWeight: '800' },
+});
+
+

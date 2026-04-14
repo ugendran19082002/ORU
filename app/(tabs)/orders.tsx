@@ -350,3 +350,5 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 18, fontWeight: '700', color: '#404850' },
   emptySubtitle: { fontSize: 13, color: '#707881' },
 });
+
+

@@ -194,3 +194,5 @@ const styles = StyleSheet.create({
   arriveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderRadius: 20, height: 56, shadowColor: '#005d90', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 },
   arriveBtnText: { color: 'white', fontWeight: '900', fontSize: 16 },
 });
+
+

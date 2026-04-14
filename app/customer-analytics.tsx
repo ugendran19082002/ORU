@@ -161,3 +161,5 @@ const styles = StyleSheet.create({
   insightTitle: { fontSize: 14, fontWeight: '800', color: '#181c20', marginBottom: 2 },
   insightDesc: { fontSize: 12, color: '#707881', lineHeight: 18 },
 });
+
+

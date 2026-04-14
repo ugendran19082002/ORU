@@ -533,3 +533,5 @@ const styles = StyleSheet.create({
   },
   emptySubtitle: { fontSize: 14, color: "#707881", marginTop: 6, textAlign: "center", maxWidth: "80%" },
 });
+
+

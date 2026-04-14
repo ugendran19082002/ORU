@@ -262,3 +262,5 @@ const styles = StyleSheet.create({
   complaintBtn: { backgroundColor: 'white', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, marginLeft: 'auto' },
   complaintBtnText: { color: '#7c3aed', fontWeight: '800', fontSize: 12 },
 });
+
+

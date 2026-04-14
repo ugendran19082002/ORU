@@ -295,3 +295,5 @@ const styles = StyleSheet.create({
   toggleThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: 'white', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
   toggleThumbActive: { transform: [{ translateX: 18 }] },
 });
+
+

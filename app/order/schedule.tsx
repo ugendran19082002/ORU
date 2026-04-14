@@ -121,3 +121,5 @@ const styles = StyleSheet.create({
   confirmBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
   confirmBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
 });
+
+

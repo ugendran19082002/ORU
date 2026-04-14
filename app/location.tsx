@@ -201,3 +201,5 @@ const styles = StyleSheet.create({
   skipBtn: { alignItems: 'center', paddingVertical: 18 },
   skipText: { fontSize: 13, color: '#94a3b8', fontWeight: '700' }
 });
+
+

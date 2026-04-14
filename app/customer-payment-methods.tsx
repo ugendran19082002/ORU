@@ -149,3 +149,5 @@ const styles = StyleSheet.create({
   defaultBadge: { alignSelf: 'flex-start', backgroundColor: '#e8f5e9', color: '#2e7d32', fontSize: 10, fontWeight: '800', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
   divider: { height: 1, backgroundColor: '#f1f4f9', marginLeft: 54 },
 });
+
+

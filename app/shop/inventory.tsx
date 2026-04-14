@@ -618,3 +618,5 @@ const styles = StyleSheet.create({
   disabledBadge: { position: 'absolute', top: -10, left: 16, backgroundColor: '#707881', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, zIndex: 10 },
   disabledBadgeText: { color: 'white', fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
 });
+
+

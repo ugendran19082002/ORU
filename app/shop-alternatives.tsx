@@ -207,3 +207,5 @@ const styles = StyleSheet.create({
   selectBtnGrad: { paddingVertical: 13, alignItems: 'center' },
   selectBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
 });
+
+

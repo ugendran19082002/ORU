@@ -230,3 +230,5 @@ const styles = StyleSheet.create({
   rescheduleBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: '#fecaca', backgroundColor: '#fff5f5' },
   rescheduleBtnText: { fontSize: 13, fontWeight: '700', color: '#c62828' },
 });
+
+

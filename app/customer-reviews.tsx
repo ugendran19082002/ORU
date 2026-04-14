@@ -83,3 +83,5 @@ const styles = StyleSheet.create({
   deleteBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: '#ffdad6' },
   btnText: { fontSize: 12, fontWeight: '700', color: '#005d90' },
 });
+
+

@@ -119,3 +119,5 @@ const styles = StyleSheet.create({
   submitBtn: { backgroundColor: '#005d90', borderRadius: 20, paddingVertical: 18, alignItems: 'center' },
   submitBtnText: { color: 'white', fontSize: 17, fontWeight: '900' },
 });
+
+

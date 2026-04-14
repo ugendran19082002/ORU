@@ -56,12 +56,11 @@ export const authApi = {
   /**
    * Verify OTP and get tokens
    */
-  verifyOtp: async (phone: string, otp: string, device_id: string = "1", referral_code?: string): Promise<VerifyOtpResponse> => {
+  verifyOtp: async (phone: string, otp: string, device_id: string = "1"): Promise<VerifyOtpResponse> => {
     const response = await apiClient.post<VerifyOtpResponse>('/auth/verify-otp', {
       phone,
       otp,
-      device_id,
-      referral_code
+      device_id
     });
     return response.data;
   },

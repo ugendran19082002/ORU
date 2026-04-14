@@ -29,16 +29,17 @@ type Promo = {
   issuer_type: 'admin' | 'shop';
 };
 
-const LOYALTY_TIERS = [
-  { level: 3, points: '200+', discount: '2%', color: '#b45309', bg: '#fef3c7', title: 'Level 3 - Bronze' },
-  { level: 6, points: '500+', discount: '5%', color: '#64748b', bg: '#f1f5f9', title: 'Level 6 - Silver' },
-  { level: 11, points: '1050+', discount: '8%', color: '#d97706', bg: '#fffbeb', title: 'Level 11 - Gold' },
-  { level: 20, points: '2000+', discount: '10%', color: '#7c3aed', bg: '#ede9fe', title: 'Level 20 - Diamond' },
-];
+const roleAccent: Record<string, string> = {
+  customer: "#005d90",
+  shop_owner: "#006878",
+  admin: "#ba1a1a",
+};
 
 export default function ShopPromotionsScreen() {
   const router = useRouter();
   const [promos, setPromos] = useState<Promo[]>([]);
+  const [loyaltyLevels, setLoyaltyLevels] = useState<any[]>([]);
+  const [loyaltySettings, setLoyaltySettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'coupons' | 'loyalty'>('coupons');
@@ -53,7 +54,23 @@ export default function ShopPromotionsScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [expiryDate, setExpiryDate] = useState(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
 
-  useEffect(() => { fetchPromotions(); }, []);
+  useEffect(() => { 
+    fetchPromotions(); 
+    fetchLoyaltyData();
+  }, []);
+
+  const fetchLoyaltyData = async () => {
+    try {
+      const [levelsRes, settingsRes] = await Promise.all([
+        apiClient.get('/loyalty/levels'),
+        apiClient.get('/loyalty/settings')
+      ]);
+      if (levelsRes.data.status === 1) setLoyaltyLevels(levelsRes.data.data);
+      if (settingsRes.data.status === 1) setLoyaltySettings(settingsRes.data.data);
+    } catch (e) {
+      console.error('Failed to fetch loyalty data', e);
+    }
+  };
 
   const fetchPromotions = async () => {
     try {
@@ -346,26 +363,40 @@ export default function ShopPromotionsScreen() {
             </LinearGradient>
 
             <Text style={styles.sectionTitle}>Platform Milestone Rewards</Text>
-            {LOYALTY_TIERS.map((tier) => (
-              <View key={tier.level} style={styles.tierCard}>
-                <View style={[styles.tierIconWrap, { backgroundColor: tier.bg }]}>
-                  <Ionicons name="ribbon" size={22} color={tier.color} />
+            {loyaltyLevels.length === 0 && (
+              <ActivityIndicator size="small" color="#7c3aed" style={{ marginVertical: 20 }} />
+            )}
+            {loyaltyLevels.map((tier, idx) => {
+              // Map dynamic colors based on index for variety
+              const colors = [
+                { color: '#b45309', bg: '#fef3c7' },
+                { color: '#64748b', bg: '#f1f5f9' },
+                { color: '#d97706', bg: '#fffbeb' },
+                { color: '#7c3aed', bg: '#ede9fe' }
+              ];
+              const theme = colors[idx % colors.length];
+              
+              return (
+                <View key={tier.id} style={styles.tierCard}>
+                  <View style={[styles.tierIconWrap, { backgroundColor: theme.bg }]}>
+                    <Ionicons name="ribbon" size={22} color={theme.color} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.tierName, { color: theme.color }]}>{tier.name}</Text>
+                    <Text style={styles.tierOrders}>{tier.min_points}+ lifetime points</Text>
+                  </View>
+                  <View style={[styles.tierBadge, { backgroundColor: theme.bg }]}>
+                    <Text style={[styles.tierDiscount, { color: theme.color }]}>{tier.discount_percentage}% off</Text>
+                  </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.tierName, { color: tier.color }]}>{tier.title}</Text>
-                  <Text style={styles.tierOrders}>{tier.points} lifetime points</Text>
-                </View>
-                <View style={[styles.tierBadge, { backgroundColor: tier.bg }]}>
-                  <Text style={[styles.tierDiscount, { color: tier.color }]}>{tier.discount} off</Text>
-                </View>
-              </View>
-            ))}
+              );
+            })}
 
             <View style={styles.infoCard}>
               <Ionicons name="information-circle-outline" size={20} color="#005d90" />
               <Text style={styles.infoText}>
                 ⚠️ ADMIN REWARDS: These coupons are funded by ThanniGo. They do NOT reduce your payout. 
-                {"\n"}🎯 POINT SYSTEM: 1 Point earned per ₹10 spent by customers.
+                {"\n"}🎯 POINT SYSTEM: 1 Point earned per ₹{loyaltySettings ? (1 / loyaltySettings.earn_points_per_rupee) : '10'} spent by customers.
               </Text>
             </View>
             <View style={[styles.infoCard, { backgroundColor: '#fef3c7', marginTop: 12 }]}>
@@ -492,3 +523,5 @@ const styles = StyleSheet.create({
   },
   infoText: { flex: 1, fontSize: 12, color: '#005d90', lineHeight: 18, fontWeight: '600' },
 });
+
+

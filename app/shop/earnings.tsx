@@ -249,3 +249,5 @@ const styles = StyleSheet.create({
   trxAmtNeg: { fontSize: 15, fontWeight: '800', color: '#c62828' },
   trxSub: { fontSize: 11, color: '#707881', fontWeight: '500', marginTop: 1 },
 });
+
+

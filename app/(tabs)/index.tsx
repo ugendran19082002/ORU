@@ -93,6 +93,7 @@ export default function HomeScreen() {
   const [loadingLoc, setLoadingLoc] = useState(true);
   const [userLoc, setUserLoc] = useState<{lat: number, lng: number} | null>(null);
   const [nearbyShops, setNearbyShops] = useState<any[]>([]);
+  const [loyaltyPoints, setLoyaltyPoints] = useState<number>(0);
   const [requestedShopIds, setRequestedShopIds] = useState<string[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [isAddressModalVisible, setIsAddressModalVisible] = useState(false);
@@ -106,10 +107,27 @@ export default function HomeScreen() {
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    await loadShops();
-    await checkLocation();
+    await Promise.all([
+      loadShops(),
+      checkLocation(),
+      fetchLoyaltyBalance()
+    ]);
     setRefreshing(false);
   }, []);
+
+  const fetchLoyaltyBalance = async () => {
+    try {
+      const res = await addressApi.apiClient.get('/promotion/loyalty/ledger');
+      // Calculate total points from ledger or if balance is in user session use that
+      // Assuming user metadata or ledger has balance. For simplicity, we can also fetch /users/me
+      const profileRes = await addressApi.apiClient.get('/users/me');
+      if (profileRes.data.status === 1) {
+        setLoyaltyPoints(profileRes.data.data.loyalty_points || 0);
+      }
+    } catch (e) {
+      console.error('Failed to fetch loyalty balance', e);
+    }
+  };
 
   useEffect(() => {
     loadShops();
@@ -118,6 +136,7 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       checkLocation();
+      fetchLoyaltyBalance();
     }, [])
   );
 
@@ -259,6 +278,15 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
         <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.pointsChip}
+            onPress={() => router.push('/rewards' as any)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="gift" size={14} color="#005d90" />
+            <Text style={styles.pointsText}>{loyaltyPoints}</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.iconBtn}
             onPress={() => router.push('/notifications' as any)}
@@ -555,7 +583,13 @@ const styles = StyleSheet.create({
   brandName: { fontSize: 20, fontWeight: '900', color: '#003a5c', letterSpacing: -0.8 },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   locationText: { fontSize: 12, color: '#64748b', fontWeight: '700', maxWidth: 180 },
-  headerRight: { flexDirection: 'row', gap: 10 },
+  headerRight: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  pointsChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: '#eff6ff', paddingHorizontal: 10, paddingVertical: 6,
+    borderRadius: 20, borderWidth: 1, borderColor: '#dbeafe'
+  },
+  pointsText: { fontSize: 13, fontWeight: '800', color: '#005d90' },
   iconBtn: {
     width: 42, height: 42, borderRadius: 12,
     backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center',
@@ -630,4 +664,6 @@ const styles = StyleSheet.create({
   addAddrBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, marginTop: 8 },
   addAddrText: { fontSize: 14, fontWeight: '700', color: '#005d90' },
 });
+
+
 

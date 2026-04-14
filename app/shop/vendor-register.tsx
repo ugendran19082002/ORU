@@ -260,3 +260,5 @@ const styles = StyleSheet.create({
   nextBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
   nextBtnText: { color: 'white', fontSize: 16, fontWeight: '800', letterSpacing: -0.3 },
 });
+
+

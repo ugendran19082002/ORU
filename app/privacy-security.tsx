@@ -218,3 +218,5 @@ const styles = StyleSheet.create({
   deleteBtn: { paddingVertical: 18, alignItems: 'center' },
   deleteBtnText: { color: '#ba1a1a', fontWeight: '700', fontSize: 14 },
 });
+
+

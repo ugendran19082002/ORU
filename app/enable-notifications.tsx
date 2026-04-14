@@ -173,3 +173,5 @@ const styles = StyleSheet.create({
   skipBtn: { marginTop: 20, paddingVertical: 10, alignItems: 'center' },
   skipText: { color: '#44474e', fontSize: 15, fontWeight: '600' },
 });
+
+

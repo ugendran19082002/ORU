@@ -158,3 +158,5 @@ const styles = StyleSheet.create({
   primaryBtn: { backgroundColor: '#C0392B', borderRadius: 18, paddingVertical: 16, alignItems: 'center' },
   primaryText: { color: '#fff', fontWeight: '800', fontSize: 15 },
 });
+
+
