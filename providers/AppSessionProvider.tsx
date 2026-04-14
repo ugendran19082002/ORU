@@ -408,6 +408,7 @@ export function AppSessionProvider({
         setAccessToken(nextAccessToken);
         setRefreshToken(refresh_token || refreshToken);
         setNextStepState(resNextStep || null);
+        setPreferredRoleState(user.role as AppRole);
         setStatus(nextAccessToken ? "authenticated" : "anonymous");
 
           await writeSession({
@@ -678,7 +679,7 @@ export function AppRouteGuard() {
                              (targetNorm === "delivery" && currentNorm.startsWith("delivery")) ||
                              (targetNorm === "admin" && currentNorm.startsWith("admin")) ||
                              (targetNorm.startsWith("onboarding") && currentNorm.startsWith("onboarding")) ||
-                             (targetNorm === "" && !["admin", "shop", "delivery", "onboarding", "auth", "security-setup"].includes(firstSegment));
+                             (targetNorm === "" && !["admin", "shop", "delivery", "onboarding", "auth", "security-setup", "guest"].includes(firstSegment));
 
     // SPECIAL: If we are on the absolute root '/', we MUST push to the targetRoute 
     // to replace the Splash/Loading state, even if normalization says they are same.

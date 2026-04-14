@@ -86,7 +86,7 @@ export default function AdminOverviewScreen() {
   }, [fetchDashboard]);
 
   // 0. Role Bouncer
-  if (status === 'loading') {
+  if (status === 'loading' || (status === 'authenticated' && !user)) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color="#005d90" />
