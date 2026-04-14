@@ -21,8 +21,24 @@ export default function AdminShopsScreen() {
   const [shops, setShops] = useState<AdminShop[]>([]);
   const [loading, setLoading] = useState(true);
 
+  if (status === 'loading') {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#005d90" />
+      </View>
+    );
+  }
+
   if (status === 'authenticated' && (!user || user?.role !== 'admin')) {
-    return null; // Layout handles the error message
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 40 }]}>
+        <Ionicons name="lock-closed" size={64} color="#ba1a1a" />
+        <Text style={{ fontSize: 20, fontWeight: '800', color: '#1e293b', marginTop: 16 }}>Restricted Access</Text>
+        <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', marginTop: 8 }}>
+          You do not have administrative permissions to view the partner list.
+        </Text>
+      </View>
+    );
   }
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');

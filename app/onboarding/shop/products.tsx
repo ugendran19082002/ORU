@@ -67,7 +67,8 @@ export default function ShopProductsScreen() {
       subcategory_id: subcat.id,
       name: subcat.name_en, // Default name from subcat
       price: '40',
-      stock_quantity: '50'
+      stock_quantity: '50',
+      is_water_can: !!subcat.is_water_can
     }]);
   };
 
@@ -101,7 +102,7 @@ export default function ShopProductsScreen() {
             name: p.name,
             price: isFinite(price) ? price : 0,
             stock_quantity: isFinite(stock) ? stock : 0,
-            type: selectedCategory?.id === 1 ? 'WATER_CAN' : 'NORMAL'
+            type: p.is_water_can ? 'WATER_CAN' : 'NORMAL'
           };
         })
       });

@@ -8,8 +8,9 @@ import { Logo } from '@/components/ui/Logo';
 import { useAppSession } from '@/providers/AppSessionProvider';
 
 const NAV_ITEMS = [
-  { name: 'Dashboard', path: '/admin', icon: 'pie-chart' },
-  { name: 'Shops', path: '/admin/shops', icon: 'storefront' },
+  { name: 'Dashboard', path: '/admin', icon: 'grid' },
+  { name: 'Vendors', path: '/admin/shops', icon: 'business' },
+  { name: 'Master Menu', path: '/admin/master', icon: 'list' },
 ];
 
 export default function AdminLayout() {
@@ -59,7 +60,7 @@ export default function AdminLayout() {
             >
               <Ionicons
                 name={isActive ? item.icon : `${item.icon}-outline` as any}
-                size={20}
+                size={22}
                 color={isActive ? '#005d90' : '#707881'}
               />
               <Text style={[styles.navText, isActive && styles.navTextActive]}>
@@ -136,8 +137,8 @@ const styles = StyleSheet.create({
   brandBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 40,
-    paddingTop: Platform.OS === 'ios' ? 20 : 0,
+    marginBottom: 48,
+    paddingTop: Platform.OS === 'ios' ? 20 : 10,
   },
   brandName: {
     fontSize: 20,

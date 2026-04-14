@@ -575,9 +575,11 @@ export function AppRouteGuard() {
         } else if (!user.onboarding_completed && !isPriorityRoute) {
           const currentPath = pathname || "";
           const isCurrentlyInExpectedFlow = (user.role === 'customer' && currentPath.startsWith('/onboarding/customer')) ||
-                                             (user.role === 'shop_owner' && currentPath.startsWith('/onboarding/shop'));
+                                             (user.role === 'shop_owner' && currentPath.startsWith('/onboarding/shop')) ||
+                                             (user.role === 'admin' && currentPath.startsWith('/admin')) ||
+                                             (user.role === 'delivery' && currentPath.startsWith('/delivery'));
 
-          if (!isCurrentlyInExpectedFlow || currentPath === '/onboarding/shop' || currentPath === '/onboarding/customer') {
+          if (!isCurrentlyInExpectedFlow) {
               navigate(idealRoute, "Enforcing Onboarding");
           }
         } else if (pathname === "/" || pathname === "/auth") {
@@ -595,11 +597,17 @@ export function AppRouteGuard() {
         }
       } catch (error) {
         console.error("🛡️ [Guard] Critical Navigation Error:", error);
-        // Fail-safe: Avoid blind redirects to /(tabs) for special roles to prevent loops
-        if (user && user.role === 'admin') router.replace("/admin" as any);
-        else if (user && user.role === 'shop_owner') router.replace("/shop" as any);
-        else if (user && user.role === 'delivery') router.replace("/delivery" as any);
-        else router.replace("/(tabs)" as any);
+        
+        // Fail-safe: Only redirect if we are NOT already in a safe dashboard or auth screen
+        const currentPath = pathname || "";
+        const isSafePlace = currentPath.startsWith("/admin") || 
+                            currentPath.startsWith("/shop") || 
+                            currentPath.startsWith("/delivery") || 
+                            currentPath.startsWith("/auth");
+
+        if (!isSafePlace) {
+           router.replace("/(tabs)" as any);
+        }
       }
     };
 

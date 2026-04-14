@@ -65,7 +65,8 @@ export default function ShopInventoryScreen() {
           stock_quantity: String(p.stock_quantity || ''),
           image_url: p.image_url || null,
           is_available: p.is_available !== undefined ? p.is_available : true,
-          type: p.type || "water"
+          type: p.type || "water",
+          is_water_can: !!p.Subcategory?.is_water_can
         })));
       } else if (stepsRes.data?.steps) {
         const catStep = stepsRes.data.steps.find((s: any) => s.step_key === 'product_catalog');
@@ -172,9 +173,9 @@ export default function ShopInventoryScreen() {
     setEditingSubchainId(prod.subcategory_id);
     setSelectedCategoryId(catId);
     setSelectedSubchainId(prod.subcategory_id);
-    setNewPrice(prod.price);
-    setNewStock(prod.stock_quantity);
-    setNewImageUrl(prod.image_url);
+    setNewPrice(String(prod.price || '40'));
+    setNewStock(String(prod.stock_quantity || '0'));
+    setNewImageUrl(prod.image_url || null);
     setNewIsAvailable(prod.is_available !== false);
     setIsEditing(true);
     setModalStep(2); // Jump to details by default
@@ -201,7 +202,8 @@ export default function ShopInventoryScreen() {
       stock_quantity: newStock,
       image_url: newImageUrl,
       is_available: newIsAvailable,
-      type: selectedCategoryId === 1 ? 'WATER_CAN' : 'NORMAL'
+      type: categories.find(c => c.id === selectedCategoryId)?.Subcategories?.find((s: any) => s.id === selectedSubchainId)?.is_water_can ? 'WATER_CAN' : 'NORMAL',
+      is_water_can: !!categories.find(c => c.id === selectedCategoryId)?.Subcategories?.find((s: any) => s.id === selectedSubchainId)?.is_water_can
     };
 
     if (isEditing && editingSubchainId) {
@@ -218,8 +220,8 @@ export default function ShopInventoryScreen() {
     setSelectedSubchainId(null);
     setSelectedCategoryId(null);
     setModalStep(0);
-    setNewPrice('');
-    setNewStock('0');
+    setNewPrice('40'); // Senseful default to enable button
+    setNewStock('100'); // Senseful default
     setNewImageUrl(null);
     setNewIsAvailable(true);
   };
@@ -237,7 +239,7 @@ export default function ShopInventoryScreen() {
           stock_quantity: parseInt(p.stock_quantity) || 0,
           image_url: p.image_url || null,
           is_available: p.is_available !== false,
-          type: p.type || "water"
+          type: p.is_water_can ? 'WATER_CAN' : 'NORMAL'
         }))
       });
       
@@ -331,22 +333,7 @@ export default function ShopInventoryScreen() {
                         </View>
                       </View>
                       
-                      <View style={styles.stockSection}>
-                      <View style={styles.stockCol}>
-                        <Text style={styles.inputLabel}>Visibility</Text>
-                        <View style={[styles.inputField, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-                          <Text style={{ fontSize: 14, fontWeight: '700', color: newIsAvailable ? '#006878' : '#707881' }}>
-                            {newIsAvailable ? 'Active & Visible' : 'Hidden from Customers'}
-                          </Text>
-                          <Switch 
-                            value={newIsAvailable}
-                            onValueChange={setNewIsAvailable}
-                            trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
-                            thumbColor={newIsAvailable ? '#006878' : '#707881'}
-                          />
-                        </View>
-                      </View>
-                    </View>
+
 
                     <View style={styles.stockSection}>
                         <View style={styles.stockCol}>
