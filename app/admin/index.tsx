@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 import { useAppSession } from '@/providers/AppSessionProvider';
 import { Logo } from '@/components/ui/Logo';
 import { adminApi, AdminShop } from '@/api/adminApi';
@@ -50,11 +50,16 @@ export default function AdminOverviewScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const router = useRouter();
+  const pathname = usePathname();
   const { user, status } = useAppSession();
   
   const [refreshing, setRefreshing] = useState(false);
   const [pendingShops, setPendingShops] = useState<AdminShop[]>([]);
   const [loading, setLoading] = useState(true);
+
+  if (__DEV__) {
+    console.log(`📊 [AdminDashboard] Mounting. Status: ${status}, UID: ${user?.id || 'none'}, Path: ${pathname}`);
+  }
 
   const fetchDashboard = useCallback(async () => {
     try {

@@ -21,12 +21,8 @@ export default function AdminLayout() {
   const { signOut, status } = useAppSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  if (status === 'loading') {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color="#005d90" />
-      </View>
-    );
+  if (__DEV__) {
+    console.log(`🏗️ [AdminLayout] Rendering. Status: ${status}, Path: ${pathname}, Width: ${width}`);
   }
 
   const handleNav = (path: string) => {

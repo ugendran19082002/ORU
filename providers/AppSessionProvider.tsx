@@ -11,7 +11,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { Platform, DeviceEventEmitter } from "react-native";
+import { Platform, DeviceEventEmitter, View, ActivityIndicator } from "react-native";
 
 import { apiClient, setClientToken, getClientToken } from "@/api/client";
 import { onboardingApi } from "@/api/onboardingApi";
@@ -384,8 +384,19 @@ export function AppSessionProvider({
     [accessToken, refreshToken, biometricEnabled, isBiometricVerified, isLocationVerified, isHydrated, preferredRole, status, user, nextStep, isSyncingShop]
   );
 
+  if (!isHydrated) {
+    return (
+      <View style={{ flex: 1, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' }}>
+         <ActivityIndicator size="large" color="#005d90" />
+      </View>
+    );
+  }
+
   return (
-    <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
+    <SessionContext.Provider value={value}>
+        {children}
+        <AppRouteGuard />
+    </SessionContext.Provider>
   );
 }
 
@@ -428,8 +439,8 @@ export function AppRouteGuard() {
     const isPaused = !isHydrated || (isSyncingShop && isShopOwner) || needsShopSync;
 
     if (isPaused) {
-        if ((isSyncingShop || needsShopSync) && !lastLoggedSyncPauseRef.current) {
-            console.log('🛡️ [Guard] Shop status sync in progress. Pausing redirection.');
+        if (__DEV__ && (isSyncingShop || needsShopSync) && !lastLoggedSyncPauseRef.current) {
+            console.log('🛡️ [Guard] Paused (Sync/Hydration in progress)');
             lastLoggedSyncPauseRef.current = true;
         }
         return;
@@ -450,6 +461,13 @@ export function AppRouteGuard() {
 
     const isPriorityRoute = isSecurityRoute || isAuthRoute;
 
+    const isAdminRoute = segments[0] === 'admin';
+    const isDeliveryRoute = segments[0] === 'delivery';
+
+    if (__DEV__ && isAdminRoute) {
+      console.log(`🛡️ [Guard-Admin] Status: ${status}, Path: /${segments.join('/')}, UID: ${user?.id || 'none'}`);
+    }
+
     if (status === "anonymous") {
       if (!isAuthRoute && !isOnboardingRoute) {
         router.replace("/auth");
@@ -468,33 +486,29 @@ export function AppRouteGuard() {
         if (currentGeneration < guardGenerationRef.current) return;
 
         let hasRedirected = false;
-        const normalize = (path: string) => path.split('/').filter(s => !s.startsWith('(')).join('/');
 
         const navigate = (target: string, reason: string) => {
-          // Validation: If a newer generation is running, or we already navigated, stop.
           if (hasRedirected || currentGeneration < guardGenerationRef.current || isNavigatingRef.current) return;
           
-          // Strip out route groups (e.g., (onboarding)) for comparison logic
-          const currentNorm = normalize(pathname);
-          const targetNorm = normalize(target);
-          const lastRedirectNorm = normalize(lastRedirectRef.current || "");
+          // Production Safe Normalization: strip groups like (tabs) or (auth)
+          const norm = (p: string) => p.split('/').filter(s => s && !s.startsWith('(')).join('/');
+          const currentNorm = norm(pathname || "");
+          const targetNorm = norm(target);
 
-          if (currentNorm === targetNorm || lastRedirectNorm === targetNorm) {
+          if (currentNorm === targetNorm) {
+            if (__DEV__) console.log(`🛡️ [Guard] Already at ${targetNorm}. Skipping.`);
             hasRedirected = true;
             return;
           }
           
-          console.log(`🛡️ [Guard] Redirecting to ${target} | Reason: ${reason} | Role: ${user?.role} | Status: ${user?.shopStatus || 'none'}`);
-          lastRedirectRef.current = target;
+          console.log(`🛡️ [Guard] Redirect: ${currentNorm} -> ${targetNorm} (${reason})`);
           hasRedirected = true;
           isNavigatingRef.current = true;
-          
-          // Use replace and then clear the lock after a small cooldown to allow native nav to settle
           router.replace(target as any);
           
           setTimeout(() => {
             isNavigatingRef.current = false;
-          }, 150);
+          }, 500); // 500ms safety lock
         };
 
         // 1. Biometrics
@@ -551,6 +565,11 @@ export function AppRouteGuard() {
             }
           } else if (user.role === "admin") {
             idealRoute = "/admin";
+            const currentBase = segments[0] as string;
+            if (isAdminRoute || isDeliveryRoute || currentBase === 'security') {
+              if (__DEV__) console.log(`🛡️ [Guard] Already in ${currentBase} stack. Early exit.`);
+              return; // Correct role in specialized route
+            }
           } else if (user.role === "delivery") {
             idealRoute = "/delivery";
           } else if (backendNextStep?.screen_route) {
@@ -591,6 +610,11 @@ export function AppRouteGuard() {
                                               (idealRoute === "/delivery" && currentPath.startsWith("/delivery")) ||
                                               (idealRoute === "/admin" && currentPath.startsWith("/admin"));
             
+            if (currentPath === idealRoute || isCurrentlyInIdealStack) {
+              if (__DEV__) console.log(`🛡️ [Guard] Already at target: ${currentPath}. Skipping redundant redirect.`);
+              return;
+            }
+
             if (!isCurrentlyInIdealStack) {
                 navigate(idealRoute, "Stack Correction");
             }

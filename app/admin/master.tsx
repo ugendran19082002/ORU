@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
   inputLabel: { fontSize: 12, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, marginLeft: 4 },
   input: { backgroundColor: '#f8fafc', borderRadius: 16, padding: 16, fontSize: 15, fontWeight: '600', color: '#1e293b', borderWidth: 1, borderColor: '#f1f5f9' },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 24, padding: 16, backgroundColor: '#f8fafc', borderRadius: 20, borderWidth: 1, borderColor: '#f1f5f9' },
-  checkbox: { width: 24, height: 24, borderRadius: 8, borderWeight: 2, borderColor: '#e2e8f0', backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  checkbox: { width: 24, height: 24, borderRadius: 8, borderWidth: 2, borderColor: '#e2e8f0', backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
   checkboxActive: { backgroundColor: '#005d90', borderColor: '#005d90' },
   checkLabel: { fontSize: 15, fontWeight: '800', color: '#1e293b' },
   checkSub: { fontSize: 12, color: '#94a3b8', fontWeight: '500' },
