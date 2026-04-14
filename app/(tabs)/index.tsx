@@ -37,63 +37,25 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
-/* ---------- SAMPLE DATA ---------- */
-const SAMPLE_SHOPS = [
-  {
-    id: '1',
-    name: 'Blue Spring Aquatics',
-    price: 45,
-    rating: 4.8,
-    lat: 12.9716,
-    lng: 80.2210,
-    image: require('@/assets/images/water_can_1.jpg')
-  },
-  {
-    id: '2',
-    name: 'Aqua Pure Water',
-    price: 50,
-    rating: 4.5,
-    lat: 12.9725,
-    lng: 80.2230,
-    image: require('@/assets/images/water_can_2.jpg')
-  },
-  {
-    id: '3',
-    name: 'Clear Drop Deliveries',
-    price: 40,
-    rating: 4.6,
-    lat: 12.9730,
-    lng: 80.2190,
-    image: require('@/assets/images/water_can_3.jpg')
-  },
-  {
-    id: '4',
-    name: 'H2O Essentials',
-    price: 55,
-    rating: 4.9,
-    lat: 12.9690,
-    lng: 80.2240,
-    image: require('@/assets/images/water_can_1.jpg') // reused
-  },
-  {
-    id: '5',
-    name: 'Crystal Flow Cans',
-    price: 60,
-    rating: 4.7,
-    lat: 12.9705,
-    lng: 80.2185,
-    image: require('@/assets/images/water_can_2.jpg') // reused
+const getShopImage = (hero: string) => {
+  switch (hero) {
+    case 'water_can_1': return require('@/assets/images/water_can_1.jpg');
+    case 'water_can_2': return require('@/assets/images/water_can_2.jpg');
+    case 'water_can_3': return require('@/assets/images/water_can_3.jpg');
+    default: return require('@/assets/images/water_can_1.jpg');
   }
-];
+};
+
+
+
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { setSelectedShop, loadShops } = useShopStore();
+  const { setSelectedShop, loadShops, shops } = useShopStore();
   const [search, setSearch] = useState('');
   
   const [loadingLoc, setLoadingLoc] = useState(true);
   const [userLoc, setUserLoc] = useState<{lat: number, lng: number} | null>(null);
-  const [nearbyShops, setNearbyShops] = useState<any[]>([]);
   const [loyaltyPoints, setLoyaltyPoints] = useState<number>(0);
   const [requestedShopIds, setRequestedShopIds] = useState<string[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -109,7 +71,6 @@ export default function HomeScreen() {
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     await Promise.all([
-      loadShops(),
       checkLocation(),
       fetchLoyaltyBalance()
     ]);
@@ -131,7 +92,7 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-    loadShops();
+    // Initial fetch handled by checkLocation() on focus or mount
   }, []);
 
   useFocusEffect(
@@ -207,47 +168,33 @@ export default function HomeScreen() {
         }
       }
 
-      // Calculate distances & filter <= 3km
-      // NOTE: Because simulators might be thousands of miles away from 12.97/80.22,
-      // we will inject a fallback spoofed location matching Chennai/BLR area if real distance is > 3km.
-      let processedShops = SAMPLE_SHOPS.map(shop => {
-         const distance = calculateDistance(currentLat, currentLng, shop.lat, shop.lng);
-         return { ...shop, calculatedDistance: distance };
-      });
-
-      // Simulation fallback: If everything is > 3km, spoof it for the demo
-      if (processedShops.every(s => s.calculatedDistance > 3.0)) {
-         processedShops = processedShops.map((shop, idx) => ({
-             ...shop, calculatedDistance: 1.2 + (idx * 0.5) // spoof logic
-         }));
-      }
-
-      setNearbyShops(processedShops);
+      // 3. Fetch approved shops from backend using these coordinates
+      await loadShops({ lat: currentLat, lng: currentLng });
 
     } catch (err) {
-      console.warn("Could not fetch location, falling back to mock locations", err);
-      // Fallback for emulators where location services might be disabled or fail
-      setUserLoc({ lat: 12.9716, lng: 80.2210 });
-      let fallbackShops = SAMPLE_SHOPS.map((shop, idx) => ({
-         ...shop, calculatedDistance: 1.2 + (idx * 0.5)
-      }));
-      setNearbyShops(fallbackShops);
+      console.warn("Could not fetch location, falling back to mock area", err);
+      // Fallback for emulators: Use Chennai coordinates and load shops
+      const fallbackLat = 12.9716;
+      const fallbackLng = 80.2210;
+      setUserLoc({ lat: fallbackLat, lng: fallbackLng });
+      await loadShops({ lat: fallbackLat, lng: fallbackLng });
     } finally {
       setLoadingLoc(false);
     }
   };
 
   // Filter and sort the shops for rendering
-  const filteredShops = nearbyShops
-    .filter(s => s.calculatedDistance <= 3.0)
+  // Filter and sort the shops for rendering
+  const filteredShops = shops
+    .filter(s => s.distanceKm <= 3.0)
     .filter(s => search.trim() === '' ? true : s.name.toLowerCase().includes(search.toLowerCase()))
     .filter(s => {
       if (activeFilter === 'Rating 4.5+') return s.rating >= 4.5;
-      if (activeFilter === '< 2km') return s.calculatedDistance < 2.0;
-      if (activeFilter === 'Under Rs.50') return s.price < 50;
+      if (activeFilter === '< 2km') return s.distanceKm < 2.0;
+      if (activeFilter === 'Under Rs.50') return s.pricePerCan < 50;
       return true;
     })
-    .sort((a,b) => a.calculatedDistance - b.calculatedDistance);
+    .sort((a,b) => a.distanceKm - b.distanceKm);
 
   if (loadingLoc) {
     return (
@@ -448,7 +395,7 @@ export default function HomeScreen() {
                  }}
                >
                  <View style={styles.shopImageContainer}>
-                   <Image source={shop.image} style={styles.shopImage} contentFit="cover" transition={300} />
+                   <Image source={getShopImage(shop.heroImage)} style={styles.shopImage} contentFit="cover" transition={300} />
                    <TouchableOpacity 
                      style={styles.favBtn} 
                      onPress={(e) => {
@@ -464,7 +411,7 @@ export default function HomeScreen() {
                    </TouchableOpacity>
                    <View style={styles.distBadge}>
                      <Ionicons name="navigate" size={12} color="#005d90" />
-                     <Text style={styles.distText}>{shop.calculatedDistance.toFixed(1)} km</Text>
+                     <Text style={styles.distText}>{shop.distanceKm.toFixed(1)} km</Text>
                    </View>
                  </View>
                  <View style={styles.shopInfo}>
@@ -477,7 +424,7 @@ export default function HomeScreen() {
                        </View>
                      </View>
                      <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
-                      <Text style={styles.shopPrice}>Rs. {shop.price}</Text>
+                      <Text style={styles.shopPrice}>Rs. {shop.pricePerCan}</Text>
                        <Text style={styles.shopPriceLabel}>PER CAN</Text>
                      </View>
                    </View>

@@ -378,7 +378,7 @@ export default function ShopInventoryScreen() {
 
                       {parseFloat(prod.deposit_amount) > 0 && (
                         <View style={styles.depositRowList}>
-                          <Text style={styles.depositLabelList}>Refundable Deposit:</Text>
+                          <Text style={styles.depositLabelList}>Can Price Amount:</Text>
                           <Text style={styles.depositValueList}>₹{prod.deposit_amount}</Text>
                         </View>
                       )}
@@ -534,7 +534,7 @@ export default function ShopInventoryScreen() {
                       if (subcat?.is_water_can) {
                         return (
                           <View style={{ marginTop: 20 }}>
-                            <Text style={styles.inputLabel}>Deposit Amount (₹)</Text>
+                            <Text style={styles.inputLabel}>Can Price Amount (₹)</Text>
                             <View style={styles.modalPriceInputWrap}>
                                 <Text style={styles.rupeeIcon}>₹</Text>
                                 <TextInput 

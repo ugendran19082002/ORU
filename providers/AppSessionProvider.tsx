@@ -238,24 +238,36 @@ export function AppSessionProvider({
   }, [status, user?.role, user?.shopStatus, isSyncingShop]);
 
   const handleSignOut = async () => {
-    setUser(null);
-    setAccessToken(null);
-    setRefreshToken(null);
-    setIsBiometricVerified(false);
-    setIsLocationVerified(false);
-    setPreferredRoleState(null);
-    setNextStepState(null);
-    setStatus("anonymous");
-    setClientToken(null);
+    try {
+      console.log("🛡️ [Session] Deep Purge SignOut initiated...");
+      
+      // 1. Reset memory state immediately to halt ongoing guard checks
+      setUser(null);
+      setAccessToken(null);
+      setRefreshToken(null);
+      setIsBiometricVerified(false);
+      setIsLocationVerified(false);
+      setPreferredRoleState(null);
+      setNextStepState(null);
+      setStatus("anonymous");
+      setClientToken(null);
 
-    await writeSession({
-      user: null,
-      access_token: null,
-      refresh_token: null,
-      preferredRole: null,
-      biometricEnabled,
-      nextStep: null,
-    });
+      // 2. Perform aggressive storage clearing
+      if (Platform.OS === "web") {
+        await AsyncStorage.clear();
+      } else {
+        // Clear session specific key from SecureStore
+        await SecureStore.deleteItemAsync(SESSION_KEY);
+        // Clear everything else from AsyncStorage
+        await AsyncStorage.clear();
+      }
+      
+      console.log("✅ [Session] Deep Purge completed. All caches cleared.");
+    } catch (err) {
+      console.error("[Session] SignOut Error:", err);
+      // Fallback: at least try to set status to anonymous
+      setStatus("anonymous");
+    }
   };
 
   const emergencyReset = async () => {

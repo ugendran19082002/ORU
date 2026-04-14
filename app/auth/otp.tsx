@@ -6,7 +6,7 @@ import { useAndroidBackHandler } from "@/hooks/use-back-handler";
 import { authApi } from "@/api/authApi";
 import { roleAccent, roleGradients } from "@/constants/theme";
 import { useAppSession } from "@/hooks/use-app-session";
-import type { AppRole } from "@/types/session";
+import type { AppRole, AppUser } from "@/types/session";
 import { getOriginalDeviceId } from "@/utils/device";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -95,11 +95,11 @@ export default function OTPScreen() {
 
         // 1. Sign in to global session
         await signIn({
-          user: response.data.user,
+          user: response.data.user as AppUser,
           access_token: response.data.access_token,
           refresh_token: response.data.refresh_token,
           nextStep: response.data.next_step,
-        } as any);
+        });
 
         Animated.spring(successAnim, {
           toValue: 1,

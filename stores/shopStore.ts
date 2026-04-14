@@ -22,7 +22,7 @@ type ShopState = {
   error: string | null;
   selectedShopId: string | null;
   filters: ShopFilters;
-  loadShops: () => Promise<void>;
+  loadShops: (params?: { lat: number; lng: number }) => Promise<void>;
   setSelectedShop: (shopId: string | null) => void;
   toggleFilter: (key: keyof Omit<ShopFilters, 'maxPrice'>) => void;
   setMaxPrice: (price: number | null) => void;
@@ -48,10 +48,10 @@ export const useShopStore = create<ShopState>((set) => ({
   selectedShopId: null,
   filters: defaultFilters,
   
-  loadShops: async () => {
+  loadShops: async (params) => {
     set({ isLoading: true, error: null });
     try {
-      const data = await shopApi.getShops();
+      const data = await shopApi.getShops(params);
       set({ shops: data, isLoading: false });
     } catch (error: any) {
       set({ error: error.message || 'Failed to fetch shops', isLoading: false });

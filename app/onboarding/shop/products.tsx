@@ -210,7 +210,7 @@ export default function ShopProductsScreen() {
                                             </View>
                                             {prod.is_water_can && (
                                                 <View style={styles.prodInputWrap}>
-                                                    <Text style={styles.prodInputLabel}>Deposit (₹)</Text>
+                                                    <Text style={styles.prodInputLabel}>Can Price (₹)</Text>
                                                     <TextInput 
                                                         style={styles.prodInput} 
                                                         keyboardType="number-pad" 
@@ -223,7 +223,7 @@ export default function ShopProductsScreen() {
                                         
                                         {parseFloat(prod.deposit_amount) > 0 && (
                                             <View style={styles.depositSummary}>
-                                                <Text style={styles.depositSummaryLabel}>Refundable Deposit:</Text>
+                                                <Text style={styles.depositSummaryLabel}>Can Price Amount:</Text>
                                                 <Text style={styles.depositSummaryValue}>₹{prod.deposit_amount}</Text>
                                             </View>
                                         )}
