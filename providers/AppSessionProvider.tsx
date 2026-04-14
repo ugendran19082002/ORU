@@ -152,10 +152,14 @@ export function AppSessionProvider({
         const { isPinEnabled, isBiometricsEnabled } = useSecurityStore.getState();
         const securityEnabled = isPinEnabled || isBiometricsEnabled;
 
-        if (status === 'authenticated' && securityEnabled) {
-          console.log(`🔐 [App Lock] Force re-verification on app reopen.`);
+        if (status === 'authenticated' && securityEnabled && lastBgTimestamp !== 0 && SECONDS_SINCE_BG > 5) {
+          console.log(`🔐 [App Lock] Force re-verification after ${Math.round(SECONDS_SINCE_BG)}s in background.`);
           setIsBiometricVerified(false);
         }
+
+        // IMPORTANT: Reset the timestamp after it's been checked once.
+        // This stops "stale" timestamps from causing re-lock loops on every tab change.
+        setLastBgTimestamp(0);
       }
     };
 
@@ -510,7 +514,7 @@ export function AppRouteGuard() {
     // Expand security routes to include ANY location picker or permission screen
     const isSecurityRoute = firstSegment === "location" || 
                             firstSegment === "enable-notifications" ||
-                            (firstSegment as string) === "security" ||
+                            (firstSegment as string) === "security-setup" ||
                             currentPath.includes("location");
 
     const isPriorityRoute = isSecurityRoute || isAuthRoute;
@@ -569,16 +573,16 @@ export function AppRouteGuard() {
         const { isPinEnabled, isBiometricsEnabled, authenticateBiometrics, setLocked } = useSecurityStore.getState();
         
         // Force PIN setup if authenticated but no PIN exists
-        if (status === 'authenticated' && !isPinEnabled && (firstSegment as string) !== 'security') {
-          navigate('/security/setup', 'Mandatory security setup required');
+        if (status === 'authenticated' && !isPinEnabled && (firstSegment as string) !== 'security-setup') {
+          navigate('/security-setup', 'Mandatory security setup required');
           return;
         }
 
         const securityEnabled = isPinEnabled || isBiometricsEnabled;
 
         // 1.5 Biometrics & PIN App Lock
-
-        if (securityEnabled && !isBiometricVerified) {
+        // Safety: Never lock while at the security setup screen
+        if (securityEnabled && !isBiometricVerified && (firstSegment as string) !== 'security-setup') {
           // If biometrics enabled, try them first
           if (isBiometricsEnabled) {
             const success = await authenticateBiometrics();
@@ -657,7 +661,7 @@ export function AppRouteGuard() {
           } else if (user.role === "admin") {
             idealRoute = "/admin";
             const currentBase = segments[0] as string;
-            if (isAdminRoute || isDeliveryRoute || currentBase === 'security') {
+            if (isAdminRoute || isDeliveryRoute || currentBase === 'security-setup') {
               if (__DEV__) console.log(`🛡️ [Guard] Already in ${currentBase} stack. Early exit.`);
               return; // Correct role in specialized route
             }

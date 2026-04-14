@@ -31,6 +31,7 @@ export default function RootLayout() {
               <Stack.Screen name="auth" options={{ headerShown: false, animation: 'fade' }} />
               <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
               <Stack.Screen name="enable-notifications" options={{ headerShown: false, animation: 'fade' }} />
+              <Stack.Screen name="security-setup" options={{ headerShown: false, animation: 'fade' }} />
               <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
               <Stack.Screen name="order/[id]" options={{ animation: 'slide_from_right' }} />
               <Stack.Screen name="order/confirmed" options={{ animation: 'slide_from_right' }} />
