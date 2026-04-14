@@ -71,7 +71,7 @@ export default function ShopSettingsScreen() {
   const { signOut } = useAppSession();
   const { 
     isPinEnabled, isBiometricsEnabled, togglePin, toggleBiometrics, 
-    setPin, initialize: initSecurity 
+    setPin, authenticateBiometrics, initialize: initSecurity 
   } = useSecurityStore();
   
   const [refreshing, setRefreshing] = useState(false);
@@ -274,7 +274,20 @@ export default function ShopSettingsScreen() {
             </View>
             <Switch
               value={isBiometricsEnabled}
-              onValueChange={toggleBiometrics}
+              onValueChange={async (val) => {
+                if (val) {
+                  const success = await authenticateBiometrics();
+                  if (!success) {
+                    Toast.show({ type: 'error', text1: 'Biometrics Failed', text2: 'Verification failed' });
+                    return;
+                  }
+                }
+                toggleBiometrics(val);
+                Toast.show({ 
+                  type: 'success', 
+                  text1: val ? 'Biometrics Enabled' : 'Biometrics Disabled' 
+                });
+              }}
               disabled={!isPinEnabled}
               trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
               thumbColor={isBiometricsEnabled ? '#006878' : '#707881'}

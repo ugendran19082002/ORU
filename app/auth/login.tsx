@@ -27,6 +27,7 @@ import { useAppSession } from '@/hooks/use-app-session';
 import { authApi } from '@/api/authApi';
 import type { AppRole } from '@/types/session';
 import { getOriginalDeviceId } from '@/utils/device';
+import { useSecurityStore } from "@/stores/securityStore";
 
 const ROLE_LABELS: Record<string, string> = {
   customer: "Customer",
@@ -37,7 +38,8 @@ const ROLE_LABELS: Record<string, string> = {
 export default function LoginScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
-  const { preferredRole, biometricEnabled, user, setPreferredRole } = useAppSession();
+  const { preferredRole, user, setPreferredRole } = useAppSession();
+  const { isBiometricsEnabled: biometricEnabled } = useSecurityStore();
 
   useAndroidBackHandler(() => {
     safeBack("/auth");

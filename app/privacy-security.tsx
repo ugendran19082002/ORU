@@ -36,7 +36,22 @@ export default function PrivacySecurityScreen() {
 
   const handleToggleBiometrics = async (val: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    toggleBiometrics(val);
+    
+    if (val) {
+      // Immediate verification to 'lock in' the setting
+      const { authenticateBiometrics } = useSecurityStore.getState();
+      const success = await authenticateBiometrics();
+      if (!success) {
+        Toast.show({ 
+          type: 'error', 
+          text1: 'Biometrics Failed',
+          text2: 'Could not verify identity. Please try again.'
+        });
+        return;
+      }
+    }
+
+    await toggleBiometrics(val);
     Toast.show({ 
       type: 'success', 
       text1: val ? 'Biometrics Enabled' : 'Biometrics Disabled',

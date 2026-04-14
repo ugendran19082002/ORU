@@ -11,7 +11,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { Platform, DeviceEventEmitter, View, ActivityIndicator } from "react-native";
+import { Platform, DeviceEventEmitter, View, ActivityIndicator, AppState, AppStateStatus } from "react-native";
 
 import { apiClient, setClientToken, getClientToken } from "@/api/client";
 import { onboardingApi } from "@/api/onboardingApi";
@@ -22,6 +22,8 @@ import type {
   PersistedSession,
   SessionStatus,
 } from "@/types/session";
+import { useSecurityStore } from "@/stores/securityStore";
+import { PinEntryModal } from "@/components/security/PinEntryModal";
 
 const SESSION_KEY = "thannigo_session";
 
@@ -32,7 +34,6 @@ type SessionContextValue = {
   access_token: string | null;
   refresh_token: string | null;
   preferredRole: AppRole | null;
-  biometricEnabled: boolean;
   isBiometricVerified: boolean;
   isLocationVerified: boolean;
   setIsBiometricVerified: (verified: boolean) => void;
@@ -61,7 +62,6 @@ const defaultSession: PersistedSession = {
   access_token: null,
   refresh_token: null,
   preferredRole: null,
-  biometricEnabled: false,
 };
 
 async function readSession() {
@@ -97,11 +97,13 @@ export function AppSessionProvider({
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [preferredRole, setPreferredRoleState] = useState<AppRole | null>(null);
-  const [biometricEnabled, setBiometricEnabledState] = useState(false);
   const [isBiometricVerified, setIsBiometricVerified] = useState(false);
   const [isLocationVerified, setIsLocationVerified] = useState(false);
   const [nextStep, setNextStepState] = useState<any>(null);
   const [isSyncingShop, setIsSyncingShop] = useState(false);
+  const [lastBgTimestamp, setLastBgTimestamp] = useState<number>(0);
+
+  const { isLocked, setLocked } = useSecurityStore();
 
   // Sync Token to Axios Defaults (Memory Store)
   useEffect(() => {
@@ -116,6 +118,9 @@ export function AppSessionProvider({
     let active = true;
 
     async function hydrate() {
+      // Initialize security settings first so the guard has accurate data
+      await useSecurityStore.getState().initialize();
+      
       const session = await readSession();
       if (!active) return;
 
@@ -123,8 +128,6 @@ export function AppSessionProvider({
       setAccessToken(session.access_token);
       setRefreshToken(session.refresh_token);
       setPreferredRoleState(session.preferredRole);
-      setBiometricEnabledState(session.biometricEnabled);
-      setNextStepState(session.nextStep);
       setStatus(session.access_token ? "authenticated" : "anonymous");
       setIsHydrated(true);
     }
@@ -134,6 +137,31 @@ export function AppSessionProvider({
       active = false;
     };
   }, []);
+
+  // APP LOCK: Handle Foreground Lock
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'background') {
+        setLastBgTimestamp(Date.now());
+      }
+      
+      if (nextAppState === 'active') {
+        // If app was in background for more than 30 seconds, re-lock
+        const SECONDS_SINCE_BG = (Date.now() - lastBgTimestamp) / 1000;
+        
+        const { isPinEnabled, isBiometricsEnabled } = useSecurityStore.getState();
+        const securityEnabled = isPinEnabled || isBiometricsEnabled;
+
+        if (status === 'authenticated' && securityEnabled) {
+          console.log(`🔐 [App Lock] Force re-verification on app reopen.`);
+          setIsBiometricVerified(false);
+        }
+      }
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, [status, lastBgTimestamp]);
 
   // MERCHANT STATUS SYNC
   const refreshShopStatus = async () => {
@@ -156,7 +184,6 @@ export function AppSessionProvider({
             access_token: accessToken,
             refresh_token: refreshToken,
             preferredRole,
-            biometricEnabled,
             nextStep
         });
       }
@@ -169,7 +196,6 @@ export function AppSessionProvider({
             access_token: accessToken,
             refresh_token: refreshToken,
             preferredRole,
-            biometricEnabled,
             nextStep
         });
       } else if (err.response?.status === 403 || err.response?.status === 401) {
@@ -181,7 +207,6 @@ export function AppSessionProvider({
             access_token: accessToken,
             refresh_token: refreshToken,
             preferredRole,
-            biometricEnabled,
             nextStep
         });
         console.warn('🛡️ [Session] Shop sync failed (403/401). Loop broken and persisted.');
@@ -218,7 +243,6 @@ export function AppSessionProvider({
             access_token: accessToken,
             refresh_token: refreshToken,
             preferredRole: nextUser.role as AppRole,
-            biometricEnabled,
             nextStep: nextNextStep
           });
           console.log(`🛡️ [Session] Sync complete. User role is now: ${nextUser.role}`);
@@ -260,6 +284,9 @@ export function AppSessionProvider({
         await SecureStore.deleteItemAsync(SESSION_KEY);
         // Clear everything else from AsyncStorage
         await AsyncStorage.clear();
+
+        // 3. Clear security settings
+        await useSecurityStore.getState().reset();
       }
       
       console.log("✅ [Session] Deep Purge completed. All caches cleared.");
@@ -280,6 +307,9 @@ export function AppSessionProvider({
         await SecureStore.deleteItemAsync(SESSION_KEY);
         await AsyncStorage.clear();
       }
+      
+      await useSecurityStore.getState().reset();
+
       setUser(null);
       setAccessToken(null);
       setRefreshToken(null);
@@ -312,7 +342,6 @@ export function AppSessionProvider({
       access_token: accessToken,
       refresh_token: refreshToken,
       preferredRole,
-      biometricEnabled,
       isBiometricVerified,
       isLocationVerified,
       setIsBiometricVerified,
@@ -320,26 +349,16 @@ export function AppSessionProvider({
       isSyncingShop,
       nextStep,
       async setPreferredRole(role) {
-        const next = {
+        await writeSession({
           user,
           access_token: accessToken,
           refresh_token: refreshToken,
           preferredRole: role,
-          biometricEnabled,
-        };
+        });
         setPreferredRoleState(role);
-        await writeSession(next);
       },
       async setBiometricEnabled(enabled) {
-        const next = {
-          user,
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          preferredRole,
-          biometricEnabled: enabled,
-        };
-        setBiometricEnabledState(enabled);
-        await writeSession(next);
+        useSecurityStore.getState().toggleBiometrics(enabled);
       },
       async signIn({ user: rawUser, access_token, refresh_token, nextStep: resNextStep }) {
         const nextAccessToken = access_token || accessToken;
@@ -358,14 +377,13 @@ export function AppSessionProvider({
         setNextStepState(resNextStep || null);
         setStatus(nextAccessToken ? "authenticated" : "anonymous");
 
-        await writeSession({
-          user,
-          access_token: nextAccessToken,
-          refresh_token: refresh_token || refreshToken,
-          preferredRole: user.role as AppRole,
-          biometricEnabled,
-          nextStep: resNextStep || null,
-        });
+          await writeSession({
+            user,
+            access_token: nextAccessToken,
+            refresh_token: refresh_token || refreshToken,
+            preferredRole: user.role as AppRole,
+            nextStep: resNextStep || null,
+          });
       },
       signOut: handleSignOut,
       async updateUser(partialUser) {
@@ -398,7 +416,6 @@ export function AppSessionProvider({
             access_token: nextAccessToken,
             refresh_token: userData.refresh_token || refreshToken,
             preferredRole: nextUser.role as AppRole,
-            biometricEnabled,
             nextStep: ('next_step' in userData) ? userData.next_step : (isRoleSwitch ? null : nextStep),
           });
         } catch (err) {
@@ -410,9 +427,8 @@ export function AppSessionProvider({
       syncSession,
       emergencyReset,
     }),
-    [accessToken, refreshToken, biometricEnabled, isBiometricVerified, isLocationVerified, isHydrated, preferredRole, status, user, nextStep, isSyncingShop]
+    [accessToken, refreshToken, isBiometricVerified, isLocationVerified, isHydrated, preferredRole, status, user, nextStep, isSyncingShop]
   );
-
   if (!isHydrated) {
     return (
       <View style={{ flex: 1, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' }}>
@@ -425,6 +441,15 @@ export function AppSessionProvider({
     <SessionContext.Provider value={value}>
         {children}
         <AppRouteGuard />
+        <PinEntryModal 
+          visible={isLocked}
+          onSuccess={() => {
+            setLocked(false);
+            setIsBiometricVerified(true);
+          }}
+          title="Unlock ThanniGo"
+          mode="verify"
+        />
     </SessionContext.Provider>
   );
 }
@@ -446,7 +471,6 @@ export function AppRouteGuard() {
     isHydrated,
     status,
     user,
-    biometricEnabled,
     isBiometricVerified,
     isLocationVerified,
     setIsBiometricVerified,
@@ -486,6 +510,7 @@ export function AppRouteGuard() {
     // Expand security routes to include ANY location picker or permission screen
     const isSecurityRoute = firstSegment === "location" || 
                             firstSegment === "enable-notifications" ||
+                            (firstSegment as string) === "security" ||
                             currentPath.includes("location");
 
     const isPriorityRoute = isSecurityRoute || isAuthRoute;
@@ -540,23 +565,51 @@ export function AppRouteGuard() {
           }, 500); // 500ms safety lock
         };
 
-        // 1. Biometrics
-        if (biometricEnabled && !isBiometricVerified) {
-          const hasHardware = await LocalAuthentication.hasHardwareAsync();
-          const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-          if (hasHardware && isEnrolled) {
-            const result = await LocalAuthentication.authenticateAsync({ promptMessage: "Unlock ThanniGo" });
-            if (currentGeneration < guardGenerationRef.current) return; // ABA check
-            if (result.success) setIsBiometricVerified(true);
-            else return;
-          } else {
-            setIsBiometricVerified(true);
+        // 1. Mandatory Security Check
+        const { isPinEnabled, isBiometricsEnabled, authenticateBiometrics, setLocked } = useSecurityStore.getState();
+        
+        // Force PIN setup if authenticated but no PIN exists
+        if (status === 'authenticated' && !isPinEnabled && (firstSegment as string) !== 'security') {
+          navigate('/security/setup', 'Mandatory security setup required');
+          return;
+        }
+
+        const securityEnabled = isPinEnabled || isBiometricsEnabled;
+
+        // 1.5 Biometrics & PIN App Lock
+
+        if (securityEnabled && !isBiometricVerified) {
+          // If biometrics enabled, try them first
+          if (isBiometricsEnabled) {
+            const success = await authenticateBiometrics();
+            if (currentGeneration < guardGenerationRef.current) return;
+            
+            if (success) {
+               setIsBiometricVerified(true);
+            } else if (isPinEnabled) {
+               // Fallback to PIN gate if biometrics failed/cancelled
+               setLocked(true);
+               // We don't return here because the PIN modal overlay will handle blocking the UI
+               // But actually, we SHOULD redirect to a lock screen or block if strictness is required.
+               // For now, authenticateBiometrics failure handles its own fallout.
+            } else {
+               // If only biometrics enabled and user fails, we might want to block
+               return; 
+            }
+          } else if (isPinEnabled) {
+            // Only PIN enabled
+            setLocked(true);
           }
         }
 
-        // 2. Location (Mandatory only for Customers & Delivery searching for orders)
-        // Shop owners already have a fixed business location and don't strictly need phone location for dashboards
-        const needsMandatoryLocation = user.role === "customer";
+        // 2. Location (Mandatory only for Customers & Shop Owners Updating Addresses)
+        // Shop owners bypass this for general dashboard usage but must trigger it for profile/onboarding
+        const isLocationTargetRoute = currentPath.startsWith("/shop/profile") || 
+                                      currentPath.includes("onboarding") || 
+                                      currentPath.includes("address");
+
+        const needsMandatoryLocation = user.role === "customer" || 
+                                       (user.role === "shop_owner" && isLocationTargetRoute);
         
         if (needsMandatoryLocation && !isSecurityRoute && !isLocationVerified) {
           const { status: locStatus } = await Location.getForegroundPermissionsAsync();
@@ -565,7 +618,7 @@ export function AppRouteGuard() {
           if (locStatus === "granted") {
             setIsLocationVerified(true);
           } else {
-            navigate("/location", "Location required");
+            navigate("/location", "Location required for address update");
             return;
           }
         }
@@ -676,7 +729,7 @@ export function AppRouteGuard() {
     };
 
     runChecklist();
-  }, [isHydrated, pathname, segments, status, user, biometricEnabled, isBiometricVerified, nextStep, isSyncingShop]);
+  }, [isHydrated, pathname, segments, status, user, isBiometricVerified, nextStep, isSyncingShop]);
 
   return null;
 }

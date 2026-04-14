@@ -21,6 +21,7 @@ type SecurityState = SecuritySettings & {
   authenticateBiometrics: () => Promise<boolean>;
   setLocked: (locked: boolean) => void;
   hasPin: () => Promise<boolean>;
+  reset: () => Promise<void>;
 };
 
 export const useSecurityStore = create<SecurityState>((set, get) => ({
@@ -134,5 +135,20 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
   hasPin: async () => {
     const pin = await SecureStore.getItemAsync(PIN_KEY);
     return !!pin;
+  },
+
+  reset: async () => {
+    try {
+      await SecureStore.deleteItemAsync(PIN_KEY);
+      await SecureStore.deleteItemAsync(SECURITY_SETTINGS_KEY);
+      set({ 
+        isPinEnabled: false, 
+        isBiometricsEnabled: false, 
+        isLocked: false 
+      });
+      console.log('🛡️ [SecurityStore] Global Reset completed.');
+    } catch (error) {
+      console.error('[SecurityStore] Reset failed:', error);
+    }
   },
 }));

@@ -112,11 +112,16 @@ export default function DeliveryDashboardScreen() {
         {/* QUICK ACTIONS */}
         <View style={styles.quickRow}>
           {[
+            { label: 'Security', icon: 'shield-checkmark-outline', color: '#005d90', bg: '#f0f9ff', path: '/privacy-security' },
             { label: 'My Earnings', icon: 'cash-outline', color: '#2e7d32', bg: '#e8f5e9' },
             { label: 'Trip History', icon: 'time-outline', color: '#b45309', bg: '#fef3c7' },
             { label: 'Emergency', icon: 'warning-outline', color: '#c62828', bg: '#ffebee' },
           ].map((q) => (
-            <TouchableOpacity key={q.label} style={styles.quickBtn}>
+            <TouchableOpacity 
+              key={q.label} 
+              style={styles.quickBtn}
+              onPress={() => q.path && router.push(q.path as any)}
+            >
               <View style={[styles.quickIcon, { backgroundColor: q.bg }]}>
                 <Ionicons name={q.icon as any} size={20} color={q.color} />
               </View>

@@ -30,6 +30,5 @@ export type PersistedSession = {
   access_token: string | null;
   refresh_token: string | null;
   preferredRole: AppRole | null;
-  biometricEnabled: boolean;
   nextStep?: NextStepData;
 };

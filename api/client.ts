@@ -61,53 +61,153 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// REFRESH LOGIC STATE
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 apiClient.interceptors.response.use(
   (response) => {
     const startTime = (response.config as any).metadata?.startTime;
     const duration = startTime ? new Date().getTime() - startTime.getTime() : 'unknown';
     
     console.log(`\n✅ [API Response] ${response.status} ${response.config.url} (${duration}ms)`);
-    console.log(`📃 Headers:`, JSON.stringify(response.headers, null, 2));
-    console.log(`📥 Data:`, JSON.stringify(response.data, null, 2));
     return response;
   },
-  (error) => {
-    const startTime = (error.config as any)?.metadata?.startTime;
+  async (error) => {
+    const originalRequest = error.config;
+    const startTime = (originalRequest as any)?.metadata?.startTime;
     const duration = startTime ? new Date().getTime() - startTime.getTime() : 'unknown';
 
-    const is404 = error.response?.status === 404;
     const is401 = error.response?.status === 401;
+    const isRefreshRequest = originalRequest.url?.includes('/auth/refresh');
 
-    // Only log real errors, ignore 404 as requested
-    if (!is404) {
-      console.error(`\n❌ [API Error] ${error.response?.status || 'Network'} ${error.config?.url} (${duration}ms)`);
-      if (error.response) {
-         // Silencing headers/data logs for general cleaner feedback
-      } else {
-        console.error(`‼️ Message:`, error.message);
+    // Handle 401 Unauthorized errors (excluding the refresh request itself to avoid loops)
+    if (is401 && !isRefreshRequest && !originalRequest._retry) {
+      if (isRefreshing) {
+        // If already refreshing, wait for it to complete
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return apiClient(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
       }
-    }
 
-    if (is401) {
-      console.error('[API] Unauthorized entry detected. Purging session storage.');
+      originalRequest._retry = true;
+      isRefreshing = true;
       
-      // 1. Reactive Store Cleanup
+      console.log('🔄 [API Client] Access Token expired. Attempting Silent Refresh...');
+
+      // 1. Get the current refresh token from storage
+      let refreshToken = null;
       try {
-        if (Platform.OS === 'web') {
-          AsyncStorage.removeItem('thannigo_session');
-        } else {
-          SecureStore.deleteItemAsync('thannigo_session');
+        const sessionRaw = Platform.OS === 'web' 
+          ? await AsyncStorage.getItem('thannigo_session')
+          : await SecureStore.getItemAsync('thannigo_session');
+        
+        if (sessionRaw) {
+          const session = JSON.parse(sessionRaw);
+          refreshToken = session.refresh_token;
         }
-      } catch (storageErr) {
-        console.error('[API] Failed to purge session storage:', storageErr);
+      } catch (err) {
+        console.error('⚠️ [API Client] Failed to read refresh token from storage:', err);
       }
 
-      // 2. Global Event Signal (Native DeviceEventEmitter)
-      DeviceEventEmitter.emit('thannigo:unauthorized', {
-        code: error.response?.data?.code || 'UNAUTHORIZED',
-        message: error.response?.data?.message || 'Unauthorized access'
-      });
+      if (!refreshToken) {
+        console.error('❌ [API Client] No refresh token found. Purging session.');
+        isRefreshing = false;
+        processQueue(new Error('No refresh token'), null);
+        performDeepPurge();
+        return Promise.reject(error);
+      }
+
+      // 2. Call the refresh endpoint
+      try {
+        const res = await axios.post(`${apiClient.defaults.baseURL}/auth/refresh`, {
+          refresh_token: refreshToken
+        });
+
+        if (res.status === 200 && res.data.data.access_token) {
+          const newAccessToken = res.data.data.access_token;
+          console.log('✅ [API Client] Token successfully refreshed.');
+          
+          // Update memory & storage
+          setClientToken(newAccessToken);
+          await updatePersistentToken(newAccessToken);
+          
+          isRefreshing = false;
+          processQueue(null, newAccessToken);
+
+          // Retry the original request
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return apiClient(originalRequest);
+        }
+      } catch (refreshErr) {
+        console.error('❌ [API Client] Silent Refresh failed. Purging session:', refreshErr);
+        isRefreshing = false;
+        processQueue(refreshErr, null);
+        performDeepPurge();
+        return Promise.reject(error);
+      }
     }
+
+    // Regular error logging (non-401 or failed refresh)
+    if (error.response?.status !== 404) {
+      console.error(`\n❌ [API Error] ${error.response?.status || 'Network'} ${originalRequest?.url} (${duration}ms)`);
+      if (error.response?.data) {
+        console.error('📥 Error Data:', JSON.stringify(error.response.data, null, 2));
+      }
+    }
+
     return Promise.reject(error);
   }
 );
+
+/**
+ * Update ONLY the access token in the persisted session storage
+ */
+async function updatePersistentToken(token: string) {
+  try {
+    const key = 'thannigo_session';
+    const raw = Platform.OS === 'web' 
+      ? await AsyncStorage.getItem(key)
+      : await SecureStore.getItemAsync(key);
+    
+    if (raw) {
+      const session = JSON.parse(raw);
+      session.access_token = token;
+      if (Platform.OS === 'web') {
+        await AsyncStorage.setItem(key, JSON.stringify(session));
+      } else {
+        await SecureStore.setItemAsync(key, JSON.stringify(session));
+      }
+    }
+  } catch (err) {
+    console.error('[API Client] Persistence update failed:', err);
+  }
+}
+
+/**
+ * Global signal to log out the user and clear all data
+ */
+function performDeepPurge() {
+  console.warn('[API] Deep Purge initiated.');
+  // Signal AppSessionProvider to handle UI logout
+  DeviceEventEmitter.emit('thannigo:unauthorized', {
+    code: 'SESSION_EXPIRED',
+    message: 'Your session has expired. Please log in again.'
+  });
+}
