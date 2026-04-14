@@ -580,13 +580,26 @@ export function AppRouteGuard() {
           if (!isCurrentlyInExpectedFlow || currentPath === '/onboarding/shop' || currentPath === '/onboarding/customer') {
               navigate(idealRoute, "Enforcing Onboarding");
           }
-        } else if (pathname === "/") {
+        } else if (pathname === "/" || pathname === "/auth") {
           navigate(idealRoute, "Root Redirection");
+        } else {
+            // Contextual Guard: If we are in the correct stack, don't force index
+            const currentPath = pathname || "";
+            const isCurrentlyInIdealStack = (idealRoute === "/shop" && currentPath.startsWith("/shop")) ||
+                                              (idealRoute === "/delivery" && currentPath.startsWith("/delivery")) ||
+                                              (idealRoute === "/admin" && currentPath.startsWith("/admin"));
+            
+            if (!isCurrentlyInIdealStack) {
+                navigate(idealRoute, "Stack Correction");
+            }
         }
       } catch (error) {
         console.error("🛡️ [Guard] Critical Navigation Error:", error);
-        // Fail-safe: Back to customer home
-        router.replace("/(tabs)" as any);
+        // Fail-safe: Avoid blind redirects to /(tabs) for special roles to prevent loops
+        if (user && user.role === 'admin') router.replace("/admin" as any);
+        else if (user && user.role === 'shop_owner') router.replace("/shop" as any);
+        else if (user && user.role === 'delivery') router.replace("/delivery" as any);
+        else router.replace("/(tabs)" as any);
       }
     };
 

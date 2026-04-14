@@ -25,6 +25,21 @@ export const setClientToken = (token: string | null) => {
 
 export const getClientToken = () => authToken;
 
+/**
+ * Resolves a relative backend path (e.g. /uploads/...) to a full absolute URL
+ * based on the current apiClient baseURL.
+ */
+export const resolveApiUrl = (path?: string | null): string | undefined => {
+  if (!path) return undefined;
+  if (path.startsWith('http')) return path;
+  
+  // Get base server URL by removing '/api' from the baseURL
+  const base = apiClient.defaults.baseURL?.replace(/\/api$/, '') || '';
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  
+  return `${base}${cleanPath}`;
+};
+
 console.log('🌐 [API Client] Initialized with baseURL:', apiClient.defaults.baseURL);
 
 // Automatically inject session data if available

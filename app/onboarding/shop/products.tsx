@@ -100,7 +100,8 @@ export default function ShopProductsScreen() {
             subcategory_id: p.subcategory_id,
             name: p.name,
             price: isFinite(price) ? price : 0,
-            stock_quantity: isFinite(stock) ? stock : 0
+            stock_quantity: isFinite(stock) ? stock : 0,
+            type: selectedCategory?.id === 1 ? 'WATER_CAN' : 'NORMAL'
           };
         })
       });

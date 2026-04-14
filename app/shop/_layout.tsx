@@ -62,6 +62,7 @@ export default function ShopLayout() {
 
   return (
     <Tabs
+      initialRouteName="index"
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -91,18 +92,7 @@ export default function ShopLayout() {
         animation: "fade",
       }}
     >
-      {/* Hidden screens (no tab icon) */}
-      <Tabs.Screen
-        name="order/[id]"
-        options={{ href: null, tabBarStyle: { display: "none" } }}
-      />
-      <Tabs.Screen name="vendor-register" options={{ href: null }} />
-      <Tabs.Screen name="subscription-plans" options={{ href: null }} />
-      <Tabs.Screen name="manual-order" options={{ href: null }} />
-      <Tabs.Screen name="analytics" options={{ href: null }} />
-      <Tabs.Screen name="delivery-fleet" options={{ href: null }} />
-
-      {/* TAB 1 — Orders (Home) */}
+      {/* TAB 1 — Orders (Home) - MUST BE FIRST FOR DEFAULT ROUTE */}
       <Tabs.Screen
         name="index"
         options={{
@@ -161,6 +151,17 @@ export default function ShopLayout() {
           ),
         }}
       />
+
+      {/* Hidden screens (no tab icon) - MOVED TO BOTTOM */}
+      <Tabs.Screen
+        name="order/[id]"
+        options={{ href: null, tabBarStyle: { display: "none" } }}
+      />
+      <Tabs.Screen name="vendor-register" options={{ href: null }} />
+      <Tabs.Screen name="subscription-plans" options={{ href: null }} />
+      <Tabs.Screen name="manual-order" options={{ href: null }} />
+      <Tabs.Screen name="analytics" options={{ href: null }} />
+      <Tabs.Screen name="delivery-fleet" options={{ href: null }} />
 
       {/* Hidden but accessible via push */}
       <Tabs.Screen name="customers" options={{ href: null }} />

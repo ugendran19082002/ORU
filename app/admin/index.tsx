@@ -89,17 +89,21 @@ export default function AdminOverviewScreen() {
     );
   }
 
-  if (status === 'authenticated' && (!user || user?.role !== 'admin')) {
+  if (status === 'unauthenticated' || (status === 'authenticated' && (!user || user?.role !== 'admin'))) {
      return (
        <View style={[styles.container, styles.centered]}>
          <Ionicons name="lock-closed-outline" size={64} color="#ba1a1a" />
-         <Text style={styles.errorTitle}>Restricted Area</Text>
-         <Text style={styles.errorMsg}>You do not have administrative privileges to access this dashboard.</Text>
+         <Text style={styles.errorTitle}>{status === 'unauthenticated' ? 'Session Expired' : 'Restricted Area'}</Text>
+         <Text style={styles.errorMsg}>
+            {status === 'unauthenticated' 
+              ? 'Your session has expired or you are not logged in. Please log in with an admin account.' 
+              : 'You do not have administrative privileges to access this dashboard.'}
+         </Text>
          <TouchableOpacity 
            style={styles.switchBtn} 
-           onPress={() => router.replace(user?.role === 'shop_owner' ? '/onboarding/shop' : '/(tabs)')}
+           onPress={() => router.replace(user?.role === 'shop_owner' ? '/onboarding/shop' : (status === 'unauthenticated' ? '/auth' : '/(tabs)'))}
          >
-           <Text style={styles.switchBtnText}>Back to My Dashboard</Text>
+           <Text style={styles.switchBtnText}>{status === 'unauthenticated' ? 'Go to Login' : 'Back to My Dashboard'}</Text>
          </TouchableOpacity>
        </View>
      );
