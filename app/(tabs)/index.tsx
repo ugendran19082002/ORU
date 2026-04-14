@@ -381,7 +381,7 @@ export default function HomeScreen() {
           </View>
         ) : (
           filteredShops.map((shop) => {
-             const isLinked = shop.id === '1'; // Demo: Only Shop 1 is approved
+             const isLinked = shop.verified; // Verified shops are orderable in this view
              const isRequested = requestedShopIds.includes(shop.id);
 
              return (

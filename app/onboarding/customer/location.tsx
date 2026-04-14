@@ -19,7 +19,7 @@ const { width } = Dimensions.get('window');
 
 export default function CustomerLocationScreen() {
   const router = useRouter();
-  const { user, updateUser, status } = useAppSession();
+  const { user, updateUser, status, syncSession } = useAppSession();
   const mapRef = useRef<any>(null);
 
   // 0. Role Bouncer
@@ -128,8 +128,8 @@ export default function CustomerLocationScreen() {
       });
       
       if (res.status === 1) {
-        // Technically this is the last step for customer
-        // The checklist will now see 'onboarding_completed: true'
+        // Refresh session to get updated onboarding_completed status
+        await syncSession();
         router.replace('/onboarding/customer');
       }
     } catch (error: any) {

@@ -208,7 +208,7 @@ export function AppSessionProvider({
               onboardingStatus: freshUser.onboarding_status || freshUser.onboardingStatus || 'none'
           } as AppUser;
 
-          const nextNextStep = freshUser.next_step || (freshUser.role !== user?.role ? null : nextStep);
+          const nextNextStep = ('next_step' in freshUser) ? freshUser.next_step : (freshUser.role !== user?.role ? null : nextStep);
           
           setUser(nextUser);
           setNextStepState(nextNextStep);
@@ -371,13 +371,13 @@ export function AppSessionProvider({
       async updateUser(partialUser) {
         if (!user) return;
         try {
-          const response = await userApi.updateProfile(partialUser);
-          const updatedUserFromApi = response.data;
-          const nextAccessToken = updatedUserFromApi.access_token || accessToken;
+          const responsePayload = await userApi.updateProfile(partialUser);
+          const userData = responsePayload.data;
+          const nextAccessToken = responsePayload.data.access_token || accessToken;
           
           setClientToken(nextAccessToken);
-          const isRoleSwitch = updatedUserFromApi.role !== user.role;
-          const nextUser = { ...user, ...updatedUserFromApi } as AppUser;
+          const isRoleSwitch = userData.role !== user.role;
+          const nextUser = { ...user, ...userData } as AppUser;
           
           if (isRoleSwitch) {
               console.log('🔄 [Session] Role switch detected. Clearing role-specific metadata.');
@@ -391,15 +391,15 @@ export function AppSessionProvider({
 
           setUser(nextUser);
           setAccessToken(nextAccessToken);
-          if (updatedUserFromApi.refresh_token) setRefreshToken(updatedUserFromApi.refresh_token);
+          if (userData.refresh_token) setRefreshToken(userData.refresh_token);
 
           await writeSession({
             user: nextUser,
             access_token: nextAccessToken,
-            refresh_token: updatedUserFromApi.refresh_token || refreshToken,
+            refresh_token: userData.refresh_token || refreshToken,
             preferredRole: nextUser.role as AppRole,
             biometricEnabled,
-            nextStep: updatedUserFromApi.next_step || (isRoleSwitch ? null : nextStep),
+            nextStep: ('next_step' in userData) ? userData.next_step : (isRoleSwitch ? null : nextStep),
           });
         } catch (err) {
           console.error("Failed to update user:", err);
@@ -638,6 +638,7 @@ export function AppRouteGuard() {
             const isCurrentlyInIdealStack = (idealRoute === "/shop" && currentPath.startsWith("/shop")) ||
                                               (idealRoute === "/delivery" && currentPath.startsWith("/delivery")) ||
                                               (idealRoute === "/admin" && currentPath.startsWith("/admin")) ||
+                                              (idealRoute.includes("onboarding") && currentPath.includes("onboarding")) ||
                                               (idealRoute === "/(tabs)" && !["admin", "shop", "delivery", "onboarding", "auth"].includes(firstSegment));
             
             if (currentPath === idealRoute || isCurrentlyInIdealStack) {

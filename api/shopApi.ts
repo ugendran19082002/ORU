@@ -16,7 +16,7 @@ export const shopApi = {
     }
 
     try {
-      const response = await apiClient.get('/shop/shops', { params });
+      const response = await apiClient.get('/shops', { params });
       if (response.data.status === 1 && response.data.data.data) {
         return response.data.data.data.map((s: any) => ({
           id: s.id,

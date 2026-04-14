@@ -16,7 +16,7 @@ import { BackButton } from '@/components/ui/BackButton';
 
 export default function CustomerProfileScreen() {
   const router = useRouter();
-  const { user, updateUser, status } = useAppSession();
+  const { user, updateUser, status, syncSession } = useAppSession();
   const [loading, setLoading] = useState(false);
 
   // 0. Role Bouncer
@@ -47,8 +47,8 @@ export default function CustomerProfileScreen() {
       const res = await onboardingApi.completeCustomerStep('set_profile', { email });
       
       if (res.status === 1) {
-        // 3. Update local session state
-        await updateUser({ name, email });
+        // 3. Refresh full session to ensure next_step and onboarding_completed are updated
+        await syncSession();
         
         // 4. Return to checklist
         router.replace('/onboarding/customer');
