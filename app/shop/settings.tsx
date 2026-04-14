@@ -11,6 +11,11 @@ import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
 import { useAppSession } from '@/hooks/use-app-session';
 import { BackButton } from '@/components/ui/BackButton';
+import { useSecurityStore } from '@/stores/securityStore';
+import { PinEntryModal } from '@/components/security/PinEntryModal';
+import { shopApi } from '@/api/shopApi';
+import Toast from 'react-native-toast-message';
+import * as Haptics from 'expo-haptics';
 
 type NavItem = {
   label: string;
@@ -64,13 +69,81 @@ function MenuRow({ item }: { item: NavItem }) {
 export default function ShopSettingsScreen() {
   const router = useRouter();
   const { signOut } = useAppSession();
+  const { 
+    isPinEnabled, isBiometricsEnabled, togglePin, toggleBiometrics, 
+    setPin, initialize: initSecurity 
+  } = useSecurityStore();
+  
   const [refreshing, setRefreshing] = useState(false);
-  const [shopOpen, setShopOpen] = useState(true);
-  const [deliveryActive, setDeliveryActive] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [deliveryActive, setDeliveryActive] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinMode, setPinMode] = useState<'set' | 'verify'>('set');
+
+  React.useEffect(() => {
+    initSecurity();
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      setIsLoading(true);
+      const data = await shopApi.getMyShop();
+      if (data) {
+        setShopOpen(data.is_open);
+      }
+      const settings = await shopApi.getShopSettings();
+      if (settings) {
+        setDeliveryActive(!settings.busy_mode); // deliveryActive is inverse of busy_mode
+      }
+    } catch (error) {
+      console.error('[Settings] Fetch failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const onRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    fetchSettings().finally(() => setRefreshing(false));
+  };
+
+  const handleToggleShop = async (val: boolean) => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setShopOpen(val);
+      await shopApi.toggleShopOpen(val);
+      Toast.show({
+        type: 'success',
+        text1: val ? 'Shop matches Open' : 'Shop matches Closed',
+        text2: val ? 'You can now receive new orders.' : 'No new orders will be accepted.'
+      });
+    } catch (error) {
+      setShopOpen(!val);
+      Toast.show({ type: 'error', text1: 'Update failed' });
+    }
+  };
+
+  const handleToggleDelivery = async (val: boolean) => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setDeliveryActive(val);
+      await shopApi.toggleBusyMode(!val);
+      Toast.show({
+        type: 'success',
+        text1: val ? 'Delivery Active' : 'Delivery Paused',
+        text2: val ? 'Orders will be assigned to agents.' : 'New orders will be auto-rejected.'
+      });
+    } catch (error) {
+      setDeliveryActive(!val);
+      Toast.show({ type: 'error', text1: 'Update failed' });
+    }
+  };
+
+  const handleSetPin = async (newPin: string) => {
+    await setPin(newPin);
+    Toast.show({ type: 'success', text1: 'PIN Set Successfully' });
   };
 
 
@@ -132,7 +205,7 @@ export default function ShopSettingsScreen() {
             </View>
             <Switch
               value={shopOpen}
-              onValueChange={setShopOpen}
+              onValueChange={handleToggleShop}
               trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
               thumbColor={shopOpen ? '#006878' : '#707881'}
             />
@@ -145,7 +218,7 @@ export default function ShopSettingsScreen() {
             </View>
             <Switch
               value={deliveryActive}
-              onValueChange={setDeliveryActive}
+              onValueChange={handleToggleDelivery}
               trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
               thumbColor={deliveryActive ? '#006878' : '#707881'}
             />
@@ -161,6 +234,71 @@ export default function ShopSettingsScreen() {
               {i < SHOP_MENU.length - 1 && <View style={styles.menuDivider} />}
             </View>
           ))}
+        </View>
+
+        {/* SECURITY SETTINGS */}
+        <Text style={styles.sectionHeader}>Privacy & Security</Text>
+        <View style={styles.menuCard}>
+          <View style={styles.menuRow}>
+            <View style={[styles.menuIcon, { backgroundColor: '#f1f4f9' }]}>
+              <Ionicons name="lock-closed-outline" size={20} color="#006878" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.menuLabel}>App PIN Lock</Text>
+              <Text style={styles.statusSub}>Lock app when in background</Text>
+            </View>
+            <Switch
+              value={isPinEnabled}
+              onValueChange={(val) => {
+                if (val) {
+                  setPinMode('set');
+                  setShowPinModal(true);
+                } else {
+                  togglePin(false);
+                }
+              }}
+              trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
+              thumbColor={isPinEnabled ? '#006878' : '#707881'}
+            />
+          </View>
+          
+          <View style={styles.menuDivider} />
+          
+          <View style={styles.menuRow}>
+            <View style={[styles.menuIcon, { backgroundColor: '#f1f4f9' }]}>
+              <Ionicons name="finger-print-outline" size={20} color="#006878" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.menuLabel}>Biometric Unlock</Text>
+              <Text style={styles.statusSub}>Use FaceID or Fingerprint</Text>
+            </View>
+            <Switch
+              value={isBiometricsEnabled}
+              onValueChange={toggleBiometrics}
+              disabled={!isPinEnabled}
+              trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
+              thumbColor={isBiometricsEnabled ? '#006878' : '#707881'}
+            />
+          </View>
+
+          {isPinEnabled && (
+            <>
+              <View style={styles.menuDivider} />
+              <TouchableOpacity 
+                style={styles.menuRow}
+                onPress={() => {
+                  setPinMode('set');
+                  setShowPinModal(true);
+                }}
+              >
+                <View style={[styles.menuIcon, { backgroundColor: '#f1f4f9' }]}>
+                  <Ionicons name="key-outline" size={20} color="#006878" />
+                </View>
+                <Text style={styles.menuLabel}>Change App PIN</Text>
+                <Ionicons name="chevron-forward" size={16} color="#bfc7d1" />
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
         {/* ACCOUNT MENU */}
@@ -199,6 +337,15 @@ export default function ShopSettingsScreen() {
 
         <Text style={styles.version}>ThanniGo Shop Panel · v1.0.0</Text>
       </ScrollView>
+
+      <PinEntryModal
+        visible={showPinModal}
+        mode={pinMode}
+        onSuccess={() => setShowPinModal(false)}
+        onCancel={() => setShowPinModal(false)}
+        onSetPin={handleSetPin}
+        title={pinMode === 'set' ? 'Set App PIN' : 'Verify PIN'}
+      />
     </SafeAreaView>
   );
 }

@@ -11,23 +11,37 @@ import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppSession } from '@/hooks/use-app-session';
+import { userApi } from '@/api/userApi';
+import { ActivityIndicator } from 'react-native';
 
 export default function EditProfileScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
 
+  const { user, updateUser } = useAppSession();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Field State
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [name, setName] = useState('Rahul Sharma');
-  const [mobile, setMobile] = useState('+91 98765 43210');
+  const [name, setName] = useState('');
+  const [mobile, setMobile] = useState('');
   const [altMobile, setAltMobile] = useState('');
-  const [email, setEmail] = useState('rahul.s@example.com');
+  const [email, setEmail] = useState('');
   const [pan, setPan] = useState('');
 
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpCode, setOtpCode] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setMobile(user.phone || '');
+      setEmail(user.email || '');
+      // Add other fields if present in user object
+    }
+  }, [user]);
 
 
 
@@ -63,13 +77,31 @@ export default function EditProfileScreen() {
     setIsEmailVerified(true);
   };
 
-  const saveProfile = () => {
-    Toast.show({
-      type: 'success',
-      text1: 'Profile Saved!',
-      text2: 'Your account details have been successfully updated.'
-    });
-    safeBack('/(tabs)/profile');
+  const saveProfile = async () => {
+    try {
+      setIsLoading(true);
+      await updateUser({
+        name,
+        email,
+      });
+
+      Toast.show({
+        type: 'success',
+        text1: 'Profile Saved!',
+        text2: 'Your account details have been successfully updated.'
+      });
+      
+      const fallback = user?.role === 'admin' ? '/admin/settings' : '/(tabs)/profile';
+      safeBack(fallback as any);
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Update Failed',
+        text2: error.message || 'Could not save profile details.'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -81,8 +113,17 @@ export default function EditProfileScreen() {
           <BackButton fallback="/(tabs)/profile" />
           <Text style={styles.headerTitle}>Edit Profile</Text>
 
-          <TouchableOpacity style={styles.headerSaveBtn} onPress={saveProfile} activeOpacity={0.7}>
-            <Text style={styles.headerSaveText}>Save</Text>
+          <TouchableOpacity 
+            style={[styles.headerSaveBtn, isLoading && { opacity: 0.7 }]} 
+            onPress={saveProfile} 
+            activeOpacity={0.7}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text style={styles.headerSaveText}>Save</Text>
+            )}
           </TouchableOpacity>
         </View>
 

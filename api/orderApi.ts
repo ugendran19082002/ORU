@@ -6,16 +6,34 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export const orderApi = {
   /**
    * Submit a new checkout order
-   * Simulates POST /v1/orders
+   * POST /orders
    */
-  async submitOrder(payload: Partial<Order>): Promise<{ success: boolean; orderId: string }> {
-    // const response = await apiClient.post('/orders', payload);
-    // return response.data;
-    
-    await delay(1200); // Placing an order takes longer
-    return {
-      success: true,
-      orderId: `TNG-${Math.floor(Math.random() * 100000)}`,
-    };
+  async submitOrder(payload: any): Promise<any> {
+    try {
+      const response = await apiClient.post('/orders', payload);
+      return response.data;
+    } catch (error) {
+      console.error("[orderApi] submitOrder failed:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Fetch available slots for a shop and date
+   * GET /slots
+   */
+  async getAvailableSlots(shopId: number, date: string): Promise<any> {
+    try {
+      const response = await apiClient.get('/slots', {
+        params: { shop_id: shopId, date }
+      });
+      if (response.data.status === 1) {
+        return response.data.data;
+      }
+      throw new Error(response.data.message || 'Failed to fetch slots');
+    } catch (error) {
+       console.error("[orderApi] getAvailableSlots failed:", error);
+       throw error;
+    }
   }
 };

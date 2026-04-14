@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { name: 'Growth', path: '/admin/growth', icon: 'trending-up' },
   { name: 'Coupons', path: '/admin/coupons', icon: 'ticket' },
   { name: 'Master Menu', path: '/admin/master', icon: 'list' },
+  { name: 'Settings', path: '/admin/settings', icon: 'settings' },
 ];
 
 export default function AdminLayout() {

@@ -9,6 +9,7 @@ import {
   setGlobalLocationListener,
 } from "@/utils/locationEvents";
 import { safeNavigate } from "@/utils/safeNavigation";
+import { shopApi } from "@/api/shopApi";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
@@ -58,7 +59,8 @@ type Region = {
 
 export default function ShopProfileScreen() {
   const router = useRouter();
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { safeBack } = useAppNavigation();
 
@@ -66,11 +68,54 @@ export default function ShopProfileScreen() {
     safeBack("/shop/settings");
   });
 
-  const onRefresh = React.useCallback(() => {
+  const fetchProfile = async () => {
+    try {
+      setIsLoading(true);
+      const data = await shopApi.getMyShop();
+      if (data) {
+        setShopName(data.name || "");
+        setOwnerName(data.owner_name || "");
+        setMobile(data.phone || "");
+        setFssai(data.fssai_no || "");
+        setShopNo(data.address_line1 || "");
+        setAddressArea(data.address_line2 || "");
+        setGstNo(data.gstin || "");
+        setPanNo(data.pan_no || "");
+        setAadharNo(data.aadhar_no || "");
+        setSecondaryMobile(data.alternate_phone || "");
+        setEmail(data.email || "");
+        setBankName(data.bank_name || "");
+        setBankBranch(data.bank_branch || "");
+        setIfscCode(data.bank_ifsc || "");
+        setHolderName(data.account_holder_name || "");
+        setUpiId(data.upi_id || "");
+        
+        if (data.latitude && data.longitude) {
+          const lat = parseFloat(data.latitude);
+          const lng = parseFloat(data.longitude);
+          setCurrentLat(lat);
+          setCurrentLng(lng);
+          setRegion(prev => ({ ...prev, latitude: lat, longitude: lng }));
+        }
+      }
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Fetch Failed',
+        text2: 'Could not load profile details.'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+    fetchProfile().finally(() => setRefreshing(false));
   }, []);
 
   const [shopName, setShopName] = useState("Blue Spring Aquatics");
@@ -90,7 +135,50 @@ export default function ShopProfileScreen() {
   const [bankBranch, setBankBranch] = useState("Koramangala Main");
   const [ifscCode, setIfscCode] = useState("SBIN0001234");
   const [holderName, setHolderName] = useState("Rajesh Kumar");
-  const [upiId, setUpiId] = useState("rajesh@oksbi");
+  const [upiId, setUpiId] = useState("");
+  const [bankAccountNo, setBankAccountNo] = useState("");
+
+  const handleSave = async () => {
+    try {
+      setIsLoading(true);
+      const payload = {
+        name: shopName,
+        owner_name: ownerName,
+        phone: mobile,
+        fssai_no: fssai,
+        address_line1: shopNo,
+        address_line2: addressArea,
+        gstin: gstNo,
+        pan_no: panNo,
+        aadhar_no: aadharNo,
+        alternate_phone: secondaryMobile,
+        email: email,
+        bank_name: bankName,
+        bank_branch: bankBranch,
+        bank_ifsc: ifscCode,
+        account_holder_name: holderName,
+        bank_account_no: bankAccountNo,
+        upi_id: upiId,
+        latitude: currentLat,
+        longitude: currentLng,
+      };
+
+      await shopApi.updateMyShop(payload);
+      Toast.show({
+        type: 'success',
+        text1: 'Saved',
+        text2: 'Your profile changes have been saved.'
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Update Failed',
+        text2: 'Could not save profile changes.'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Company & Contact Details
   const [gstNo, setGstNo] = useState("29ABCDE1234F1Z5");
@@ -371,29 +459,14 @@ export default function ShopProfileScreen() {
         </View>
         <TouchableOpacity
           style={styles.editBtn}
-          onPress={() => {
-            console.log("=== [SHOP] Edit Click ===");
-            require('react-native').Alert.alert(
-              "Profile Update",
-              "Are you sure you want to save changes?",
-              [
-                { text: "Cancel", style: "cancel" },
-                {
-                  text: "Save",
-                  onPress: () => {
-                    console.log("✅ [SHOP] Profile Saved (Mock)");
-                    Toast.show({
-                      type: 'success',
-                      text1: 'Saved',
-                      text2: 'Your profile changes have been saved.'
-                    });
-                  },
-                },
-              ],
-            );
-          }}
+          onPress={handleSave}
+          disabled={isLoading}
         >
-          <Text style={styles.editBtnText}>Edit</Text>
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#005d90" />
+          ) : (
+            <Text style={styles.editBtnText}>Save</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -739,6 +812,17 @@ export default function ShopProfileScreen() {
                   autoCapitalize="characters"
                 />
               </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Bank Account Number</Text>
+              <TextInput
+                style={styles.input}
+                value={bankAccountNo}
+                onChangeText={setBankAccountNo}
+                placeholder="Enter account number"
+                keyboardType="numeric"
+              />
             </View>
 
             <View style={[styles.inputGroup, { marginBottom: 0 }]}>

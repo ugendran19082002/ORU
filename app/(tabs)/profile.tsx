@@ -13,14 +13,20 @@ import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
 import { useAppSession } from '@/hooks/use-app-session';
 import { addressApi } from '@/api/addressApi';
+import { useSecurityStore } from '@/stores/securityStore';
 
 
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { signOut, user, emergencyReset } = useAppSession();
+  const { isPinEnabled, initialize: initSecurity } = useSecurityStore();
   const [refreshing, setRefreshing] = React.useState(false);
   const [addressCount, setAddressCount] = React.useState(0);
+
+  React.useEffect(() => {
+    initSecurity();
+  }, []);
 
   const fetchAddressCount = React.useCallback(async () => {
     try {
@@ -49,7 +55,7 @@ export default function ProfileScreen() {
     { icon: 'receipt-outline' as const, label: 'Order History', subtitle: 'View past orders', hasArrow: true },
     { icon: 'repeat-outline' as const, label: 'Subscriptions', subtitle: 'Manage scheduled deliveries', hasArrow: true },
     { icon: 'gift-outline' as const, label: 'Rewards', subtitle: 'Referral code and loyalty points', hasArrow: true },
-    { icon: 'shield-checkmark-outline' as const, label: 'Privacy & Security', subtitle: 'Manage your data', hasArrow: true },
+    { icon: 'shield-checkmark-outline' as const, label: 'Privacy & Security', subtitle: isPinEnabled ? 'PIN Protected' : 'Manage your data', hasArrow: true, status: isPinEnabled ? 'active' : 'none' },
     { icon: 'help-circle-outline' as const, label: 'Help & Support', subtitle: '24/7 customer service', hasArrow: true },
     { icon: 'information-circle-outline' as const, label: 'About ThanniGo', subtitle: 'Version 1.0.0', hasArrow: true },
   ];
@@ -196,7 +202,15 @@ export default function ProfileScreen() {
                   <Ionicons name={item.icon} size={20} color="#005d90" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.menuItemLabel}>{item.label}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={styles.menuItemLabel}>{item.label}</Text>
+                    {item.label === 'Privacy & Security' && isPinEnabled && (
+                      <View style={styles.securityBadge}>
+                         <Ionicons name="lock-closed" size={10} color="#10b981" />
+                         <Text style={styles.securityBadgeText}>ACTIVE</Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={styles.menuItemSub}>{item.subtitle}</Text>
                 </View>
                 {item.hasArrow && <Ionicons name="chevron-forward" size={16} color="#bfc7d1" />}
@@ -272,6 +286,9 @@ const styles = StyleSheet.create({
   menuItemLabel: { fontSize: 14, fontWeight: '700', color: '#181c20', marginBottom: 1 },
   menuItemSub: { fontSize: 11, color: '#707881' },
   menuDivider: { height: 1, backgroundColor: '#f1f4f9', marginLeft: 74 },
+  
+  securityBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#e0fdf4', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  securityBadgeText: { fontSize: 8, fontWeight: '900', color: '#10b981', letterSpacing: 0.5 },
 
   logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#ffdad6', borderRadius: 16, paddingVertical: 14, marginBottom: 20 },
   logoutText: { color: '#ba1a1a', fontWeight: '700', fontSize: 15 },

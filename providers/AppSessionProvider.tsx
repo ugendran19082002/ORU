@@ -554,8 +554,11 @@ export function AppRouteGuard() {
           }
         }
 
-        // 2. Location
-        if (user.role !== "admin" && !isSecurityRoute && !isLocationVerified) {
+        // 2. Location (Mandatory only for Customers & Delivery searching for orders)
+        // Shop owners already have a fixed business location and don't strictly need phone location for dashboards
+        const needsMandatoryLocation = user.role === "customer";
+        
+        if (needsMandatoryLocation && !isSecurityRoute && !isLocationVerified) {
           const { status: locStatus } = await Location.getForegroundPermissionsAsync();
           if (currentGeneration < guardGenerationRef.current) return; // ABA check
           
@@ -571,11 +574,17 @@ export function AppRouteGuard() {
         let idealRoute: any = "/(tabs)";
         if (user.onboarding_completed) {
           if (user.role === "shop_owner") {
-            if (user.shopStatus === "active") idealRoute = "/shop";
+            if (user.shopStatus === "active") {
+                idealRoute = "/shop";
+                if (currentPath.startsWith("/shop") || isPriorityRoute) return;
+            }
             else if (user.shopStatus === "rejected") idealRoute = "/onboarding/shop/rejected";
             else idealRoute = "/onboarding/shop/waitlist";
           } else if (user.role === "admin") idealRoute = "/admin";
-          else if (user.role === "delivery") idealRoute = "/delivery";
+          else if (user.role === "delivery") {
+              idealRoute = "/delivery";
+              if (currentPath.startsWith("/delivery") || isPriorityRoute) return;
+          }
           else idealRoute = "/(tabs)";
         } else {
           const backendNextStep = nextStep as any;
@@ -646,7 +655,7 @@ export function AppRouteGuard() {
               return;
             }
 
-            if (!isCurrentlyInIdealStack) {
+            if (!isCurrentlyInIdealStack && !isPriorityRoute) {
                 navigate(idealRoute, "Stack Correction");
             }
         }

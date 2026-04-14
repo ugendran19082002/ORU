@@ -53,5 +53,107 @@ export const shopApi = {
     const shop = mockShops.find(s => s.id === id);
     if (!shop) throw new Error('Shop not found');
     return shop;
+  },
+
+  /**
+   * Fetch the current user's shop profile
+   * GET /shop-owner/shops/me
+   */
+  async getMyShop(): Promise<any> {
+    try {
+      const response = await apiClient.get('/shop-owner/shops/me');
+      if (response.data.status === 1) {
+        return response.data.data;
+      }
+      throw new Error(response.data.message || 'Failed to fetch shop profile');
+    } catch (error) {
+      console.error("[shopApi] getMyShop failed:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update the current user's shop profile
+   * PATCH /shop-owner/shops/me
+   */
+  async updateMyShop(data: any): Promise<any> {
+    try {
+      const response = await apiClient.patch('/shop-owner/shops/me', data);
+      if (response.data.status === 1) {
+        return response.data.data;
+      }
+      throw new Error(response.data.message || 'Failed to update shop profile');
+    } catch (error) {
+      console.error("[shopApi] updateMyShop failed:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get shop operational settings
+   * GET /shop-owner/shops/me/settings
+   */
+  async getShopSettings(): Promise<any> {
+    try {
+      const response = await apiClient.get('/shop-owner/shops/me/settings');
+      if (response.data.status === 1) {
+        return response.data.data;
+      }
+      throw new Error(response.data.message || 'Failed to fetch shop settings');
+    } catch (error) {
+      console.error("[shopApi] getShopSettings failed:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update shop operational settings
+   * PATCH /shop-owner/shops/me/settings
+   */
+  async updateShopSettings(data: any): Promise<any> {
+    try {
+      const response = await apiClient.patch('/shop-owner/shops/me/settings', data);
+      if (response.data.status === 1) {
+        return response.data.data;
+      }
+      throw new Error(response.data.message || 'Failed to update shop settings');
+    } catch (error) {
+      console.error("[shopApi] updateShopSettings failed:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Toggle shop open/closed status
+   * POST /shop-owner/shops/me/toggle-open
+   */
+  async toggleShopOpen(isOpen: boolean): Promise<any> {
+    try {
+      const response = await apiClient.post('/shop-owner/shops/me/toggle-open', { is_open: isOpen });
+      if (response.data.status === 1) {
+        return response.data.data;
+      }
+      throw new Error(response.data.message || 'Failed to toggle shop status');
+    } catch (error) {
+      console.error("[shopApi] toggleShopOpen failed:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Toggle busy mode (auto-reject new orders)
+   * POST /shop-owner/shops/me/toggle-busy
+   */
+  async toggleBusyMode(busyMode: boolean): Promise<any> {
+    try {
+      const response = await apiClient.post('/shop-owner/shops/me/toggle-busy', { busy_mode: busyMode });
+      if (response.data.status === 1) {
+        return response.data.data;
+      }
+      throw new Error(response.data.message || 'Failed to toggle busy mode');
+    } catch (error) {
+      console.error("[shopApi] toggleBusyMode failed:", error);
+      throw error;
+    }
   }
 };

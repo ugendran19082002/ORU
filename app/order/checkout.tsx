@@ -22,6 +22,8 @@ import { useOrderStore } from "@/stores/orderStore";
 import { useShopStore } from "@/stores/shopStore";
 import { useAppSession } from "@/hooks/use-app-session";
 import { LinearGradient } from "expo-linear-gradient";
+import moment from "moment";
+import Toast from "react-native-toast-message";
 
 type PaymentType = "upi" | "cod";
 
@@ -176,10 +178,14 @@ export default function OrderCheckoutScreen() {
   const { safeBack } = useAppNavigation();
   const { user } = useAppSession();
 
-  const { shopId = "1" } = useLocalSearchParams<{
+  const { shopId = "1", slotId, date, slotLabel, note: paramNote } = useLocalSearchParams<{
     shopId: string;
-    qty: string;
+    slotId: string;
+    date: string;
+    slotLabel: string;
+    note: string;
   }>();
+  
   const {
     paymentMethod,
     setPaymentMethod,
@@ -194,11 +200,17 @@ export default function OrderCheckoutScreen() {
   const { shops } = useShopStore();
   const { placeOrder, isSubmitting } = useOrderStore();
 
+  const [deliveryType, setDeliveryType] = useState<'instant' | 'scheduled'>('instant');
   const [payment, setPayment] = useState<PaymentType>(
     (paymentMethod as PaymentType) || "upi",
   );
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(INITIAL_ADDRESSES[0]);
+
+  // Sync paramNote with cartStore if provided from schedule screen
+  React.useEffect(() => {
+    if (slotId) setDeliveryType('scheduled');
+  }, [slotId]);
 
   useAndroidBackHandler(() => {
     if (showAddressModal) {
@@ -308,6 +320,47 @@ export default function OrderCheckoutScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* DELIVERY TYPE */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Delivery Mode</Text>
+        </View>
+        <View style={styles.deliveryToggle}>
+          <TouchableOpacity
+            style={[styles.toggleBtn, deliveryType === 'instant' && styles.toggleBtnActive]}
+            onPress={() => setDeliveryType('instant')}
+          >
+            <Ionicons name="flash" size={18} color={deliveryType === 'instant' ? 'white' : '#707881'} />
+            <Text style={[styles.toggleText, deliveryType === 'instant' && styles.toggleTextActive]}>Instant</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.toggleBtn, deliveryType === 'scheduled' && styles.toggleBtnActive]}
+            onPress={() => {
+              if (!slotId) {
+                router.push({ pathname: '/order/schedule' as any, params: { shopId: shop.id } });
+              } else {
+                setDeliveryType('scheduled');
+              }
+            }}
+          >
+            <Ionicons name="calendar" size={18} color={deliveryType === 'scheduled' ? 'white' : '#707881'} />
+            <Text style={[styles.toggleText, deliveryType === 'scheduled' && styles.toggleTextActive]}>Scheduled</Text>
+          </TouchableOpacity>
+        </View>
+
+        {deliveryType === 'scheduled' && (
+          <TouchableOpacity
+            style={styles.slotPicker}
+            onPress={() => router.push({ pathname: '/order/schedule' as any, params: { shopId: shop.id } })}
+          >
+            <View style={styles.slotInfo}>
+              <Text style={styles.slotLabel}>DELIVERY SLOT</Text>
+              <Text style={styles.slotValue}>{slotLabel || 'Select a time slot'}</Text>
+              {date && <Text style={styles.slotDate}>{moment(date).format('dddd, MMM Do')}</Text>}
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#005d90" />
+          </TouchableOpacity>
+        )}
+
         {/* DELIVERY ADDRESS */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Delivery Address</Text>
@@ -388,18 +441,24 @@ export default function OrderCheckoutScreen() {
           activeOpacity={0.9}
           disabled={isSubmitting}
           onPress={async () => {
-            await placeOrder({
-              shopId: shop.id,
-              customerName: user?.name ?? 'Customer',
-              customerPhone: user?.phone ?? '+91 00000 00000',
+            if (deliveryType === 'scheduled' && !slotId) {
+              Toast.show({ type: 'error', text1: 'Missing Slot', text2: 'Please select a delivery slot' });
+              router.push({ pathname: '/order/schedule' as any, params: { shopId: shop.id } });
+              return;
+            }
+
+            await (placeOrder as any)({
+              shop_id: shop.id,
               items: Object.entries(items)
                 .filter(([, qty]) => qty > 0)
-                .map(([productId, qty]) => ({ productId, quantity: qty })),
-              address: selectedAddress.fullAddress,
-              paymentMethod: payment,
-              eta: shop.eta,
-              total,
-              notes: note,
+                .map(([productId, qty]) => ({ product_id: productId, quantity: qty })),
+              address_id: selectedAddress.id,
+              payment_method: payment,
+              delivery_type: deliveryType,
+              delivery_slot: slotId ? Number(slotId) : null,
+              scheduled_for: date || null,
+              distance_km: 1.2,
+              delivery_notes: note,
             });
             clearCart();
             router.push("/order/confirmed" as any);
@@ -663,6 +722,18 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     gap: 12,
   },
+  deliveryToggle: { flexDirection: 'row', gap: 12, marginBottom: 16 },
+  toggleBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 14, backgroundColor: 'white', borderWidth: 1.5, borderColor: '#e2e8f0' },
+  toggleBtnActive: { backgroundColor: '#005d90', borderColor: '#005d90' },
+  toggleText: { fontSize: 13, fontWeight: '800', color: '#707881' },
+  toggleTextActive: { color: 'white' },
+
+  slotPicker: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0f9ff', padding: 16, borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: '#005d90', marginBottom: 20 },
+  slotInfo: { flex: 1, gap: 2 },
+  slotLabel: { fontSize: 9, fontWeight: '900', color: '#005d90', letterSpacing: 1 },
+  slotValue: { fontSize: 15, fontWeight: '800', color: '#0f172a' },
+  slotDate: { fontSize: 11, color: '#707881', fontWeight: '500' },
+
   totalFloating: {
     flexDirection: "row",
     justifyContent: "space-between",
