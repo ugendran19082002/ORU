@@ -73,6 +73,17 @@ export default function ShopBankDetailsScreen() {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const file = result.assets[0];
+        
+        // 5MB Client-side validation
+        if (file.size && file.size > 5000000) {
+          Toast.show({
+            type: 'error',
+            text1: 'File Too Large',
+            text2: 'Bank statement must be smaller than 5MB.'
+          });
+          return;
+        }
+
         setStatementFile(file);
       }
     } catch (err) {

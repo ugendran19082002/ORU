@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { adminApi, AdminShop } from '@/api/adminApi';
 import Toast from 'react-native-toast-message';
+import { useAppSession } from '@/providers/AppSessionProvider';
 
 type FilterStatus = 'all' | 'pending_review' | 'active' | 'rejected';
 
@@ -14,10 +15,15 @@ export default function AdminShopsScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const router = useRouter();
+  const { user, status } = useAppSession();
 
   const [refreshing, setRefreshing] = useState(false);
   const [shops, setShops] = useState<AdminShop[]>([]);
   const [loading, setLoading] = useState(true);
+
+  if (status === 'authenticated' && (!user || user?.role !== 'admin')) {
+    return null; // Layout handles the error message
+  }
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
 

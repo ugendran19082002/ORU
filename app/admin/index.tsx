@@ -89,7 +89,7 @@ export default function AdminOverviewScreen() {
     );
   }
 
-  if (status === 'authenticated' && user?.role !== 'admin') {
+  if (status === 'authenticated' && (!user || user?.role !== 'admin')) {
      return (
        <View style={[styles.container, styles.centered]}>
          <Ionicons name="lock-closed-outline" size={64} color="#ba1a1a" />
@@ -109,8 +109,8 @@ export default function AdminOverviewScreen() {
     <View style={styles.container}>
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
         style={{ flex: 1 }}
+        contentContainerStyle={{ flexGrow: 1, padding: isDesktop ? 40 : 20, paddingBottom: 80 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: isDesktop ? 40 : 20, paddingBottom: 80 }}
       >
         <Text style={[styles.pageTitle, isDesktop && { fontSize: 40, marginBottom: 32 }]}>Dashboard Overview</Text>
 

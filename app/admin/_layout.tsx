@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, useWindowDimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, useWindowDimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Slot, useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Logo } from '@/components/ui/Logo';
-import { useAppSession } from '@/hooks/use-app-session';
+import { useAppSession } from '@/providers/AppSessionProvider';
 
 const NAV_ITEMS = [
   { name: 'Dashboard', path: '/admin', icon: 'pie-chart' },
@@ -17,8 +17,16 @@ export default function AdminLayout() {
   const isMobile = width < 768;
   const router = useRouter();
   const pathname = usePathname();
-  const { signOut } = useAppSession();
+  const { signOut, status } = useAppSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  if (status === 'loading') {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#005d90" />
+      </View>
+    );
+  }
 
   const handleNav = (path: string) => {
     router.push(path as any);

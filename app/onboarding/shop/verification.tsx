@@ -56,12 +56,24 @@ export default function ShopVerificationScreen() {
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.8,
+        quality: 0.85,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        if (type === 'id') setIdProof(result.assets[0].uri);
-        else setShopPhoto(result.assets[0].uri);
+        const asset = result.assets[0];
+        
+        // 5MB Client-side validation
+        if (asset.fileSize && asset.fileSize > 5000000) {
+          Toast.show({
+            type: 'error',
+            text1: 'File Too Large',
+            text2: 'Please select an image smaller than 5MB.'
+          });
+          return;
+        }
+
+        if (type === 'id') setIdProof(asset.uri);
+        else setShopPhoto(asset.uri);
       }
     } catch (err) {
       // Silent error for image picker

@@ -122,8 +122,10 @@ export default function AddressesScreen() {
       setIsLoading(true);
       const res = await addressApi.getAddresses();
       if (res.data?.status === 1) {
-        const fetchedAddresses = res.data.data;
-        setAddresses(fetchedAddresses);
+        const fetchedAddresses = res.data.data || [];
+        // Stable sort by ID to prevent list reordering when default status changes
+        const stableList = [...fetchedAddresses].sort((a, b) => Number(a.id) - Number(b.id));
+        setAddresses(stableList);
 
         // REQUIREMENT: Centering map on default address
         const defaultAddr = fetchedAddresses.find((a: Address) => a.is_default);

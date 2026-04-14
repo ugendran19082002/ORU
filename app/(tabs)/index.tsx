@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,11 +15,12 @@ import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { Logo } from '@/components/ui/Logo';
 import { useShopStore } from '@/stores/shopStore';
+import { addressApi } from '@/api/addressApi';
 
 /* ---------- UTILS ---------- */
 // Haversine formula to calculate distance in km
@@ -101,10 +102,7 @@ export default function HomeScreen() {
   const [pendingShopId, setPendingShopId] = useState<string | null>(null);
   const [currentAddress, setCurrentAddress] = useState('Locating...');
   const [currentAddressTitle, setCurrentAddressTitle] = useState('Location');
-  const [userAddresses] = useState([
-    { id: '1', type: 'Home', title: 'Home', fullAddress: '82nd Floor, Azure Heights, Cyber City...', isDefault: true, lat: 12.9716, lng: 80.2210 },
-    { id: '2', type: 'Office', title: 'Office', fullAddress: 'Floor 12, Tech Park Central, Sector 44...', isDefault: false, lat: 12.9810, lng: 80.2310 }
-  ]);
+  const [userAddresses, setUserAddresses] = useState<any[]>([]);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -115,8 +113,13 @@ export default function HomeScreen() {
 
   useEffect(() => {
     loadShops();
-    checkLocation();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      checkLocation();
+    }, [])
+  );
 
   const handleRequestLink = (shopId: string) => {
     setPendingShopId(shopId);
@@ -140,23 +143,46 @@ export default function HomeScreen() {
     }
 
     try {
-      const location = await Location.getCurrentPositionAsync({});
+      const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       const currentLat = location.coords.latitude;
       const currentLng = location.coords.longitude;
       setUserLoc({ lat: currentLat, lng: currentLng });
 
-      // 🚨 Address Logic: Prioritize User's Default Address over generic GPS
-      const defaultAddr = userAddresses.find(a => a.isDefault);
+      // 1. Fetch real addresses from backend
+      let addresses: any[] = [];
+      try {
+        const addrRes = await addressApi.getAddresses();
+        addresses = addrRes.data.data || [];
+        setUserAddresses(addresses);
+      } catch (addrErr) {
+        console.warn("Failed to fetch saved addresses:", addrErr);
+      }
+
+      // 2. Logic: Prioritize Default Address > GPS Reverse Geocode > Coordinates
+      const defaultAddr = addresses.find(a => a.is_default);
+      
       if (defaultAddr) {
-        setCurrentAddressTitle(defaultAddr.title);
-        setCurrentAddress(defaultAddr.fullAddress.substring(0, 30) + '...');
-        setUserLoc({ lat: defaultAddr.lat, lng: defaultAddr.lng });
+        setCurrentAddressTitle(defaultAddr.label || 'Home');
+        setCurrentAddress(`${defaultAddr.address_line1}, ${defaultAddr.city}`);
+        setUserLoc({ lat: Number(defaultAddr.latitude), lng: Number(defaultAddr.longitude) });
       } else {
         setCurrentAddressTitle('Current Location');
-        // Dynamic naming based on standard GPS proximity
-        if (Math.abs(currentLat - 12.97) < 0.1 && Math.abs(currentLng - 80.22) < 0.1) {
-          setCurrentAddress('Koramangala, Bangalore');
-        } else {
+        
+        // Dynamic naming using Reverse Geocoding
+        try {
+          const rev = await Location.reverseGeocodeAsync({ 
+            latitude: currentLat, 
+            longitude: currentLng 
+          });
+          
+          if (rev && rev[0]) {
+            const place = rev[0];
+            const readable = place.district || place.name || place.city || 'Near You';
+            setCurrentAddress(`${readable}, ${place.city || ''}`);
+          } else {
+            setCurrentAddress(`${currentLat.toFixed(2)}, ${currentLng.toFixed(2)}`);
+          }
+        } catch (revErr) {
           setCurrentAddress(`${currentLat.toFixed(2)}, ${currentLng.toFixed(2)}`);
         }
       }
@@ -485,16 +511,16 @@ export default function HomeScreen() {
                   style={styles.addressItem}
                   onPress={() => confirmConnectionRequest(addr.id)}
                 >
-                  <View style={[styles.addrIcon, { backgroundColor: addr.type === 'Home' ? '#ecfeff' : '#eff6ff' }]}>
+                  <View style={[styles.addrIcon, { backgroundColor: addr.label?.toLowerCase() === 'home' ? '#ecfeff' : '#eff6ff' }]}>
                     <Ionicons 
-                      name={addr.type === 'Home' ? 'home' : 'briefcase'} 
+                      name={addr.label?.toLowerCase() === 'home' ? 'home' : 'briefcase'} 
                       size={18} 
-                      color={addr.type === 'Home' ? '#0891b2' : '#2563eb'} 
+                      color={addr.label?.toLowerCase() === 'home' ? '#0891b2' : '#2563eb'} 
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.addrTitle}>{addr.title}</Text>
-                    <Text style={styles.addrText} numberOfLines={1}>{addr.fullAddress}</Text>
+                    <Text style={styles.addrTitle}>{addr.label}</Text>
+                    <Text style={styles.addrText} numberOfLines={1}>{addr.address_line1}, {addr.city}</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
                 </TouchableOpacity>
