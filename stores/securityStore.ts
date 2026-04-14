@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { Platform } from 'react-native';
+import { userApi } from '@/api/userApi';
+import type { AppUser } from '@/types/session';
 
 const PIN_KEY = 'thannigo_app_pin';
 const SECURITY_SETTINGS_KEY = 'thannigo_security_settings';
@@ -22,6 +24,7 @@ type SecurityState = SecuritySettings & {
   setLocked: (locked: boolean) => void;
   hasPin: () => Promise<boolean>;
   reset: () => Promise<void>;
+  syncWithUser: (user: AppUser) => Promise<void>;
 };
 
 export const useSecurityStore = create<SecurityState>((set, get) => ({
@@ -46,6 +49,34 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
     }
   },
 
+  syncWithUser: async (user: AppUser) => {
+    try {
+      // Sync sever state to local flags
+      const updates: Partial<SecuritySettings> = {};
+      
+      if (user.security_pin_enabled !== undefined) {
+          updates.isPinEnabled = user.security_pin_enabled;
+      }
+      
+      if (user.biometric_enabled !== undefined) {
+          updates.isBiometricsEnabled = user.biometric_enabled;
+      }
+
+      const current = get();
+      if (Object.keys(updates).length > 0) {
+          set(updates);
+          
+          // Persist changed settings locally too
+          await SecureStore.setItemAsync(SECURITY_SETTINGS_KEY, JSON.stringify({
+            isPinEnabled: updates.isPinEnabled ?? current.isPinEnabled,
+            isBiometricsEnabled: updates.isBiometricsEnabled ?? current.isBiometricsEnabled,
+          }));
+      }
+    } catch (error) {
+      console.error('[SecurityStore] syncWithUser failed:', error);
+    }
+  },
+
   setPin: async (pin: string) => {
     try {
       await SecureStore.setItemAsync(PIN_KEY, pin);
@@ -55,6 +86,9 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
         isBiometricsEnabled: settings.isBiometricsEnabled,
       }));
       set({ isPinEnabled: true });
+
+      // SYNC TO BACKEND
+      await userApi.updateProfile({ security_pin_enabled: true });
     } catch (error) {
       console.error('[SecurityStore] setPin failed:', error);
       throw error;
@@ -99,6 +133,9 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
         isBiometricsEnabled: settings.isBiometricsEnabled,
       }));
       set({ isBiometricsEnabled: enabled });
+
+      // SYNC TO BACKEND
+      await userApi.updateProfile({ biometric_enabled: enabled });
     } catch (error) {
       console.error('[SecurityStore] toggleBiometrics failed:', error);
     }

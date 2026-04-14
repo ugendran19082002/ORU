@@ -241,6 +241,9 @@ export function AppSessionProvider({
           
           setUser(nextUser);
           setNextStepState(nextNextStep);
+          
+          // SYNC SECURITY STATE
+          await useSecurityStore.getState().syncWithUser(nextUser);
 
           await writeSession({
             user: nextUser,

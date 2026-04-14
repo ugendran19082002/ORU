@@ -17,6 +17,9 @@ export type AppUser = {
   shopStatus?: string;
   onboardingStatus?: string;
   adminNotes?: string;
+  biometric_enabled?: boolean;
+  security_pin_enabled?: boolean;
+  security_pin?: string;
 };
 
 export type NextStepData = {
