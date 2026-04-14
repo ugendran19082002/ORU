@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { ActivityIndicator } from 'react-native';
 import { useSecurityStore } from '@/stores/securityStore';
 import * as Haptics from 'expo-haptics';
 
@@ -16,7 +17,7 @@ const { width } = Dimensions.get('window');
 
 type PinEntryModalProps = {
   visible: boolean;
-  onSuccess: () => void;
+  onSuccess: (pin: string) => Promise<void> | void;
   onCancel?: () => void;
   title?: string;
   mode?: 'verify' | 'set' | 'confirm';
@@ -34,12 +35,19 @@ export const PinEntryModal: React.FC<PinEntryModalProps> = ({
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [currentStep, setCurrentStep] = useState<'enter' | 'confirm'>(mode === 'set' ? 'enter' : 'enter');
-  const { verifyPin, isBiometricsEnabled, authenticateBiometrics } = useSecurityStore();
+  const { isBiometricsEnabled, authenticateBiometrics } = useSecurityStore();
   const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (visible && mode === 'verify' && isBiometricsEnabled) {
       handleBiometrics();
+    }
+    if (!visible) {
+        setPin('');
+        setIsLoading(false);
+        setError(false);
     }
   }, [visible]);
 
@@ -47,7 +55,7 @@ export const PinEntryModal: React.FC<PinEntryModalProps> = ({
     const success = await authenticateBiometrics();
     if (success) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      onSuccess();
+      onSuccess(''); // Pass empty for biometrics as PIN is not used
     }
   };
 
@@ -71,14 +79,22 @@ export const PinEntryModal: React.FC<PinEntryModalProps> = ({
 
   const handleComplete = async (finalPin: string) => {
     if (mode === 'verify') {
-      const isValid = await verifyPin(finalPin);
-      if (isValid) {
+      try {
+        setIsLoading(true);
+        setError(false);
+        setErrorMessage('');
+        await onSuccess(finalPin);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        onSuccess();
-      } else {
+      } catch (err: any) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         setError(true);
         setPin('');
+        
+        // Extract message from backend response if available
+        const backendMsg = err.response?.data?.message || err.message;
+        setErrorMessage(backendMsg || 'Incorrect PIN');
+      } finally {
+        setIsLoading(false);
       }
     } else if (mode === 'set') {
       if (currentStep === 'enter') {
@@ -89,10 +105,11 @@ export const PinEntryModal: React.FC<PinEntryModalProps> = ({
         if (finalPin === confirmPin) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           onSetPin?.(finalPin);
-          onSuccess();
+          onSuccess(finalPin);
         } else {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
           setError(true);
+          setErrorMessage('PINs do not match');
           setPin('');
           setCurrentStep('enter');
           setConfirmPin('');
@@ -140,12 +157,12 @@ export const PinEntryModal: React.FC<PinEntryModalProps> = ({
           </Text>
           
           <View style={styles.dotsContainer}>
-            {[0, 1, 2, 3].map(renderDot)}
+            {isLoading ? <ActivityIndicator color="#005d90" /> : [0, 1, 2, 3].map(renderDot)}
           </View>
 
           {error && (
             <Text style={styles.errorText}>
-              {currentStep === 'confirm' ? 'PINs do not match' : 'Incorrect PIN'}
+              {errorMessage}
             </Text>
           )}
 

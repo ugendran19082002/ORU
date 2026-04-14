@@ -136,8 +136,11 @@ apiClient.interceptors.response.use(
 
       // 2. Call the refresh endpoint
       try {
+        const deviceId = (await import('../stores/securityStore')).useSecurityStore.getState().getDeviceId();
         const res = await axios.post(`${apiClient.defaults.baseURL}/auth/refresh`, {
           refresh_token: refreshToken
+        }, {
+            headers: { 'x-device-id': deviceId }
         });
 
         if (res.status === 200 && res.data.data.access_token) {

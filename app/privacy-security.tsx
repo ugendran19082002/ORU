@@ -13,15 +13,12 @@ import * as Haptics from 'expo-haptics';
 export default function PrivacySecurityScreen() {
   const router = useRouter();
   const { 
-    isPinEnabled, isBiometricsEnabled, togglePin, toggleBiometrics, setPin, initialize 
+    isPinEnabled, isBiometricsEnabled, togglePin, toggleBiometrics, enablePinRemote, initialize 
   } = useSecurityStore();
 
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinMode, setPinMode] = useState<'set' | 'verify'>('set');
 
-  useEffect(() => {
-    initialize();
-  }, []);
 
   const handleTogglePin = async (val: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -60,7 +57,7 @@ export default function PrivacySecurityScreen() {
   };
 
   const handleSetPin = async (newPin: string) => {
-    await setPin(newPin);
+    await enablePinRemote(newPin);
     Toast.show({ type: 'success', text1: 'PIN Set Successfully' });
   };
 

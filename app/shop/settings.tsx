@@ -71,7 +71,7 @@ export default function ShopSettingsScreen() {
   const { signOut } = useAppSession();
   const { 
     isPinEnabled, isBiometricsEnabled, togglePin, toggleBiometrics, 
-    setPin, authenticateBiometrics, initialize: initSecurity 
+    enablePinRemote, authenticateBiometrics, initialize: initSecurity 
   } = useSecurityStore();
   
   const [refreshing, setRefreshing] = useState(false);
@@ -82,7 +82,6 @@ export default function ShopSettingsScreen() {
   const [pinMode, setPinMode] = useState<'set' | 'verify'>('set');
 
   React.useEffect(() => {
-    initSecurity();
     fetchSettings();
   }, []);
 
@@ -142,7 +141,7 @@ export default function ShopSettingsScreen() {
   };
 
   const handleSetPin = async (newPin: string) => {
-    await setPin(newPin);
+    await enablePinRemote(newPin);
     Toast.show({ type: 'success', text1: 'PIN Set Successfully' });
   };
 

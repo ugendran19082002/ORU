@@ -18,8 +18,8 @@ import { useAppSession } from '@/providers/AppSessionProvider';
  */
 export default function SecuritySetupScreen() {
   const router = useRouter();
-  const { setIsVerified } = useAppSession();
-  const { setPin, toggleBiometrics, initialize } = useSecurityStore();
+  const { setIsVerified, syncSession } = useAppSession();
+  const { enablePinRemote, enableBiometricRemote, initialize } = useSecurityStore();
   const [showModal, setShowModal] = useState(false);
   const [complete, setComplete] = useState(false);
 
@@ -30,11 +30,16 @@ export default function SecuritySetupScreen() {
 
   const handleSetPin = async (newPin: string) => {
     try {
-      await setPin(newPin);
+      await enablePinRemote(newPin);
+      await syncSession(); // Refresh global user object to show PIN is now enabled
       setIsVerified(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setComplete(true);
       setShowModal(false);
+      
+      // Auto-prompt biometrics if supported
+      handleEnableBiometric();
+
       Toast.show({
         type: 'success',
         text1: 'Security Enabled',
@@ -49,9 +54,17 @@ export default function SecuritySetupScreen() {
     }
   };
 
+  const handleEnableBiometric = async () => {
+    try {
+       await enableBiometricRemote();
+    } catch (e) {
+       console.log('Biometric setup skipped or failed');
+    }
+  };
+
   const handleFinish = async () => {
     // Final sync and move to dashboard
-    await initialize();
+    await syncSession();
     router.replace('/(tabs)' as any);
   };
 

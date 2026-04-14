@@ -11,9 +11,10 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { Platform, DeviceEventEmitter, View, ActivityIndicator, AppState, AppStateStatus } from "react-native";
+import { Platform, DeviceEventEmitter, View, ActivityIndicator, AppState, AppStateStatus, BackHandler } from "react-native";
 
 import { apiClient, setClientToken, getClientToken } from "@/api/client";
+import { authApi } from "@/api/authApi";
 import { onboardingApi } from "@/api/onboardingApi";
 import { userApi } from "@/api/userApi";
 import type {
@@ -26,6 +27,8 @@ import { useSecurityStore } from "@/stores/securityStore";
 import { PinEntryModal } from "@/components/security/PinEntryModal";
 
 const SESSION_KEY = "thannigo_session";
+const LAST_PHONE_KEY = "thannigo_last_phone";
+const LAST_NAME_KEY = "thannigo_last_name";
 
 type SessionContextValue = {
   status: SessionStatus;
@@ -105,37 +108,65 @@ export function AppSessionProvider({
   const { isLocked, setLocked, isVerified, setIsVerified, isPinEnabled, isBiometricsEnabled } = useSecurityStore();
   const securityEnabled = isPinEnabled || isBiometricsEnabled;
 
-  // Sync Token to Axios Defaults (Memory Store)
-  useEffect(() => {
-    // Only update if the token in memory is different to avoid redundant logs
-    if (getClientToken() !== accessToken) {
-      setClientToken(accessToken);
-    }
-  }, [accessToken]);
-
-  // Hydration logic
+  // Hydration logic: Fetch EVERYTHING once at boot
   useEffect(() => {
     let active = true;
 
-    async function hydrate() {
-      // Initialize security settings first so the guard has accurate data
-      await useSecurityStore.getState().initialize();
-      
-      const session = await readSession();
-      if (!active) return;
+    async function init() {
+      try {
+        // 1. Load Local Security Settings
+        await useSecurityStore.getState().initialize();
+        
+        // 2. Load Local Session Storage
+        const session = await readSession();
+        if (!active) return;
 
-      setUser(session.user);
-      setAccessToken(session.access_token);
-      setRefreshToken(session.refresh_token);
-      setPreferredRoleState(session.preferredRole);
-      setStatus(session.access_token ? "authenticated" : "anonymous");
-      setIsHydrated(true);
+        if (session.access_token) {
+          // 3. Proactive Sync: Fetch Profile + Shop Status in one waterfall
+          setClientToken(session.access_token);
+          try {
+            const res = await apiClient.get('/auth/me');
+            const freshUser = res.data.data;
+            
+            const mappedUser = {
+              ...session.user,
+              ...freshUser,
+              shopStatus: freshUser.shop_status || freshUser.shopStatus || 'none',
+              onboardingStatus: freshUser.onboarding_status || freshUser.onboardingStatus || 'none',
+            };
+
+            setUser(mappedUser);
+            setAccessToken(session.access_token);
+            setRefreshToken(session.refresh_token);
+            setPreferredRoleState(mappedUser.role as AppRole);
+            setNextStepState(freshUser.next_step || null);
+            
+            // Sync security store with verified backend flags
+            await useSecurityStore.getState().syncWithUser(mappedUser);
+            
+            setStatus("authenticated");
+          } catch (syncErr) {
+            console.error('🛡️ [Session] Sync failed during init:', syncErr);
+            // Fallback to persisted session if sync fails but token exists
+            setUser(session.user);
+            setAccessToken(session.access_token);
+            setRefreshToken(session.refresh_token);
+            setPreferredRoleState(session.preferredRole);
+            setStatus("authenticated");
+          }
+        } else {
+          setStatus("anonymous");
+        }
+      } catch (err) {
+        console.error('🛡️ [Session] Hydration error:', err);
+        setStatus("anonymous");
+      } finally {
+        if (active) setIsHydrated(true);
+      }
     }
 
-    hydrate();
-    return () => {
-      active = false;
-    };
+    init();
+    return () => { active = false; };
   }, []);
 
   // APP LOCK: Handle Foreground Lock
@@ -233,7 +264,8 @@ export function AppSessionProvider({
               ...(user || {}),
               ...freshUser,
               shopStatus: freshUser.shop_status || freshUser.shopStatus || 'none',
-              onboardingStatus: freshUser.onboarding_status || freshUser.onboardingStatus || 'none'
+              onboardingStatus: freshUser.onboarding_status || freshUser.onboardingStatus || 'none',
+              is_security_verified: freshUser.is_security_verified
           } as AppUser;
 
           const nextNextStep = ('next_step' in freshUser) ? freshUser.next_step : (freshUser.role !== user?.role ? null : nextStep);
@@ -260,12 +292,6 @@ export function AppSessionProvider({
     }
   };
 
-  // Sync shop status automatically when role changes or upon login
-  useEffect(() => {
-    if (status === "authenticated" && user?.role === "shop_owner" && !user.shopStatus && !isSyncingShop) {
-      refreshShopStatus();
-    }
-  }, [status, user?.role, user?.shopStatus, isSyncingShop]);
 
   const handleSignOut = async () => {
     try {
@@ -374,7 +400,8 @@ export function AppSessionProvider({
         const user = {
             ...rawUser,
             shopStatus: (rawUser as any).shop_status || rawUser.shopStatus,
-            onboardingStatus: (rawUser as any).onboarding_status || (rawUser as any).onboardingStatus
+            onboardingStatus: (rawUser as any).onboarding_status || (rawUser as any).onboardingStatus,
+            is_security_verified: (rawUser as any).is_security_verified
         };
 
         setUser(user);
@@ -390,6 +417,14 @@ export function AppSessionProvider({
             preferredRole: user.role as AppRole,
             nextStep: resNextStep || null,
           });
+
+          // PERSIST PHONE FOR QUICK LOGIN
+          if (user.phone) {
+              await SecureStore.setItemAsync(LAST_PHONE_KEY, user.phone);
+          }
+          if (user.name) {
+              await SecureStore.setItemAsync(LAST_NAME_KEY, user.name);
+          }
       },
       signOut: handleSignOut,
       async updateUser(partialUser) {
@@ -449,9 +484,25 @@ export function AppSessionProvider({
         <AppRouteGuard />
         <PinEntryModal 
           visible={isLocked}
-          onSuccess={() => {
-            setLocked(false);
-            setIsVerified(true);
+          onSuccess={async (pin) => {
+            if (pin) {
+              // PIN Login (Remote Verify)
+              const deviceId = useSecurityStore.getState().getDeviceId();
+              const response = await authApi.loginPin(user?.phone || '', pin, deviceId);
+              if (response.status === 1) {
+                  setLocked(false);
+                  setIsVerified(true);
+              } else {
+                  throw new Error(response.message || 'Invalid PIN');
+              }
+            } else {
+                // Biometrics already verified internally in the Modal
+                // but we should ideally also verify device trust if we want maximum security.
+                // For now, if authenticateBiometrics succeeded (which is called inside mode='verify'),
+                // we treat it as unlocked.
+                setLocked(false);
+                setIsVerified(true);
+            }
           }}
           title="Unlock ThanniGo"
           mode="verify"
@@ -499,245 +550,156 @@ export function AppRouteGuard() {
   const guardGenerationRef = React.useRef<number>(0);
   const isNavigatingRef = React.useRef<boolean>(false);
   const lastLoggedSyncPauseRef = React.useRef<boolean>(false);
+
+  // NATIVE BACK BUTTON HARDENING
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+
+    const onBackPress = () => {
+      const firstSegment = segments[0] ?? "";
+      const isAuthStack = firstSegment === "auth" || firstSegment === "onboarding";
+      
+      // Rule 1: NEVER allow backing into Auth/Onboarding if authenticated
+      // (This prevents the 'flicker' where the OS pops the stack to OTP, then our guard pushes us back)
+      if (status === "authenticated" && isAuthStack) {
+          if (__DEV__) console.log('🛡️ [BackHandler] Blocked: Attempting to back into Auth stack while authenticated.');
+          return true; // Intercept: Do nothing
+      }
+
+      // Rule 2: If on a Dashboard Home (Shop, Admin, etc.) and pressing back,
+      // decide whether to exit app or do nothing.
+      if (status === "authenticated" && !isAuthStack && segments.length <= 1) {
+          return false; // Let OS handle app minimize/exit
+      }
+
+      return false; 
+    };
+
+    const backSubscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => backSubscription.remove();
+  }, [status, segments]);
   
   useEffect(() => {
-    // Proactive Pause: If we are hydrating or if we are a shop owner who hasn't synced their shop status yet,
-    // we MUST pause the guard to avoid incorrect redirections (like a false-positive Location check).
-    const isShopOwner = user?.role === 'shop_owner';
-    const needsShopSync = isShopOwner && user.shopStatus === undefined;
-    const isPaused = !isHydrated || (isSyncingShop && isShopOwner) || needsShopSync;
-
-    if (isPaused) {
-        if (__DEV__ && (isSyncingShop || needsShopSync) && !lastLoggedSyncPauseRef.current) {
-            console.log('🛡️ [Guard] Paused (Sync/Hydration in progress)');
-            lastLoggedSyncPauseRef.current = true;
-        }
-        return;
+    // 1. BOOT GATE: Guard must wait until hydration is complete and status is set
+    if (!isHydrated || status === 'loading') {
+       if (__DEV__ && !lastLoggedSyncPauseRef.current) {
+          console.log('🛡️ [Guard] Paused (Waiting for Hydration/Auth State)');
+          lastLoggedSyncPauseRef.current = true;
+       }
+       return;
     }
-    
-    // Reset log ref when we are no longer paused
     lastLoggedSyncPauseRef.current = false;
 
     const firstSegment = segments[0] ?? "";
     const currentPath = pathname || "";
-    const isAuthRoute = firstSegment === "auth";
-    const isOnboardingRoute = firstSegment === "onboarding";
+    const securityEnabled = isPinEnabled || isBiometricsEnabled;
     
-    // Expand security routes to include ANY location picker or permission screen
-    const isSecurityRoute = firstSegment === "location" || 
-                            firstSegment === "enable-notifications" ||
-                            (firstSegment as string) === "security-setup" ||
-                            currentPath.includes("location");
+    // 2. PRIORITY OVERRIDE (Security / Auth / Safe Zones)
+    const isAuthRoute = (firstSegment === "auth");
+    const isSecurityRoute = (firstSegment === "security-setup" || 
+                            firstSegment === "location" || 
+                            currentPath.includes("location") ||
+                            currentPath.includes("quick-login"));
+    
+    // SAFE ZONES: Accessible to any authenticated user to prevent loops
+    const isSafeZone = currentPath.includes("settings") || 
+                       currentPath.includes("profile") || 
+                         currentPath.includes("notifications") ||
+                         currentPath.includes("privacy-security");
 
-    const isPriorityRoute = isSecurityRoute || isAuthRoute;
-
-    const isAdminRoute = segments[0] === 'admin';
-    const isDeliveryRoute = segments[0] === 'delivery';
-
-    if (__DEV__ && isAdminRoute) {
-      console.log(`🛡️ [Guard-Admin] Status: ${status}, Path: /${segments.join('/')}, UID: ${user?.id || 'none'}`);
+    if (isSecurityRoute || isSafeZone) {
+      if (__DEV__) console.log(`🛡️ [Guard] Safe Zone/Priority: ${currentPath}. Skipping enforce.`);
+      return;
     }
 
+    // 3. ANONYMOUS GUARD
     if (status === "anonymous") {
-      if (!isAuthRoute && !isOnboardingRoute) {
-        router.replace("/auth");
+      if (!isAuthRoute && firstSegment !== "onboarding") {
+          console.log('🛡️ [Guard] Anonymous -> Redirecting to Auth');
+          router.replace("/auth");
       }
       return;
     }
 
     if (!user) return;
-    
-    // Increment generation ID to identify this specific useEffect run
-    const currentGeneration = ++guardGenerationRef.current;
 
-    const runChecklist = async () => {
-      try {
-        // 0. Pre-check: If a newer generation has already started, abort this one immediately
-        if (currentGeneration < guardGenerationRef.current) return;
-
-        let hasRedirected = false;
-
-        const navigate = (target: string, reason: string) => {
-          if (hasRedirected || currentGeneration < guardGenerationRef.current || isNavigatingRef.current) return;
-          
-          // Production Safe Normalization: strip groups like (tabs) or (auth)
-          const norm = (p: string) => p.split('/').filter(s => s && !s.startsWith('(')).join('/');
-          const currentNorm = norm(pathname || "");
-          const targetNorm = norm(target);
-
-          if (currentNorm === targetNorm) {
-            if (__DEV__) console.log(`🛡️ [Guard] Already at ${targetNorm}. Skipping.`);
-            hasRedirected = true;
-            return;
-          }
-          
-          console.log(`🛡️ [Guard] Redirect: ${currentNorm} -> ${targetNorm} (${reason})`);
-          hasRedirected = true;
-          isNavigatingRef.current = true;
-          router.replace(target as any);
-          
-          setTimeout(() => {
-            isNavigatingRef.current = false;
-          }, 500); // 500ms safety lock
-        };
-
-        // 1. Mandatory Security Check
-        // Force PIN setup if authenticated but no PIN exists
-        if (status === 'authenticated' && !isPinEnabled && (firstSegment as string) !== 'security-setup') {
-          navigate('/security-setup', 'Mandatory security setup required');
-          return;
-        }
-
-        const securityEnabled = isPinEnabled || isBiometricsEnabled;
-
-        // 1.5 Biometrics & PIN App Lock
-        // Safety: Never lock while at the security setup screen
-        if (securityEnabled && !isVerified && (firstSegment as string) !== 'security-setup') {
-          // If biometrics enabled, try them first
-          if (isBiometricsEnabled) {
-            const success = await authenticateBiometrics();
-            if (currentGeneration < guardGenerationRef.current) return;
-            
-            if (success) {
-               setIsVerified(true);
-            } else if (isPinEnabled && !isLocked) {
-               // Fallback to PIN gate if biometrics failed/cancelled
-               setLocked(true);
-            }
-          } else if (isPinEnabled && !isLocked) {
-            // Only PIN enabled
-            setLocked(true);
-          }
-        }
-
-        // 2. Location (Mandatory only for Customers & Shop Owners Updating Addresses)
-        // Shop owners bypass this for general dashboard usage but must trigger it for profile/onboarding
-        const isLocationTargetRoute = currentPath.startsWith("/shop/profile") || 
-                                      currentPath.includes("onboarding") || 
-                                      currentPath.includes("address");
-
-        const needsMandatoryLocation = user.role === "customer" || 
-                                       (user.role === "shop_owner" && isLocationTargetRoute);
+    // 4. SECURITY BLOCKING (Banking Rule)
+    // If security is enabled but we aren't verified yet, HALT navigation AND trigger verification
+    // EXCEPTION: Allow escaping Auth routes so we don't get stuck on the OTP screen.
+    if (securityEnabled && !isVerified && !isAuthRoute) {
+        if (__DEV__) console.log('🛡️ [Guard] Gated: Awaiting Security verification');
         
-        if (needsMandatoryLocation && !isSecurityRoute && !isLocationVerified) {
-          const { status: locStatus } = await Location.getForegroundPermissionsAsync();
-          if (currentGeneration < guardGenerationRef.current) return; // ABA check
-          
-          if (locStatus === "granted") {
-            setIsLocationVerified(true);
-          } else {
-            navigate("/location", "Location required for address update");
-            return;
-          }
-        }
-
-        // 3. Destinations
-        let idealRoute: any = "/(tabs)";
-        if (user.onboarding_completed) {
-          if (user.role === "shop_owner") {
-            if (user.shopStatus === "active") {
-                idealRoute = "/shop";
-                if (currentPath.startsWith("/shop") || isPriorityRoute) return;
-            }
-            else if (user.shopStatus === "rejected") idealRoute = "/onboarding/shop/rejected";
-            else idealRoute = "/onboarding/shop/waitlist";
-          } else if (user.role === "admin") idealRoute = "/admin";
-          else if (user.role === "delivery") {
-              idealRoute = "/delivery";
-              if (currentPath.startsWith("/delivery") || isPriorityRoute) return;
-          }
-          else idealRoute = "/(tabs)";
-        } else {
-          const backendNextStep = nextStep as any;
-          if (user.role === "shop_owner") {
-            const isOnboardingSubScreen = pathname.startsWith("/onboarding/shop/") && pathname !== "/onboarding/shop/waitlist";
-
-            if (user.shopStatus === "active") idealRoute = "/shop";
-            else if (user.shopStatus === "rejected") idealRoute = "/onboarding/shop/rejected";
-            else if ((user.shopStatus === "pending_review" || user.shopStatus === "under_review") && user.onboardingStatus !== 'in_progress') {
-                idealRoute = isOnboardingSubScreen ? pathname : "/onboarding/shop/waitlist";
-            }
-            else if (user.shopStatus === "in_progress" || user.onboardingStatus === 'in_progress') {
-              idealRoute = isOnboardingSubScreen ? pathname : "/onboarding/shop";
+        // AUTO-TRIGGER: Activate verification if not already locked
+        if (!isLocked) {
+            if (isBiometricsEnabled) {
+                authenticateBiometrics();
             } else {
-              idealRoute = backendNextStep?.screen_route || "/onboarding/shop";
+                setLocked(true);
             }
-          } else if (user.role === "admin") {
-            idealRoute = "/admin";
-            const currentBase = segments[0] as string;
-            if (isAdminRoute || isDeliveryRoute || currentBase === 'security-setup') {
-              if (__DEV__) console.log(`🛡️ [Guard] Already in ${currentBase} stack. Early exit.`);
-              return; // Correct role in specialized route
-            }
-          } else if (user.role === "delivery") {
-            idealRoute = "/delivery";
-          } else if (backendNextStep?.screen_route) {
-            idealRoute = backendNextStep.screen_route;
-          } else {
-            idealRoute = user.role === "customer" ? "/onboarding/customer" : "/auth/role";
-          }
         }
+        return;
+    }
 
-        // Role check & Enforce flow
+    // 5. DETERMINISTIC ZONE RESOLVER
+    const resolveTargetRoute = (): string => {
+        // PRIORITY: Professional roles bypass onboarding flows
+        if (user.role === 'admin') return "/admin";
+        if (user.role === 'delivery') return "/delivery";
+
+        // A. ONBOARDING REQUIRED
         if (!user.onboarding_completed) {
-          const routeIsShop = idealRoute.includes("/shop/");
-          const routeIsCustomer = idealRoute.includes("/customer/");
-          if ((user.role === "customer" && routeIsShop) || (user.role === "shop_owner" && routeIsCustomer)) {
-            idealRoute = user.role === "customer" ? "/onboarding/customer" : "/onboarding/shop";
-          }
-        }
-
-        // Execute
-        if (isAuthRoute) {
-          navigate(idealRoute, "Escaping Auth");
-        } else if (!user.onboarding_completed && !isPriorityRoute) {
-          const currentPath = pathname || "";
-          const isCurrentlyInExpectedFlow = (user.role === 'customer' && currentPath.startsWith('/onboarding/customer')) ||
-                                             (user.role === 'shop_owner' && currentPath.startsWith('/onboarding/shop')) ||
-                                             (user.role === 'admin' && currentPath.startsWith('/admin')) ||
-                                             (user.role === 'delivery' && currentPath.startsWith('/delivery'));
-
-          if (!isCurrentlyInExpectedFlow) {
-              navigate(idealRoute, "Enforcing Onboarding");
-          }
-        } else if (pathname === "/" || pathname === "/auth") {
-          navigate(idealRoute, "Root Redirection");
-        } else {
-            // Contextual Guard: If we are in the correct stack, don't force index
-            const currentPath = pathname || "";
-            const isCurrentlyInIdealStack = (idealRoute === "/shop" && currentPath.startsWith("/shop")) ||
-                                              (idealRoute === "/delivery" && currentPath.startsWith("/delivery")) ||
-                                              (idealRoute === "/admin" && currentPath.startsWith("/admin")) ||
-                                              (idealRoute.includes("onboarding") && currentPath.includes("onboarding")) ||
-                                              (idealRoute === "/(tabs)" && !["admin", "shop", "delivery", "onboarding", "auth"].includes(firstSegment));
-            
-            if (currentPath === idealRoute || isCurrentlyInIdealStack) {
-              if (__DEV__) console.log(`🛡️ [Guard] Already at target: ${currentPath}. Skipping redundant redirect.`);
-              return;
+            if (user.role === 'customer') return "/onboarding/customer";
+            if (user.role === 'shop_owner') {
+                if (user.shopStatus === 'pending_review' || user.shopStatus === 'under_review') return "/onboarding/shop/waitlist";
+                if (user.shopStatus === 'rejected') return "/onboarding/shop/rejected";
+                return "/onboarding/shop"; // Step-by-step
             }
-
-            if (!isCurrentlyInIdealStack && !isPriorityRoute) {
-                navigate(idealRoute, "Stack Correction");
-            }
+            return "/auth/role";
         }
-      } catch (error) {
-        console.error("🛡️ [Guard] Critical Navigation Error:", error);
-        
-        // Fail-safe: Only redirect if we are NOT already in a safe dashboard or auth screen
-        const currentPath = pathname || "";
-        const isSafePlace = currentPath.startsWith("/admin") || 
-                            currentPath.startsWith("/shop") || 
-                            currentPath.startsWith("/delivery") || 
-                            currentPath.startsWith("/auth");
 
-        if (!isSafePlace) {
-           router.replace("/(tabs)" as any);
+        // B. FULLY REGISTERED -> Map to Dashboard Home
+        if (user.role === 'shop_owner') {
+            if (user.shopStatus === 'active') return "/shop";
+            return "/onboarding/shop/waitlist";
         }
-      }
+
+        return "/(tabs)"; // Default Customer Home
     };
 
-    runChecklist();
-  }, [isHydrated, pathname, segments, status, user, isVerified, isLocked, isPinEnabled, isBiometricsEnabled, isSyncingShop]);
+    const targetRoute = resolveTargetRoute();
+    
+    // 6. EXECUTION & STACK PROTECTION
+    const norm = (p: string) => p.split('/').filter(s => s && !s.startsWith('(')).join('/');
+    const currentNorm = norm(currentPath);
+    const targetNorm = norm(targetRoute);
+    
+    // ZONE CHECK: Is current path already within the correct stack?
+    const isInCorrectStack = (targetNorm === "shop" && (currentNorm.startsWith("shop") || currentNorm.startsWith("onboarding/shop"))) ||
+                             (targetNorm === "delivery" && currentNorm.startsWith("delivery")) ||
+                             (targetNorm === "admin" && currentNorm.startsWith("admin")) ||
+                             (targetNorm.startsWith("onboarding") && currentNorm.startsWith("onboarding")) ||
+                             (targetNorm === "" && !["admin", "shop", "delivery", "onboarding", "auth", "security-setup"].includes(firstSegment));
+
+    // SPECIAL: If we are on the absolute root '/', we MUST push to the targetRoute 
+    // to replace the Splash/Loading state, even if normalization says they are same.
+    const isAtRoot = currentPath === "/" || currentPath === "";
+
+    if ((currentNorm === targetNorm && !isAtRoot) || isInCorrectStack) {
+       // All good
+       return;
+    }
+
+    // 7. PERFORM NAVIGATION (Gated by Auth vs Stack Correction)
+    if (isAuthRoute) {
+        console.log(`🛡️ [Guard] Escaping Auth -> ${targetNorm}`);
+        router.replace(targetRoute as any);
+    } else if (!isNavigatingRef.current) {
+        console.log(`🛡️ [Guard] Stack Correction: ${currentNorm} -> ${targetNorm}`);
+        isNavigatingRef.current = true;
+        router.replace(targetRoute as any);
+        setTimeout(() => { isNavigatingRef.current = false; }, 800);
+    }
+  }, [isHydrated, status, pathname, segments, user, isVerified, isLocked]);
 
   return null;
 }

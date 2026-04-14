@@ -80,4 +80,43 @@ export const authApi = {
     const response = await apiClient.post<{ status: number; message: string; data: any }>('/auth/reset-role');
     return response.data;
   },
+
+  /**
+   * Login using PIN
+   */
+  loginPin: async (phone: string, pin: string, device_id: string): Promise<VerifyOtpResponse> => {
+    const response = await apiClient.post<VerifyOtpResponse>('/auth/login-pin', {
+      phone,
+      pin,
+      device_id
+    });
+    return response.data;
+  },
+
+  /**
+   * Login using Biometrics (Trusted Device)
+   */
+  loginBiometric: async (phone: string, device_id: string): Promise<VerifyOtpResponse> => {
+    const response = await apiClient.post<VerifyOtpResponse>('/auth/login-biometric', {
+      phone,
+      device_id
+    });
+    return response.data;
+  },
+
+  /**
+   * Enable/Update Account PIN
+   */
+  enablePin: async (pin: string): Promise<{ status: number; message: string }> => {
+    const response = await apiClient.post<{ status: number; message: string }>('/auth/enable-pin', { pin });
+    return response.data;
+  },
+
+  /**
+   * Trust this device for biometric login
+   */
+  enableBiometric: async (device_id: string): Promise<{ status: number; message: string }> => {
+    const response = await apiClient.post<{ status: number; message: string }>('/auth/enable-biometric', { device_id });
+    return response.data;
+  },
 };

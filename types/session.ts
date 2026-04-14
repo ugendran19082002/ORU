@@ -20,6 +20,7 @@ export type AppUser = {
   biometric_enabled?: boolean;
   security_pin_enabled?: boolean;
   security_pin?: string;
+  is_security_verified?: boolean;
 };
 
 export type NextStepData = {

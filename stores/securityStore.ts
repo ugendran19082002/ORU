@@ -1,7 +1,10 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import * as LocalAuthentication from 'expo-local-authentication';
+import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import { authApi } from '@/api/authApi';
 import { userApi } from '@/api/userApi';
 import type { AppUser } from '@/types/session';
 
@@ -17,14 +20,16 @@ type SecuritySettings = {
 
 type SecurityState = SecuritySettings & {
   initialize: () => Promise<void>;
-  setPin: (pin: string) => Promise<void>;
-  verifyPin: (pin: string) => Promise<boolean>;
+  enablePinRemote: (pin: string) => Promise<void>;
+  loginWithPin: (phone: string, pin: string) => Promise<any>;
+  loginWithBiometric: (phone: string) => Promise<any>;
+  enableBiometricRemote: () => Promise<void>;
   togglePin: (enabled: boolean) => Promise<void>;
   toggleBiometrics: (enabled: boolean) => Promise<void>;
   authenticateBiometrics: () => Promise<boolean>;
   setLocked: (locked: boolean) => void;
   setIsVerified: (verified: boolean) => void;
-  hasPin: () => Promise<boolean>;
+  getDeviceId: () => string;
   reset: () => Promise<void>;
   syncWithUser: (user: AppUser) => Promise<void>;
 };
@@ -40,11 +45,13 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
       const settingsStr = await SecureStore.getItemAsync(SECURITY_SETTINGS_KEY);
       if (settingsStr) {
         const settings = JSON.parse(settingsStr);
-        const pin = await SecureStore.getItemAsync(PIN_KEY);
+        const { isVerified } = get();
+        
         set({ 
           ...settings, 
-          isPinEnabled: !!pin && settings.isPinEnabled,
-          isLocked: !!pin && settings.isPinEnabled 
+          // Smart re-lock: If we are already verified in this session, stay unlocked.
+          // Otherwise, if any security is enabled, we start locked.
+          isLocked: isVerified ? false : (settings.isPinEnabled || settings.isBiometricsEnabled)
         });
       }
     } catch (error) {
@@ -65,6 +72,11 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
           updates.isBiometricsEnabled = user.biometric_enabled;
       }
 
+      if (user.is_security_verified) {
+          updates.isVerified = true;
+          updates.isLocked = false;
+      }
+
       const current = get();
       if (Object.keys(updates).length > 0) {
           set(updates);
@@ -80,51 +92,94 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
     }
   },
 
-  setPin: async (pin: string) => {
+  enablePinRemote: async (pin: string) => {
     try {
       // 1. Send to Backend to Hash and Store
-      await userApi.updateProfile({ security_pin: pin, security_pin_enabled: true });
+      await authApi.enablePin(pin);
 
-      // 2. Update Local State
+      // 2. Update Local State (Cache the fact that PIN is enabled)
       const settings = { ...get(), isPinEnabled: true };
       await SecureStore.setItemAsync(SECURITY_SETTINGS_KEY, JSON.stringify({
-        isPinEnabled: settings.isPinEnabled,
+        isPinEnabled: true,
         isBiometricsEnabled: settings.isBiometricsEnabled,
       }));
       set({ isPinEnabled: true });
     } catch (error) {
-      console.error('[SecurityStore] setPin failed:', error);
+      console.error('[SecurityStore] enablePinRemote failed:', error);
       throw error;
     }
   },
 
-  verifyPin: async (pin: string) => {
+  loginWithPin: async (phone: string, pin: string) => {
     try {
-      const response = await userApi.verifyPin(pin);
-      if (response.verified) {
-        set({ isLocked: false, isVerified: true });
-        return true;
+      const deviceId = get().getDeviceId();
+      const response = await authApi.loginPin(phone, pin, deviceId);
+      
+      if (response.status === 1) {
+          set({ isLocked: false, isVerified: true, isPinEnabled: true });
+          return response.data;
       }
-      return false;
+      throw new Error(response.message || 'PIN Login Failed');
     } catch (error) {
-      console.error('[SecurityStore] verifyPin failed:', error);
-      return false;
+      console.error('[SecurityStore] loginWithPin failed:', error);
+      throw error;
+    }
+  },
+
+  enableBiometricRemote: async () => {
+    try {
+      const deviceId = get().getDeviceId();
+      await authApi.enableBiometric(deviceId);
+      
+      const settings = { ...get(), isBiometricsEnabled: true };
+      await SecureStore.setItemAsync(SECURITY_SETTINGS_KEY, JSON.stringify({
+        isPinEnabled: settings.isPinEnabled,
+        isBiometricsEnabled: true,
+      }));
+      set({ isBiometricsEnabled: true });
+    } catch (error) {
+      console.error('[SecurityStore] enableBiometricRemote failed:', error);
+      throw error;
+    }
+  },
+
+  loginWithBiometric: async (phone: string) => {
+    try {
+      // 1. Local hardware auth first
+      const hardwareAuth = await get().authenticateBiometrics();
+      if (!hardwareAuth) throw new Error('Biometric authentication cancelled');
+
+      // 2. Remote device trust check
+      const deviceId = get().getDeviceId();
+      const response = await authApi.loginBiometric(phone, deviceId);
+
+      if (response.status === 1) {
+          set({ isLocked: false, isVerified: true, isBiometricsEnabled: true });
+          return response.data;
+      }
+      throw new Error(response.message || 'Biometric Login Failed');
+    } catch (error) {
+       console.error('[SecurityStore] loginWithBiometric failed:', error);
+       throw error;
     }
   },
 
   togglePin: async (enabled: boolean) => {
     try {
-      const settings = { ...get(), isPinEnabled: enabled };
+      if (enabled) {
+          console.warn('Use enablePinRemote(pin) to enable PIN');
+          return;
+      }
+      
+      const settings = { ...get(), isPinEnabled: false };
       await SecureStore.setItemAsync(SECURITY_SETTINGS_KEY, JSON.stringify({
-        isPinEnabled: settings.isPinEnabled,
+        isPinEnabled: false,
         isBiometricsEnabled: settings.isBiometricsEnabled,
       }));
-      set({ isPinEnabled: enabled });
+      set({ isPinEnabled: false });
 
-      // If turning off, sync to backend to clear hash
-      if (!enabled) {
-          await userApi.updateProfile({ security_pin_enabled: false });
-      }
+      // SYNC TO BACKEND
+      await userApi.updateProfile({ security_pin_enabled: false });
     } catch (error) {
       console.error('[SecurityStore] togglePin failed:', error);
     }
@@ -132,6 +187,11 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
 
   toggleBiometrics: async (enabled: boolean) => {
     try {
+      if (enabled) {
+          // Mandatory handshake with backend to trust THIS device
+          await get().enableBiometricRemote();
+      }
+
       const settings = { ...get(), isBiometricsEnabled: enabled };
       await SecureStore.setItemAsync(SECURITY_SETTINGS_KEY, JSON.stringify({
         isPinEnabled: settings.isPinEnabled,
@@ -139,10 +199,11 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
       }));
       set({ isBiometricsEnabled: enabled });
 
-      // SYNC TO BACKEND
+      // SYNC TO BACKEND (Profile level)
       await userApi.updateProfile({ biometric_enabled: enabled });
     } catch (error) {
       console.error('[SecurityStore] toggleBiometrics failed:', error);
+      throw error;
     }
   },
 
@@ -176,9 +237,11 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
 
   setIsVerified: (verified: boolean) => set({ isVerified: verified }),
 
-  hasPin: async () => {
-    // This is mostly checked via generic isPinEnabled now, but keeping for compatibility
-    return get().isPinEnabled;
+  getDeviceId: () => {
+    // Produce a stable device ID
+    const installationId = Constants.installationId || 'unknown';
+    const model = Device.modelName || 'device';
+    return `${Platform.OS}-${model}-${installationId}`.toLowerCase();
   },
 
   reset: async () => {
