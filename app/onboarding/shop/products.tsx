@@ -47,7 +47,8 @@ export default function ShopProductsScreen() {
             setProducts(catStep.metadata.products.map((p: any) => ({
               ...p,
               price: String(p.price || ''),
-              stock_quantity: String(p.stock_quantity || '')
+              stock_quantity: String(p.stock_quantity || ''),
+              deposit_amount: String(p.deposit_amount || '0')
             })));
           }
         }
@@ -68,6 +69,7 @@ export default function ShopProductsScreen() {
       name: subcat.name_en, // Default name from subcat
       price: '40',
       stock_quantity: '50',
+      deposit_amount: '150',
       is_water_can: !!subcat.is_water_can
     }]);
   };
@@ -102,6 +104,7 @@ export default function ShopProductsScreen() {
             name: p.name,
             price: isFinite(price) ? price : 0,
             stock_quantity: isFinite(stock) ? stock : 0,
+            deposit_amount: parseFloat(p.deposit_amount) || 0,
             type: p.is_water_can ? 'WATER_CAN' : 'NORMAL'
           };
         })
@@ -205,7 +208,25 @@ export default function ShopProductsScreen() {
                                                     onChangeText={(v) => updateProductData(prod.subcategory_id, 'stock_quantity', v)}
                                                 />
                                             </View>
+                                            {prod.is_water_can && (
+                                                <View style={styles.prodInputWrap}>
+                                                    <Text style={styles.prodInputLabel}>Deposit (₹)</Text>
+                                                    <TextInput 
+                                                        style={styles.prodInput} 
+                                                        keyboardType="number-pad" 
+                                                        value={prod.deposit_amount}
+                                                        onChangeText={(v) => updateProductData(prod.subcategory_id, 'deposit_amount', v)}
+                                                    />
+                                                </View>
+                                            )}
                                         </View>
+                                        
+                                        {parseFloat(prod.deposit_amount) > 0 && (
+                                            <View style={styles.depositSummary}>
+                                                <Text style={styles.depositSummaryLabel}>Refundable Deposit:</Text>
+                                                <Text style={styles.depositSummaryValue}>₹{prod.deposit_amount}</Text>
+                                            </View>
+                                        )}
                                     </View>
                                 ))}
                             </View>
@@ -295,6 +316,18 @@ const styles = StyleSheet.create({
     fontWeight: '700', 
     color: '#1e293b' 
   },
+  depositSummary: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginTop: 16, 
+    paddingTop: 12, 
+    borderTopWidth: 1, 
+    borderTopColor: '#e2e8f0', 
+    borderStyle: 'dashed' 
+  },
+  depositSummaryLabel: { fontSize: 13, fontWeight: '700', color: '#64748b' },
+  depositSummaryValue: { fontSize: 15, fontWeight: '800', color: '#006878' },
   rangeHint: { fontSize: 11, color: '#94a3b8', fontWeight: '600', marginTop: 8 },
   footer: { padding: 32, backgroundColor: 'white' },
   cta: {

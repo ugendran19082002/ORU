@@ -38,6 +38,7 @@ export default function ShopInventoryScreen() {
   const [selectedSubchainId, setSelectedSubchainId] = useState<number | null>(null);
   const [newPrice, setNewPrice] = useState('');
   const [newStock, setNewStock] = useState('0');
+  const [newDeposit, setNewDeposit] = useState('0');
   const [newImageUrl, setNewImageUrl] = useState<string | null>(null);
   const [newIsAvailable, setNewIsAvailable] = useState(true);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -63,6 +64,7 @@ export default function ShopInventoryScreen() {
           name: p.name,
           price: String(p.price || ''),
           stock_quantity: String(p.stock_quantity || ''),
+          deposit_amount: String(p.deposit_amount || '0'),
           image_url: p.image_url || null,
           is_available: p.is_available !== undefined ? p.is_available : true,
           type: p.type || "water",
@@ -75,6 +77,7 @@ export default function ShopInventoryScreen() {
             ...p,
             price: String(p.price || ''),
             stock_quantity: String(p.stock_quantity || ''),
+            deposit_amount: String(p.deposit_amount || '0'),
             image_url: p.image_url || null,
             is_available: p.is_available !== undefined ? p.is_available : true,
             type: p.type || "water"
@@ -175,6 +178,7 @@ export default function ShopInventoryScreen() {
     setSelectedSubchainId(prod.subcategory_id);
     setNewPrice(String(prod.price || '40'));
     setNewStock(String(prod.stock_quantity || '0'));
+    setNewDeposit(String(prod.deposit_amount || '0'));
     setNewImageUrl(prod.image_url || null);
     setNewIsAvailable(prod.is_available !== false);
     setIsEditing(true);
@@ -200,6 +204,7 @@ export default function ShopInventoryScreen() {
       name: foundName,
       price: newPrice,
       stock_quantity: newStock,
+      deposit_amount: newDeposit,
       image_url: newImageUrl,
       is_available: newIsAvailable,
       type: categories.find(c => c.id === selectedCategoryId)?.Subcategories?.find((s: any) => s.id === selectedSubchainId)?.is_water_can ? 'WATER_CAN' : 'NORMAL',
@@ -222,6 +227,7 @@ export default function ShopInventoryScreen() {
     setModalStep(0);
     setNewPrice('40'); // Senseful default to enable button
     setNewStock('100'); // Senseful default
+    setNewDeposit('150'); // Senseful default for cans
     setNewImageUrl(null);
     setNewIsAvailable(true);
   };
@@ -237,6 +243,7 @@ export default function ShopInventoryScreen() {
           name: p.name,
           price: parseFloat(p.price) || 0,
           stock_quantity: parseInt(p.stock_quantity) || 0,
+          deposit_amount: parseFloat(p.deposit_amount) || 0,
           image_url: p.image_url || null,
           is_available: p.is_available !== false,
           type: p.is_water_can ? 'WATER_CAN' : 'NORMAL'
@@ -368,6 +375,13 @@ export default function ShopInventoryScreen() {
                           />
                         </View>
                       </View>
+
+                      {parseFloat(prod.deposit_amount) > 0 && (
+                        <View style={styles.depositRowList}>
+                          <Text style={styles.depositLabelList}>Refundable Deposit:</Text>
+                          <Text style={styles.depositValueList}>₹{prod.deposit_amount}</Text>
+                        </View>
+                      )}
                     </View>
                   );
                 })
@@ -436,6 +450,7 @@ export default function ShopInventoryScreen() {
                           style={[styles.masterCatRow, selectedSubchainId === sub.id && styles.masterCatRowActive]}
                           onPress={() => {
                             setSelectedSubchainId(sub.id);
+                            setNewDeposit(sub.is_water_can ? '150' : '0');
                             setModalStep(2);
                           }}
                         >
@@ -513,6 +528,29 @@ export default function ShopInventoryScreen() {
                       </View>
                     </View>
 
+                    {(() => {
+                      const category = categories.find(c => c.id === selectedCategoryId);
+                      const subcat = category?.Subcategories?.find((s: any) => s.id === (isEditing ? editingSubchainId : selectedSubchainId));
+                      if (subcat?.is_water_can) {
+                        return (
+                          <View style={{ marginTop: 20 }}>
+                            <Text style={styles.inputLabel}>Deposit Amount (₹)</Text>
+                            <View style={styles.modalPriceInputWrap}>
+                                <Text style={styles.rupeeIcon}>₹</Text>
+                                <TextInput 
+                                  style={styles.modalPriceInput}
+                                  value={newDeposit}
+                                  onChangeText={setNewDeposit}
+                                  keyboardType="number-pad"
+                                  placeholder="150"
+                                />
+                            </View>
+                          </View>
+                        );
+                      }
+                      return null;
+                    })()}
+
                     <TouchableOpacity 
                       style={[styles.submitBtn, (!selectedSubchainId || !newPrice) && { backgroundColor: '#e0e2e8', shadowOpacity: 0 }]} 
                       onPress={handleAddProduct}
@@ -575,6 +613,10 @@ const styles = StyleSheet.create({
   stockInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f1f4f9', borderRadius: 10, paddingHorizontal: 12, height: 42 },
   stockInput: { flex: 1, fontSize: 14, fontWeight: '800', color: '#181c20' },
   lowStockBorder: { borderWidth: 1.5, borderColor: '#ba1a1a', backgroundColor: '#fff5f4' },
+
+  depositRowList: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f1f4f9', borderStyle: 'dotted' },
+  depositLabelList: { fontSize: 12, fontWeight: '700', color: '#707881' },
+  depositValueList: { fontSize: 14, fontWeight: '800', color: '#005d90' },
 
   emptyCard: { backgroundColor: 'white', borderRadius: 20, padding: 30, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2, borderWidth: 1, borderColor: '#e0e2e8', borderStyle: 'dashed' },
   emptyText: { textAlign: 'center', color: '#707881', marginTop: 10, lineHeight: 20, fontWeight: '500' },
