@@ -109,7 +109,9 @@ export default function AdminLayout() {
 
       {/* MAIN CONTENT AREA */}
       <View style={styles.mainContent}>
-        <Slot />
+        <View style={styles.contentWrapper}>
+          <Slot />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -223,5 +225,12 @@ const styles = StyleSheet.create({
 
   mainContent: {
     flex: 1,
+    backgroundColor: '#f1f4f9',
+  },
+  contentWrapper: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 1600, // Capped for ultra-wide screens
+    alignSelf: 'center',
   },
 });

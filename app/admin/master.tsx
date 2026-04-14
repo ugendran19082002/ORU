@@ -15,6 +15,8 @@ interface Category {
   id: number;
   name_en: string;
   name_ta: string;
+  image_url?: string;
+  is_active: boolean;
   sort_order: number;
   Subcategories?: Subcategory[];
 }
@@ -24,6 +26,7 @@ interface Subcategory {
   category_id: number;
   name_en: string;
   name_ta: string;
+  is_active: boolean;
   is_water_can: boolean;
   sort_order: number;
 }
@@ -38,6 +41,7 @@ export default function MasterMenuScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [expandedCat, setExpandedCat] = useState<number | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   // Modals
   const [catModalVisible, setCatModalVisible] = useState(false);
@@ -56,8 +60,8 @@ export default function MasterMenuScreen() {
   const fetchMasterData = useCallback(async () => {
     try {
       setLoading(true);
-      // We'll use the system API since it already returns the tree
-      const res = await apiClient.get('/system/categories');
+      // Use the admin endpoint to see ALL categories including archived
+      const res = await apiClient.get('/admin/categories');
       if (res.data.status === 1) {
         setCategories(res.data.data);
       }
@@ -78,7 +82,35 @@ export default function MasterMenuScreen() {
     return null;
   }
 
-  // --- Category Handlers ---
+   const toggleCategoryActive = async (cat: Category) => {
+      try {
+        const nextActive = !cat.is_active;
+        const res = await (nextActive 
+          ? apiClient.put(`/admin/categories/${cat.id}`, { is_active: true })
+          : apiClient.delete(`/admin/categories/${cat.id}`) // DELETE is soft-delete archiving
+        );
+
+        if (res.data.status === 1) {
+          Toast.show({ type: 'success', text1: nextActive ? 'Restored' : 'Archived' });
+          fetchMasterData();
+        }
+      } catch (e) { Toast.show({ type: 'error', text1: 'Operation failed' }); }
+   };
+
+   const toggleSubcategoryActive = async (sub: Subcategory) => {
+      try {
+        const nextActive = !sub.is_active;
+        const res = await (nextActive 
+          ? apiClient.put(`/admin/subcategories/${sub.id}`, { is_active: true })
+          : apiClient.delete(`/admin/subcategories/${sub.id}`)
+        );
+
+        if (res.data.status === 1) {
+          Toast.show({ type: 'success', text1: nextActive ? 'Restored' : 'Archived' });
+          fetchMasterData();
+        }
+      } catch (e) { Toast.show({ type: 'error', text1: 'Operation failed' }); }
+   };
   const handleAddCat = () => {
     setEditingCat(null);
     setCatNameEn('');
@@ -188,35 +220,58 @@ export default function MasterMenuScreen() {
       <View style={[styles.header, isDesktop && { paddingHorizontal: 40, height: 100 }]}>
         <View>
           <Text style={[styles.title, isDesktop && { fontSize: 32 }]}>Master Menu</Text>
-          <Text style={styles.subtitle}>Manage global categories and product hierarchy</Text>
+          <Text style={[styles.subtitle, { maxWidth: isDesktop ? 'auto' : 200 }]}>Manage global categories and product hierarchy</Text>
         </View>
         <TouchableOpacity style={styles.addBtn} onPress={handleAddCat} activeOpacity={0.8}>
            <LinearGradient colors={['#005d90', '#0077b6']} style={styles.addBtnGrad} start={{x:0,y:0}} end={{x:1,y:0}}>
               <Ionicons name="add" size={20} color="white" />
-              <Text style={styles.addBtnText}>New Category</Text>
+              <Text style={styles.addBtnText}>New</Text>
            </LinearGradient>
         </TouchableOpacity>
       </View>
 
+      <View style={[styles.filterRow, isDesktop && { paddingHorizontal: 40, alignSelf: 'center', maxWidth: 1200, width: '100%' }]}>
+         <TouchableOpacity 
+            style={[styles.filterBtn, showArchived && styles.filterBtnActive]} 
+            onPress={() => setShowArchived(!showArchived)}
+         >
+            <Ionicons name={showArchived ? "eye-outline" : "eye-off-outline"} size={16} color={showArchived ? "white" : "#64748b"} />
+            <Text style={[styles.filterText, showArchived && { color: 'white' }]}>
+               {showArchived ? "Hide Archived" : "Show Archived"}
+            </Text>
+         </TouchableOpacity>
+      </View>
+
       <ScrollView 
-        contentContainerStyle={[styles.scroll, isDesktop && { paddingHorizontal: width * 0.1 }]}
+        contentContainerStyle={[styles.scroll, isDesktop && { paddingHorizontal: '5%', maxWidth: 1200, alignSelf: 'center', width: '100%' }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchMasterData(); }} />}
       >
         {loading && !refreshing ? (
           <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 100 }} />
-        ) : categories.map((cat) => (
-          <View key={cat.id} style={styles.catCard}>
+        ) : categories
+            .filter(cat => showArchived || cat.is_active)
+            .map((cat) => (
+          <View key={cat.id} style={[styles.catCard, !cat.is_active && { opacity: 0.75 }]}>
             <TouchableOpacity 
               activeOpacity={0.7}
               style={styles.catHeader} 
               onPress={() => setExpandedCat(expandedCat === cat.id ? null : cat.id)}
             >
               <View style={styles.catInfo}>
-                <View style={styles.chevronWrap}>
-                  <Ionicons name={expandedCat === cat.id ? "chevron-down" : "chevron-forward"} size={18} color="#005d90" />
+                <View style={[styles.chevronWrap, !cat.is_active && { backgroundColor: '#f1f5f9' }]}>
+                  <Ionicons name={expandedCat === cat.id ? "chevron-down" : "chevron-forward"} size={18} color={cat.is_active ? "#005d90" : "#94a3b8"} />
                 </View>
-                <View>
-                  <Text style={styles.catName}>{cat.name_en}</Text>
+                <View style={{ flex: 1 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                    <Text style={[styles.catName, !cat.is_active && { color: '#64748b' }]} numberOfLines={1}>
+                      {cat.name_en}
+                    </Text>
+                    <View style={[styles.statusBadge, { backgroundColor: cat.is_active ? '#e0f2fe' : '#fee2e2' }]}>
+                      <Text style={[styles.statusText, { color: cat.is_active ? '#0369a1' : '#ba1a1a' }]}>
+                        {cat.is_active ? 'ACTIVE' : 'ARCHIVED'}
+                      </Text>
+                    </View>
+                  </View>
                   <Text style={styles.catSubText}>{cat.Subcategories?.length || 0} items configured</Text>
                 </View>
               </View>
@@ -224,20 +279,37 @@ export default function MasterMenuScreen() {
                 <TouchableOpacity style={styles.actionBtn} onPress={() => handleEditCat(cat)}>
                   <Ionicons name="pencil-outline" size={16} color="#005d90" />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn} onPress={() => deleteCategory(cat.id)}>
-                  <Ionicons name="trash-outline" size={16} color="#ba1a1a" />
+                <TouchableOpacity 
+                   style={[styles.archiveBtn, !cat.is_active && styles.restoreBtn]} 
+                   onPress={() => toggleCategoryActive(cat)}
+                >
+                  <Ionicons 
+                    name={cat.is_active ? "trash-outline" : "refresh-outline"} 
+                    size={14} 
+                    color={cat.is_active ? "#ba1a1a" : "white"} 
+                  />
+                  {!cat.is_active && <Text style={styles.restoreText}>Restore</Text>}
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
 
             {expandedCat === cat.id && (
               <View style={styles.subList}>
-                {cat.Subcategories?.map((sub) => (
-                  <View key={sub.id} style={styles.subItem}>
+                {cat.Subcategories
+                  ?.filter(sub => showArchived || sub.is_active)
+                  ?.map((sub) => (
+                  <View key={sub.id} style={[styles.subItem, !sub.is_active && { opacity: 0.6 }]}>
                     <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                      <View style={styles.subDot} />
+                      <View style={[styles.subDot, !sub.is_active && { backgroundColor: '#e2e8f0' }]} />
                       <View>
-                        <Text style={styles.subName}>{sub.name_en}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={[styles.subName, !sub.is_active && { color: '#94a3b8' }]}>{sub.name_en}</Text>
+                          {!sub.is_active && (
+                            <View style={styles.miniBadge}>
+                              <Text style={styles.miniBadgeText}>Archived</Text>
+                            </View>
+                          )}
+                        </View>
                         {sub.is_water_can && (
                           <View style={styles.waterBadge}>
                             <Ionicons name="water" size={8} color="#0369a1" />
@@ -250,8 +322,15 @@ export default function MasterMenuScreen() {
                       <TouchableOpacity style={styles.actionBtn} onPress={() => handleEditSub(sub)}>
                         <Ionicons name="pencil-outline" size={14} color="#64748b" />
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.actionBtn} onPress={() => deleteSubcategory(sub.id)}>
-                        <Ionicons name="trash-outline" size={14} color="#ba1a1a" />
+                      <TouchableOpacity 
+                        style={[styles.subArchiveBtn, !sub.is_active && styles.subRestoreBtn]} 
+                        onPress={() => toggleSubcategoryActive(sub)}
+                      >
+                        <Ionicons 
+                           name={sub.is_active ? "trash-outline" : "refresh-outline"} 
+                           size={13} 
+                           color={sub.is_active ? "#ba1a1a" : "white"} 
+                        />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -356,23 +435,38 @@ export default function MasterMenuScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { padding: 24, paddingBottom: 32, backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  header: { padding: 24, paddingBottom: 32, backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', zIndex: 10 },
   title: { fontSize: 24, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 },
   subtitle: { fontSize: 13, color: '#64748b', marginTop: 2, fontWeight: '500' },
   addBtn: { borderRadius: 16, overflow: 'hidden' },
   addBtnGrad: { paddingHorizontal: 20, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 8 },
   addBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
   
+  filterRow: { paddingHorizontal: 20, paddingTop: 12 },
+  filterBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f1f5f9', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#e2e8f0' },
+  filterBtnActive: { backgroundColor: '#005d90', borderColor: '#005d90' },
+  filterText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
+
   scroll: { padding: 20, paddingBottom: 100 },
   catCard: { backgroundColor: 'white', borderRadius: 24, marginBottom: 16, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.02, shadowRadius: 10, elevation: 2, overflow: 'hidden' },
-  catHeader: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  catInfo: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  catHeader: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  catInfo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 16 },
   chevronWrap: { width: 32, height: 32, borderRadius: 10, backgroundColor: '#f0f9ff', alignItems: 'center', justifyContent: 'center' },
-  catName: { fontSize: 17, fontWeight: '800', color: '#1e293b' },
+  catName: { fontSize: 17, fontWeight: '800', color: '#1e293b', flexShrink: 1 },
   catSubText: { fontSize: 12, color: '#94a3b8', fontWeight: '600', marginTop: 1 },
   
-  actions: { flexDirection: 'row', gap: 8 },
+  actions: { flexDirection: 'row', gap: 10, alignItems: 'center', flexShrink: 0 },
   actionBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#f1f5f9' },
+  archiveBtn: { height: 36, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: '#fee2e2', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
+  restoreBtn: { backgroundColor: '#005d90', borderColor: '#005d90' },
+  restoreText: { color: 'white', fontSize: 13, fontWeight: '800' },
+  subArchiveBtn: { width: 32, height: 32, borderRadius: 10, borderWidth: 1, borderColor: '#fee2e2', alignItems: 'center', justifyContent: 'center' },
+  subRestoreBtn: { backgroundColor: '#005d90', borderColor: '#005d90' },
+  
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8 },
+  statusText: { fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
+  miniBadge: { backgroundColor: '#fee2e2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  miniBadgeText: { fontSize: 9, color: '#ba1a1a', fontWeight: '800', textTransform: 'uppercase' },
   
   subList: { padding: 20, paddingTop: 0, borderTopWidth: 1, borderTopColor: '#f8fafc', backgroundColor: '#fafbfc' },
   subItem: { paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', flexDirection: 'row', alignItems: 'center' },

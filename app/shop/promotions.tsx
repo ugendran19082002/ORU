@@ -1,6 +1,6 @@
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, TextInput, Switch, BackHandler
+  StyleSheet, TextInput, Switch
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useEffect, useState } from 'react';
@@ -13,84 +13,102 @@ import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
-
+import { apiClient } from '@/api/client';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 type Promo = {
-  id: string;
+  id: number;
   code: string;
-  type: 'percent' | 'flat';
-  value: number;
-  minOrder: number;
-  maxUses: number;
-  usedCount: number;
-  active: boolean;
-  expiry: string;
-  description: string;
+  type: string;
+  discount_value: number;
+  min_order_value: number;
+  max_uses: number;
+  used_count: number;
+  is_active: boolean;
+  valid_until: string;
+  issuer_type: 'admin' | 'shop';
 };
 
-const INITIAL_PROMOS: Promo[] = [
-  { id: '1', code: 'FIRST10', type: 'percent', value: 10, minOrder: 100, maxUses: 200, usedCount: 87, active: true, expiry: '30 Apr 2026', description: '10% off on first order' },
-  { id: '2', code: 'BULK20', type: 'percent', value: 20, minOrder: 500, maxUses: 100, usedCount: 44, active: true, expiry: '15 May 2026', description: '20% off on bulk orders' },
-  { id: '3', code: 'WEEKEND5', type: 'flat', value: 5, minOrder: 50, maxUses: 500, usedCount: 312, active: false, expiry: '01 May 2026', description: '₹5 off every weekend' },
-  { id: '4', code: 'LOYAL30', type: 'percent', value: 30, minOrder: 300, maxUses: 50, usedCount: 11, active: true, expiry: '31 May 2026', description: 'Loyalty reward for repeat customers' },
-];
-
 const LOYALTY_TIERS = [
-  { name: 'Bronze', orders: '1–9', discount: '0%', color: '#b45309', bg: '#fef3c7' },
-  { name: 'Silver', orders: '10–24', discount: '5%', color: '#64748b', bg: '#f1f5f9' },
-  { name: 'Gold', orders: '25–49', discount: '10%', color: '#d97706', bg: '#fffbeb' },
-  { name: 'Diamond', orders: '50+', discount: '15%', color: '#7c3aed', bg: '#ede9fe' },
+  { level: 3, points: '200+', discount: '2%', color: '#b45309', bg: '#fef3c7', title: 'Level 3 - Bronze' },
+  { level: 6, points: '500+', discount: '5%', color: '#64748b', bg: '#f1f5f9', title: 'Level 6 - Silver' },
+  { level: 11, points: '1050+', discount: '8%', color: '#d97706', bg: '#fffbeb', title: 'Level 11 - Gold' },
+  { level: 20, points: '2000+', discount: '10%', color: '#7c3aed', bg: '#ede9fe', title: 'Level 20 - Diamond' },
 ];
 
 export default function ShopPromotionsScreen() {
   const router = useRouter();
-  const [promos, setPromos] = useState<Promo[]>(INITIAL_PROMOS);
+  const [promos, setPromos] = useState<Promo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'coupons' | 'loyalty'>('coupons');
+  
+  // Create Form State
   const [showCreate, setShowCreate] = useState(false);
   const [newCode, setNewCode] = useState('');
   const [newValue, setNewValue] = useState('');
   const [newMin, setNewMin] = useState('');
-  const [newType, setNewType] = useState<'percent' | 'flat'>('percent');
+  const [newMaxUses, setNewMaxUses] = useState('100');
+  const [newType, setNewType] = useState('percentage');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [expiryDate, setExpiryDate] = useState(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
 
-  const togglePromo = (id: string) => {
-    setPromos(promos.map((p) => (p.id === id ? { ...p, active: !p.active } : p)));
+  useEffect(() => { fetchPromotions(); }, []);
+
+  const fetchPromotions = async () => {
+    try {
+      const res = await apiClient.get('/shop-owner/promotions');
+      if (res.data.status === 1) setPromos(res.data.data);
+    } catch (e) {
+      Toast.show({ type: 'error', text1: 'Failed to fetch coupons' });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
-  const { safeBack } = useAppNavigation();
+  const togglePromo = async (id: number) => {
+    try {
+      const res = await apiClient.patch(`/shop-owner/promotions/${id}/status`);
+      if (res.data.status === 1) {
+        setPromos(prev => prev.map(p => p.id === id ? { ...p, is_active: !p.is_active } : p));
+        Toast.show({ type: 'success', text1: res.data.message });
+      }
+    } catch (e) {
+      Toast.show({ type: 'error', text1: 'Action failed' });
+    }
+  };
 
-  useAndroidBackHandler(() => {
-    safeBack('/shop/settings');
-  });
-
-
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!newCode.trim() || !newValue.trim()) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Please fill in the coupon code and discount value.'
-      });
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Logic and value required' });
       return;
     }
-    const promo: Promo = {
-      id: Date.now().toString(),
-      code: newCode.trim().toUpperCase(),
-      type: newType,
-      value: parseFloat(newValue),
-      minOrder: parseFloat(newMin) || 0,
-      maxUses: 100,
-      usedCount: 0,
-      active: true,
-      expiry: '30 Jun 2026',
-      description: `${newType === 'percent' ? newValue + '% off' : '₹' + newValue + ' off'} with code ${newCode}`,
-    };
-    setPromos([promo, ...promos]);
-    setNewCode(''); setNewValue(''); setNewMin('');
-    setShowCreate(false);
+    try {
+      const payload = {
+        code: newCode.trim().toUpperCase(),
+        type: newType,
+        discount_value: parseFloat(newValue),
+        min_order_value: parseFloat(newMin) || 0,
+        max_uses: parseInt(newMaxUses) || 100,
+        valid_until: expiryDate.toISOString()
+      };
+      const res = await apiClient.post('/shop-owner/promotions', payload);
+      if (res.data.status === 1) {
+        Toast.show({ type: 'success', text1: 'Coupon Created' });
+        fetchPromotions();
+        setShowCreate(false);
+        setNewCode(''); setNewValue(''); setNewMin('');
+      } else {
+        Toast.show({ type: 'error', text1: 'Error', text2: res.data.message });
+      }
+    } catch (e: any) {
+      Toast.show({ type: 'error', text1: 'Creation failed', text2: e.response?.data?.message });
+    }
   };
 
-  const activeCount = promos.filter((p) => p.active).length;
-  const totalUses = promos.reduce((s, p) => s + p.usedCount, 0);
+  const activeCount = promos.filter((p) => p.is_active).length;
+  const totalUses = promos.reduce((s, p) => s + (p.used_count || 0), 0);
   const avgUse = promos.length ? Math.round(totalUses / promos.length) : 0;
 
   return (
@@ -176,14 +194,14 @@ export default function ShopPromotionsScreen() {
 
                 <Text style={styles.inputLabel}>Discount Type</Text>
                 <View style={styles.typeRow}>
-                  {(['percent', 'flat'] as const).map((t) => (
+                  {(['percentage', 'fixed'] as const).map((t) => (
                     <TouchableOpacity
                       key={t}
                       style={[styles.typePill, newType === t && styles.typePillActive]}
                       onPress={() => setNewType(t)}
                     >
                       <Text style={[styles.typePillText, newType === t && styles.typePillTextActive]}>
-                        {t === 'percent' ? '% Percent' : '₹ Flat'}
+                        {t === 'percentage' ? '% Percent' : '₹ Flat'}
                       </Text>
                     </TouchableOpacity>
                   ))}
@@ -191,14 +209,39 @@ export default function ShopPromotionsScreen() {
 
                 <View style={styles.inputRow}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.inputLabel}>Value ({newType === 'percent' ? '%' : '₹'})</Text>
+                    <Text style={styles.inputLabel}>Value ({newType === 'percentage' ? '%' : '₹'})</Text>
                     <TextInput style={styles.input} placeholder="20" value={newValue} onChangeText={setNewValue} keyboardType="numeric" />
                   </View>
-                  <View style={{ flex: 1 }}>
+                  <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text style={styles.inputLabel}>Min Order (₹)</Text>
                     <TextInput style={styles.input} placeholder="100" value={newMin} onChangeText={setNewMin} keyboardType="numeric" />
                   </View>
                 </View>
+
+                <View style={styles.inputRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.inputLabel}>Expiry Date</Text>
+                    <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
+                      <Text style={{ fontSize: 15, color: '#181c20' }}>{expiryDate.toDateString()}</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.inputLabel}>Usage Limit</Text>
+                    <TextInput style={styles.input} placeholder="100" value={newMaxUses} onChangeText={setNewMaxUses} keyboardType="numeric" />
+                  </View>
+                </View>
+
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={expiryDate}
+                    mode="date"
+                    minimumDate={new Date()}
+                    onChange={(event, date) => {
+                      setShowDatePicker(false);
+                      if (date) setExpiryDate(date);
+                    }}
+                  />
+                )}
 
                 <View style={styles.createActions}>
                   <TouchableOpacity style={styles.createSaveBtn} onPress={handleCreate}>
@@ -220,32 +263,32 @@ export default function ShopPromotionsScreen() {
             )}
 
             {promos.map((promo) => (
-              <View key={promo.id} style={[styles.promoCard, !promo.active && styles.promoCardInactive]}>
+              <View key={promo.id} style={[styles.promoCard, !promo.is_active && styles.promoCardInactive]}>
                 {/* TOP ROW */}
                 <View style={styles.promoTop}>
                   <LinearGradient
-                    colors={promo.active ? ['#005d90', '#0077b6'] : ['#94a3b8', '#64748b']}
+                    colors={promo.is_active ? ['#005d90', '#0077b6'] : ['#94a3b8', '#64748b']}
                     style={styles.codeBadge}
                   >
                     <Text style={styles.codeText}>{promo.code}</Text>
                   </LinearGradient>
                   <View style={{ flex: 1, paddingHorizontal: 12 }}>
-                    <Text style={styles.promoDesc}>{promo.description}</Text>
-                    <Text style={styles.promoMeta}>Min order ₹{promo.minOrder} · Expires {promo.expiry}</Text>
+                    <Text style={styles.promoDesc}>{promo.discount_value}{promo.type === 'percentage' ? '%' : '₹'} off</Text>
+                    <Text style={styles.promoMeta}>Min order ₹{promo.min_order_value} · Expires {new Date(promo.valid_until).toLocaleDateString()}</Text>
                   </View>
                   <Switch
-                    value={promo.active}
+                    value={promo.is_active}
                     onValueChange={() => togglePromo(promo.id)}
                     trackColor={{ false: '#e0e2e8', true: '#bfdbf7' }}
-                    thumbColor={promo.active ? '#005d90' : '#94a3b8'}
+                    thumbColor={promo.is_active ? '#005d90' : '#94a3b8'}
                   />
                 </View>
 
                 {/* USAGE BAR */}
                 <View style={styles.usageRow}>
-                  <Text style={styles.usageLabel}>{promo.usedCount} / {promo.maxUses} uses</Text>
-                  <Text style={[styles.usagePct, { color: promo.usedCount / promo.maxUses > 0.8 ? '#c62828' : '#005d90' }]}>
-                    {Math.round((promo.usedCount / promo.maxUses) * 100)}%
+                  <Text style={styles.usageLabel}>{promo.used_count || 0} / {promo.max_uses} uses</Text>
+                  <Text style={[styles.usagePct, { color: (promo.used_count / promo.max_uses) > 0.8 ? '#c62828' : '#005d90' }]}>
+                    {Math.round(((promo.used_count || 0) / promo.max_uses) * 100)}%
                   </Text>
                 </View>
                 <View style={styles.usageTrack}>
@@ -253,8 +296,8 @@ export default function ShopPromotionsScreen() {
                     style={[
                       styles.usageFill,
                       {
-                        width: `${Math.min((promo.usedCount / promo.maxUses) * 100, 100)}%`,
-                        backgroundColor: promo.usedCount / promo.maxUses > 0.8 ? '#f87171' : '#005d90',
+                        width: `${Math.min(((promo.used_count || 0) / promo.max_uses) * 100, 100)}%`,
+                        backgroundColor: (promo.used_count / promo.max_uses) > 0.8 ? '#f87171' : '#005d90',
                       },
                     ]}
                   />
@@ -302,15 +345,15 @@ export default function ShopPromotionsScreen() {
               </View>
             </LinearGradient>
 
-            <Text style={styles.sectionTitle}>Tier Structure</Text>
+            <Text style={styles.sectionTitle}>Platform Milestone Rewards</Text>
             {LOYALTY_TIERS.map((tier) => (
-              <View key={tier.name} style={styles.tierCard}>
+              <View key={tier.level} style={styles.tierCard}>
                 <View style={[styles.tierIconWrap, { backgroundColor: tier.bg }]}>
                   <Ionicons name="ribbon" size={22} color={tier.color} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.tierName, { color: tier.color }]}>{tier.name}</Text>
-                  <Text style={styles.tierOrders}>{tier.orders} lifetime orders</Text>
+                  <Text style={[styles.tierName, { color: tier.color }]}>{tier.title}</Text>
+                  <Text style={styles.tierOrders}>{tier.points} lifetime points</Text>
                 </View>
                 <View style={[styles.tierBadge, { backgroundColor: tier.bg }]}>
                   <Text style={[styles.tierDiscount, { color: tier.color }]}>{tier.discount} off</Text>
@@ -321,8 +364,15 @@ export default function ShopPromotionsScreen() {
             <View style={styles.infoCard}>
               <Ionicons name="information-circle-outline" size={20} color="#005d90" />
               <Text style={styles.infoText}>
-                Discounts are applied automatically at checkout based on the customer's lifetime order count with your shop.
+                ⚠️ ADMIN REWARDS: These coupons are funded by ThanniGo. They do NOT reduce your payout. 
+                {"\n"}🎯 POINT SYSTEM: 1 Point earned per ₹10 spent by customers.
               </Text>
+            </View>
+            <View style={[styles.infoCard, { backgroundColor: '#fef3c7', marginTop: 12 }]}>
+               <Ionicons name="shield-checkmark-outline" size={20} color="#b45309" />
+               <Text style={[styles.infoText, { color: '#b45309' }]}>
+                 MERCHANT PROTECTION: Milestone coupons are automatically generated for users when they level up. Your payout always remains the full subtotal.
+               </Text>
             </View>
           </>
         )}

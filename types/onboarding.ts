@@ -36,4 +36,5 @@ export interface ShopCreationData {
   address?: string;
   latitude?: number;
   longitude?: number;
+  referral_code?: string;
 }

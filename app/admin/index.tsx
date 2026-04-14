@@ -30,7 +30,7 @@ const STATS = [
 /* ---- COMPONENTS ---- */
 function StatCard({ stat, isDesktop }: { stat: typeof STATS[0], isDesktop: boolean }) {
   return (
-    <View style={[styles.statCard, { width: isDesktop ? '23.5%' : '48%' }]}>
+    <View style={styles.statCard}>
       <View style={styles.statCardTop}>
         <View style={[styles.statIcon, { backgroundColor: stat.bg }]}>
           <Ionicons name={stat.icon} size={isDesktop ? 22 : 18} color={stat.color} />
@@ -126,11 +126,22 @@ export default function AdminOverviewScreen() {
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
-          {STATS.map((stat, i) => (
-            <View key={i} style={[{ marginBottom: 10 }, i % 2 === 0 && !isDesktop && { marginRight: '4%' }]}>
+          {STATS.map((stat, i) => {
+            const numCols = 2; // Fixed 2 per row
+            const cardWidth = '49%'; 
+            return (
+              <View 
+                key={i} 
+                style={[
+                  styles.statCardWrapper, 
+                  { width: cardWidth as any },
+                  i % numCols !== numCols - 1 && { marginRight: '2%' }
+                ]}
+              >
                 <StatCard stat={stat} isDesktop={isDesktop} />
-            </View>
-          ))}
+              </View>
+            );
+          })}
         </View>
 
         <View style={{ flexDirection: isDesktop ? 'row' : 'column', marginTop: 12 }}>
@@ -216,9 +227,10 @@ export default function AdminOverviewScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
   pageTitle: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, marginBottom: 24 },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 20 },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 24 },
+  statCardWrapper: { marginBottom: 16 },
   statCard: {
-    backgroundColor: 'white', borderRadius: 18, padding: 16,
+    backgroundColor: 'white', borderRadius: 18, padding: 16, flex: 1,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 6, elevation: 2,
     borderLeftWidth: 3, borderLeftColor: '#005d90',
   },
