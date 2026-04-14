@@ -18,7 +18,7 @@ import { useAppSession } from '@/providers/AppSessionProvider';
  */
 export default function SecuritySetupScreen() {
   const router = useRouter();
-  const { setIsBiometricVerified } = useAppSession();
+  const { setIsVerified } = useAppSession();
   const { setPin, toggleBiometrics, initialize } = useSecurityStore();
   const [showModal, setShowModal] = useState(false);
   const [complete, setComplete] = useState(false);
@@ -31,7 +31,7 @@ export default function SecuritySetupScreen() {
   const handleSetPin = async (newPin: string) => {
     try {
       await setPin(newPin);
-      setIsBiometricVerified(true);
+      setIsVerified(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setComplete(true);
       setShowModal(false);

@@ -3,20 +3,18 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-import { Platform } from 'react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { AppRouteGuard, AppSessionProvider } from '@/providers/AppSessionProvider';
 import { NoInternetBanner } from '@/components/ui/NoInternetBanner';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '@/components/ui/ToastConfig';
-import { SecurityProvider } from '@/providers/SecurityProvider';
 
 // Suppress known SDK 53 informational warning inside Expo Go for Push Notifications
 import { LogBox } from 'react-native';
 LogBox.ignoreLogs([
   'expo-notifications: Android Push notifications',
-  'Style property \'width\' is not supported by native animated module', // Fallback ignoring if hermes caches it briefly
+  'Style property \'width\' is not supported by native animated module', 
 ]);
 
 export default function RootLayout() {
@@ -25,7 +23,6 @@ export default function RootLayout() {
     <ErrorBoundary>
       <AppSessionProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <SecurityProvider>
             <AppRouteGuard />
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="auth" options={{ headerShown: false, animation: 'fade' }} />
@@ -60,7 +57,6 @@ export default function RootLayout() {
             <NoInternetBanner />
             <Toast config={toastConfig} />
             <StatusBar style="auto" />
-          </SecurityProvider>
         </ThemeProvider>
       </AppSessionProvider>
     </ErrorBoundary>

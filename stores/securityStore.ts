@@ -12,6 +12,7 @@ type SecuritySettings = {
   isPinEnabled: boolean;
   isBiometricsEnabled: boolean;
   isLocked: boolean;
+  isVerified: boolean; // Session-transient unlocked status
 };
 
 type SecurityState = SecuritySettings & {
@@ -22,6 +23,7 @@ type SecurityState = SecuritySettings & {
   toggleBiometrics: (enabled: boolean) => Promise<void>;
   authenticateBiometrics: () => Promise<boolean>;
   setLocked: (locked: boolean) => void;
+  setIsVerified: (verified: boolean) => void;
   hasPin: () => Promise<boolean>;
   reset: () => Promise<void>;
   syncWithUser: (user: AppUser) => Promise<void>;
@@ -31,6 +33,7 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
   isPinEnabled: false,
   isBiometricsEnabled: false,
   isLocked: false,
+  isVerified: false,
 
   initialize: async () => {
     try {
@@ -79,16 +82,16 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
 
   setPin: async (pin: string) => {
     try {
-      await SecureStore.setItemAsync(PIN_KEY, pin);
+      // 1. Send to Backend to Hash and Store
+      await userApi.updateProfile({ security_pin: pin, security_pin_enabled: true });
+
+      // 2. Update Local State
       const settings = { ...get(), isPinEnabled: true };
       await SecureStore.setItemAsync(SECURITY_SETTINGS_KEY, JSON.stringify({
         isPinEnabled: settings.isPinEnabled,
         isBiometricsEnabled: settings.isBiometricsEnabled,
       }));
       set({ isPinEnabled: true });
-
-      // SYNC TO BACKEND
-      await userApi.updateProfile({ security_pin_enabled: true });
     } catch (error) {
       console.error('[SecurityStore] setPin failed:', error);
       throw error;
@@ -97,12 +100,12 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
 
   verifyPin: async (pin: string) => {
     try {
-      const storedPin = await SecureStore.getItemAsync(PIN_KEY);
-      const isValid = storedPin === pin;
-      if (isValid) {
-        set({ isLocked: false });
+      const response = await userApi.verifyPin(pin);
+      if (response.verified) {
+        set({ isLocked: false, isVerified: true });
+        return true;
       }
-      return isValid;
+      return false;
     } catch (error) {
       console.error('[SecurityStore] verifyPin failed:', error);
       return false;
@@ -111,15 +114,17 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
 
   togglePin: async (enabled: boolean) => {
     try {
-      if (!enabled) {
-        await SecureStore.deleteItemAsync(PIN_KEY);
-      }
       const settings = { ...get(), isPinEnabled: enabled };
       await SecureStore.setItemAsync(SECURITY_SETTINGS_KEY, JSON.stringify({
         isPinEnabled: settings.isPinEnabled,
         isBiometricsEnabled: settings.isBiometricsEnabled,
       }));
       set({ isPinEnabled: enabled });
+
+      // If turning off, sync to backend to clear hash
+      if (!enabled) {
+          await userApi.updateProfile({ security_pin_enabled: false });
+      }
     } catch (error) {
       console.error('[SecurityStore] togglePin failed:', error);
     }
@@ -157,7 +162,7 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
       });
 
       if (result.success) {
-        set({ isLocked: false });
+        set({ isLocked: false, isVerified: true });
         return true;
       }
       return false;
@@ -169,9 +174,11 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
 
   setLocked: (locked: boolean) => set({ isLocked: locked }),
 
+  setIsVerified: (verified: boolean) => set({ isVerified: verified }),
+
   hasPin: async () => {
-    const pin = await SecureStore.getItemAsync(PIN_KEY);
-    return !!pin;
+    // This is mostly checked via generic isPinEnabled now, but keeping for compatibility
+    return get().isPinEnabled;
   },
 
   reset: async () => {
@@ -181,7 +188,8 @@ export const useSecurityStore = create<SecurityState>((set, get) => ({
       set({ 
         isPinEnabled: false, 
         isBiometricsEnabled: false, 
-        isLocked: false 
+        isLocked: false,
+        isVerified: false
       });
       console.log('🛡️ [SecurityStore] Global Reset completed.');
     } catch (error) {

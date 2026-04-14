@@ -19,4 +19,12 @@ export const userApi = {
     const response = await apiClient.patch<UserUpdateResponse>('/users/me', data);
     return response.data;
   },
+
+  /**
+   * Verify the user's security PIN
+   */
+  verifyPin: async (pin: string): Promise<{ verified: boolean }> => {
+    const response = await apiClient.post<{ status: number; message: string; data: { verified: boolean } }>('/users/me/security/verify', { pin });
+    return response.data.data;
+  },
 };

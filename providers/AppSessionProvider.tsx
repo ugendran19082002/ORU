@@ -34,9 +34,9 @@ type SessionContextValue = {
   access_token: string | null;
   refresh_token: string | null;
   preferredRole: AppRole | null;
-  isBiometricVerified: boolean;
+  isVerified: boolean;
   isLocationVerified: boolean;
-  setIsBiometricVerified: (verified: boolean) => void;
+  setIsVerified: (verified: boolean) => void;
   setIsLocationVerified: (verified: boolean) => void;
   setPreferredRole: (role: AppRole | null) => Promise<void>;
   setBiometricEnabled: (enabled: boolean) => Promise<void>;
@@ -97,13 +97,13 @@ export function AppSessionProvider({
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [preferredRole, setPreferredRoleState] = useState<AppRole | null>(null);
-  const [isBiometricVerified, setIsBiometricVerified] = useState(false);
   const [isLocationVerified, setIsLocationVerified] = useState(false);
   const [nextStep, setNextStepState] = useState<any>(null);
   const [isSyncingShop, setIsSyncingShop] = useState(false);
   const [lastBgTimestamp, setLastBgTimestamp] = useState<number>(0);
 
-  const { isLocked, setLocked } = useSecurityStore();
+  const { isLocked, setLocked, isVerified, setIsVerified, isPinEnabled, isBiometricsEnabled } = useSecurityStore();
+  const securityEnabled = isPinEnabled || isBiometricsEnabled;
 
   // Sync Token to Axios Defaults (Memory Store)
   useEffect(() => {
@@ -146,19 +146,18 @@ export function AppSessionProvider({
       }
       
       if (nextAppState === 'active') {
-        // If app was in background for more than 30 seconds, re-lock
-        const SECONDS_SINCE_BG = (Date.now() - lastBgTimestamp) / 1000;
+        const SECONDS_SINCE_BG = lastBgTimestamp !== 0 ? (Date.now() - lastBgTimestamp) / 1000 : 0;
         
-        const { isPinEnabled, isBiometricsEnabled } = useSecurityStore.getState();
-        const securityEnabled = isPinEnabled || isBiometricsEnabled;
+        if (__DEV__) {
+            console.log(`🛡️ [App Lock Audit] App Active. Seconds since background: ${SECONDS_SINCE_BG.toFixed(2)}s`);
+        }
 
         if (status === 'authenticated' && securityEnabled && lastBgTimestamp !== 0 && SECONDS_SINCE_BG > 5) {
-          console.log(`🔐 [App Lock] Force re-verification after ${Math.round(SECONDS_SINCE_BG)}s in background.`);
-          setIsBiometricVerified(false);
+          console.log(`🔐 [App Lock] Force re-verification triggered after ${Math.round(SECONDS_SINCE_BG)}s.`);
+          setIsVerified(false);
         }
 
         // IMPORTANT: Reset the timestamp after it's been checked once.
-        // This stops "stale" timestamps from causing re-lock loops on every tab change.
         setLastBgTimestamp(0);
       }
     };
@@ -276,7 +275,7 @@ export function AppSessionProvider({
       setUser(null);
       setAccessToken(null);
       setRefreshToken(null);
-      setIsBiometricVerified(false);
+      setIsVerified(false);
       setIsLocationVerified(false);
       setPreferredRoleState(null);
       setNextStepState(null);
@@ -321,7 +320,7 @@ export function AppSessionProvider({
       setAccessToken(null);
       setRefreshToken(null);
       setNextStepState(null);
-      setIsBiometricVerified(false);
+      setIsVerified(false);
       setIsLocationVerified(false);
       setPreferredRoleState(null);
       setStatus("anonymous");
@@ -349,9 +348,9 @@ export function AppSessionProvider({
       access_token: accessToken,
       refresh_token: refreshToken,
       preferredRole,
-      isBiometricVerified,
+      isVerified,
       isLocationVerified,
-      setIsBiometricVerified,
+      setIsVerified,
       setIsLocationVerified,
       isSyncingShop,
       nextStep,
@@ -434,7 +433,7 @@ export function AppSessionProvider({
       syncSession,
       emergencyReset,
     }),
-    [accessToken, refreshToken, isBiometricVerified, isLocationVerified, isHydrated, preferredRole, status, user, nextStep, isSyncingShop]
+    [accessToken, refreshToken, isVerified, isLocationVerified, isHydrated, preferredRole, status, user, nextStep, isSyncingShop]
   );
   if (!isHydrated) {
     return (
@@ -452,7 +451,7 @@ export function AppSessionProvider({
           visible={isLocked}
           onSuccess={() => {
             setLocked(false);
-            setIsBiometricVerified(true);
+            setIsVerified(true);
           }}
           title="Unlock ThanniGo"
           mode="verify"
@@ -474,13 +473,23 @@ export function AppRouteGuard() {
   const pathname = usePathname();
   const segments = useSegments();
   const session = useAppSession();
+  
+  // DIRECT STORE BINDING: Bypassing context for security flags to eliminate reactivity lag
+  const { 
+    isLocked, 
+    setLocked, 
+    isVerified, 
+    setIsVerified, 
+    isPinEnabled, 
+    isBiometricsEnabled, 
+    authenticateBiometrics 
+  } = useSecurityStore();
+
   const {
     isHydrated,
     status,
     user,
-    isBiometricVerified,
     isLocationVerified,
-    setIsBiometricVerified,
     setIsLocationVerified,
     isSyncingShop,
     nextStep
@@ -573,8 +582,6 @@ export function AppRouteGuard() {
         };
 
         // 1. Mandatory Security Check
-        const { isPinEnabled, isBiometricsEnabled, authenticateBiometrics, setLocked } = useSecurityStore.getState();
-        
         // Force PIN setup if authenticated but no PIN exists
         if (status === 'authenticated' && !isPinEnabled && (firstSegment as string) !== 'security-setup') {
           navigate('/security-setup', 'Mandatory security setup required');
@@ -585,25 +592,19 @@ export function AppRouteGuard() {
 
         // 1.5 Biometrics & PIN App Lock
         // Safety: Never lock while at the security setup screen
-        if (securityEnabled && !isBiometricVerified && (firstSegment as string) !== 'security-setup') {
+        if (securityEnabled && !isVerified && (firstSegment as string) !== 'security-setup') {
           // If biometrics enabled, try them first
           if (isBiometricsEnabled) {
             const success = await authenticateBiometrics();
             if (currentGeneration < guardGenerationRef.current) return;
             
             if (success) {
-               setIsBiometricVerified(true);
-            } else if (isPinEnabled) {
+               setIsVerified(true);
+            } else if (isPinEnabled && !isLocked) {
                // Fallback to PIN gate if biometrics failed/cancelled
                setLocked(true);
-               // We don't return here because the PIN modal overlay will handle blocking the UI
-               // But actually, we SHOULD redirect to a lock screen or block if strictness is required.
-               // For now, authenticateBiometrics failure handles its own fallout.
-            } else {
-               // If only biometrics enabled and user fails, we might want to block
-               return; 
             }
-          } else if (isPinEnabled) {
+          } else if (isPinEnabled && !isLocked) {
             // Only PIN enabled
             setLocked(true);
           }
@@ -736,7 +737,7 @@ export function AppRouteGuard() {
     };
 
     runChecklist();
-  }, [isHydrated, pathname, segments, status, user, isBiometricVerified, nextStep, isSyncingShop]);
+  }, [isHydrated, pathname, segments, status, user, isVerified, isLocked, isPinEnabled, isBiometricsEnabled, isSyncingShop]);
 
   return null;
 }
