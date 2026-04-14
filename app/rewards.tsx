@@ -35,10 +35,10 @@ export default function RewardsScreen() {
         apiClient.get('/promotion/coupons/active')
       ]);
 
-      if (historyRes.data.status === 1) setHistory(historyRes.data.data);
-      if (tierRes.data.status === 1) setTiers(tierRes.data.data);
+      if (historyRes.data.status === 1) setHistory(historyRes.data.data || []);
+      if (tierRes.data.status === 1) setTiers(tierRes.data.data || []);
       if (settingRes.data.status === 1) setSettings(settingRes.data.data);
-      if (couponRes.data.status === 1) setCoupons(couponRes.data.data.filter((c: any) => c.is_active));
+      if (couponRes.data.status === 1) setCoupons((couponRes.data.data || []).filter((c: any) => c.is_active));
     } catch (err) {
       console.error('Failed to fetch rewards data', err);
     } finally {
@@ -52,7 +52,7 @@ export default function RewardsScreen() {
   const currentPoints = user?.loyalty_points || 0;
   // Note: For total orders, we'd ideally fetch from an analytics endpoint.
   // Using points as a proxy for progress if levels are point-based.
-  const currentTier = tiers.find(t => currentPoints >= t.min_points && (!t.max_points || currentPoints <= t.max_points)) || tiers[0] || { name: 'Bronze', discount_percentage: 0, min_points: 0 };
+  const currentTier = tiers.find(t => currentPoints >= t.min_points && (!t.max_points || currentPoints <= t.max_points)) || tiers[0] || { name: 'Bronze', discount_percent: 0, min_points: 0 };
   const nextTier = tiers.find(t => t.min_points > currentPoints);
   
   const pointsToNext = nextTier ? nextTier.min_points - currentPoints : 0;
@@ -204,7 +204,7 @@ export default function RewardsScreen() {
                 <Text style={[styles.tierName, { color: '#1a1c1e' }]}>{tier.name}</Text>
                 <Text style={styles.tierRange}>{tier.min_points}+ lifetime points</Text>
               </View>
-              <Text style={[styles.tierDiscount, { color: '#005d90' }]}>{tier.discount_percentage}% off</Text>
+              <Text style={[styles.tierDiscount, { color: '#005d90' }]}>{tier.discount_percent}% off</Text>
               {tier.id === currentTier.id && (
                 <View style={[styles.currentChip, { backgroundColor: '#005d9018' }]}>
                   <Text style={[styles.currentChipText, { color: '#005d90' }]}>CURRENT</Text>

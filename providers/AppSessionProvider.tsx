@@ -172,6 +172,11 @@ export function AppSessionProvider({
             biometricEnabled,
             nextStep
         });
+      } else if (err.response?.status === 403 || err.response?.status === 401) {
+        // Break infinite loop if unauthorized
+        const nextUser = { ...user, shopStatus: 'error', onboardingStatus: 'error' };
+        setUser(nextUser);
+        console.warn('🛡️ [Session] Shop sync failed (403/401). Loop broken.');
       }
     } finally {
       setIsSyncingShop(false);
@@ -195,14 +200,18 @@ export function AppSessionProvider({
               onboardingStatus: freshUser.onboarding_status || freshUser.onboardingStatus || 'none'
           } as AppUser;
 
+          const nextNextStep = freshUser.next_step || (freshUser.role !== user?.role ? null : nextStep);
+          
           setUser(nextUser);
+          setNextStepState(nextNextStep);
+
           await writeSession({
             user: nextUser,
             access_token: accessToken,
             refresh_token: refreshToken,
             preferredRole: nextUser.role as AppRole,
             biometricEnabled,
-            nextStep
+            nextStep: nextNextStep
           });
           console.log(`🛡️ [Session] Sync complete. User role is now: ${nextUser.role}`);
       }
@@ -608,7 +617,8 @@ export function AppRouteGuard() {
             const currentPath = pathname || "";
             const isCurrentlyInIdealStack = (idealRoute === "/shop" && currentPath.startsWith("/shop")) ||
                                               (idealRoute === "/delivery" && currentPath.startsWith("/delivery")) ||
-                                              (idealRoute === "/admin" && currentPath.startsWith("/admin"));
+                                              (idealRoute === "/admin" && currentPath.startsWith("/admin")) ||
+                                              (idealRoute === "/(tabs)" && !["admin", "shop", "delivery", "onboarding", "auth"].includes(firstSegment));
             
             if (currentPath === idealRoute || isCurrentlyInIdealStack) {
               if (__DEV__) console.log(`🛡️ [Guard] Already at target: ${currentPath}. Skipping redundant redirect.`);

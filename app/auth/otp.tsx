@@ -95,11 +95,11 @@ export default function OTPScreen() {
 
         // 1. Sign in to global session
         await signIn({
-          user: response.data.user as any,
+          user: response.data.user,
           access_token: response.data.access_token,
           refresh_token: response.data.refresh_token,
           nextStep: response.data.next_step,
-        });;
+        } as any);
 
         Animated.spring(successAnim, {
           toValue: 1,
@@ -107,26 +107,7 @@ export default function OTPScreen() {
           tension: 60,
         }).start();
 
-        setTimeout(() => {
-          const { user, next_step } = response.data;
-
-          // 2. Navigation Logic
-          if (user.onboarding_completed) {
-            // Flow 1: Existing User - Go to Home
-            if (user.role === "shop_owner") router.replace("/shop" as any);
-            else if (user.role === "admin") router.replace("/admin");
-            else if (user.role === "delivery") router.replace("/delivery");
-            else router.replace("/(tabs)");
-          } else {
-            // Flow 2: New/Incomplete User - Follow next_step
-            if (next_step?.screen_route) {
-              router.replace(next_step.screen_route as any);
-            } else {
-              // Fallback to role selection if no next step (usually guest)
-              router.replace("/auth/role");
-            }
-          }
-        }, 1200);
+        // (Wait for global AppRouteGuard to handle the redirect based on session state)
       } else {
         throw new Error(response.message || "Verification failed");
       }

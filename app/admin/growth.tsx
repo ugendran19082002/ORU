@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  ActivityIndicator, TextInput, Switch, RefreshControl
+  ActivityIndicator, TextInput, Switch, RefreshControl, Modal
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,6 +19,9 @@ export default function AdminGrowthScreen() {
   const [settings, setSettings] = useState<any>(null);
   const [levels, setLevels] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'config' | 'tiers'>('config');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingLevel, setEditingLevel] = useState<any>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -45,6 +48,21 @@ export default function AdminGrowthScreen() {
       fetchData();
     } catch (err) {
       Toast.show({ type: 'error', text1: 'Update Failed' });
+    }
+  };
+
+  const handleUpdateLevel = async () => {
+    if (!editingLevel) return;
+    setIsSaving(true);
+    try {
+      await adminApi.updateLoyaltyLevel(editingLevel.id || 'new', editingLevel);
+      Toast.show({ type: 'success', text1: editingLevel.id === 'new' ? 'Tier Created' : 'Tier Updated' });
+      setModalVisible(false);
+      fetchData();
+    } catch (err) {
+      Toast.show({ type: 'error', text1: 'Update Failed' });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -179,15 +197,38 @@ export default function AdminGrowthScreen() {
             <View style={styles.sectionHeader}>
               <Ionicons name="trophy-outline" size={20} color="#005d90" />
               <Text style={styles.sectionTitle}>Platform Tiers</Text>
+              <TouchableOpacity 
+                style={styles.addBtn}
+                onPress={() => {
+                  setEditingLevel({ 
+                    level_number: (levels.length + 1), 
+                    name: '', 
+                    min_points: 0, 
+                    max_points: 0, 
+                    discount_percent: 0,
+                    status: 'active' 
+                  });
+                  setModalVisible(true);
+                }}
+              >
+                <Ionicons name="add" size={20} color="#005d90" />
+              </TouchableOpacity>
             </View>
             {levels.map((level) => (
-              <TouchableOpacity key={level.id} style={styles.tierCard} onPress={() => {}}>
+              <TouchableOpacity 
+                key={level.id} 
+                style={styles.tierCard} 
+                onPress={() => {
+                  setEditingLevel(level);
+                  setModalVisible(true);
+                }}
+              >
                 <View style={styles.tierMain}>
                   <Text style={styles.tierName}>{level.name}</Text>
-                  <Text style={styles.tierReq}>{level.min_points} points required</Text>
+                  <Text style={styles.tierReq}>{level.min_points} - {level.max_points} pts</Text>
                 </View>
                 <View style={styles.tierBenefit}>
-                   <Text style={styles.tierDiscount}>{level.discount_percentage}% OFF</Text>
+                   <Text style={styles.tierDiscount}>{level.discount_percent}% OFF</Text>
                    <Text style={styles.tierSub}>Auto-Coupon</Text>
                 </View>
               </TouchableOpacity>
@@ -195,6 +236,61 @@ export default function AdminGrowthScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* EDIT MODAL */}
+      <Modal visible={modalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{editingLevel?.id ? 'Edit Tier' : 'New Tier'}</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#1a1c1e" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalForm}>
+              <ConfigItem 
+                label="Tier Name" 
+                value={editingLevel?.name || ''} 
+                onChange={(v: string) => setEditingLevel({...editingLevel, name: v})} 
+              />
+              <ConfigItem 
+                label="Min Points" 
+                value={editingLevel?.min_points?.toString() || '0'} 
+                onChange={(v: string) => setEditingLevel({...editingLevel, min_points: parseInt(v)})} 
+                keyboardType="numeric"
+              />
+              <ConfigItem 
+                label="Max Points" 
+                value={editingLevel?.max_points?.toString() || '0'} 
+                onChange={(v: string) => setEditingLevel({...editingLevel, max_points: parseInt(v)})} 
+                keyboardType="numeric"
+              />
+              <ConfigItem 
+                label="Discount (%)" 
+                value={editingLevel?.discount_percent?.toString() || '0'} 
+                onChange={(v: string) => setEditingLevel({...editingLevel, discount_percent: parseInt(v)})} 
+                keyboardType="numeric"
+              />
+              <View style={styles.toggleRow}>
+                <Text style={styles.toggleLabel}>Active Tier</Text>
+                <Switch 
+                  value={editingLevel?.status === 'active'} 
+                  onValueChange={(val) => setEditingLevel({...editingLevel, status: val ? 'active' : 'inactive'})}
+                />
+              </View>
+            </ScrollView>
+
+            <TouchableOpacity 
+              style={[styles.saveBtn, isSaving && { opacity: 0.7 }]} 
+              onPress={handleUpdateLevel}
+              disabled={isSaving}
+            >
+              {isSaving ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>Save Changes</Text>}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -258,6 +354,14 @@ const styles = StyleSheet.create({
   tierBenefit: { alignItems: 'flex-end' },
   tierDiscount: { fontSize: 18, fontWeight: '900', color: '#005d90' },
   tierSub: { fontSize: 10, color: '#94a3b8', fontWeight: '700', letterSpacing: 0.5 },
+  addBtn: { marginLeft: 'auto', backgroundColor: '#eef6ff', padding: 6, borderRadius: 8 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: 'white', borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 25, maxHeight: '80%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: '#1a1c1e' },
+  modalForm: { marginBottom: 20 },
+  saveBtn: { backgroundColor: '#005d90', paddingVertical: 15, borderRadius: 15, alignItems: 'center' },
+  saveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
 });
 
 
