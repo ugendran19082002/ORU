@@ -344,66 +344,47 @@ export default function ShopPromotionsScreen() {
         {activeTab === 'loyalty' && (
           <>
             <LinearGradient
-              colors={['#7c3aed', '#5b21b6']}
+              colors={['#006878', '#004e5b']}
               style={styles.loyaltyHero}
             >
-              <Ionicons name="ribbon" size={80} color="rgba(255,255,255,0.08)" style={styles.loyaltyDecor} />
-              <Text style={styles.loyaltyHeroTitle}>Loyalty Programme</Text>
+              <Ionicons name="sparkles" size={80} color="rgba(255,255,255,0.08)" style={styles.loyaltyDecor} />
+              <Text style={styles.loyaltyHeroTitle}>Smart loyalty Engine</Text>
               <Text style={styles.loyaltyHeroSub}>
-                Reward repeat customers automatically. Tiers upgrade based on total orders.
+                ThanniGo automatically rewards your repeat customers and incentivizes new users to try your shop. No setup required!
               </Text>
-              <View style={styles.loyaltyToggleRow}>
-                <Text style={styles.loyaltyToggleLabel}>Programme Active</Text>
-                <Switch
-                  value={true}
-                  trackColor={{ false: '#8b5cf6', true: '#c4b5fd' }}
-                  thumbColor="white"
-                />
+              <View style={styles.autoBadge}>
+                <Ionicons name="shield-checkmark" size={14} color="white" />
+                <Text style={styles.autoBadgeText}>Platform Managed</Text>
               </View>
             </LinearGradient>
 
-            <Text style={styles.sectionTitle}>Platform Milestone Rewards</Text>
-            {loyaltyLevels.length === 0 && (
-              <ActivityIndicator size="small" color="#7c3aed" style={{ marginVertical: 20 }} />
-            )}
-            {loyaltyLevels.map((tier, idx) => {
-              // Map dynamic colors based on index for variety
-              const colors = [
-                { color: '#b45309', bg: '#fef3c7' },
-                { color: '#64748b', bg: '#f1f5f9' },
-                { color: '#d97706', bg: '#fffbeb' },
-                { color: '#7c3aed', bg: '#ede9fe' }
-              ];
-              const theme = colors[idx % colors.length];
-              
-              return (
-                <View key={tier.id} style={styles.tierCard}>
-                  <View style={[styles.tierIconWrap, { backgroundColor: theme.bg }]}>
-                    <Ionicons name="ribbon" size={22} color={theme.color} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.tierName, { color: theme.color }]}>{tier.name}</Text>
-                    <Text style={styles.tierOrders}>{tier.min_points}+ lifetime points</Text>
-                  </View>
-                  <View style={[styles.tierBadge, { backgroundColor: theme.bg }]}>
-                    <Text style={[styles.tierDiscount, { color: theme.color }]}>{tier.discount_percentage}% off</Text>
-                  </View>
-                </View>
-              );
-            })}
+            <Text style={styles.sectionTitle}>How it works for your shop</Text>
+            
+            <View style={styles.ruleCard}>
+              <View style={styles.ruleIconWrap}>
+                 <Ionicons name="gift" size={20} color="#006878" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.ruleTitle}>New Shop Bonus</Text>
+                <Text style={styles.ruleDesc}>New users get +20 points on their first order at your shop.</Text>
+              </View>
+            </View>
+
+            <View style={styles.ruleCard}>
+              <View style={[styles.ruleIconWrap, { backgroundColor: '#e0f0ff' }]}>
+                 <Ionicons name="trending-up" size={20} color="#005d90" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.ruleTitle}>Loyalty Boost (+5%)</Text>
+                <Text style={styles.ruleDesc}>Repeat customers (5+ orders) earn extra points at your shop automatically.</Text>
+              </View>
+            </View>
 
             <View style={styles.infoCard}>
-              <Ionicons name="information-circle-outline" size={20} color="#005d90" />
+              <Ionicons name="cash-outline" size={20} color="#005d90" />
               <Text style={styles.infoText}>
-                ⚠️ ADMIN REWARDS: These coupons are funded by ThanniGo. They do NOT reduce your payout. 
-                {"\n"}🎯 POINT SYSTEM: 1 Point earned per ₹{loyaltySettings ? (1 / loyaltySettings.earn_points_per_rupee) : '10'} spent by customers.
+                The cost of these extra points is funded by ThanniGo. These rewards do NOT reduce your payout. You only pay for the shop-specific coupons you create in the first tab.
               </Text>
-            </View>
-            <View style={[styles.infoCard, { backgroundColor: '#fef3c7', marginTop: 12 }]}>
-               <Ionicons name="shield-checkmark-outline" size={20} color="#b45309" />
-               <Text style={[styles.infoText, { color: '#b45309' }]}>
-                 MERCHANT PROTECTION: Milestone coupons are automatically generated for users when they level up. Your payout always remains the full subtotal.
-               </Text>
             </View>
           </>
         )}
@@ -503,19 +484,21 @@ const styles = StyleSheet.create({
   loyaltyDecor: { position: 'absolute', bottom: -20, right: -20 },
   loyaltyHeroTitle: { fontSize: 22, fontWeight: '900', color: 'white', marginBottom: 8 },
   loyaltyHeroSub: { fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 18, marginBottom: 20 },
-  loyaltyToggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  loyaltyToggleLabel: { fontSize: 13, fontWeight: '700', color: 'white' },
-
-  tierCard: {
+  autoBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.15)', alignSelf: 'flex-start',
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
+  },
+  autoBadgeText: { color: 'white', fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
+  
+  ruleCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: 'white', borderRadius: 18, padding: 16, marginBottom: 10,
+    backgroundColor: 'white', borderRadius: 18, padding: 16, marginBottom: 12,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
-  tierIconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  tierName: { fontSize: 16, fontWeight: '900', marginBottom: 2 },
-  tierOrders: { fontSize: 11, color: '#707881', fontWeight: '600' },
-  tierBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
-  tierDiscount: { fontSize: 13, fontWeight: '800' },
+  ruleIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#e8f5e9', alignItems: 'center', justifyContent: 'center' },
+  ruleTitle: { fontSize: 15, fontWeight: '800', color: '#181c20', marginBottom: 2 },
+  ruleDesc: { fontSize: 12, color: '#707881', lineHeight: 16 },
 
   infoCard: {
     flexDirection: 'row', gap: 10, backgroundColor: '#e0f0ff', borderRadius: 16, padding: 16, marginTop: 8,

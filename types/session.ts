@@ -11,6 +11,9 @@ export type AppUser = {
   role: AppRole;
   status: string;
   onboarding_completed: boolean;
+  loyalty_points?: number | null;
+  total_loyalty_points?: number | null;
+  referral_code?: string | null;
   shopStatus?: string;
   onboardingStatus?: string;
   adminNotes?: string;

@@ -21,6 +21,7 @@ import * as Location from 'expo-location';
 import { Logo } from '@/components/ui/Logo';
 import { useShopStore } from '@/stores/shopStore';
 import { addressApi } from '@/api/addressApi';
+import { apiClient } from '@/api/client';
 
 /* ---------- UTILS ---------- */
 // Haversine formula to calculate distance in km
@@ -117,10 +118,10 @@ export default function HomeScreen() {
 
   const fetchLoyaltyBalance = async () => {
     try {
-      const res = await addressApi.apiClient.get('/promotion/loyalty/ledger');
+      const res = await apiClient.get('/promotion/loyalty/ledger');
       // Calculate total points from ledger or if balance is in user session use that
       // Assuming user metadata or ledger has balance. For simplicity, we can also fetch /users/me
-      const profileRes = await addressApi.apiClient.get('/users/me');
+      const profileRes = await apiClient.get('/users/me');
       if (profileRes.data.status === 1) {
         setLoyaltyPoints(profileRes.data.data.loyalty_points || 0);
       }

@@ -99,22 +99,36 @@ export default function AdminGrowthScreen() {
               <ConfigItem
                 label="Earn Rate (Points per ₹1)"
                 value={settings.loyalty.earn_points_per_rupee.toString()}
-                onChange={(v) => handleUpdateSettings('loyalty', { earn_points_per_rupee: parseFloat(v) })}
+                onChange={(v: string) => handleUpdateSettings('loyalty', { earn_points_per_rupee: parseFloat(v) })}
                 keyboardType="numeric"
                 helper="e.g. 0.1 = 1 point per ₹10 spent"
               />
               <ConfigItem
                 label="Redeem Ratio (Points per ₹1)"
                 value={settings.loyalty.points_to_currency_ratio.toString()}
-                onChange={(v) => handleUpdateSettings('loyalty', { points_to_currency_ratio: parseFloat(v) })}
+                onChange={(v: string) => handleUpdateSettings('loyalty', { points_to_currency_ratio: parseFloat(v) })}
                 keyboardType="numeric"
                 helper="e.g. 10 = ₹1 discount for every 10 points"
               />
               <ConfigItem
                 label="Min Order for Redeem (₹)"
                 value={settings.loyalty.min_order_amount_for_redeem.toString()}
-                onChange={(v) => handleUpdateSettings('loyalty', { min_order_amount_for_redeem: parseFloat(v) })}
+                onChange={(v: string) => handleUpdateSettings('loyalty', { min_order_amount_for_redeem: parseFloat(v) })}
                 keyboardType="numeric"
+              />
+              <ConfigItem
+                label="New Shop Bonus Points"
+                value={settings.loyalty.new_shop_bonus_points.toString()}
+                onChange={(v: string) => handleUpdateSettings('loyalty', { new_shop_bonus_points: parseInt(v) })}
+                keyboardType="numeric"
+                helper="Bonus pts for first order ever at a specific shop"
+              />
+              <ConfigItem
+                label="Repeat Patron Boost (%)"
+                value={settings.loyalty.repeat_order_bonus_percentage.toString()}
+                onChange={(v: string) => handleUpdateSettings('loyalty', { repeat_order_bonus_percentage: parseInt(v) })}
+                keyboardType="numeric"
+                helper="Extra points multiplier after 5+ shop orders"
               />
             </View>
 
@@ -127,19 +141,19 @@ export default function AdminGrowthScreen() {
               <ConfigItem
                 label="Signup Bonus (PTS)"
                 value={settings.referral.signup_bonus_points.toString()}
-                onChange={(v) => handleUpdateSettings('referral', { signup_bonus_points: parseInt(v) })}
+                onChange={(v: string) => handleUpdateSettings('referral', { signup_bonus_points: parseInt(v) })}
                 keyboardType="numeric"
               />
               <ConfigItem
                 label="First Order (Referrer) (PTS)"
                 value={settings.referral.first_order_bonus_referrer.toString()}
-                onChange={(v) => handleUpdateSettings('referral', { first_order_bonus_referrer: parseInt(v) })}
+                onChange={(v: string) => handleUpdateSettings('referral', { first_order_bonus_referrer: parseInt(v) })}
                 keyboardType="numeric"
               />
               <ConfigItem
                 label="First Order (Referee) (PTS)"
                 value={settings.referral.first_order_bonus_referee.toString()}
-                onChange={(v) => handleUpdateSettings('referral', { first_order_bonus_referee: parseInt(v) })}
+                onChange={(v: string) => handleUpdateSettings('referral', { first_order_bonus_referee: parseInt(v) })}
                 keyboardType="numeric"
               />
               <View style={styles.toggleRow}>
@@ -238,6 +252,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: 'white', borderRadius: 18, padding: 18, borderWidth: 1, borderColor: '#ebeef4',
   },
+  tierMain: { flex: 1 },
   tierName: { fontSize: 16, fontWeight: '900', color: '#1a1c1e', marginBottom: 2 },
   tierReq: { fontSize: 12, color: '#707881', fontWeight: '600' },
   tierBenefit: { alignItems: 'flex-end' },

@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppSession } from '@/hooks/use-app-session';
 import { addressApi } from '@/api/addressApi';
+import { apiClient } from '@/api/client';
 
 export default function RewardsScreen() {
   const router = useRouter();
@@ -28,10 +29,10 @@ export default function RewardsScreen() {
   const fetchRewardsData = useCallback(async () => {
     try {
       const [historyRes, tierRes, settingRes, couponRes] = await Promise.all([
-        addressApi.apiClient.get('/promotion/loyalty/ledger'),
-        addressApi.apiClient.get('/promotion/loyalty/levels'),
-        addressApi.apiClient.get('/promotion/loyalty/settings'),
-        addressApi.apiClient.get('/promotion/coupons')
+        apiClient.get('/promotion/loyalty/ledger'),
+        apiClient.get('/promotion/loyalty/levels'),
+        apiClient.get('/promotion/loyalty/settings'),
+        apiClient.get('/promotion/coupons/active')
       ]);
 
       if (historyRes.data.status === 1) setHistory(historyRes.data.data);
@@ -332,7 +333,6 @@ const styles = StyleSheet.create({
   historyDate: { fontSize: 11, color: '#707881', fontWeight: '500' },
   historyPoints: { fontSize: 15, fontWeight: '800' },
 });
- 15, fontWeight: '800' },
-});
+
 
 

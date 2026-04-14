@@ -95,11 +95,11 @@ export default function OTPScreen() {
 
         // 1. Sign in to global session
         await signIn({
-          user: response.data.user,
+          user: response.data.user as any,
           access_token: response.data.access_token,
           refresh_token: response.data.refresh_token,
           nextStep: response.data.next_step,
-        });
+        });;
 
         Animated.spring(successAnim, {
           toValue: 1,
