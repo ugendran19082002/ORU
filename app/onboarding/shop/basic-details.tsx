@@ -35,7 +35,6 @@ export default function ShopBasicDetailsScreen() {
     city: '',
     latitude: 28.6139 as number | null, // Default New Delhi
     longitude: 77.2090 as number | null,
-    referral_code: '',
   });
 
   // Map & Search States
@@ -204,7 +203,6 @@ export default function ShopBasicDetailsScreen() {
           name: formData.name,
           contact_number: `+91${formData.phone}`,
           shop_type: formData.shop_type,
-          referral_code: formData.referral_code
         });
         if (createRes.status === 1) {
           currentShopId = createRes.data.id;
@@ -334,23 +332,6 @@ export default function ShopBasicDetailsScreen() {
                   </View>
                 </View>
 
-                {/* Referral Code (Only on CREATE) */}
-                {mode === 'CREATE' && (
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Referral Code (Optional)</Text>
-                        <View style={styles.inputWrap}>
-                            <Ionicons name="gift-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Enter referral code"
-                                value={formData.referral_code}
-                                onChangeText={(v) => setFormData(p => ({ ...p, referral_code: v }))}
-                                autoCapitalize="characters"
-                                autoCorrect={false}
-                            />
-                        </View>
-                    </View>
-                )}
 
                 {/* Shop Location Section */}
                 <View style={styles.inputGroup}>

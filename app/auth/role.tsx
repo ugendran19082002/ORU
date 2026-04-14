@@ -4,7 +4,7 @@ import { useAndroidBackHandler } from "@/hooks/use-back-handler";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   TouchableOpacity,
   View,
@@ -64,6 +64,8 @@ export default function RoleSelectScreen() {
   const [selected, setSelected] = useState<Role | null>(null);
   const [referralCode, setReferralCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [referralY, setReferralY] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
 
   const handleSignOut = async () => {
     Alert.alert(
@@ -147,98 +149,110 @@ export default function RoleSelectScreen() {
 
         {/* ROLE CARDS */}
         <ScrollView
+          ref={scrollRef}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.roleList}
         >
-          {ROLES.map((role) => {
-            const isSelected = selected === role.id;
-            return (
-              <TouchableOpacity
-                key={role.id}
-                activeOpacity={0.88}
-                style={[
-                  styles.roleCard,
-                  isSelected && { borderColor: role.accent, borderWidth: 2.5 },
-                ]}
-                onPress={() => setSelected(role.id)}
-              >
-                {/* Radio */}
-                <View
+          <View style={styles.roleList}>
+            {ROLES.map((role) => {
+              const isSelected = selected === role.id;
+              return (
+                <TouchableOpacity
+                  key={role.id}
+                  activeOpacity={0.88}
                   style={[
-                    styles.radioOuter,
-                    isSelected && { borderColor: role.accent },
+                    styles.roleCard,
+                    isSelected && { borderColor: role.accent, borderWidth: 2.5 },
                   ]}
+                  onPress={() => setSelected(role.id)}
                 >
-                  {isSelected && (
-                    <View
-                      style={[
-                        styles.radioInner,
-                        { backgroundColor: role.accent },
-                      ]}
-                    />
-                  )}
-                </View>
-
-                <View
-                  style={[styles.roleIconWrap, { backgroundColor: role.bg }]}
-                >
-                  <Ionicons name={role.icon} size={26} color={role.accent} />
-                </View>
-
-                <View style={{ flex: 1 }}>
-                  <Text
+                  {/* Radio */}
+                  <View
                     style={[
-                      styles.roleTitle,
-                      isSelected && { color: role.accent },
+                      styles.radioOuter,
+                      isSelected && { borderColor: role.accent },
                     ]}
                   >
-                    {role.title}
-                  </Text>
-                  <Text style={styles.roleSubtitle}>{role.subtitle}</Text>
-                  {isSelected && (
-                    <View style={styles.featureList}>
-                      {role.features.map((f) => (
-                        <View key={f} style={styles.featureRow}>
-                          <Ionicons
-                            name="checkmark-circle"
-                            size={13}
-                            color={role.accent}
-                          />
-                          <Text
-                            style={[styles.featureText, { color: role.accent }]}
-                          >
-                            {f}
-                          </Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+                    {isSelected && (
+                      <View
+                        style={[
+                          styles.radioInner,
+                          { backgroundColor: role.accent },
+                        ]}
+                      />
+                    )}
+                  </View>
 
-        {/* REFERRAL CODE */}
-        <View style={styles.referralSection}>
-          <View style={styles.referralInputWrap}>
-            <Ionicons
-              name="gift-outline"
-              size={18}
-              color={selectedRole?.accent || "#334155"}
-              style={styles.referralIcon}
-            />
-            <TextInput
-              style={styles.referralInput}
-              placeholder="Have a Referral Code? (Optional)"
-              placeholderTextColor="#94a3b8"
-              value={referralCode}
-              onChangeText={setReferralCode}
-              autoCapitalize="characters"
-              autoCorrect={false}
-            />
+                  <View
+                    style={[styles.roleIconWrap, { backgroundColor: role.bg }]}
+                  >
+                    <Ionicons name={role.icon} size={26} color={role.accent} />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[
+                        styles.roleTitle,
+                        isSelected && { color: role.accent },
+                      ]}
+                    >
+                      {role.title}
+                    </Text>
+                    <Text style={styles.roleSubtitle}>{role.subtitle}</Text>
+                    {isSelected && (
+                      <View style={styles.featureList}>
+                        {role.features.map((f) => (
+                          <View key={f} style={styles.featureRow}>
+                            <Ionicons
+                              name="checkmark-circle"
+                              size={13}
+                              color={role.accent}
+                            />
+                            <Text
+                              style={[styles.featureText, { color: role.accent }]}
+                            >
+                              {f}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
           </View>
-        </View>
+
+          {/* REFERRAL CODE */}
+          <View 
+            style={styles.referralSection}
+            onLayout={(e) => setReferralY(e.nativeEvent.layout.y)}
+          >
+            <View style={styles.referralInputWrap}>
+              <Ionicons
+                name="gift-outline"
+                size={18}
+                color={selectedRole?.accent || "#334155"}
+                style={styles.referralIcon}
+              />
+              <TextInput
+                style={styles.referralInput}
+                placeholder="Referral Code? (Optional)"
+                placeholderTextColor="#94a3b8"
+                value={referralCode}
+                onChangeText={setReferralCode}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                onFocus={() => {
+                  // Small delay to ensure keyboard has started opening
+                  setTimeout(() => {
+                      scrollRef.current?.scrollTo({ y: referralY - 10, animated: true });
+                  }, 100);
+                }}
+              />
+            </View>
+          </View>
+        </ScrollView>
 
         {/* CTA */}
         <TouchableOpacity

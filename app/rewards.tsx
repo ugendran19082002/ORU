@@ -35,10 +35,10 @@ export default function RewardsScreen() {
         apiClient.get('/promotion/coupons/active')
       ]);
 
-      if (historyRes.data.status === 1) setHistory(historyRes.data.data || []);
-      if (tierRes.data.status === 1) setTiers(tierRes.data.data || []);
-      if (settingRes.data.status === 1) setSettings(settingRes.data.data);
-      if (couponRes.data.status === 1) setCoupons((couponRes.data.data || []).filter((c: any) => c.is_active));
+      if (historyRes.data?.status === 1) setHistory(historyRes.data.data?.data || []);
+      if (tierRes.data?.status === 1) setTiers(tierRes.data.data || []);
+      if (settingRes.data?.status === 1) setSettings(settingRes.data.data || null);
+      if (couponRes.data?.status === 1) setCoupons((couponRes.data.data || []).filter((c: any) => c?.is_active));
     } catch (err) {
       console.error('Failed to fetch rewards data', err);
     } finally {
@@ -52,8 +52,8 @@ export default function RewardsScreen() {
   const currentPoints = user?.loyalty_points || 0;
   // Note: For total orders, we'd ideally fetch from an analytics endpoint.
   // Using points as a proxy for progress if levels are point-based.
-  const currentTier = tiers.find(t => currentPoints >= t.min_points && (!t.max_points || currentPoints <= t.max_points)) || tiers[0] || { name: 'Bronze', discount_percent: 0, min_points: 0 };
-  const nextTier = tiers.find(t => t.min_points > currentPoints);
+  const currentTier = (tiers || []).find(t => currentPoints >= t.min_points && (!t.max_points || currentPoints <= t.max_points)) || tiers[0] || { name: 'Bronze', discount_percent: 0, min_points: 0 };
+  const nextTier = (tiers || []).find(t => t.min_points > currentPoints);
   
   const pointsToNext = nextTier ? nextTier.min_points - currentPoints : 0;
   const tierProgress = nextTier ? (currentPoints / nextTier.min_points) : 1;
@@ -100,10 +100,15 @@ export default function RewardsScreen() {
               <Ionicons name="medal-outline" size={16} color="white" />
               <Text style={styles.tierBadgeText}>{currentTier.name} Member</Text>
             </View>
-            <Text style={styles.discountChip}>{currentTier.discount_percentage}% OFF</Text>
+            <Text style={styles.discountChip}>{currentTier.discount_percent}% OFF</Text>
           </View>
           <Text style={styles.heroPoints}>{currentPoints.toLocaleString()}</Text>
-          <Text style={styles.heroPointsLabel}>Total Points</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 18 }}>
+            <Text style={styles.heroPointsLabel}>Total Points</Text>
+            <View style={styles.valueBadge}>
+              <Text style={styles.valueBadgeText}>≈ ₹{settings ? (currentPoints / settings.points_to_currency_ratio).toFixed(2) : '0'}</Text>
+            </View>
+          </View>
 
           {nextTier && (
             <View style={styles.progressSection}>
@@ -119,17 +124,17 @@ export default function RewardsScreen() {
 
           <View style={styles.heroStats}>
             <View style={styles.heroStat}>
-              <Text style={styles.heroStatVal}>{settings?.min_order_amount_for_redeem || 200}</Text>
+              <Text style={styles.heroStatVal}>₹{Math.round(settings?.min_order_amount_for_redeem || 100)}</Text>
               <Text style={styles.heroStatLabel}>Min Order</Text>
             </View>
             <View style={styles.heroStatDivider} />
             <View style={styles.heroStat}>
-              <Text style={styles.heroStatVal}>{settings ? (1 / settings.points_to_currency_ratio) : '10'}</Text>
+              <Text style={styles.heroStatVal}>{settings?.points_to_currency_ratio || 10}</Text>
               <Text style={styles.heroStatLabel}>Pts = ₹1</Text>
             </View>
             <View style={styles.heroStatDivider} />
             <View style={styles.heroStat}>
-              <Text style={styles.heroStatVal}>{settings?.max_points_percentage_per_order || 20}%</Text>
+              <Text style={styles.heroStatVal}>{settings?.max_points_percentage_per_order || 10}%</Text>
               <Text style={styles.heroStatLabel}>Max Discount</Text>
             </View>
           </View>
@@ -174,7 +179,7 @@ export default function RewardsScreen() {
         </View>
 
         {/* VOUCHERS */}
-        {coupons.length > 0 && (
+        {(coupons || []).length > 0 && (
           <>
             <Text style={styles.sectionTitle}>Available Coupons</Text>
             {coupons.map((v) => (
@@ -195,7 +200,7 @@ export default function RewardsScreen() {
         {/* LOYALTY TIERS */}
         <Text style={styles.sectionTitle}>Loyalty Tiers</Text>
         <View style={styles.tiersList}>
-          {tiers.map((tier) => (
+          {(tiers || []).map((tier) => (
             <View key={tier.id} style={[styles.tierRow, tier.id === currentTier.id && styles.tierRowActive]}>
               <View style={[styles.tierIcon, { backgroundColor: '#eff6ff' }]}>
                 <Ionicons name="medal-outline" size={18} color="#005d90" />
@@ -217,10 +222,10 @@ export default function RewardsScreen() {
         {/* POINTS HISTORY */}
         <Text style={styles.sectionTitle}>Points History</Text>
         <View style={styles.historyCard}>
-          {history.length === 0 && (
+          {(history || []).length === 0 && (
             <Text style={{ textAlign: 'center', color: '#94a3b8', padding: 20 }}>No transactions yet</Text>
           )}
-          {history.map((h, i) => (
+          {(history || []).map((h, i) => (
             <View key={h.id} style={[styles.historyRow, i < history.length - 1 && styles.historyDivider]}>
               <View style={[styles.historyIcon, { backgroundColor: h.points > 0 ? '#e8f5e9' : '#ffebee' }]}>
                 <Ionicons name={h.points > 0 ? 'arrow-up' : 'arrow-down'} size={14} color={h.points > 0 ? '#2e7d32' : '#c62828'} />
@@ -262,8 +267,10 @@ const styles = StyleSheet.create({
   tierBadgeText: { color: 'white', fontSize: 12, fontWeight: '700' },
   discountChip: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, fontSize: 13, color: 'white', fontWeight: '800' },
   heroPoints: { fontSize: 52, fontWeight: '900', color: 'white', letterSpacing: -2, marginBottom: 2 },
-  heroPointsLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '600', marginBottom: 18 },
-  progressSection: { marginBottom: 20 },
+  heroPointsLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '600' },
+  valueBadge: { backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  valueBadgeText: { color: 'white', fontSize: 11, fontWeight: '800' },
+  progressSection: { marginBottom: 20, marginTop: 18 },
   progressHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
   progressLabel: { fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: '600' },
   progressPct: { fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: '700' },

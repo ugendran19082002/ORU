@@ -176,7 +176,15 @@ export function AppSessionProvider({
         // Break infinite loop if unauthorized
         const nextUser = { ...user, shopStatus: 'error', onboardingStatus: 'error' };
         setUser(nextUser);
-        console.warn('🛡️ [Session] Shop sync failed (403/401). Loop broken.');
+        await writeSession({
+            user: nextUser,
+            access_token: accessToken,
+            refresh_token: refreshToken,
+            preferredRole,
+            biometricEnabled,
+            nextStep
+        });
+        console.warn('🛡️ [Session] Shop sync failed (403/401). Loop broken and persisted.');
       }
     } finally {
       setIsSyncingShop(false);
