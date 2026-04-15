@@ -34,6 +34,7 @@ export default function RootLayout() {
               <Stack.Screen name="order/tracking" options={{ animation: 'slide_from_right' }} />
               <Stack.Screen name="order/cancel" options={{ animation: 'slide_from_bottom' }} />
               <Stack.Screen name="order/schedule" options={{ animation: 'slide_from_bottom' }} />
+              <Stack.Screen name="order/rating" options={{ animation: 'slide_from_bottom' }} />
               <Stack.Screen name="notifications" options={{ animation: 'slide_from_right' }} />
               <Stack.Screen name="subscriptions" options={{ animation: 'slide_from_right' }} />
               <Stack.Screen name="rewards" options={{ animation: 'slide_from_right' }} />
@@ -47,6 +48,9 @@ export default function RootLayout() {
               <Stack.Screen name="map-preview" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
               <Stack.Screen name="addresses" options={{ headerShown: false, animation: 'slide_from_right' }} />
               <Stack.Screen name="edit-profile" options={{ headerShown: false, animation: 'slide_from_right' }} />
+              <Stack.Screen name="customer-analytics" options={{ headerShown: false, animation: 'slide_from_right' }} />
+              <Stack.Screen name="customer-payment-methods" options={{ headerShown: false, animation: 'slide_from_right' }} />
+              <Stack.Screen name="customer-reviews" options={{ headerShown: false, animation: 'slide_from_right' }} />
               <Stack.Screen name="location" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
               <Stack.Screen name="shop" options={{ headerShown: false, animation: 'fade' }} />
               <Stack.Screen name="delivery" options={{ headerShown: false, animation: 'fade' }} />

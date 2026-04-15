@@ -5,22 +5,20 @@
  */
 import { create } from 'zustand';
 import type { DeliveryAgent } from '@/types/domain';
-
-const DEFAULT_AGENTS: DeliveryAgent[] = [
-  { id: 'da_owner', name: 'Store Owner', phone: '9999999999', status: 'active', assignedOrders: 0 },
-  { id: 'da_1', name: 'Ravi Kumar', phone: '9876543210', status: 'active', assignedOrders: 2 },
-  { id: 'da_2', name: 'Suresh M', phone: '9123456789', status: 'offline', assignedOrders: 0 },
-];
+import { apiClient } from '@/api/client';
 
 type FleetState = {
   agents: DeliveryAgent[];
+  isFetching: boolean;
   addAgent: (payload: { name: string; phone: string }) => void;
   removeAgent: (id: string) => void;
   setAgentStatus: (id: string, status: DeliveryAgent['status']) => void;
+  fetchAgents: () => Promise<void>;
 };
 
 export const useFleetStore = create<FleetState>((set) => ({
-  agents: DEFAULT_AGENTS,
+  agents: [],
+  isFetching: false,
 
   addAgent: (payload) =>
     set((state) => ({
@@ -47,4 +45,22 @@ export const useFleetStore = create<FleetState>((set) => ({
         a.id === id ? { ...a, status } : a,
       ),
     })),
+
+  fetchAgents: async () => {
+    set({ isFetching: true });
+    try {
+      const res = await apiClient.get('/delivery/persons');
+      const list: any[] = res.data?.data ?? res.data ?? [];
+      const agents: DeliveryAgent[] = list.map((dp: any) => ({
+        id: String(dp.id),
+        name: dp.user?.name ?? `Agent ${dp.id}`,
+        phone: dp.user?.phone ?? '',
+        status: dp.is_on_duty ? 'active' : 'offline',
+        assignedOrders: 0,
+      }));
+      set({ agents, isFetching: false });
+    } catch {
+      set({ isFetching: false });
+    }
+  },
 }));

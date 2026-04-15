@@ -63,12 +63,19 @@ export const shopApi = {
 
   /**
    * Fetch a single shop by ID.
-   * Currently resolved from mock data — replace with real endpoint when available.
+   * GET /shops/:id
    */
   async getShopById(id: string): Promise<Shop | null> {
-    const shop = mockShops.find((s) => s.id === id);
-    if (!shop) throw new ApiError('SHOP_NOT_FOUND', 404, 'Shop not found');
-    return shop;
+    try {
+      const response = await apiClient.get<ApiResponse<ShopProfileRaw>>(`/shops/${id}`);
+      if (response.data.status === 1 && response.data.data) {
+        return mapShop(response.data.data);
+      }
+      return null;
+    } catch (error) {
+      log.error('[shopApi] getShopById failed:', error);
+      throw ApiError.from(error, 'Shop not found');
+    }
   },
 
   /**

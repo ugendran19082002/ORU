@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Switch, Linking,
@@ -8,8 +9,10 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import * as Location from 'expo-location';
 import { useDeliveryStore } from '@/stores/deliveryStore';
 import { useAppSession } from '@/hooks/use-app-session';
+import { connectSocket, disconnectSocket, getSocket } from '@/utils/socket';
 
 
 
@@ -17,6 +20,79 @@ export default function DeliveryDashboardScreen() {
   const router = useRouter();
   const { user, signOut } = useAppSession();
   const { tasks, online, toggleOnline, assignCurrentTask, updateTaskStatus, removeTask } = useDeliveryStore();
+
+  // ── Socket location push ─────────────────────────────────────────────────────
+  // When the driver is online and has an active accepted task, broadcast GPS
+  // position every 5 seconds through the socket connection.
+  const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    const activeTask = tasks.find((t) => t.status === 'accepted');
+
+    if (!online || !activeTask) {
+      // Not on duty — clear any running interval and disconnect socket
+      if (locationIntervalRef.current) {
+        clearInterval(locationIntervalRef.current);
+        locationIntervalRef.current = null;
+      }
+      disconnectSocket();
+      return;
+    }
+
+    let mounted = true;
+
+    const startLocationPush = async () => {
+      // Request foreground location permissions
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.warn('[Socket] Location permission denied — skipping push');
+        return;
+      }
+
+      // Connect socket (no-op if already connected)
+      try {
+        await connectSocket();
+      } catch (err) {
+        console.warn('[Socket] Connect failed in delivery push:', err);
+        return;
+      }
+
+      if (!mounted) return;
+
+      // Push location every 5 seconds
+      locationIntervalRef.current = setInterval(async () => {
+        const sock = getSocket();
+        if (!sock?.connected) return;
+
+        try {
+          const currentLocation = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.High,
+          });
+
+          sock.emit('location_push', {
+            latitude: currentLocation.coords.latitude,
+            longitude: currentLocation.coords.longitude,
+            order_id: activeTask.orderId,
+            accuracy: currentLocation.coords.accuracy,
+            speed: currentLocation.coords.speed,
+          });
+        } catch (locErr) {
+          console.warn('[Socket] Failed to get location:', locErr);
+        }
+      }, 5000);
+    };
+
+    startLocationPush();
+
+    return () => {
+      mounted = false;
+      if (locationIntervalRef.current) {
+        clearInterval(locationIntervalRef.current);
+        locationIntervalRef.current = null;
+      }
+    };
+  }, [online, tasks]);
+  // ────────────────────────────────────────────────────────────────────────────
 
   const handleAccept = (id: string) => {
     updateTaskStatus(id, 'accepted');

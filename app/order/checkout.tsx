@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Modal,
   RefreshControl,
   ScrollView,
@@ -24,65 +25,43 @@ import { useAppSession } from "@/hooks/use-app-session";
 import { LinearGradient } from "expo-linear-gradient";
 import moment from "moment";
 import Toast from "react-native-toast-message";
+import { promotionApi } from "@/api/promotionApi";
+import { ApiError } from "@/api/apiError";
 
 type PaymentType = "upi" | "cod";
 
-const VALID_COUPONS: Record<string, number> = {
-  WATER10: 10,
-  FIRST20: 20,
-  THANNI15: 15,
-};
-
-function CouponBlock({ subtotal, onApply }: { subtotal: number; onApply?: (discount: number) => void }) {
+function CouponBlock({ subtotal, onApply }: { subtotal: number; onApply?: (discount: number, code: string) => void }) {
   const [coupon, setCoupon] = useState("");
   const [discount, setDiscount] = useState(0);
   const [couponError, setCouponError] = useState("");
+  const [isValidating, setIsValidating] = useState(false);
 
-  const applyCoupon = (codeOverride?: string) => {
-    const targetCode = (codeOverride || coupon).toUpperCase();
-    const pct = VALID_COUPONS[targetCode];
-    if (pct) {
-      const discountedAmount = Math.round((subtotal * pct) / 100);
-      setDiscount(discountedAmount);
+  const applyCoupon = async () => {
+    const targetCode = coupon.trim().toUpperCase();
+    if (!targetCode) return;
+
+    setIsValidating(true);
+    setCouponError("");
+    try {
+      const result = await promotionApi.validateCoupon(targetCode, subtotal);
+      setDiscount(result.discount_amount);
       setCoupon(targetCode);
-      setCouponError("");
-      onApply?.(discountedAmount);
-    } else {
+      onApply?.(result.discount_amount, targetCode);
+    } catch (err) {
       setDiscount(0);
-      setCouponError("Invalid code. Try selecting a suggested tag.");
-      onApply?.(0);
+      onApply?.(0, "");
+      if (err instanceof ApiError) {
+        setCouponError(err.message || "Invalid or expired coupon code.");
+      } else {
+        setCouponError("Could not validate coupon. Please try again.");
+      }
+    } finally {
+      setIsValidating(false);
     }
   };
 
   return (
     <View style={{ marginTop: 8 }}>
-      <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
-        {Object.keys(VALID_COUPONS).map((code) => (
-          <TouchableOpacity
-            key={code}
-            onPress={() => applyCoupon(code)}
-            style={{
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 10,
-              backgroundColor: coupon === code && discount > 0 ? "#005d90" : "#f1f4f9",
-              borderWidth: 1,
-              borderColor: coupon === code && discount > 0 ? "#005d90" : "#e2e8f0",
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 11,
-                fontWeight: "800",
-                color: coupon === code && discount > 0 ? "white" : "#707881",
-              }}
-            >
-              {code}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
       <View style={{ flexDirection: "row", gap: 10 }}>
         <View style={{ flex: 1, position: 'relative' }}>
           <TextInput
@@ -90,8 +69,10 @@ function CouponBlock({ subtotal, onApply }: { subtotal: number; onApply?: (disco
             onChangeText={(t) => {
               setCoupon(t);
               setCouponError("");
-              setDiscount(0);
-              onApply?.(0);
+              if (discount > 0) {
+                setDiscount(0);
+                onApply?.(0, "");
+              }
             }}
             placeholder="Enter promo code"
             placeholderTextColor="#bfc7d1"
@@ -116,17 +97,21 @@ function CouponBlock({ subtotal, onApply }: { subtotal: number; onApply?: (disco
           )}
         </View>
         <TouchableOpacity
-          onPress={() => applyCoupon()}
-          disabled={!coupon}
+          onPress={applyCoupon}
+          disabled={!coupon.trim() || isValidating}
           style={{
             backgroundColor: "#005d90",
             borderRadius: 14,
             paddingHorizontal: 20,
             justifyContent: "center",
-            opacity: !coupon ? 0.6 : 1,
+            opacity: !coupon.trim() || isValidating ? 0.6 : 1,
           }}
         >
-          <Text style={{ color: "white", fontWeight: "800", fontSize: 14 }}>Apply</Text>
+          {isValidating ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Text style={{ color: "white", fontWeight: "800", fontSize: 14 }}>Apply</Text>
+          )}
         </TouchableOpacity>
       </View>
       {couponError ? (
@@ -136,7 +121,7 @@ function CouponBlock({ subtotal, onApply }: { subtotal: number; onApply?: (disco
       ) : null}
       {discount > 0 ? (
         <Text style={{ color: "#22c55e", fontSize: 13, marginTop: 8, fontWeight: "800", marginLeft: 4 }}>
-          🎉 Extra ₹{discount} off applied!
+          Extra ₹{discount} off applied!
         </Text>
       ) : null}
     </View>
@@ -401,9 +386,8 @@ export default function OrderCheckoutScreen() {
           <Text style={styles.sectionTitle}>Coupon / Promo Code</Text>
           <CouponBlock
             subtotal={subtotal}
-            onApply={(discount) => {
-              // ✅ Wire to cartStore so getTotal() reflects discount
-              applyCoupon(discount > 0 ? 'APPLIED' : '', discount);
+            onApply={(discount, code) => {
+              applyCoupon(code, discount);
             }}
           />
         </View>
@@ -415,6 +399,12 @@ export default function OrderCheckoutScreen() {
             <Text style={styles.summaryKey}>Products (×{quantity})</Text>
             <Text style={styles.summaryVal}>₹{subtotal}</Text>
           </View>
+          {(shop as any)?.floor_charge > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryKey}>Floor charge</Text>
+              <Text style={styles.summaryVal}>₹{(shop as any).floor_charge}</Text>
+            </View>
+          )}
           <View style={styles.summaryRow}>
             <Text style={styles.summaryKey}>Delivery Fee</Text>
             <Text style={styles.summaryVal}>₹{deliveryFee}</Text>

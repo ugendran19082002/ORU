@@ -47,11 +47,16 @@ export type OrderStatus =
   | 'picked'
   | 'delivered'
   | 'completed'
-  | 'cancelled';
+  | 'cancelled'
+  | 'placed'
+  | 'preparing'
+  | 'dispatched'
+  | 'failed';
 
 export type Order = {
   id: string;
   shopId: string;
+  shopName?: string;
   customerName: string;
   customerPhone: string;
   items: Array<{ productId: string; quantity: number }>;

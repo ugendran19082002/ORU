@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,56 +16,6 @@ import { useCartStore } from '@/stores/cartStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
 
-const ORDERS = [
-  {
-    id: 'THN-8821',
-    shop: 'Aqua Crystal Pure',
-    items: '2x 20L Mineral Water',
-    date: 'Today, 10:30 AM',
-    amount: '₹90',
-    status: 'Out for Delivery',
-    statusColor: '#006878',
-    statusBg: '#e0f7fa',
-    progress: 0.65,
-    isActive: true,
-  },
-  {
-    id: 'THN-8810',
-    shop: 'Blue Drop Waters',
-    items: '3x 20L Mineral Water',
-    date: 'Yesterday, 3:15 PM',
-    amount: '₹135',
-    status: 'Delivered',
-    statusColor: '#005d90',
-    statusBg: '#e3f2fd',
-    progress: 1.0,
-    isActive: false,
-  },
-  {
-    id: 'THN-8800',
-    shop: 'H2O Wellness',
-    items: '1x 20L Copper-Ionized',
-    date: 'Apr 2, 11:00 AM',
-    amount: '₹40',
-    status: 'Delivered',
-    statusColor: '#005d90',
-    statusBg: '#e3f2fd',
-    progress: 1.0,
-    isActive: false,
-  },
-  {
-    id: 'THN-8791',
-    shop: 'Aqua Crystal Pure',
-    items: '4x 20L Alkaline Water',
-    date: 'Mar 28, 9:00 AM',
-    amount: '₹180',
-    status: 'Cancelled',
-    statusColor: '#ba1a1a',
-    statusBg: '#ffdad6',
-    progress: 0,
-    isActive: false,
-  },
-];
 
 function OrderCard({ order, onTrack, onReorder, onSupport }: {
   order: any;
@@ -132,17 +82,19 @@ export default function OrdersScreen() {
   const router = useRouter();
   const [tab, setTab] = useState<'active' | 'past'>('active');
   const [refreshing, setRefreshing] = useState(false);
-  const { orders, setActiveOrder } = useOrderStore();
+  const { orders, setActiveOrder, fetchOrders, isFetching } = useOrderStore();
   const { shops, setSelectedShop } = useShopStore();
   const { setShop, setQuantity } = useCartStore();
 
-  const onRefresh = React.useCallback(() => {
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    // Simulate a network request
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  }, []);
+    await fetchOrders();
+    setRefreshing(false);
+  }, [fetchOrders]);
 
   const normalizedOrders = orders.map((order) => {
     const shop = shops.find((item) => item.id === order.shopId);
@@ -156,13 +108,17 @@ export default function OrdersScreen() {
       delivered: { label: 'Delivered', color: '#005D90', bg: '#E3F2FD', progress: 0.9 },
       completed: { label: 'Completed', color: '#2e7d32', bg: '#e8f5e9', progress: 1 },
       cancelled: { label: 'Cancelled', color: '#ba1a1a', bg: '#ffdad6', progress: 0 },
+      placed: { label: 'Placed', color: '#005D90', bg: '#E3F2FD', progress: 0.1 },
+      preparing: { label: 'Preparing', color: '#0077B6', bg: '#E0F0FF', progress: 0.4 },
+      dispatched: { label: 'Dispatched', color: '#006878', bg: '#E0F7FA', progress: 0.75 },
+      failed: { label: 'Failed', color: '#ba1a1a', bg: '#ffdad6', progress: 0 },
     } as const;
     const statusInfo = statusMap[order.status];
 
     return {
       id: order.id,
       shopId: order.shopId,
-      shop: shop?.name ?? 'Water Shop',
+      shop: order.shopName ?? shop?.name ?? 'Water Shop',
       items: `${quantity}x Water Can`,
       date: order.createdAtLabel,
       amount: `Rs. ${order.total}`,

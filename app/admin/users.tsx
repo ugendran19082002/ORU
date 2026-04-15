@@ -1,0 +1,797 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Modal,
+  Alert,
+  ScrollView,
+  useWindowDimensions,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import Toast from 'react-native-toast-message';
+import { adminUsersApi, type AdminUser } from '@/api/adminUsersApi';
+import type { AppRole } from '@/types/session';
+
+// ─── Types & constants ────────────────────────────────────────────────────────
+
+type RoleFilter = '' | 'customer' | 'shop_owner' | 'delivery' | 'admin';
+
+const ROLE_TABS: { key: RoleFilter; label: string }[] = [
+  { key: '', label: 'All' },
+  { key: 'customer', label: 'Customers' },
+  { key: 'shop_owner', label: 'Shop Owners' },
+  { key: 'delivery', label: 'Delivery' },
+  { key: 'admin', label: 'Admin' },
+];
+
+const ROLE_OPTIONS: { key: AppRole; label: string }[] = [
+  { key: 'customer', label: 'Customer' },
+  { key: 'shop_owner', label: 'Shop Owner' },
+  { key: 'delivery', label: 'Delivery' },
+  { key: 'admin', label: 'Admin' },
+];
+
+const PAGE_SIZE = 20;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function getRoleBadgeTheme(role: AppRole | string) {
+  switch (role) {
+    case 'admin':
+      return { bg: '#ffdad6', text: '#ba1a1a' };
+    case 'shop_owner':
+      return { bg: '#e0f0ff', text: '#005d90' };
+    case 'delivery':
+      return { bg: '#fff3e0', text: '#e65100' };
+    case 'customer':
+    default:
+      return { bg: '#e8f5e9', text: '#2e7d32' };
+  }
+}
+
+function getRoleLabel(role: AppRole | string): string {
+  switch (role) {
+    case 'shop_owner': return 'Shop Owner';
+    case 'delivery': return 'Delivery';
+    case 'admin': return 'Admin';
+    case 'customer': return 'Customer';
+    default: return role;
+  }
+}
+
+// ─── User Card ────────────────────────────────────────────────────────────────
+
+interface UserCardProps {
+  user: AdminUser;
+  onPress: (user: AdminUser) => void;
+}
+
+function UserCard({ user, onPress }: UserCardProps) {
+  const roleBadge = getRoleBadgeTheme(user.role);
+  const isActive = user.status === 'active';
+
+  return (
+    <TouchableOpacity style={styles.card} onPress={() => onPress(user)} activeOpacity={0.75}>
+      {/* Avatar + info */}
+      <View style={styles.cardRow}>
+        <View style={styles.avatarBox}>
+          <Text style={styles.avatarText}>
+            {(user.name || user.phone || '?').charAt(0).toUpperCase()}
+          </Text>
+        </View>
+
+        <View style={styles.cardInfo}>
+          <Text style={styles.cardName} numberOfLines={1}>
+            {user.name || '—'}
+          </Text>
+          <Text style={styles.cardPhone}>{user.phone}</Text>
+          {user.email ? (
+            <Text style={styles.cardEmail} numberOfLines={1}>{user.email}</Text>
+          ) : null}
+        </View>
+
+        <View style={styles.cardBadges}>
+          {/* Role badge */}
+          <View style={[styles.badge, { backgroundColor: roleBadge.bg }]}>
+            <Text style={[styles.badgeText, { color: roleBadge.text }]}>
+              {getRoleLabel(user.role)}
+            </Text>
+          </View>
+          {/* Status badge */}
+          <View style={[styles.badge, { backgroundColor: isActive ? '#e8f5e9' : '#f5f5f5', marginTop: 4 }]}>
+            <View style={[styles.statusDot, { backgroundColor: isActive ? '#2e7d32' : '#9e9e9e' }]} />
+            <Text style={[styles.badgeText, { color: isActive ? '#2e7d32' : '#757575' }]}>
+              {isActive ? 'Active' : user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Join date footer */}
+      <View style={styles.cardFooter}>
+        <Ionicons name="calendar-outline" size={11} color="#94a3b8" />
+        <Text style={styles.cardFooterText}>Joined {formatDate(user.created_at)}</Text>
+        <Ionicons name="chevron-forward" size={14} color="#c8d6e0" style={{ marginLeft: 'auto' }} />
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+// ─── Detail Modal ─────────────────────────────────────────────────────────────
+
+interface UserDetailModalProps {
+  user: AdminUser | null;
+  visible: boolean;
+  onClose: () => void;
+  onUpdated: (updated: AdminUser) => void;
+}
+
+function UserDetailModal({ user, visible, onClose, onUpdated }: UserDetailModalProps) {
+  const [actionLoading, setActionLoading] = useState(false);
+  const [roleLoading, setRoleLoading] = useState(false);
+  const [showRolePicker, setShowRolePicker] = useState(false);
+
+  if (!user) return null;
+
+  const isActive = user.status === 'active';
+  const roleBadge = getRoleBadgeTheme(user.role);
+
+  const handleToggleSuspend = () => {
+    const nextStatus = isActive ? 'suspended' : 'active';
+    const actionLabel = isActive ? 'Suspend' : 'Unsuspend';
+
+    Alert.alert(
+      `${actionLabel} User`,
+      `Are you sure you want to ${actionLabel.toLowerCase()} ${user.name || user.phone}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: actionLabel,
+          style: isActive ? 'destructive' : 'default',
+          onPress: async () => {
+            setActionLoading(true);
+            try {
+              const res = await adminUsersApi.updateUser(user.id, { status: nextStatus });
+              if (res.status === 1 && res.data) {
+                onUpdated(res.data);
+                Toast.show({ type: 'success', text1: 'Done', text2: `User ${actionLabel.toLowerCase()}ed.` });
+                onClose();
+              } else {
+                throw new Error(res.message || 'Update failed');
+              }
+            } catch (err: any) {
+              Toast.show({ type: 'error', text1: 'Error', text2: err?.message ?? 'Action failed.' });
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleChangeRole = async (newRole: AppRole) => {
+    if (newRole === user.role) {
+      setShowRolePicker(false);
+      return;
+    }
+    Alert.alert(
+      'Change Role',
+      `Change ${user.name || user.phone}'s role to ${getRoleLabel(newRole)}?`,
+      [
+        { text: 'Cancel', style: 'cancel', onPress: () => setShowRolePicker(false) },
+        {
+          text: 'Confirm',
+          onPress: async () => {
+            setShowRolePicker(false);
+            setRoleLoading(true);
+            try {
+              const res = await adminUsersApi.updateUser(user.id, { role: newRole });
+              if (res.status === 1 && res.data) {
+                onUpdated(res.data);
+                Toast.show({ type: 'success', text1: 'Role Updated', text2: `Role changed to ${getRoleLabel(newRole)}.` });
+                onClose();
+              } else {
+                throw new Error(res.message || 'Update failed');
+              }
+            } catch (err: any) {
+              Toast.show({ type: 'error', text1: 'Error', text2: err?.message ?? 'Role change failed.' });
+            } finally {
+              setRoleLoading(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
+        <TouchableOpacity activeOpacity={1} style={styles.modalSheet}>
+          {/* Handle */}
+          <View style={styles.modalHandle} />
+
+          {/* Header row */}
+          <View style={styles.modalHeader}>
+            <View style={styles.modalAvatar}>
+              <Text style={styles.modalAvatarText}>
+                {(user.name || user.phone || '?').charAt(0).toUpperCase()}
+              </Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.modalName} numberOfLines={1}>{user.name || '—'}</Text>
+              <Text style={styles.modalPhone}>{user.phone}</Text>
+            </View>
+            <TouchableOpacity style={styles.modalCloseBtn} onPress={onClose}>
+              <Ionicons name="close" size={20} color="#707881" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Info rows */}
+          <View style={styles.modalInfo}>
+            {user.email ? (
+              <View style={styles.modalInfoRow}>
+                <Ionicons name="mail-outline" size={15} color="#707881" />
+                <Text style={styles.modalInfoText}>{user.email}</Text>
+              </View>
+            ) : null}
+            <View style={styles.modalInfoRow}>
+              <Ionicons name="person-outline" size={15} color="#707881" />
+              <View style={[styles.badge, { backgroundColor: roleBadge.bg }]}>
+                <Text style={[styles.badgeText, { color: roleBadge.text }]}>
+                  {getRoleLabel(user.role)}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.modalInfoRow}>
+              <Ionicons name="calendar-outline" size={15} color="#707881" />
+              <Text style={styles.modalInfoText}>Joined {formatDate(user.created_at)}</Text>
+            </View>
+            <View style={styles.modalInfoRow}>
+              <Ionicons name="ellipse" size={10} color={user.status === 'active' ? '#2e7d32' : '#9e9e9e'} />
+              <Text style={[styles.modalInfoText, { fontWeight: '700', color: user.status === 'active' ? '#2e7d32' : '#757575' }]}>
+                {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.modalDivider} />
+
+          {/* Role picker */}
+          {showRolePicker ? (
+            <View style={styles.rolePicker}>
+              <Text style={styles.rolePickerTitle}>Select New Role</Text>
+              {ROLE_OPTIONS.map((opt) => (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[styles.roleOption, user.role === opt.key && styles.roleOptionActive]}
+                  onPress={() => handleChangeRole(opt.key)}
+                  disabled={roleLoading}
+                >
+                  <Text style={[styles.roleOptionText, user.role === opt.key && styles.roleOptionTextActive]}>
+                    {opt.label}
+                  </Text>
+                  {user.role === opt.key && (
+                    <Ionicons name="checkmark" size={16} color="#005d90" />
+                  )}
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity style={styles.rolePickerCancel} onPress={() => setShowRolePicker(false)}>
+                <Text style={styles.rolePickerCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            /* Action buttons */
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalActionBtn, styles.modalActionBtnOutline]}
+                onPress={() => setShowRolePicker(true)}
+                disabled={roleLoading || actionLoading}
+              >
+                {roleLoading ? (
+                  <ActivityIndicator size="small" color="#005d90" />
+                ) : (
+                  <>
+                    <Ionicons name="swap-horizontal-outline" size={16} color="#005d90" />
+                    <Text style={[styles.modalActionBtnText, { color: '#005d90' }]}>Change Role</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modalActionBtn,
+                  isActive ? styles.modalActionBtnDanger : styles.modalActionBtnSuccess,
+                ]}
+                onPress={handleToggleSuspend}
+                disabled={actionLoading || roleLoading}
+              >
+                {actionLoading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <>
+                    <Ionicons
+                      name={isActive ? 'ban-outline' : 'checkmark-circle-outline'}
+                      size={16}
+                      color="white"
+                    />
+                    <Text style={[styles.modalActionBtnText, { color: 'white' }]}>
+                      {isActive ? 'Suspend' : 'Unsuspend'}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+        </TouchableOpacity>
+      </TouchableOpacity>
+    </Modal>
+  );
+}
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
+
+export default function AdminUsersScreen() {
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
+
+  const [activeRole, setActiveRole] = useState<RoleFilter>('');
+  const [search, setSearch] = useState('');
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  // Debounce search
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
+  }, [search]);
+
+  const fetchUsers = useCallback(async (pageNum: number, reset: boolean) => {
+    if (reset) {
+      setLoading(true);
+      setError(null);
+    } else {
+      setLoadingMore(true);
+    }
+
+    try {
+      const res = await adminUsersApi.listUsers({
+        role: activeRole,
+        search: debouncedSearch || undefined,
+        page: pageNum,
+        limit: PAGE_SIZE,
+      });
+
+      if (res.status === 1 && res.data) {
+        const list = res.data.data ?? [];
+        setUsers((prev) => (reset ? list : [...prev, ...list]));
+        setTotalCount(res.data.total ?? 0);
+      } else {
+        throw new Error(res.message || 'Failed to fetch users');
+      }
+    } catch (err: any) {
+      const msg = err?.message ?? 'Failed to load users.';
+      setError(msg);
+      if (!reset) Toast.show({ type: 'error', text1: 'Load Error', text2: msg });
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [activeRole, debouncedSearch]);
+
+  // Reset and reload when filter/search changes
+  useEffect(() => {
+    setPage(1);
+    fetchUsers(1, true);
+  }, [fetchUsers]);
+
+  const handleLoadMore = useCallback(() => {
+    const hasMore = users.length < totalCount;
+    if (loadingMore || loading || !hasMore) return;
+    const next = page + 1;
+    setPage(next);
+    fetchUsers(next, false);
+  }, [users.length, totalCount, loadingMore, loading, page, fetchUsers]);
+
+  const handleUserUpdated = useCallback((updated: AdminUser) => {
+    setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+  }, []);
+
+  const openDetail = useCallback((user: AdminUser) => {
+    setSelectedUser(user);
+    setModalVisible(true);
+  }, []);
+
+  const renderUser = useCallback(
+    ({ item }: { item: AdminUser }) => <UserCard user={item} onPress={openDetail} />,
+    [openDetail],
+  );
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return <ActivityIndicator size="small" color="#005d90" style={{ marginVertical: 20 }} />;
+  };
+
+  const renderEmpty = () => {
+    if (loading) return null;
+    return (
+      <View style={styles.emptyWrap}>
+        <Ionicons name="people-outline" size={64} color="#c8d6e0" />
+        <Text style={styles.emptyTitle}>No Users Found</Text>
+        <Text style={styles.emptySubtitle}>
+          {debouncedSearch
+            ? `No results for "${debouncedSearch}".`
+            : activeRole
+            ? `No ${getRoleLabel(activeRole).toLowerCase()}s yet.`
+            : 'No users have registered yet.'}
+        </Text>
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={[styles.header, isDesktop && { paddingHorizontal: 40, height: 80 }]}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={20} color="#005d90" />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.pageTitle, isDesktop && { fontSize: 28 }]}>User Management</Text>
+          {!loading && (
+            <Text style={styles.subtitle}>{totalCount} total users</Text>
+          )}
+        </View>
+      </View>
+
+      {/* Search bar */}
+      <View style={[styles.searchBar, isDesktop && { paddingHorizontal: 40 }]}>
+        <View style={styles.searchInput}>
+          <Ionicons name="search-outline" size={18} color="#94a3b8" />
+          <TextInput
+            style={styles.searchField}
+            placeholder="Search by name, phone or email…"
+            placeholderTextColor="#94a3b8"
+            value={search}
+            onChangeText={setSearch}
+            returnKeyType="search"
+            clearButtonMode="while-editing"
+          />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')}>
+              <Ionicons name="close-circle" size={18} color="#94a3b8" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Filter Tabs */}
+      <View style={[styles.filterBar, isDesktop && { paddingHorizontal: 40 }]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabContent}>
+          {ROLE_TABS.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.tab, activeRole === tab.key && styles.tabActive]}
+              onPress={() => setActiveRole(tab.key)}
+            >
+              <Text style={[styles.tabText, activeRole === tab.key && styles.tabTextActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* List */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 80 }} />
+      ) : error ? (
+        <View style={styles.emptyWrap}>
+          <Ionicons name="cloud-offline-outline" size={64} color="#c8d6e0" />
+          <Text style={styles.emptyTitle}>Failed to Load</Text>
+          <Text style={styles.emptySubtitle}>{error}</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={() => fetchUsers(1, true)}>
+            <Text style={styles.retryBtnText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          data={users}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={renderUser}
+          contentContainerStyle={[
+            styles.listContent,
+            isDesktop && { paddingHorizontal: width * 0.08 },
+          ]}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={renderFooter}
+          ListEmptyComponent={renderEmpty}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
+      {/* Detail Modal */}
+      <UserDetailModal
+        user={selectedUser}
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onUpdated={handleUserUpdated}
+      />
+    </View>
+  );
+}
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f7f9ff' },
+
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 16,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#e0f0ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pageTitle: { fontSize: 22, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
+  subtitle: { fontSize: 12, color: '#64748b', fontWeight: '600', marginTop: 2 },
+
+  searchBar: {
+    paddingHorizontal: 24,
+    paddingTop: 14,
+    paddingBottom: 8,
+    backgroundColor: 'white',
+  },
+  searchInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  searchField: {
+    flex: 1,
+    fontSize: 14,
+    color: '#181c20',
+    fontWeight: '500',
+  },
+
+  filterBar: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  tabContent: { gap: 8, paddingRight: 24 },
+  tab: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
+  },
+  tabActive: { backgroundColor: '#005d90' },
+  tabText: { fontSize: 12, fontWeight: '800', color: '#64748b' },
+  tabTextActive: { color: 'white' },
+
+  listContent: { padding: 20, paddingBottom: 100 },
+
+  // User card
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  cardRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  avatarBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#e0f0ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { fontSize: 18, fontWeight: '900', color: '#005d90' },
+  cardInfo: { flex: 1, gap: 2 },
+  cardName: { fontSize: 15, fontWeight: '800', color: '#181c20' },
+  cardPhone: { fontSize: 13, color: '#707881', fontWeight: '500' },
+  cardEmail: { fontSize: 12, color: '#94a3b8', fontWeight: '400' },
+  cardBadges: { alignItems: 'flex-end' },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  badgeText: { fontSize: 11, fontWeight: '700' },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  cardFooterText: { fontSize: 11, color: '#94a3b8', fontWeight: '500' },
+
+  // Empty / error states
+  emptyWrap: { alignItems: 'center', marginTop: 100, gap: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#181c20' },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#94a3b8',
+    fontWeight: '500',
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
+  retryBtn: {
+    marginTop: 8,
+    backgroundColor: '#005d90',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  retryBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
+
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 24,
+    paddingBottom: 40,
+    minHeight: 300,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#e0e2e8',
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 20 },
+  modalAvatar: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#e0f0ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalAvatarText: { fontSize: 22, fontWeight: '900', color: '#005d90' },
+  modalName: { fontSize: 18, fontWeight: '900', color: '#181c20', letterSpacing: -0.3 },
+  modalPhone: { fontSize: 14, color: '#707881', fontWeight: '500', marginTop: 2 },
+  modalCloseBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalInfo: { gap: 10, marginBottom: 4 },
+  modalInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  modalInfoText: { fontSize: 14, color: '#505860', fontWeight: '500' },
+  modalDivider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 20 },
+  modalActions: { flexDirection: 'row', gap: 12 },
+  modalActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 16,
+  },
+  modalActionBtnText: { fontSize: 14, fontWeight: '800' },
+  modalActionBtnOutline: {
+    borderWidth: 1.5,
+    borderColor: '#d0e8ff',
+    backgroundColor: '#f0f8ff',
+  },
+  modalActionBtnDanger: { backgroundColor: '#ba1a1a' },
+  modalActionBtnSuccess: { backgroundColor: '#2e7d32' },
+
+  // Role picker
+  rolePicker: { gap: 4 },
+  rolePickerTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#181c20',
+    marginBottom: 10,
+  },
+  roleOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: '#f7f9ff',
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    marginBottom: 6,
+  },
+  roleOptionActive: {
+    backgroundColor: '#e0f0ff',
+    borderColor: '#b0d4f0',
+  },
+  roleOptionText: { fontSize: 14, fontWeight: '600', color: '#505860' },
+  roleOptionTextActive: { color: '#005d90', fontWeight: '800' },
+  rolePickerCancel: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginTop: 4,
+  },
+  rolePickerCancelText: { fontSize: 14, fontWeight: '700', color: '#94a3b8' },
+});

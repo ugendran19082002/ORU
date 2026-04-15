@@ -20,6 +20,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { ExpoMap } from '@/components/maps/ExpoMap';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
+import { connectSocket, disconnectSocket, joinOrderRoom } from '@/utils/socket';
 
 type StepStatus = 'done' | 'active' | 'pending';
 
@@ -131,15 +132,56 @@ export default function OrderTrackingScreen() {
   const baseLat = 12.9716 + shopIdx * 0.005;
   const baseLng = 80.2210 + shopIdx * 0.005;
 
+  // Live driver location from socket; falls back to offset position when no real data yet
+  const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [socketConnected, setSocketConnected] = useState(false);
+
+  // Fallback simulated position used before the first real location_update arrives
   const [driverPos, setDriverPos] = React.useState({ lat: baseLat + 0.002, lng: baseLng + 0.002 });
 
   useEffect(() => {
-    // Simulate live driver movement towards destination
+    let mounted = true;
+
+    connectSocket()
+      .then((sock) => {
+        if (!mounted) return;
+        setSocketConnected(sock.connected);
+
+        // Keep connected state in sync with socket events
+        const onConnect = () => { if (mounted) setSocketConnected(true); };
+        const onDisconnect = () => { if (mounted) setSocketConnected(false); };
+        sock.on('connect', onConnect);
+        sock.on('disconnect', onDisconnect);
+
+        joinOrderRoom(activeOrder?.id ?? '');
+
+        sock.on('location_update', (data: { latitude: number; longitude: number; order_id: string }) => {
+          if (String(data.order_id) === String(activeOrder?.id) && mounted) {
+            setDriverLocation({ lat: data.latitude, lng: data.longitude });
+          }
+        });
+
+        sock.on('order_status', (data: { order_id: string; status: string }) => {
+          if (String(data.order_id) === String(activeOrder?.id) && mounted) {
+            // updateStatus is available in orderStore if needed
+          }
+        });
+      })
+      .catch((err) => console.warn('Socket connect failed:', err));
+
+    return () => {
+      mounted = false;
+      disconnectSocket();
+    };
+  }, [activeOrder?.id]);
+
+  // Fallback simulated movement — only runs when no live data is available
+  useEffect(() => {
+    if (driverLocation) return; // real GPS is live; skip simulation
     const interval = setInterval(() => {
       setDriverPos((prev) => {
         const dLat = (baseLat - prev.lat) * 0.1;
         const dLng = (baseLng - prev.lng) * 0.1;
-        // If driver reached destination, wiggle around it slightly
         if (Math.abs(dLat) < 0.0001) {
           return {
             lat: prev.lat + (Math.random() - 0.5) * 0.0002,
@@ -148,14 +190,22 @@ export default function OrderTrackingScreen() {
         }
         return { lat: prev.lat + dLat, lng: prev.lng + dLng };
       });
-    }, 3000); // Update every 3 seconds for mock live feel
-
+    }, 3000);
     return () => clearInterval(interval);
-  }, [baseLat, baseLng]);
+  }, [baseLat, baseLng, driverLocation]);
+
+  // Use real socket location when available; otherwise fall back to simulated position
+  const effectiveDriverPos = driverLocation ?? driverPos;
 
   const TRACKING_MARKERS = [
     { latitude: baseLat, longitude: baseLng, title: `📦 ${shop?.name ?? 'Shop'}`, color: '#005d90', iconType: 'home' as const },
-    { latitude: driverPos.lat, longitude: driverPos.lng, title: `🚲 ${activeOrder?.deliveryAgentName ?? 'Driver'}`, color: '#006878', iconType: 'bicycle' as const },
+    {
+      latitude: effectiveDriverPos.lat,
+      longitude: effectiveDriverPos.lng,
+      title: `🚲 ${activeOrder?.deliveryAgentName ?? 'Driver'}${driverLocation ? ' (Live)' : ''}`,
+      color: driverLocation ? '#00a878' : '#006878',
+      iconType: 'bicycle' as const,
+    },
   ];
   const steps: Step[] = [
     {
@@ -322,7 +372,16 @@ export default function OrderTrackingScreen() {
               <Ionicons name="bicycle" size={20} color="#005d90" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.driverLabel}>DELIVERY PARTNER</Text>
+              <View style={styles.driverLabelRow}>
+                <Text style={styles.driverLabel}>DELIVERY PARTNER</Text>
+                {/* Socket live status badge */}
+                <View style={[styles.liveBadge, !socketConnected && styles.liveBadgeConnecting]}>
+                  <View style={[styles.liveDot, !socketConnected && styles.liveDotConnecting]} />
+                  <Text style={[styles.liveBadgeText, !socketConnected && styles.liveBadgeTextConnecting]}>
+                    {socketConnected ? 'Live' : 'Connecting...'}
+                  </Text>
+                </View>
+              </View>
               <Text style={styles.driverName}>{activeOrder?.deliveryAgentName ?? 'Assigned shortly'}</Text>
             </View>
             <TouchableOpacity
@@ -585,6 +644,19 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
   },
+
+  // Live socket status badge inside driver card
+  driverLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 1 },
+  liveBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    backgroundColor: '#dcfce7', borderRadius: 10,
+    paddingHorizontal: 6, paddingVertical: 2,
+  },
+  liveBadgeConnecting: { backgroundColor: '#fef9c3' },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#16a34a' },
+  liveDotConnecting: { backgroundColor: '#ca8a04' },
+  liveBadgeText: { fontSize: 9, fontWeight: '700', color: '#16a34a', letterSpacing: 0.3 },
+  liveBadgeTextConnecting: { color: '#ca8a04' },
 });
 
 

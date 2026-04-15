@@ -20,6 +20,37 @@ export const orderApi = {
     }
   },
 
+  async getMyOrders(params?: { status?: string; page?: number; limit?: number }): Promise<{ data: any[]; pagination: any }> {
+    try {
+      const response = await apiClient.get<ApiResponse<{ data: any[]; pagination: any }>>('/orders', { params });
+      if (response.data.status === 1) return response.data.data;
+      return { data: [], pagination: {} };
+    } catch (error) {
+      log.error('[orderApi] getMyOrders failed:', error);
+      throw ApiError.from(error, 'Failed to fetch orders');
+    }
+  },
+
+  async getOrderById(id: string): Promise<any> {
+    try {
+      const response = await apiClient.get<ApiResponse<any>>(`/orders/${id}`);
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('NOT_FOUND', 404, 'Order not found');
+    } catch (error) {
+      log.error('[orderApi] getOrderById failed:', error);
+      throw ApiError.from(error, 'Failed to fetch order');
+    }
+  },
+
+  async cancelOrder(id: string, reason?: string): Promise<void> {
+    try {
+      await apiClient.post(`/orders/${id}/cancel`, { reason });
+    } catch (error) {
+      log.error('[orderApi] cancelOrder failed:', error);
+      throw ApiError.from(error, 'Failed to cancel order');
+    }
+  },
+
   /**
    * Fetch available delivery slots for a shop and date.
    * GET /slots — returns { slots: [], status: '' } as the data payload.

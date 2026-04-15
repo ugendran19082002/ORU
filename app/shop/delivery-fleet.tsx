@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,7 +15,11 @@ import { useFleetStore } from '@/stores/fleetStore';
 export default function ShopDeliveryFleetScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
-  const { agents: deliveryAgents, addAgent: addDeliveryAgent, removeAgent: removeDeliveryAgent } = useFleetStore();
+  const { agents: deliveryAgents, addAgent: addDeliveryAgent, removeAgent: removeDeliveryAgent, fetchAgents } = useFleetStore();
+
+  useEffect(() => {
+    fetchAgents();
+  }, []);
 
   useAndroidBackHandler(() => {
     safeBack('/shop/delivery');
