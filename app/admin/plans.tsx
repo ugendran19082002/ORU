@@ -1,0 +1,253 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  RefreshControl, ActivityIndicator, Alert, TextInput, Modal,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BackButton } from '@/components/ui/BackButton';
+import { platformSubscriptionApi, PlatformPlan } from '@/api/platformSubscriptionApi';
+import { apiClient } from '@/api/client';
+import Toast from 'react-native-toast-message';
+
+const ROLE_COLORS: Record<string, string> = {
+  customer: '#005d90', shop_owner: '#006878', delivery: '#7c3aed', admin: '#b45309',
+};
+
+export default function AdminPlansScreen() {
+  const [plans, setPlans] = useState<PlatformPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [editPlan, setEditPlan] = useState<Partial<PlatformPlan> | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const fetchPlans = useCallback(async () => {
+    try {
+      const res = await platformSubscriptionApi.listPlans();
+      setPlans(res);
+    } catch {
+      Toast.show({ type: 'error', text1: 'Failed to load plans' });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchPlans(); }, [fetchPlans]);
+
+  const handleSave = async () => {
+    if (!editPlan?.name || !editPlan?.slug) {
+      Toast.show({ type: 'error', text1: 'Name and slug are required' });
+      return;
+    }
+    setSaving(true);
+    try {
+      if (editPlan.id) {
+        await apiClient.put(`/admin/plans/${editPlan.id}`, editPlan);
+      } else {
+        await apiClient.post('/admin/plans', editPlan);
+      }
+      Toast.show({ type: 'success', text1: editPlan.id ? 'Plan updated' : 'Plan created' });
+      setShowModal(false);
+      setEditPlan(null);
+      fetchPlans();
+    } catch (e: any) {
+      Toast.show({ type: 'error', text1: 'Save failed', text2: e?.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openCreate = () => {
+    setEditPlan({
+      name: '', slug: '', role: 'customer', price_monthly: 0,
+      free_delivery_count: 0, auto_discount_pct: 0, monthly_coupon_count: 0,
+      monthly_coupon_value: 0, loyalty_boost_pct: 0, is_active: true,
+    });
+    setShowModal(true);
+  };
+
+  const openEdit = (plan: PlatformPlan) => {
+    setEditPlan({ ...plan });
+    setShowModal(true);
+  };
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar style="dark" />
+
+      <View style={styles.header}>
+        <BackButton fallback="/admin" />
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={styles.headerTitle}>Subscription Plans</Text>
+          <Text style={styles.headerSub}>{plans.length} plans configured</Text>
+        </View>
+        <TouchableOpacity style={styles.addBtn} onPress={openCreate}>
+          <Ionicons name="add" size={22} color="#005d90" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchPlans(); }} colors={['#005d90']} />}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+      >
+        {loading ? (
+          <View style={styles.centered}><ActivityIndicator size="large" color="#005d90" /></View>
+        ) : plans.length === 0 ? (
+          <View style={styles.centered}>
+            <Ionicons name="card-outline" size={56} color="#94a3b8" />
+            <Text style={styles.emptyText}>No plans yet. Tap + to create one.</Text>
+          </View>
+        ) : plans.map((plan) => (
+          <View key={plan.id} style={styles.planCard}>
+            <View style={styles.planTop}>
+              <View style={[styles.planIcon, { backgroundColor: (ROLE_COLORS[plan.role] ?? '#005d90') + '18' }]}>
+                <Ionicons name="card-outline" size={22} color={ROLE_COLORS[plan.role] ?? '#005d90'} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={styles.planNameRow}>
+                  <Text style={styles.planName}>{plan.name}</Text>
+                  <View style={[styles.statusBadge, { backgroundColor: plan.is_active ? '#e8f5e9' : '#ffebee' }]}>
+                    <Text style={[styles.statusText, { color: plan.is_active ? '#2e7d32' : '#c62828' }]}>
+                      {plan.is_active ? 'Active' : 'Inactive'}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.planSlug}>{plan.slug}</Text>
+              </View>
+              <TouchableOpacity onPress={() => openEdit(plan)} style={styles.editBtn}>
+                <Ionicons name="pencil-outline" size={18} color="#005d90" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.priceRow}>
+              <Text style={styles.price}>₹{plan.price_monthly}<Text style={styles.pricePeriod}>/mo</Text></Text>
+              {plan.price_yearly && (
+                <Text style={styles.priceYearly}>₹{plan.price_yearly}/yr</Text>
+              )}
+            </View>
+
+            <View style={styles.benefitsGrid}>
+              {[
+                { icon: 'bicycle-outline', label: 'Free deliveries', value: plan.free_delivery_count === 0 ? 'Unlimited' : String(plan.free_delivery_count) },
+                { icon: 'pricetag-outline', label: 'Auto discount', value: `${plan.auto_discount_pct}%` },
+                { icon: 'ticket-outline', label: 'Coupons/mo', value: String(plan.monthly_coupon_count) },
+                { icon: 'ribbon-outline', label: 'Loyalty boost', value: `${plan.loyalty_boost_pct}%` },
+              ].map((b) => (
+                <View key={b.label} style={styles.benefitItem}>
+                  <Ionicons name={b.icon as any} size={16} color="#005d90" />
+                  <View>
+                    <Text style={styles.benefitLabel}>{b.label}</Text>
+                    <Text style={styles.benefitValue}>{b.value}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+
+      {/* EDIT / CREATE MODAL */}
+      <Modal visible={showModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{editPlan?.id ? 'Edit Plan' : 'New Plan'}</Text>
+              <TouchableOpacity onPress={() => { setShowModal(false); setEditPlan(null); }}>
+                <Ionicons name="close" size={24} color="#181c20" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {[
+                { key: 'name', label: 'Plan Name', placeholder: 'e.g. Plus' },
+                { key: 'slug', label: 'Slug', placeholder: 'e.g. plus' },
+                { key: 'price_monthly', label: 'Monthly Price (₹)', placeholder: '99' },
+                { key: 'auto_discount_pct', label: 'Auto Discount %', placeholder: '2' },
+                { key: 'monthly_coupon_count', label: 'Coupons / Month', placeholder: '3' },
+                { key: 'monthly_coupon_value', label: 'Coupon Value (₹)', placeholder: '50' },
+                { key: 'loyalty_boost_pct', label: 'Loyalty Boost %', placeholder: '10' },
+              ].map((field) => (
+                <View key={field.key} style={styles.fieldRow}>
+                  <Text style={styles.fieldLabel}>{field.label}</Text>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={String((editPlan as any)?.[field.key] ?? '')}
+                    onChangeText={(v) => setEditPlan((p) => ({ ...p, [field.key]: field.key.includes('price') || field.key.includes('pct') || field.key.includes('count') || field.key.includes('value') ? Number(v) : v }))}
+                    placeholder={field.placeholder}
+                    keyboardType={field.key === 'name' || field.key === 'slug' ? 'default' : 'numeric'}
+                    placeholderTextColor="#94a3b8"
+                  />
+                </View>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={[styles.saveBtn, saving && { opacity: 0.6 }]}
+              onPress={handleSave}
+              disabled={saving}
+            >
+              <LinearGradient colors={['#005d90', '#0077b6']} style={styles.saveBtnGrad}>
+                {saving ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>Save Plan</Text>}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  header: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 20, paddingVertical: 14,
+    backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+  },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
+  headerSub: { fontSize: 12, color: '#64748b', fontWeight: '500', marginTop: 1 },
+  addBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
+  content: { padding: 16, gap: 14, paddingBottom: 100 },
+  centered: { paddingTop: 80, alignItems: 'center' },
+  emptyText: { marginTop: 14, color: '#64748b', fontWeight: '600', fontSize: 15, textAlign: 'center' },
+  planCard: {
+    backgroundColor: 'white', borderRadius: 20, padding: 18,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
+  },
+  planTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
+  planIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  planNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
+  planName: { fontSize: 17, fontWeight: '900', color: '#181c20' },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
+  statusText: { fontSize: 11, fontWeight: '800' },
+  planSlug: { fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' },
+  editBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 14 },
+  price: { fontSize: 28, fontWeight: '900', color: '#005d90' },
+  pricePeriod: { fontSize: 14, fontWeight: '600', color: '#707881' },
+  priceYearly: { fontSize: 14, fontWeight: '700', color: '#64748b' },
+  benefitsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  benefitItem: { flexDirection: 'row', alignItems: 'center', gap: 6, width: '47%' },
+  benefitLabel: { fontSize: 10, color: '#94a3b8', fontWeight: '600' },
+  benefitValue: { fontSize: 14, fontWeight: '800', color: '#181c20' },
+  // Modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalSheet: {
+    backgroundColor: 'white', borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    padding: 24, maxHeight: '85%',
+  },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: '#181c20' },
+  fieldRow: { marginBottom: 14 },
+  fieldLabel: { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 6 },
+  fieldInput: {
+    borderWidth: 1.5, borderColor: '#e0e2e8', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#181c20',
+  },
+  saveBtn: { borderRadius: 16, overflow: 'hidden', marginTop: 16 },
+  saveBtnGrad: { paddingVertical: 16, alignItems: 'center' },
+  saveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
+});

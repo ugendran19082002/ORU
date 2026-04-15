@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Switch,
+  View, Text, ScrollView, TouchableOpacity, Alert,
+  StyleSheet, ActivityIndicator,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+import { platformSubscriptionApi, PlatformPlan, PlatformSubscription } from '@/api/platformSubscriptionApi';
 
 
 type PlanId = 'basic' | 'standard' | 'premium';
@@ -79,10 +80,9 @@ export default function SubscriptionsScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
 
-  useAndroidBackHandler(() => {
-    safeBack('/(tabs)/profile');
-  });
+  useAndroidBackHandler(() => { safeBack('/(tabs)/profile'); });
 
+  // ─── Product subscription (existing water-can delivery plans) ─
   const [selected, setSelected] = useState<PlanId>('standard');
   const [activeSub, setActiveSub] = useState<ActiveSub | null>({
     planId: 'standard',
@@ -90,6 +90,69 @@ export default function SubscriptionsScreen() {
     remaining: 5,
     paused: false,
   });
+
+  // ─── Platform subscription (Plus Membership ₹99/month) ────────
+  const [platformPlans, setPlatformPlans] = useState<PlatformPlan[]>([]);
+  const [myPlatformSub, setMyPlatformSub] = useState<PlatformSubscription | null>(null);
+  const [platformLoading, setPlatformLoading] = useState(true);
+  const [platformSubmitting, setPlatformSubmitting] = useState(false);
+
+  const fetchPlatformData = useCallback(async () => {
+    try {
+      const [plans, mySub] = await Promise.all([
+        platformSubscriptionApi.listPlans(),
+        platformSubscriptionApi.getMySubscription(),
+      ]);
+      setPlatformPlans(plans.filter((p) => p.price_monthly > 0));
+      setMyPlatformSub(mySub);
+    } catch { /* silently fallback */ }
+    finally { setPlatformLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchPlatformData(); }, [fetchPlatformData]);
+
+  const plusPlan = platformPlans[0] ?? null;
+
+  const handleGetPlus = () => {
+    if (!plusPlan) return;
+    Alert.alert(
+      'Subscribe to Plus',
+      `Get Plus Membership for ₹${plusPlan.price_monthly}/month?\n\n✓ Free delivery every order\n✓ ${plusPlan.auto_discount_pct}% auto discount\n✓ ${plusPlan.monthly_coupon_count} coupons/month\n✓ ${plusPlan.loyalty_boost_pct}% loyalty boost`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Subscribe',
+          onPress: async () => {
+            setPlatformSubmitting(true);
+            try {
+              const sub = await platformSubscriptionApi.subscribe({ plan_id: plusPlan.id, billing_cycle: 'monthly' });
+              setMyPlatformSub(sub);
+              Toast.show({ type: 'success', text1: 'Plus Activated!', text2: 'Your membership is now active.' });
+            } catch (e: any) {
+              Toast.show({ type: 'error', text1: 'Failed', text2: e?.message ?? 'Could not activate Plus' });
+            } finally { setPlatformSubmitting(false); }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleCancelPlus = () => {
+    if (!myPlatformSub) return;
+    Alert.alert('Cancel Plus?', 'Your membership benefits will end at the current billing period.', [
+      { text: 'Keep Plus', style: 'cancel' },
+      {
+        text: 'Cancel', style: 'destructive',
+        onPress: async () => {
+          try {
+            await platformSubscriptionApi.cancelSubscription(myPlatformSub.id);
+            setMyPlatformSub(null);
+            Toast.show({ type: 'success', text1: 'Cancelled', text2: 'Plus membership cancelled.' });
+          } catch { Toast.show({ type: 'error', text1: 'Failed to cancel' }); }
+        },
+      },
+    ]);
+  };
 
   const togglePause = () => {
     if (!activeSub) return;
@@ -103,7 +166,7 @@ export default function SubscriptionsScreen() {
 
   const handleSubscribe = () => {
     const plan = PLANS.find((p) => p.id === selected)!;
-    require('react-native').Alert.alert('Subscribe', `Activate ${plan.name} for ₹${plan.price}/month?`, [
+    Alert.alert('Subscribe', `Activate ${plan.name} for ₹${plan.price}/month?`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Confirm', onPress: () => setActiveSub({ planId: selected, nextDelivery: 'Tomorrow, 10 AM', remaining: plan.cans, paused: false }) },
     ]);
@@ -125,6 +188,76 @@ export default function SubscriptionsScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+
+        {/* ─── PLUS MEMBERSHIP (Platform Subscription) ─────── */}
+        <Text style={styles.sectionTitle}>Plus Membership</Text>
+        {platformLoading ? (
+          <View style={[styles.plusCard, { alignItems: 'center', paddingVertical: 24 }]}>
+            <ActivityIndicator color="#7c3aed" />
+          </View>
+        ) : myPlatformSub ? (
+          <LinearGradient colors={['#7c3aed', '#5b21b6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.plusCard}>
+            <Ionicons name="diamond" size={80} color="rgba(255,255,255,0.06)" style={styles.plusDecor} />
+            <View style={styles.plusTop}>
+              <View>
+                <Text style={styles.plusTitle}>Plus Member</Text>
+                <Text style={styles.plusMeta}>Active · Expires {new Date(myPlatformSub.expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
+              </View>
+              <View style={styles.plusBadge}><Text style={styles.plusBadgeText}>ACTIVE</Text></View>
+            </View>
+            <View style={styles.plusBenefitsRow}>
+              {[
+                '✓ Free delivery',
+                `✓ ${plusPlan?.auto_discount_pct ?? 2}% discount`,
+                `✓ ${plusPlan?.monthly_coupon_count ?? 3} coupons/mo`,
+                `✓ ${plusPlan?.loyalty_boost_pct ?? 10}% loyalty boost`,
+              ].map((b) => (
+                <View key={b} style={styles.plusBenefit}><Text style={styles.plusBenefitText}>{b}</Text></View>
+              ))}
+            </View>
+            <TouchableOpacity onPress={handleCancelPlus} style={styles.plusCancelBtn}>
+              <Text style={styles.plusCancelText}>Cancel Membership</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        ) : (
+          <View style={styles.plusCard}>
+            <View style={styles.plusPromoTop}>
+              <View style={[styles.plusPromoIcon, { backgroundColor: '#ede9fe' }]}>
+                <Ionicons name="diamond-outline" size={28} color="#7c3aed" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.plusPromoTitle}>Upgrade to Plus</Text>
+                <Text style={styles.plusPromoSub}>Free delivery + 2% discount + coupons every month</Text>
+              </View>
+              <Text style={styles.plusPromoPrice}>₹99/mo</Text>
+            </View>
+            <View style={styles.plusBenefitsRow}>
+              {['Free delivery', '2% auto discount', '3 coupons/month', '10% loyalty boost'].map((b) => (
+                <View key={b} style={[styles.plusBenefit, { backgroundColor: '#ede9fe' }]}>
+                  <Text style={[styles.plusBenefitText, { color: '#7c3aed' }]}>✓ {b}</Text>
+                </View>
+              ))}
+            </View>
+            <TouchableOpacity
+              onPress={handleGetPlus}
+              disabled={platformSubmitting || !plusPlan}
+              style={{ borderRadius: 14, overflow: 'hidden', marginTop: 12 }}
+            >
+              <LinearGradient colors={['#7c3aed', '#5b21b6']} style={styles.plusSubscribeBtn}>
+                {platformSubmitting ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <>
+                    <Ionicons name="diamond-outline" size={18} color="white" />
+                    <Text style={styles.plusSubscribeBtnText}>Get Plus — ₹99/mo</Text>
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        <View style={styles.dividerRow}><View style={styles.dividerLine} /><Text style={styles.dividerText}>WATER DELIVERY PLANS</Text><View style={styles.dividerLine} /></View>
 
         {/* ACTIVE SUBSCRIPTION */}
         {activeSub && activePlan && (
@@ -350,6 +483,34 @@ const styles = StyleSheet.create({
     fontSize: 12, color: 'rgba(255,255,255,0.55)', fontWeight: '700',
     textDecorationLine: 'underline',
   },
+
+  // Plus Membership styles
+  plusCard: {
+    backgroundColor: 'white', borderRadius: 24, padding: 20, overflow: 'hidden',
+    shadowColor: '#7c3aed', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.18, shadowRadius: 16, elevation: 6,
+    borderWidth: 1, borderColor: '#ede9fe',
+  },
+  plusDecor: { position: 'absolute', right: -10, bottom: -10 },
+  plusTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
+  plusTitle: { fontSize: 20, fontWeight: '900', color: 'white' },
+  plusMeta: { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 2, fontWeight: '600' },
+  plusBadge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  plusBadgeText: { color: 'white', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
+  plusBenefitsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 },
+  plusBenefit: { backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
+  plusBenefitText: { color: 'white', fontSize: 12, fontWeight: '700' },
+  plusCancelBtn: { alignItems: 'center', paddingTop: 8 },
+  plusCancelText: { color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
+  plusPromoTop: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 14 },
+  plusPromoIcon: { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  plusPromoTitle: { fontSize: 17, fontWeight: '900', color: '#181c20' },
+  plusPromoSub: { fontSize: 12, color: '#707881', marginTop: 2, lineHeight: 16 },
+  plusPromoPrice: { fontSize: 20, fontWeight: '900', color: '#7c3aed' },
+  plusSubscribeBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 },
+  plusSubscribeBtnText: { color: 'white', fontSize: 15, fontWeight: '800' },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#e0e2e8' },
+  dividerText: { fontSize: 10, fontWeight: '800', color: '#94a3b8', letterSpacing: 1 },
 });
 
 

@@ -18,17 +18,29 @@ import { useRouter, usePathname } from 'expo-router';
 import { useAppSession } from '@/providers/AppSessionProvider';
 import { Logo } from '@/components/ui/Logo';
 import { adminApi, AdminShop } from '@/api/adminApi';
+import { analyticsApi } from '@/api/analyticsApi';
+import type { AdminDashboard } from '@/types/api';
 
-/* ---- DATA ---- */
-const STATS = [
-  { label: 'Total Orders', value: '1,284', icon: 'bag-handle-outline' as const, delta: '+12%', deltaPos: true, color: '#005d90', bg: '#e0f0ff' },
-  { label: 'Active Users', value: '8,432', icon: 'people-outline' as const, delta: '+5%', deltaPos: true, color: '#006878', bg: '#e0f7fa' },
-  { label: 'Revenue', value: '₹4,12,050', icon: 'cash-outline' as const, delta: '+24%', deltaPos: true, color: '#23616b', bg: '#e0f2f1' },
-  { label: 'Active Shops', value: '42', icon: 'water-outline' as const, delta: '-2%', deltaPos: false, color: '#404850', bg: '#ebeef4' },
+/* ---- DATA (fallback skeleton while loading) ---- */
+const STATS_CONFIG = [
+  { label: 'Total Orders', icon: 'bag-handle-outline' as const, color: '#005d90', bg: '#e0f0ff' },
+  { label: 'Active Users', icon: 'people-outline' as const, color: '#006878', bg: '#e0f7fa' },
+  { label: 'Revenue', icon: 'cash-outline' as const, color: '#23616b', bg: '#e0f2f1' },
+  { label: 'Active Shops', icon: 'water-outline' as const, color: '#404850', bg: '#ebeef4' },
 ];
 
 /* ---- COMPONENTS ---- */
-function StatCard({ stat, isDesktop }: { stat: typeof STATS[0], isDesktop: boolean }) {
+type StatCardData = {
+  label: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  color: string;
+  bg: string;
+  value: string;
+  delta: string;
+  deltaPos: boolean;
+};
+
+function StatCard({ stat, isDesktop }: { stat: StatCardData, isDesktop: boolean }) {
   return (
     <View style={styles.statCard}>
       <View style={styles.statCardTop}>
@@ -56,6 +68,7 @@ export default function AdminOverviewScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [pendingShops, setPendingShops] = useState<AdminShop[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState<AdminDashboard | null>(null);
 
   if (__DEV__) {
     console.log(`📊 [AdminDashboard] Mounting. Status: ${status}, UID: ${user?.id || 'none'}, Path: ${pathname}`);
@@ -63,9 +76,16 @@ export default function AdminOverviewScreen() {
 
   const fetchDashboard = useCallback(async () => {
     try {
-      const res = await adminApi.listShops('pending_review');
-      if (res.data) {
-        setPendingShops(res.data);
+      const [shopsRes, analytics] = await Promise.allSettled([
+        adminApi.listShops('pending_review'),
+        analyticsApi.getAdminDashboard({ period: 'today' }),
+      ]);
+
+      if (shopsRes.status === 'fulfilled' && shopsRes.value.data) {
+        setPendingShops(shopsRes.value.data);
+      }
+      if (analytics.status === 'fulfilled') {
+        setDashboardData(analytics.value);
       }
     } catch (err: any) {
       console.error('[AdminDashboard] Fetch error:', err);
@@ -126,22 +146,63 @@ export default function AdminOverviewScreen() {
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
-          {STATS.map((stat, i) => {
-            const numCols = 2; // Fixed 2 per row
-            const cardWidth = '49%'; 
-            return (
-              <View 
-                key={i} 
+          {(() => {
+            const revenue = dashboardData?.orders.total_revenue;
+            const revenueStr = revenue != null
+              ? '₹' + (revenue >= 100000
+                  ? (revenue / 100000).toFixed(1) + 'L'
+                  : revenue >= 1000
+                  ? (revenue / 1000).toFixed(1) + 'K'
+                  : String(revenue))
+              : '—';
+
+            const statsData: StatCardData[] = [
+              {
+                ...STATS_CONFIG[0],
+                value: dashboardData?.orders.total != null ? String(dashboardData.orders.total) : '—',
+                delta: dashboardData?.orders.total != null ? `+${dashboardData.orders.total}` : '—',
+                deltaPos: (dashboardData?.orders.total ?? 0) > 0,
+              },
+              {
+                ...STATS_CONFIG[1],
+                value: dashboardData?.users.total != null ? String(dashboardData.users.total) : '—',
+                delta: dashboardData?.users.new_this_period != null
+                  ? (dashboardData.users.new_this_period >= 0 ? '+' : '') + dashboardData.users.new_this_period
+                  : '—',
+                deltaPos: (dashboardData?.users.new_this_period ?? 0) >= 0,
+              },
+              {
+                ...STATS_CONFIG[2],
+                value: revenueStr,
+                delta: dashboardData?.orders.total_revenue != null
+                  ? (dashboardData.orders.total_revenue >= 0 ? '+' : '') + revenueStr
+                  : '—',
+                deltaPos: (dashboardData?.orders.total_revenue ?? 0) >= 0,
+              },
+              {
+                ...STATS_CONFIG[3],
+                value: dashboardData?.shops.active != null ? String(dashboardData.shops.active) : '—',
+                delta: dashboardData?.shops.pending != null
+                  ? `${dashboardData.shops.pending} pending`
+                  : '—',
+                deltaPos: (dashboardData?.shops.pending ?? 0) === 0,
+              },
+            ];
+
+            const numCols = 2;
+            return statsData.map((stat, i) => (
+              <View
+                key={i}
                 style={[
-                  styles.statCardWrapper, 
-                  { width: cardWidth as any },
-                  i % numCols !== numCols - 1 && { marginRight: '2%' }
+                  styles.statCardWrapper,
+                  { width: '49%' as any },
+                  i % numCols !== numCols - 1 && { marginRight: '2%' },
                 ]}
               >
                 <StatCard stat={stat} isDesktop={isDesktop} />
               </View>
-            );
-          })}
+            ));
+          })()}
         </View>
 
         <View style={{ flexDirection: isDesktop ? 'row' : 'column', marginTop: 12 }}>
@@ -223,7 +284,7 @@ export default function AdminOverviewScreen() {
                     </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
+                <TouchableOpacity
                     style={[styles.verifCard, { padding: 20, marginTop: 12, backgroundColor: '#fff8f7', borderWidth: 1, borderColor: '#ffdad6' }]}
                     onPress={() => router.push('/admin/coupons')}
                 >
@@ -236,6 +297,31 @@ export default function AdminOverviewScreen() {
                             <Text style={{ fontSize: 12, color: '#707881' }}>Global Promotion Codes</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={18} color="#ba1a1a" />
+                    </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.verifCard, { padding: 20, marginTop: 12, backgroundColor: '#fff3f3', borderWidth: 1, borderColor: '#ffcdd2' }]}
+                    onPress={() => router.push('/admin/complaints')}
+                >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        <LinearGradient colors={['#c62828', '#e53935']} style={{ width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+                            <Ionicons name="alert-circle-outline" size={24} color="white" />
+                        </LinearGradient>
+                        <View style={{ flex: 1 }}>
+                            <Text style={{ fontSize: 15, fontWeight: '800', color: '#181c20' }}>Complaints</Text>
+                            <Text style={{ fontSize: 12, color: '#707881' }}>
+                                {dashboardData?.complaints.open != null
+                                    ? `${dashboardData.complaints.open} open${dashboardData.complaints.sos > 0 ? ` • ${dashboardData.complaints.sos} SOS` : ''}`
+                                    : 'Review & Resolve Issues'}
+                            </Text>
+                        </View>
+                        {(dashboardData?.complaints.sos ?? 0) > 0 && (
+                            <View style={{ backgroundColor: '#ba1a1a', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3, marginRight: 4 }}>
+                                <Text style={{ color: 'white', fontWeight: '900', fontSize: 11 }}>SOS</Text>
+                            </View>
+                        )}
+                        <Ionicons name="chevron-forward" size={18} color="#c62828" />
                     </View>
                 </TouchableOpacity>
             </View>

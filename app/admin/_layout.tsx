@@ -10,6 +10,7 @@ import { useAppSession } from '@/providers/AppSessionProvider';
 const NAV_ITEMS = [
   { name: 'Dashboard', path: '/admin', icon: 'grid' },
   { name: 'Vendors', path: '/admin/shops', icon: 'business' },
+  { name: 'Complaints', path: '/admin/complaints', icon: 'alert-circle' },
   { name: 'Growth', path: '/admin/growth', icon: 'trending-up' },
   { name: 'Coupons', path: '/admin/coupons', icon: 'ticket' },
   { name: 'Master Menu', path: '/admin/master', icon: 'list' },

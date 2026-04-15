@@ -215,3 +215,169 @@ export type CreateCouponPayload = Partial<Omit<PlatformCoupon, 'id' | 'uses_coun
   code: string;
   discount_value: number;
 };
+
+// ─── Payout API types ─────────────────────────────────────────────────────────
+
+export type ShopWallet = {
+  id: number;
+  shop_id: number;
+  balance: number;
+  pending_balance: number;
+  total_earned: number;
+  total_paid_out: number;
+  total_commission: number;
+  payout_mode: 'instant' | 'scheduled';
+  payout_cycle: 'daily' | 'weekly' | 'monthly';
+  bank_account_verified: boolean;
+  razorpay_fund_account_id: string | null;
+  last_payout_at: string | null;
+};
+
+export type PayoutLog = {
+  id: number;
+  type: 'credit' | 'debit' | 'refund_debit' | 'commission';
+  amount: number;
+  commission_amount: number;
+  net_amount: number;
+  balance_after: number;
+  order_id: number | null;
+  payout_status: 'pending' | 'processing' | 'paid' | 'failed' | null;
+  description: string | null;
+  failed_reason: string | null;
+  scheduled_for: string | null;
+  processed_at: string | null;
+  created_at: string;
+};
+
+// ─── Platform Subscription API types ─────────────────────────────────────────
+
+export type PlatformPlan = {
+  id: number;
+  name: string;
+  slug: string;
+  price_monthly: number;
+  price_yearly: number | null;
+  free_delivery_count: number;
+  auto_discount_pct: number;
+  monthly_coupon_count: number;
+  monthly_coupon_value: number;
+  loyalty_boost_pct: number;
+  is_active: boolean;
+  description: string | null;
+};
+
+export type PlatformSubscription = {
+  id: number;
+  plan_id: number;
+  status: 'active' | 'expired' | 'cancelled' | 'paused' | 'grace_period';
+  billing_cycle: 'monthly' | 'yearly';
+  amount_paid: number;
+  auto_renew: boolean;
+  started_at: string;
+  expires_at: string;
+  next_billing_at: string | null;
+  free_deliveries_used: number;
+  coupons_issued_this_cycle: number;
+  plan?: PlatformPlan;
+};
+
+export type CheckoutBenefits = {
+  has_subscription: boolean;
+  free_delivery: boolean;
+  auto_discount_pct: number;
+  loyalty_boost_pct: number;
+};
+
+// ─── Feature API types ────────────────────────────────────────────────────────
+
+export type FeatureMap = Record<string, boolean>;
+
+// ─── Complaint API types ──────────────────────────────────────────────────────
+
+export type Complaint = {
+  id: number;
+  order_id: number;
+  customer_id: number;
+  shop_id: number;
+  type: string;
+  issue_type: string | null;
+  description: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  priority: 'normal' | 'urgent';
+  is_sos: boolean;
+  admin_action: 'pending_review' | 'approved' | 'rejected' | 'escalated' | null;
+  admin_notes: string | null;
+  resolution_type: string | null;
+  resolution_notes: string | null;
+  created_at: string;
+  updated_at: string | null;
+  Order?: { order_number: string; status: string; total_amount: number };
+  Shop?: { id: number; name: string };
+};
+
+// ─── Analytics API types ──────────────────────────────────────────────────────
+
+export type ShopAnalytics = {
+  period: string;
+  orders: {
+    total: number;
+    delivered: number;
+    cancelled: number;
+    avg_order_value: number;
+  };
+  revenue: {
+    gross: number;
+    net: number;
+    commission: number;
+  };
+  daily_revenue: Array<{ date: string; revenue: number; orders: number }>;
+  top_products: Array<{
+    product_id: number;
+    product_name: string;
+    total_qty: number;
+    revenue: number;
+  }>;
+  delivery: {
+    avg_delivery_time_mins: number;
+    on_time_rate: number;
+  };
+  rating: {
+    avg: number;
+    count: number;
+  };
+  peak_hours: Array<{ hour: number; orders: number }>;
+};
+
+export type AdminDashboard = {
+  period: string;
+  orders: {
+    total: number;
+    delivered: number;
+    cancelled: number;
+    total_revenue: number;
+  };
+  users: {
+    total: number;
+    new_this_period: number;
+  };
+  shops: {
+    total: number;
+    active: number;
+    pending: number;
+  };
+  top_shops: Array<{
+    shop_id: number;
+    shop_name: string;
+    total_orders: number;
+    revenue: number;
+  }>;
+  complaints: {
+    total: number;
+    open: number;
+    sos: number;
+  };
+  refunds: {
+    total: number;
+    total_amount: number;
+  };
+};

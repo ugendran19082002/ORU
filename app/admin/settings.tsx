@@ -50,6 +50,36 @@ export default function AdminSettingsScreen() {
         </View>
 
         {/* SETTINGS MENU */}
+        {/* PLATFORM MANAGEMENT */}
+        <Text style={styles.sectionHeader}>Platform Management</Text>
+        <View style={[styles.menuCard, { marginBottom: 28 }]}>
+          {[
+            { label: 'Subscription Plans', icon: 'card-outline', subtitle: 'Manage Plus & other plans', path: '/admin/plans' },
+            { label: 'Feature Flags', icon: 'toggle-outline', subtitle: 'Enable / disable platform features', path: '/admin/features' },
+            { label: 'Complaint Management', icon: 'chatbubble-ellipses-outline', subtitle: 'Review SOS & open complaints', path: '/admin/complaints' },
+            { label: 'Master Data', icon: 'list-outline', subtitle: 'Categories & subcategories', path: '/admin/master' },
+            { label: 'System Settings', icon: 'settings-outline', subtitle: 'Global platform configuration', path: '/admin/settings' },
+          ].map((item, index, arr) => (
+            <React.Fragment key={item.label}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => router.push(item.path as any)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.menuIconBox}>
+                  <Ionicons name={item.icon as any} size={20} color="#005d90" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.menuLabel}>{item.label}</Text>
+                  <Text style={styles.menuSub}>{item.subtitle}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color="#bfc7d1" />
+              </TouchableOpacity>
+              {index < arr.length - 1 && <View style={styles.divider} />}
+            </React.Fragment>
+          ))}
+        </View>
+
         <Text style={styles.sectionHeader}>Account & Security</Text>
         <View style={styles.menuCard}>
           {menuItems.map((item, index) => (

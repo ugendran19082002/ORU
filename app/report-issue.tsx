@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import React, { useState, useMemo } from 'react';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,9 +7,19 @@ import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
-
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
+import { complaintApi } from '@/api/complaintApi';
+
+const ISSUE_TYPE_MAP: Record<string, string> = {
+  'Late Delivery': 'late_delivery',
+  'Wrong Order': 'wrong_item',
+  'Water Quality': 'bad_quality',
+  'Rude Delivery': 'other',
+  'Leaking Can': 'damage',
+  'Overcharged': 'other',
+  'Other': 'other',
+};
 
 const issueOptions = [
   'Late Delivery',
@@ -28,14 +38,13 @@ export default function ReportIssueScreen() {
   const { safeBack } = useAppNavigation();
   const { orders, activeOrderId } = useOrderStore();
 
-  useAndroidBackHandler(() => {
-    safeBack('/(tabs)/profile');
-  });
+  useAndroidBackHandler(() => { safeBack('/(tabs)/profile'); });
 
   const { shops } = useShopStore();
   const [selectedIssue, setSelectedIssue] = useState<(typeof issueOptions)[number]>('Late Delivery');
   const [resolution, setResolution] = useState<(typeof resolutionOptions)[number]>('Refund');
   const [details, setDetails] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const activeOrder = useMemo(
     () => orders.find((order) => order.id === activeOrderId) ?? orders[0],
@@ -112,17 +121,35 @@ export default function ReportIssueScreen() {
         </View>
 
         <TouchableOpacity
-          style={styles.primaryBtn}
-          onPress={() => {
-            Toast.show({
-              type: 'success',
-              text1: 'Issue Submitted',
-              text2: `${selectedIssue} has been logged for ${resolution.toLowerCase()}.`
-            });
-            router.replace('/notifications');
+          style={[styles.primaryBtn, submitting && { opacity: 0.6 }]}
+          disabled={submitting}
+          onPress={async () => {
+            if (!activeOrder) {
+              Toast.show({ type: 'error', text1: 'No active order found' });
+              return;
+            }
+            setSubmitting(true);
+            try {
+              await complaintApi.fileSosComplaint({
+                order_id: Number(activeOrder.id),
+                issue_type: ISSUE_TYPE_MAP[selectedIssue] ?? 'other',
+                description: details || selectedIssue,
+                is_sos: selectedIssue === 'Late Delivery',
+              });
+              Toast.show({
+                type: 'success',
+                text1: 'Issue Submitted',
+                text2: `${selectedIssue} has been logged. Our team will review it.`,
+              });
+              router.replace('/notifications');
+            } catch (e: any) {
+              Toast.show({ type: 'error', text1: 'Submission Failed', text2: e?.message ?? 'Please try again.' });
+            } finally {
+              setSubmitting(false);
+            }
           }}
         >
-          <Text style={styles.primaryText}>Submit Issue</Text>
+          {submitting ? <ActivityIndicator color="white" /> : <Text style={styles.primaryText}>Submit Issue</Text>}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
