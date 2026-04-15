@@ -82,7 +82,7 @@ export default function OTPScreen() {
 
   const handleVerify = async () => {
     const code = otp.join("");
-    if (code.length < OTP_LENGTH) return;
+    if (code.length < OTP_LENGTH || loading || verified) return;
     setLoading(true);
 
     try {
@@ -90,10 +90,9 @@ export default function OTPScreen() {
       const response = await authApi.verifyOtp(`+91${phone}`, code, deviceId);
 
       if (response.status === 1) {
-        setLoading(false);
         setVerified(true);
 
-        // 1. Sign in to global session
+        // 1. Persist tokens and user into global session
         await signIn({
           user: response.data.user as AppUser,
           access_token: response.data.access_token,
@@ -107,17 +106,28 @@ export default function OTPScreen() {
           tension: 60,
         }).start();
 
-        // (Wait for global AppRouteGuard to handle the redirect based on session state)
+        // 2. Navigate immediately — don't rely solely on RouteGuard re-render
+        const { user, next_step, is_new_user } = response.data;
+        if (is_new_user || !user.onboarding_completed) {
+          router.replace((next_step?.screen_route || '/auth/role') as any);
+        } else if (user.role === 'shop_owner') {
+          router.replace('/shop' as any);
+        } else if (user.role === 'admin') {
+          router.replace('/admin' as any);
+        } else {
+          router.replace('/(tabs)' as any);
+        }
       } else {
         throw new Error(response.message || "Verification failed");
       }
     } catch (err: any) {
-      setLoading(false);
       Toast.show({
         type: 'error',
         text1: 'Verification Failed',
         text2: err?.response?.data?.message || err?.message || "Please check your OTP and try again."
       });
+    } finally {
+      setLoading(false);
     }
   };
 

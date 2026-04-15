@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, AppState } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Linking, AppState, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -64,7 +64,16 @@ export default function EnableLocationScreen() {
     try {
       const servicesEnabled = await Location.hasServicesEnabledAsync();
       if (!servicesEnabled) {
-        setErrorMsg('GPS hardware is turned off. Please enable Location Services in your settings.');
+        // Open the OS location settings so the user can turn GPS on directly
+        if (Platform.OS === 'android') {
+          Linking.sendIntent('android.settings.LOCATION_SOURCE_SETTINGS').catch(() =>
+            Linking.openSettings(),
+          );
+        } else {
+          // iOS: cannot open the location settings page directly
+          Linking.openSettings();
+        }
+        setErrorMsg('Location Services are off. Enable GPS and return to the app.');
         setDenied(true);
         setLoading(false);
         return;
