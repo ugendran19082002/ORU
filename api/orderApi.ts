@@ -1,39 +1,39 @@
 import { apiClient } from './client';
-import type { Order } from '@/types/domain';
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+import { ApiError } from './apiError';
+import { log } from '@/utils/logger';
+import type { ApiResponse, OrderPayload, OrderSubmitResult, SlotsData } from '@/types/api';
+// AvailableSlot is used as the inner element type via SlotsData — keep import for callers
+export type { AvailableSlot } from '@/types/api';
 
 export const orderApi = {
   /**
-   * Submit a new checkout order
+   * Submit a new checkout order.
    * POST /orders
    */
-  async submitOrder(payload: any): Promise<any> {
+  async submitOrder(payload: OrderPayload): Promise<ApiResponse<OrderSubmitResult>> {
     try {
-      const response = await apiClient.post('/orders', payload);
+      const response = await apiClient.post<ApiResponse<OrderSubmitResult>>('/orders', payload);
       return response.data;
     } catch (error) {
-      console.error("[orderApi] submitOrder failed:", error);
-      throw error;
+      log.error('[orderApi] submitOrder failed:', error);
+      throw ApiError.from(error, 'Failed to place order');
     }
   },
 
   /**
-   * Fetch available slots for a shop and date
-   * GET /slots
+   * Fetch available delivery slots for a shop and date.
+   * GET /slots — returns { slots: [], status: '' } as the data payload.
    */
-  async getAvailableSlots(shopId: number, date: string): Promise<any> {
+  async getAvailableSlots(shopId: number, date: string): Promise<SlotsData> {
     try {
-      const response = await apiClient.get('/slots', {
-        params: { shop_id: shopId, date }
+      const response = await apiClient.get<ApiResponse<SlotsData>>('/slots', {
+        params: { shop_id: shopId, date },
       });
-      if (response.data.status === 1) {
-        return response.data.data;
-      }
-      throw new Error(response.data.message || 'Failed to fetch slots');
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('FETCH_FAILED', response.status ?? 400, response.data.message || 'Failed to fetch slots');
     } catch (error) {
-       console.error("[orderApi] getAvailableSlots failed:", error);
-       throw error;
+      log.error('[orderApi] getAvailableSlots failed:', error);
+      throw ApiError.from(error, 'Failed to fetch available slots');
     }
-  }
+  },
 };

@@ -10,12 +10,12 @@ import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
 
 
-import { useShopStore } from '@/stores/shopStore';
+import { useFleetStore } from '@/stores/fleetStore';
 
 export default function ShopDeliveryFleetScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
-  const { deliveryAgents, addDeliveryAgent, removeDeliveryAgent } = useShopStore();
+  const { agents: deliveryAgents, addAgent: addDeliveryAgent, removeAgent: removeDeliveryAgent } = useFleetStore();
 
   useAndroidBackHandler(() => {
     safeBack('/shop/delivery');
@@ -74,7 +74,7 @@ export default function ShopDeliveryFleetScreen() {
         </View>
 
         <View style={styles.list}>
-          {deliveryAgents.map((agent) => (
+          {deliveryAgents.map((agent: import('@/types/domain').DeliveryAgent) => (
             <View key={agent.id} style={styles.card}>
               <View style={styles.cardHeader}>
                 <View style={[styles.avatar, agent.status === 'active' ? { backgroundColor: '#e8f5e9' } : { backgroundColor: '#f1f4f9' }]}>

@@ -1,5 +1,8 @@
 import type { AppRole } from '@/types/session';
 
+/** Supported product hero image keys */
+export type ProductImage = 'water_can_1' | 'water_can_2' | 'water_can_3';
+
 export type Product = {
   id: string;
   name: string;
@@ -8,7 +11,7 @@ export type Product = {
   price: number;
   inStock: boolean;
   stockCount: number;
-  image: 'water_can_1' | 'water_can_2' | 'water_can_3';
+  image: ProductImage;
 };
 
 export type Shop = {
@@ -27,7 +30,7 @@ export type Shop = {
   lat: number;
   lng: number;
   accent: string;
-  heroImage: Product['image'];
+  heroImage: ProductImage;
   products: Product[];
 };
 

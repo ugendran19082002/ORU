@@ -2,8 +2,19 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    // noUnusedLocals / noUnusedParameters are intentionally disabled until all
+    // pre-existing screens are cleaned up (100+ violations across untouched files).
+    // Re-enable these incrementally as screens are refactored.
+    "noImplicitReturns": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@api/*": ["./api/*"],
+      "@components/*": ["./components/*"],
+      "@stores/*": ["./stores/*"],
+      "@types/*": ["./types/*"],
+      "@utils/*": ["./utils/*"],
+      "@constants/*": ["./constants/*"],
+      "@hooks/*": ["./hooks/*"]
     }
   },
   "include": [

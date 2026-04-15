@@ -178,7 +178,7 @@ export default function PrivacySecurityScreen() {
       <PinEntryModal
         visible={showPinModal}
         mode={pinMode}
-        onSuccess={() => setShowPinModal(false)}
+        onSuccess={async () => { setShowPinModal(false); }}
         onCancel={() => setShowPinModal(false)}
         onSetPin={handleSetPin}
         title={pinMode === 'set' ? 'Set App PIN' : 'Verify PIN'}

@@ -17,7 +17,8 @@ const { width } = Dimensions.get('window');
 
 type PinEntryModalProps = {
   visible: boolean;
-  onSuccess: (pin: string) => Promise<void> | void;
+  /** Always async — callers must return a Promise (throw on failure). */
+  onSuccess: (pin: string) => Promise<void>;
   onCancel?: () => void;
   title?: string;
   mode?: 'verify' | 'set' | 'confirm';

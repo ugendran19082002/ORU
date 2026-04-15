@@ -12,6 +12,7 @@ import { BackButton } from '@/components/ui/BackButton';
 
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
+import { useFleetStore } from '@/stores/fleetStore';
 
 export default function ShopDeliveredOrderScreen() {
   const router = useRouter();
@@ -24,7 +25,8 @@ export default function ShopDeliveredOrderScreen() {
   const { id } = useLocalSearchParams();
 
   const { orders, updateStatus } = useOrderStore();
-  const { shops, deliveryAgents } = useShopStore();
+  const { shops } = useShopStore();
+  const { agents: deliveryAgents } = useFleetStore();
   const [isAssignModalOpen, setAssignModalOpen] = React.useState(false);
 
   const handleAssignAgent = (agentName: string) => {
@@ -215,7 +217,7 @@ export default function ShopDeliveredOrderScreen() {
             </View>
             
             <ScrollView contentContainerStyle={{ gap: 12 }}>
-              {deliveryAgents.map((agent) => (
+              {deliveryAgents.map((agent: import('@/types/domain').DeliveryAgent) => (
                 <TouchableOpacity 
                   key={agent.id} 
                   style={[styles.agentCard, agent.status !== 'active' && { opacity: 0.5 }]}

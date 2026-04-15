@@ -561,6 +561,7 @@ export default function ShopInventoryScreen() {
                   </ScrollView>
                 );
               }
+              return null;
             })()}
           </View>
         </View>

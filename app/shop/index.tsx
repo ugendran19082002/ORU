@@ -90,21 +90,19 @@ export default function ShopOrdersScreen() {
     const pendingCount = activeOrders.filter(
       (o) => o.status === "pending",
     ).length;
-    if (pendingCount > 0) {
-      // In a real app we'd compare created timestamps, but here we trigger a timer.
-      // Using 5 * 60 * 1000 for 5 minutes.
-      const timer = setTimeout(
-        () => {
-          Toast.show({
-            type: 'info',
-            text1: '⚠️ Unaccepted Orders',
-            text2: `You have ${pendingCount} order(s) waiting for acceptance. Please action them immediately.`
-          });
-        },
-        5 * 60 * 1000,
-      );
-      return () => clearTimeout(timer);
-    }
+    if (pendingCount === 0) return;
+    // In a real app we'd compare created timestamps, but here we trigger a timer.
+    const timer = setTimeout(
+      () => {
+        Toast.show({
+          type: 'info',
+          text1: '⚠️ Unaccepted Orders',
+          text2: `You have ${pendingCount} order(s) waiting for acceptance. Please action them immediately.`
+        });
+      },
+      5 * 60 * 1000,
+    );
+    return () => clearTimeout(timer);
   }, [activeOrders]);
 
   const handleAction = (action: OrderAction, orderId?: string) => {

@@ -1,156 +1,130 @@
 import { apiClient } from './client';
+import { ApiError } from './apiError';
+import type {
+  ApiResponse,
+  AdminShop,
+  ShopApprovalResult,
+  OnboardingStepReviewResult,
+  OnboardingStep,
+  GrowthSettings,
+  GrowthSettingsPayload,
+  LoyaltyLevel,
+  LoyaltyLevelPayload,
+  PlatformCoupon,
+  CreateCouponPayload,
+} from '@/types/api';
 
-export interface AdminShop {
-  id: number;
-  uuid: string;
-  name: string;
-  phone?: string;
-  shop_type?: string;
-  status: string;
-  delivery_radius_km?: string;
-  gstin?: string | null;
-  bank_account_no?: string | null;
-  bank_ifsc?: string | null;
-  is_verified?: boolean;
-  admin_notes?: string | null;
-  city?: string | null;
-  created_at: string;
-  owner?: {
-    name: string;
-    phone: string;
-    email: string | null;
-  };
-}
-
-export interface AdminApiResponse<T> {
-  status: number;
-  message: string;
-  data: T;
-}
+// Re-export so existing imports of AdminShop from adminApi still work
+export type { AdminShop };
 
 export const adminApi = {
-  /**
-   * List all shops with optional status filtering
-   */
-  listShops: async (status?: string): Promise<AdminApiResponse<AdminShop[]>> => {
-    const response = await apiClient.get<AdminApiResponse<AdminShop[]>>('/admin/shops', {
-      params: { status }
+  /** List all shops with optional status filtering */
+  listShops: async (status?: string): Promise<ApiResponse<AdminShop[]>> => {
+    const response = await apiClient.get<ApiResponse<AdminShop[]>>('/admin/shops', {
+      params: { status },
     });
     return response.data;
   },
 
-  /**
-   * Approve a shop application globally
-   */
-  approveShop: async (shopId: number): Promise<AdminApiResponse<any>> => {
-    const response = await apiClient.post<AdminApiResponse<any>>(`/admin/shops/${shopId}/approve`);
-    return response.data;
-  },
-
-  /**
-   * Reject a shop application with notes
-   */
-  rejectShop: async (shopId: number, notes: string): Promise<AdminApiResponse<any>> => {
-    const response = await apiClient.post<AdminApiResponse<any>>(`/admin/shops/${shopId}/reject`, {
-      notes
-    });
-    return response.data;
-  },
-
-  /**
-   * Get specific shop profile (Admin Detail View)
-   */
-  getShopDetail: async (shopId: number): Promise<AdminApiResponse<AdminShop>> => {
-    const response = await apiClient.get<AdminApiResponse<AdminShop>>(`/admin/shops/${shopId}`);
-    return response.data;
-  },
-
-  /**
-   * Get specific shop onboarding progress (to view document URLs)
-   */
-  getShopOnboardingProgress: async (shopId: number): Promise<AdminApiResponse<any>> => {
-    // Re-using the onboarding steps API which includes titles and document_urls
-    const response = await apiClient.get<AdminApiResponse<any>>(`/onboarding/shop/steps`, {
-      params: { shopId }
-    });
-    return response.data;
-  },
-
-  /**
-   * Review (Approve/Reject) a specific onboarding step
-   */
-  reviewShopOnboardingStep: async (data: { 
-    shopId: number; 
-    stepId: number; 
-    status: 'approved' | 'rejected'; 
-    notes?: string 
-  }): Promise<AdminApiResponse<any>> => {
-    // Map UI 'approved' to backend 'completed'
-    const status = data.status === 'approved' ? 'completed' : 'rejected';
-    
-    const response = await apiClient.post<AdminApiResponse<any>>(
-      `/admin/shops/${data.shopId}/onboarding/${data.stepId}/review`, 
-      {
-        status,
-        admin_notes: data.notes
-      }
+  /** Approve a shop application */
+  approveShop: async (shopId: number): Promise<ApiResponse<ShopApprovalResult>> => {
+    const response = await apiClient.post<ApiResponse<ShopApprovalResult>>(
+      `/admin/shops/${shopId}/approve`,
     );
     return response.data;
   },
 
-  /**
-   * Get all growth engine settings (Loyalty & Referral)
-   */
-  getGrowthSettings: async (): Promise<AdminApiResponse<any>> => {
-    const response = await apiClient.get<AdminApiResponse<any>>('/admin/growth/settings');
+  /** Reject a shop application with admin notes */
+  rejectShop: async (shopId: number, notes: string): Promise<ApiResponse<ShopApprovalResult>> => {
+    const response = await apiClient.post<ApiResponse<ShopApprovalResult>>(
+      `/admin/shops/${shopId}/reject`,
+      { notes },
+    );
     return response.data;
   },
 
-  /**
-   * Update growth engine settings
-   */
-  updateGrowthSettings: async (data: any): Promise<AdminApiResponse<any>> => {
-    const response = await apiClient.put<AdminApiResponse<any>>('/admin/growth/settings', data);
+  /** Get specific shop profile (Admin detail view) */
+  getShopDetail: async (shopId: number): Promise<ApiResponse<AdminShop>> => {
+    const response = await apiClient.get<ApiResponse<AdminShop>>(`/admin/shops/${shopId}`);
     return response.data;
   },
 
-  /**
-   * Get all loyalty levels
-   */
-  getLoyaltyLevels: async (): Promise<AdminApiResponse<any[]>> => {
-    const response = await apiClient.get<AdminApiResponse<any[]>>('/admin/growth/levels');
+  /** Get shop onboarding progress (includes document URLs) */
+  getShopOnboardingProgress: async (shopId: number): Promise<ApiResponse<OnboardingStep[]>> => {
+    const response = await apiClient.get<ApiResponse<OnboardingStep[]>>(
+      '/onboarding/shop/steps',
+      { params: { shopId } },
+    );
     return response.data;
   },
 
-  /**
-   * Update or create a loyalty level
-   */
-  updateLoyaltyLevel: async (id: number | 'new', data: any): Promise<AdminApiResponse<any>> => {
-    const response = await apiClient.put<AdminApiResponse<any>>(`/admin/growth/levels/${id}`, data);
+  /** Review (approve/reject) a specific onboarding step */
+  reviewShopOnboardingStep: async (data: {
+    shopId: number;
+    stepId: number;
+    status: 'approved' | 'rejected';
+    notes?: string;
+  }): Promise<ApiResponse<OnboardingStepReviewResult>> => {
+    // Map UI 'approved' → backend 'completed'
+    const backendStatus = data.status === 'approved' ? 'completed' : 'rejected';
+
+    const response = await apiClient.post<ApiResponse<OnboardingStepReviewResult>>(
+      `/admin/shops/${data.shopId}/onboarding/${data.stepId}/review`,
+      { status: backendStatus, admin_notes: data.notes },
+    );
     return response.data;
   },
 
-  /**
-   * List all platform coupons
-   */
-  listPlatformCoupons: async (): Promise<AdminApiResponse<any[]>> => {
-    const response = await apiClient.get<AdminApiResponse<any[]>>('/admin/coupons');
+  /** Get all growth engine settings (loyalty & referral) */
+  getGrowthSettings: async (): Promise<ApiResponse<GrowthSettings>> => {
+    const response = await apiClient.get<ApiResponse<GrowthSettings>>('/admin/growth/settings');
     return response.data;
   },
 
-  /**
-   * Create a platform coupon
-   */
-  createPlatformCoupon: async (data: any): Promise<AdminApiResponse<any>> => {
-    const response = await apiClient.post<AdminApiResponse<any>>('/admin/coupons', data);
+  /** Update growth engine settings */
+  updateGrowthSettings: async (data: GrowthSettingsPayload): Promise<ApiResponse<GrowthSettings>> => {
+    const response = await apiClient.put<ApiResponse<GrowthSettings>>('/admin/growth/settings', data);
     return response.data;
   },
 
-  /**
-   * Delete a platform coupon
-   */
-  deletePlatformCoupon: async (id: number): Promise<AdminApiResponse<any>> => {
-    const response = await apiClient.delete<AdminApiResponse<any>>(`/admin/coupons/${id}`);
+  /** Get all loyalty levels */
+  getLoyaltyLevels: async (): Promise<ApiResponse<LoyaltyLevel[]>> => {
+    const response = await apiClient.get<ApiResponse<LoyaltyLevel[]>>('/admin/growth/levels');
     return response.data;
-  }
+  },
+
+  /** Update or create a loyalty level */
+  updateLoyaltyLevel: async (
+    id: number | 'new',
+    data: LoyaltyLevelPayload,
+  ): Promise<ApiResponse<LoyaltyLevel>> => {
+    const response = await apiClient.put<ApiResponse<LoyaltyLevel>>(
+      `/admin/growth/levels/${id}`,
+      data,
+    );
+    return response.data;
+  },
+
+  /** List all platform coupons */
+  listPlatformCoupons: async (): Promise<ApiResponse<PlatformCoupon[]>> => {
+    const response = await apiClient.get<ApiResponse<PlatformCoupon[]>>('/admin/coupons');
+    return response.data;
+  },
+
+  /** Create a platform coupon */
+  createPlatformCoupon: async (
+    data: CreateCouponPayload,
+  ): Promise<ApiResponse<PlatformCoupon>> => {
+    const response = await apiClient.post<ApiResponse<PlatformCoupon>>('/admin/coupons', data);
+    return response.data;
+  },
+
+  /** Delete a platform coupon */
+  deletePlatformCoupon: async (id: number): Promise<ApiResponse<{ deleted: true }>> => {
+    const response = await apiClient.delete<ApiResponse<{ deleted: true }>>(`/admin/coupons/${id}`);
+    return response.data;
+  },
 };
+
+// Keep ApiError accessible for callers that need to catch it
+export { ApiError };

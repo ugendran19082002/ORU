@@ -151,7 +151,7 @@ export default function SecuritySetupScreen() {
       <PinEntryModal
         visible={showModal}
         mode="set"
-        onSuccess={() => {}} // Handled via onSetPin
+        onSuccess={async () => {}} // Handled via onSetPin
         onCancel={() => setShowModal(false)}
         onSetPin={handleSetPin}
         title="Create App PIN"

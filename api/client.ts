@@ -2,25 +2,28 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform, DeviceEventEmitter } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { log } from '@/utils/logger';
 
-// Local development baseURL. Accessing via Expo Public environment variables.
-console.log('🔍 [System] process.env.EXPO_PUBLIC_API_URL:', process.env.EXPO_PUBLIC_API_URL);
+// Session storage key — versioned to support future schema migrations
+export const SESSION_STORAGE_KEY = 'thannigo_session_v1';
 
 export const apiClient = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api',
   timeout: 30000,
 });
 
+log.info('🌐 [API Client] Initialized with baseURL:', apiClient.defaults.baseURL);
+
 // MEMORY STORE: Synchronous token access to prevent race conditions during role changes
 let authToken: string | null = null;
 
 /**
  * Synchronously update the token used for all API requests.
- * This should be called immediately after login or role selection.
+ * Call immediately after login or role selection.
  */
 export const setClientToken = (token: string | null) => {
   authToken = token;
-  console.log('🔑 [API Client] Auth Token updated in memory');
+  log.info('🔑 [API Client] Auth token updated');
 };
 
 export const getClientToken = () => authToken;
@@ -32,71 +35,69 @@ export const getClientToken = () => authToken;
 export const resolveApiUrl = (path?: string | null): string | undefined => {
   if (!path) return undefined;
   if (path.startsWith('http')) return path;
-  
-  // Get base server URL by removing '/api' from the baseURL
-  const base = apiClient.defaults.baseURL?.replace(/\/api$/, '') || '';
+
+  const base = apiClient.defaults.baseURL?.replace(/\/api$/, '') ?? '';
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  
   return `${base}${cleanPath}`;
 };
 
-console.log('🌐 [API Client] Initialized with baseURL:', apiClient.defaults.baseURL);
+// ─── Request interceptor ───────────────────────────────────────────────────────
 
-// Automatically inject session data if available
 apiClient.interceptors.request.use(
   async (config) => {
-    (config as any).metadata = { startTime: new Date() };
-    console.log(`\n🚀 [API Request] ${config.method?.toUpperCase()} ${config.url}`);
-    
-    // Set token from memory (sync and reliable)
+    (config as unknown as Record<string, unknown>).metadata = { startTime: new Date() };
+    log.info(`🚀 [API] ${config.method?.toUpperCase()} ${config.url}`);
+
     if (authToken) {
       config.headers.Authorization = `Bearer ${authToken}`;
-      console.log(`🔑 [API Client] Using Token (last 10 chars): ...${authToken.slice(-10)}`);
     } else {
-      console.log(`🔑 [API Client] No Auth Token in memory`);
+      log.info('🔑 [API] No auth token in memory');
     }
-    
+
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
-// REFRESH LOGIC STATE
-let isRefreshing = false;
-let failedQueue: any[] = [];
+// ─── Refresh-queue state ───────────────────────────────────────────────────────
 
-const processQueue = (error: any, token: string | null = null) => {
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (err: unknown) => void;
+}> = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve(token!);
     }
   });
   failedQueue = [];
 };
 
+// ─── Response interceptor ──────────────────────────────────────────────────────
+
 apiClient.interceptors.response.use(
   (response) => {
-    const startTime = (response.config as any).metadata?.startTime;
-    const duration = startTime ? new Date().getTime() - startTime.getTime() : 'unknown';
-    
-    console.log(`\n✅ [API Response] ${response.status} ${response.config.url} (${duration}ms)`);
+    const meta = (response.config as unknown as Record<string, unknown>).metadata as { startTime: Date } | undefined;
+    const duration = meta ? new Date().getTime() - meta.startTime.getTime() : 'unknown';
+    log.info(`✅ [API] ${response.status} ${response.config.url} (${duration}ms)`);
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
-    const startTime = (originalRequest as any)?.metadata?.startTime;
-    const duration = startTime ? new Date().getTime() - startTime.getTime() : 'unknown';
+    const originalRequest = error.config as unknown as Record<string, unknown> & { url?: string; _retry?: boolean; headers: Record<string, string> };
+    const meta = originalRequest?.metadata as { startTime: Date } | undefined;
+    const duration = meta ? new Date().getTime() - meta.startTime.getTime() : 'unknown';
 
     const is401 = error.response?.status === 401;
-    const isRefreshRequest = originalRequest.url?.includes('/auth/refresh');
+    const isRefreshRequest = originalRequest?.url?.includes('/auth/refresh');
 
-    // Handle 401 Unauthorized errors (excluding the refresh request itself to avoid loops)
     if (is401 && !isRefreshRequest && !originalRequest._retry) {
       if (isRefreshing) {
-        // If already refreshing, wait for it to complete
-        return new Promise((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
           .then((token) => {
@@ -108,58 +109,57 @@ apiClient.interceptors.response.use(
 
       originalRequest._retry = true;
       isRefreshing = true;
-      
-      console.log('🔄 [API Client] Access Token expired. Attempting Silent Refresh...');
 
-      // 1. Get the current refresh token from storage
-      let refreshToken = null;
+      log.info('🔄 [API] Access token expired — attempting silent refresh...');
+
+      // Read refresh token from storage
+      let refreshToken: string | null = null;
       try {
-        const sessionRaw = Platform.OS === 'web' 
-          ? await AsyncStorage.getItem('thannigo_session')
-          : await SecureStore.getItemAsync('thannigo_session');
-        
+        const sessionRaw =
+          Platform.OS === 'web'
+            ? await AsyncStorage.getItem(SESSION_STORAGE_KEY)
+            : await SecureStore.getItemAsync(SESSION_STORAGE_KEY);
+
         if (sessionRaw) {
-          const session = JSON.parse(sessionRaw);
-          refreshToken = session.refresh_token;
+          const session = JSON.parse(sessionRaw) as { refresh_token?: string };
+          refreshToken = session.refresh_token ?? null;
         }
       } catch (err) {
-        console.error('⚠️ [API Client] Failed to read refresh token from storage:', err);
+        log.error('⚠️ [API] Failed to read refresh token from storage:', err);
       }
 
       if (!refreshToken) {
-        console.error('❌ [API Client] No refresh token found. Purging session.');
+        log.error('❌ [API] No refresh token found — purging session.');
         isRefreshing = false;
         processQueue(new Error('No refresh token'), null);
         performDeepPurge();
         return Promise.reject(error);
       }
 
-      // 2. Call the refresh endpoint
       try {
-        const deviceId = (await import('../stores/securityStore')).useSecurityStore.getState().getDeviceId();
-        const res = await axios.post(`${apiClient.defaults.baseURL}/auth/refresh`, {
-          refresh_token: refreshToken
-        }, {
-            headers: { 'x-device-id': deviceId }
-        });
+        const { useSecurityStore } = await import('../stores/securityStore');
+        const deviceId = useSecurityStore.getState().getDeviceId();
+        const res = await axios.post(
+          `${apiClient.defaults.baseURL}/auth/refresh`,
+          { refresh_token: refreshToken },
+          { headers: { 'x-device-id': deviceId } },
+        );
 
-        if (res.status === 200 && res.data.data.access_token) {
-          const newAccessToken = res.data.data.access_token;
-          console.log('✅ [API Client] Token successfully refreshed.');
-          
-          // Update memory & storage
+        if (res.status === 200 && (res.data as { data: { access_token?: string } }).data.access_token) {
+          const newAccessToken = (res.data as { data: { access_token: string } }).data.access_token;
+          log.info('✅ [API] Token refreshed successfully.');
+
           setClientToken(newAccessToken);
           await updatePersistentToken(newAccessToken);
-          
+
           isRefreshing = false;
           processQueue(null, newAccessToken);
 
-          // Retry the original request
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return apiClient(originalRequest);
         }
       } catch (refreshErr) {
-        console.error('❌ [API Client] Silent Refresh failed. Purging session:', refreshErr);
+        log.error('❌ [API] Silent refresh failed — purging session:', refreshErr);
         isRefreshing = false;
         processQueue(refreshErr, null);
         performDeepPurge();
@@ -167,50 +167,44 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Regular error logging (non-401 or failed refresh)
-    if (error.response?.status !== 404) {
-      console.error(`\n❌ [API Error] ${error.response?.status || 'Network'} ${originalRequest?.url} (${duration}ms)`);
-      if (error.response?.data) {
-        console.error('📥 Error Data:', JSON.stringify(error.response.data, null, 2));
-      }
-    }
+    // Log non-401 errors (including 404 which was silently swallowed before)
+    log.error(
+      `❌ [API] ${error.response?.status ?? 'Network'} ${originalRequest?.url} (${duration}ms)`,
+      error.response?.data ?? '',
+    );
 
     return Promise.reject(error);
-  }
+  },
 );
 
-/**
- * Update ONLY the access token in the persisted session storage
- */
-async function updatePersistentToken(token: string) {
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+async function updatePersistentToken(token: string): Promise<void> {
   try {
-    const key = 'thannigo_session';
-    const raw = Platform.OS === 'web' 
-      ? await AsyncStorage.getItem(key)
-      : await SecureStore.getItemAsync(key);
-    
+    const raw =
+      Platform.OS === 'web'
+        ? await AsyncStorage.getItem(SESSION_STORAGE_KEY)
+        : await SecureStore.getItemAsync(SESSION_STORAGE_KEY);
+
     if (raw) {
-      const session = JSON.parse(raw);
+      const session = JSON.parse(raw) as Record<string, unknown>;
       session.access_token = token;
+
       if (Platform.OS === 'web') {
-        await AsyncStorage.setItem(key, JSON.stringify(session));
+        await AsyncStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
       } else {
-        await SecureStore.setItemAsync(key, JSON.stringify(session));
+        await SecureStore.setItemAsync(SESSION_STORAGE_KEY, JSON.stringify(session));
       }
     }
   } catch (err) {
-    console.error('[API Client] Persistence update failed:', err);
+    log.error('[API] Persistence update failed:', err);
   }
 }
 
-/**
- * Global signal to log out the user and clear all data
- */
-function performDeepPurge() {
-  console.warn('[API] Deep Purge initiated.');
-  // Signal AppSessionProvider to handle UI logout
+function performDeepPurge(): void {
+  log.warn('[API] Deep purge initiated — emitting unauthorized signal.');
   DeviceEventEmitter.emit('thannigo:unauthorized', {
     code: 'SESSION_EXPIRED',
-    message: 'Your session has expired. Please log in again.'
+    message: 'Your session has expired. Please log in again.',
   });
 }

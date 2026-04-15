@@ -1,159 +1,169 @@
 import { apiClient } from './client';
+import { ApiError } from './apiError';
 import { mockShops } from '@/utils/mockData';
+import { log } from '@/utils/logger';
 import type { Shop } from '@/types/domain';
+import type {
+  ApiResponse,
+  ShopProfileRaw,
+  ShopSettings,
+  ShopToggleResult,
+  BusyModeResult,
+  ShopUpdatePayload,
+  ShopSettingsPayload,
+} from '@/types/api';
 
-// Simulated network delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+/** Map raw backend shape → frontend Shop domain model */
+function mapShop(s: ShopProfileRaw): Shop {
+  return {
+    id: String(s.id),
+    name: s.name,
+    area: s.city ?? 'Chennai',
+    rating: parseFloat(s.avg_rating) || 0,
+    distanceKm: parseFloat(s.distance_km) || 0,
+    eta: '25-45 mins',
+    phone: s.phone,
+    isOpen: s.is_open ?? true,
+    tags: ['Mineral Water', 'Purified'],
+    verified: s.status === 'active',
+    pricePerCan: parseFloat(s.min_price) || 0,
+    lat: parseFloat(s.latitude),
+    lng: parseFloat(s.longitude),
+    accent: '#005d90',
+    heroImage: 'water_can_1',
+    products: [],
+  };
+}
 
 export const shopApi = {
   /**
-   * Fetch approved nearby shops based on coordinates
+   * Fetch approved nearby shops based on coordinates.
+   * Falls back to mock data in dev mode when coordinates are missing.
    */
   async getShops(params?: { lat: number; lng: number }): Promise<Shop[]> {
     if (!params?.lat || !params?.lng) {
-      // Fallback for screens that don't pass coords yet (returns empty or mock if needed)
-      return mockShops;
+      if (__DEV__) {
+        log.warn('[shopApi] No coords provided — returning mock shops (dev only)');
+        return mockShops;
+      }
+      return [];
     }
 
     try {
-      const response = await apiClient.get('/shops', { params });
-      if (response.data.status === 1 && response.data.data.data) {
-        return response.data.data.data.map((s: any) => ({
-          id: s.id,
-          name: s.name,
-          area: s.city || 'Chennai',
-          rating: parseFloat(s.avg_rating) || 4.5,
-          distanceKm: parseFloat(s.distance_km) || 0,
-          eta: '25-45 mins',
-          phone: s.phone || '',
-          isOpen: s.is_open ?? true,
-          tags: ['Mineral Water', 'Purified'],
-          verified: s.status === 'active',
-          pricePerCan: parseFloat(s.min_price) || 45,
-          lat: parseFloat(s.latitude),
-          lng: parseFloat(s.longitude),
-          accent: '#005d90',
-          heroImage: 'water_can_1',
-          products: []
-        }));
+      const response = await apiClient.get<ApiResponse<{ data: ShopProfileRaw[] }>>('/shops', { params });
+      if (response.data.status === 1 && response.data.data?.data) {
+        return response.data.data.data.map(mapShop);
       }
       return [];
     } catch (error) {
-      console.error("[shopApi] getShops failed:", error);
-      throw error;
+      log.error('[shopApi] getShops failed:', error);
+      throw ApiError.from(error, 'Failed to fetch shops');
     }
   },
 
   /**
-   * Fetch a single shop by its ID
-   * Simulates GET /v1/shops/:id
+   * Fetch a single shop by ID.
+   * Currently resolved from mock data — replace with real endpoint when available.
    */
   async getShopById(id: string): Promise<Shop | null> {
-    await delay(500);
-    const shop = mockShops.find(s => s.id === id);
-    if (!shop) throw new Error('Shop not found');
+    const shop = mockShops.find((s) => s.id === id);
+    if (!shop) throw new ApiError('SHOP_NOT_FOUND', 404, 'Shop not found');
     return shop;
   },
 
   /**
-   * Fetch the current user's shop profile
+   * Fetch the current shop owner's shop profile.
    * GET /shop-owner/shops/me
    */
-  async getMyShop(): Promise<any> {
+  async getMyShop(): Promise<ShopProfileRaw> {
     try {
-      const response = await apiClient.get('/shop-owner/shops/me');
-      if (response.data.status === 1) {
-        return response.data.data;
-      }
-      throw new Error(response.data.message || 'Failed to fetch shop profile');
+      const response = await apiClient.get<ApiResponse<ShopProfileRaw>>('/shop-owner/shops/me');
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('FETCH_FAILED', response.status ?? 400, response.data.message || 'Failed to fetch shop profile');
     } catch (error) {
-      console.error("[shopApi] getMyShop failed:", error);
-      throw error;
+      log.error('[shopApi] getMyShop failed:', error);
+      throw ApiError.from(error, 'Failed to fetch shop profile');
     }
   },
 
   /**
-   * Update the current user's shop profile
+   * Update the current shop owner's shop profile.
    * PATCH /shop-owner/shops/me
    */
-  async updateMyShop(data: any): Promise<any> {
+  async updateMyShop(data: ShopUpdatePayload): Promise<ShopProfileRaw> {
     try {
-      const response = await apiClient.patch('/shop-owner/shops/me', data);
-      if (response.data.status === 1) {
-        return response.data.data;
-      }
-      throw new Error(response.data.message || 'Failed to update shop profile');
+      const response = await apiClient.patch<ApiResponse<ShopProfileRaw>>('/shop-owner/shops/me', data);
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('UPDATE_FAILED', response.status ?? 400, response.data.message || 'Failed to update shop profile');
     } catch (error) {
-      console.error("[shopApi] updateMyShop failed:", error);
-      throw error;
+      log.error('[shopApi] updateMyShop failed:', error);
+      throw ApiError.from(error, 'Failed to update shop profile');
     }
   },
 
   /**
-   * Get shop operational settings
+   * Get shop operational settings.
    * GET /shop-owner/shops/me/settings
    */
-  async getShopSettings(): Promise<any> {
+  async getShopSettings(): Promise<ShopSettings> {
     try {
-      const response = await apiClient.get('/shop-owner/shops/me/settings');
-      if (response.data.status === 1) {
-        return response.data.data;
-      }
-      throw new Error(response.data.message || 'Failed to fetch shop settings');
+      const response = await apiClient.get<ApiResponse<ShopSettings>>('/shop-owner/shops/me/settings');
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('FETCH_FAILED', response.status ?? 400, response.data.message || 'Failed to fetch shop settings');
     } catch (error) {
-      console.error("[shopApi] getShopSettings failed:", error);
-      throw error;
+      log.error('[shopApi] getShopSettings failed:', error);
+      throw ApiError.from(error, 'Failed to fetch shop settings');
     }
   },
 
   /**
-   * Update shop operational settings
+   * Update shop operational settings.
    * PATCH /shop-owner/shops/me/settings
    */
-  async updateShopSettings(data: any): Promise<any> {
+  async updateShopSettings(data: ShopSettingsPayload): Promise<ShopSettings> {
     try {
-      const response = await apiClient.patch('/shop-owner/shops/me/settings', data);
-      if (response.data.status === 1) {
-        return response.data.data;
-      }
-      throw new Error(response.data.message || 'Failed to update shop settings');
+      const response = await apiClient.patch<ApiResponse<ShopSettings>>('/shop-owner/shops/me/settings', data);
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('UPDATE_FAILED', response.status ?? 400, response.data.message || 'Failed to update shop settings');
     } catch (error) {
-      console.error("[shopApi] updateShopSettings failed:", error);
-      throw error;
+      log.error('[shopApi] updateShopSettings failed:', error);
+      throw ApiError.from(error, 'Failed to update shop settings');
     }
   },
 
   /**
-   * Toggle shop open/closed status
+   * Toggle shop open/closed status.
    * POST /shop-owner/shops/me/toggle-open
    */
-  async toggleShopOpen(isOpen: boolean): Promise<any> {
+  async toggleShopOpen(isOpen: boolean): Promise<ShopToggleResult> {
     try {
-      const response = await apiClient.post('/shop-owner/shops/me/toggle-open', { is_open: isOpen });
-      if (response.data.status === 1) {
-        return response.data.data;
-      }
-      throw new Error(response.data.message || 'Failed to toggle shop status');
+      const response = await apiClient.post<ApiResponse<ShopToggleResult>>(
+        '/shop-owner/shops/me/toggle-open',
+        { is_open: isOpen },
+      );
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('TOGGLE_FAILED', response.status ?? 400, response.data.message || 'Failed to toggle shop status');
     } catch (error) {
-      console.error("[shopApi] toggleShopOpen failed:", error);
-      throw error;
+      log.error('[shopApi] toggleShopOpen failed:', error);
+      throw ApiError.from(error, 'Failed to toggle shop status');
     }
   },
 
   /**
-   * Toggle busy mode (auto-reject new orders)
+   * Toggle busy mode (auto-reject new orders).
    * POST /shop-owner/shops/me/toggle-busy
    */
-  async toggleBusyMode(busyMode: boolean): Promise<any> {
+  async toggleBusyMode(busyMode: boolean): Promise<BusyModeResult> {
     try {
-      const response = await apiClient.post('/shop-owner/shops/me/toggle-busy', { busy_mode: busyMode });
-      if (response.data.status === 1) {
-        return response.data.data;
-      }
-      throw new Error(response.data.message || 'Failed to toggle busy mode');
+      const response = await apiClient.post<ApiResponse<BusyModeResult>>(
+        '/shop-owner/shops/me/toggle-busy',
+        { busy_mode: busyMode },
+      );
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('TOGGLE_FAILED', response.status ?? 400, response.data.message || 'Failed to toggle busy mode');
     } catch (error) {
-      console.error("[shopApi] toggleBusyMode failed:", error);
-      throw error;
+      log.error('[shopApi] toggleBusyMode failed:', error);
+      throw ApiError.from(error, 'Failed to toggle busy mode');
     }
-  }
+  },
 };

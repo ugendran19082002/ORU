@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { AppRouteGuard, AppSessionProvider } from '@/providers/AppSessionProvider';
+import { AppSessionProvider } from '@/providers/AppSessionProvider';
 import { NoInternetBanner } from '@/components/ui/NoInternetBanner';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '@/components/ui/ToastConfig';
@@ -23,7 +23,6 @@ export default function RootLayout() {
     <ErrorBoundary>
       <AppSessionProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <AppRouteGuard />
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="auth" options={{ headerShown: false, animation: 'fade' }} />
               <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
