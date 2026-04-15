@@ -8,7 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import * as LocalAuthentication from 'expo-local-authentication';
 import {
   KeyboardAvoidingView,
@@ -52,6 +52,7 @@ export default function LoginScreen() {
   const [role, setRole] = useState<AppRole | null>(searchParams.role || preferredRole || null);
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   // If no role, safe default for styles
   const displayRole = role || 'customer';
@@ -86,25 +87,28 @@ export default function LoginScreen() {
 
   const handleSendOTP = async () => {
     if (phone.length < 10) return;
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setLoading(true);
 
     try {
       const deviceId = await getOriginalDeviceId();
       const response = await authApi.sendOtp(`+91${phone}`, deviceId);
-      
+
       if (response.status === 1) {
-        setLoading(false);
         router.push({ pathname: "/auth/otp", params: { phone, role: role || "" } });
       } else {
         throw new Error(response.message || "Failed to send OTP");
       }
     } catch (err: any) {
-      setLoading(false);
       Toast.show({
         type: 'error',
         text1: 'Authentication Error',
         text2: err?.response?.data?.message || err?.message || "Failed to send OTP. Please try again."
       });
+    } finally {
+      isSubmittingRef.current = false;
+      setLoading(false);
     }
   };
 
@@ -216,9 +220,10 @@ export default function LoginScreen() {
         {/* SEND OTP BUTTON (pinned to bottom) */}
         <View style={styles.bottomBar}>
           <TouchableOpacity
-            activeOpacity={phone.length === 10 ? 0.9 : 1}
+            activeOpacity={phone.length === 10 && !loading ? 0.9 : 1}
             onPress={handleSendOTP}
-            style={[styles.ctaWrap, phone.length < 10 && { opacity: 0.4 }]}
+            disabled={loading}
+            style={[styles.ctaWrap, (phone.length < 10 || loading) && { opacity: 0.4 }]}
           >
             <LinearGradient
               colors={[theme.start, theme.end]}
