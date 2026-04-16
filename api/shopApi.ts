@@ -276,4 +276,46 @@ export const shopApi = {
       throw ApiError.from(error, 'Failed to sync delivery slots');
     }
   },
+
+  /**
+   * Fetch all holidays.
+   * GET /shop-owner/holidays
+   */
+  async getHolidays(): Promise<any[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<any[]>>('/shop-owner/holidays');
+      return response.data.data || [];
+    } catch (error) {
+      log.error('[shopApi] getHolidays failed:', error);
+      throw ApiError.from(error, 'Failed to fetch holidays');
+    }
+  },
+
+  /**
+   * Add a new holiday.
+   * POST /shop-owner/holidays
+   */
+  async addHoliday(data: { holiday_date: string; reason: string }): Promise<any> {
+    try {
+      const response = await apiClient.post<ApiResponse<any>>('/shop-owner/holidays', data);
+      return response.data.data;
+    } catch (error) {
+      log.error('[shopApi] addHoliday failed:', error);
+      throw ApiError.from(error, 'Failed to add holiday');
+    }
+  },
+
+  /**
+   * Delete a holiday.
+   * DELETE /shop-owner/holidays/:id
+   */
+  async deleteHoliday(id: number | string): Promise<any> {
+    try {
+      const response = await apiClient.delete<ApiResponse<any>>(`/shop-owner/holidays/${id}`);
+      return response.data.data;
+    } catch (error) {
+      log.error('[shopApi] deleteHoliday failed:', error);
+      throw ApiError.from(error, 'Failed to delete holiday');
+    }
+  },
 };

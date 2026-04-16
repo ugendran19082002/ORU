@@ -34,6 +34,7 @@ const QUICK_ACTIONS: NavItem[] = [
 
 const SHOP_MGMT_MENU: NavItem[] = [
   { label: 'Operational Rules', icon: 'settings-outline', route: '/shop/operational-settings' },
+  { label: 'Holiday Master', icon: 'calendar-outline', route: '/shop/holidays' },
   { label: 'Shop Profile & Address', icon: 'storefront-outline', route: '/shop/profile' },
   { label: 'Promotions & Coupons', icon: 'pricetag-outline', route: '/shop/promotions', badge: 'NEW' },
   { label: 'Staff Management', icon: 'people-outline', route: '/shop/staff' },
