@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, RefreshControl, Alert, ActivityIndicator,
+  StyleSheet, RefreshControl, Alert, ActivityIndicator, Modal, TextInput,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,6 +36,15 @@ export default function ShopEarningsScreen() {
 
   // P0 Sprint 3 - End of Day Reconciliation
   const [isReconciled, setIsReconciled] = React.useState(false);
+  const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [payoutMode, setPayoutMode] = useState<'upi' | 'bank'>('bank');
+  const [upiId, setUpiId] = useState('');
+  const [bankDetails, setBankDetails] = useState({
+    account_number: '',
+    ifsc: '',
+    holder_name: ''
+  });
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -45,6 +54,16 @@ export default function ShopEarningsScreen() {
       ]);
       setWallet(walletData);
       setPayoutLogs(logsData.data);
+      
+      if (walletData) {
+        setPayoutMode(walletData.payout_mode || 'bank');
+        setUpiId(walletData.upi_id || '');
+        setBankDetails({
+           account_number: walletData.bank_account_no || '',
+           ifsc: walletData.bank_ifsc || '',
+           holder_name: walletData.account_holder_name || ''
+        });
+      }
     } catch (err) {
       Toast.show({
         type: 'error',
@@ -75,6 +94,25 @@ export default function ShopEarningsScreen() {
         text2: 'Accounts have been fully reconciled and settled.'
       });
     }, 300);
+  };
+
+  const handleUpdateSettings = async () => {
+    setIsSavingSettings(true);
+    try {
+       await payoutApi.updateSettings({
+         payout_mode: payoutMode,
+         upi_id: upiId,
+         bank_details: bankDetails,
+         payout_cycle: 'daily' // Default
+       });
+       Toast.show({ type: 'success', text1: 'Settings Updated', text2: 'Your payout details are saved.' });
+       setSettingsModalOpen(false);
+       fetchData();
+    } catch (err) {
+       Toast.show({ type: 'error', text1: 'Update Failed', text2: 'Could not save payout settings.' });
+    } finally {
+       setIsSavingSettings(false);
+    }
   };
 
   const handleWithdraw = () => {
@@ -154,6 +192,12 @@ export default function ShopEarningsScreen() {
             <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
         </View>
+        <TouchableOpacity 
+          style={styles.settingsBtn} 
+          onPress={() => setSettingsModalOpen(true)}
+        >
+          <Ionicons name="cog-outline" size={24} color="#006878" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
@@ -282,6 +326,91 @@ export default function ShopEarningsScreen() {
           </>
         )}
       </ScrollView>
+
+      {/* PAYOUT SETTINGS MODAL */}
+      <Modal visible={isSettingsModalOpen} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Payout Settings</Text>
+              <TouchableOpacity onPress={() => setSettingsModalOpen(false)}>
+                <Ionicons name="close" size={24} color="#64748b" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.inputLabel}>Payout Method</Text>
+              <View style={styles.modeToggle}>
+                 <TouchableOpacity 
+                   style={[styles.modeBtn, payoutMode === 'bank' && styles.modeBtnActive]} 
+                   onPress={() => setPayoutMode('bank')}
+                 >
+                    <Text style={[styles.modeText, payoutMode === 'bank' && styles.modeTextActive]}>Bank Transfer</Text>
+                 </TouchableOpacity>
+                 <TouchableOpacity 
+                   style={[styles.modeBtn, payoutMode === 'upi' && styles.modeBtnActive]} 
+                   onPress={() => setPayoutMode('upi')}
+                 >
+                    <Text style={[styles.modeText, payoutMode === 'upi' && styles.modeTextActive]}>UPI ID</Text>
+                 </TouchableOpacity>
+              </View>
+
+              {payoutMode === 'bank' ? (
+                <View style={{ gap: 16 }}>
+                   <View>
+                     <Text style={styles.fieldLabel}>Account Holder Name</Text>
+                     <TextInput 
+                       style={styles.input} 
+                       value={bankDetails.holder_name}
+                       onChangeText={(v) => setBankDetails({...bankDetails, holder_name: v})}
+                       placeholder="Enter full name"
+                     />
+                   </View>
+                   <View>
+                     <Text style={styles.fieldLabel}>Account Number</Text>
+                     <TextInput 
+                       style={styles.input} 
+                       value={bankDetails.account_number}
+                       onChangeText={(v) => setBankDetails({...bankDetails, account_number: v})}
+                       placeholder="Enter account number"
+                       keyboardType="numeric"
+                     />
+                   </View>
+                   <View>
+                     <Text style={styles.fieldLabel}>IFSC Code</Text>
+                     <TextInput 
+                       style={styles.input} 
+                       value={bankDetails.ifsc}
+                       onChangeText={(v) => setBankDetails({...bankDetails, ifsc: v})}
+                       placeholder="e.g. SBIN0001234"
+                       autoCapitalize="characters"
+                     />
+                   </View>
+                </View>
+              ) : (
+                <View>
+                   <Text style={styles.fieldLabel}>UPI ID</Text>
+                   <TextInput 
+                     style={styles.input} 
+                     value={upiId}
+                     onChangeText={setUpiId}
+                     placeholder="e.g. shopowner@upi"
+                     autoCapitalize="none"
+                   />
+                </View>
+              )}
+
+              <TouchableOpacity 
+                style={styles.saveBtn} 
+                onPress={handleUpdateSettings}
+                disabled={isSavingSettings}
+              >
+                {isSavingSettings ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>Save Settings</Text>}
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -343,4 +472,20 @@ const styles = StyleSheet.create({
   trxAmtNeg: { fontSize: 15, fontWeight: '800', color: '#c62828' },
   trxAmtCommission: { fontSize: 15, fontWeight: '800', color: '#e65100' },
   trxSub: { fontSize: 11, color: '#707881', fontWeight: '500', marginTop: 1 },
+
+  settingsBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: 'white', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, maxHeight: '85%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  modalTitle: { fontSize: 24, fontWeight: '900', color: '#1e293b' },
+  inputLabel: { fontSize: 13, fontWeight: '700', color: '#64748b', marginBottom: 12 },
+  modeToggle: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  modeBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
+  modeBtnActive: { backgroundColor: '#006878', borderColor: '#006878' },
+  modeText: { fontSize: 14, fontWeight: '700', color: '#64748b' },
+  modeTextActive: { color: 'white' },
+  fieldLabel: { fontSize: 13, fontWeight: '700', color: '#1e293b', marginBottom: 8, marginTop: 12 },
+  input: { backgroundColor: '#f8fafc', borderRadius: 12, padding: 14, fontSize: 15, color: '#1e293b', borderWidth: 1, borderColor: '#e2e8f0' },
+  saveBtn: { backgroundColor: '#006878', borderRadius: 16, paddingVertical: 18, alignItems: 'center', marginTop: 32, marginBottom: 20 },
+  saveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
 });

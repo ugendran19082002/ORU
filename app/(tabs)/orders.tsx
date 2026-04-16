@@ -15,6 +15,8 @@ import { Logo } from '@/components/ui/Logo';
 import { useCartStore } from '@/stores/cartStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
+import { orderApi } from '@/api/orderApi';
+import Toast from 'react-native-toast-message';
 
 
 function OrderCard({ order, onTrack, onReorder, onSupport, onPress }: {
@@ -196,16 +198,15 @@ export default function OrdersScreen() {
                 setActiveOrder(order.id);
                 router.push('/order/tracking');
               }}
-              onReorder={() => {
-                const sourceOrder = orders.find((item) => item.id === order.id);
-                setSelectedShop(order.shopId);
-                setShop(order.shopId);
-                let totalQty = 0;
-                sourceOrder?.items.forEach((item) => {
-                  setQuantity(item.productId, item.quantity, order.shopId);
-                  totalQty += item.quantity;
-                });
-                router.push(`/order/checkout?shopId=${order.shopId}&qty=${totalQty}` as any);
+              onReorder={async () => {
+                try {
+                  const res = await orderApi.reorder(order.id);
+                  Toast.show({ type: 'success', text1: 'Order Placed', text2: 'Reorder successful!' });
+                  setActiveOrder(res.data.id || res.data.orderId);
+                  router.push('/order/tracking');
+                } catch (err) {
+                  Toast.show({ type: 'error', text1: 'Reorder Failed', text2: 'Please try again.' });
+                }
               }}
               onSupport={() => {
                 setActiveOrder(order.id);

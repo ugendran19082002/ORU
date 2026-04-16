@@ -1,10 +1,7 @@
 import { apiClient } from './client';
 import { ApiError } from './apiError';
 import { log } from '@/utils/logger';
-import type { ApiResponse, PaginatedData } from '@/types/api';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
+import type { ApiResponse } from '@/types/api';
 export type ShopWallet = {
   id: number;
   shop_id: number;
@@ -18,6 +15,10 @@ export type ShopWallet = {
   bank_account_verified: boolean;
   razorpay_fund_account_id: string | null;
   last_payout_at: string | null;
+  upi_id?: string | null;
+  bank_account_no?: string | null;
+  bank_ifsc?: string | null;
+  account_holder_name?: string | null;
 };
 
 export type PayoutLog = {
@@ -36,38 +37,52 @@ export type PayoutLog = {
   created_at: string;
 };
 
-// ─── API ──────────────────────────────────────────────────────────────────────
-
 export const payoutApi = {
   /**
-   * Fetch the shop owner's wallet details.
+   * Get current payout settings and wallet balance.
    * GET /shop-owner/payouts/wallet
    */
-  async getWallet(): Promise<ShopWallet> {
+  async getWallet(): Promise<ApiResponse<any>> {
     try {
-      const response = await apiClient.get<ApiResponse<ShopWallet>>('/shop-owner/payouts/wallet');
-      if (response.data.status === 1) return response.data.data;
-      throw new ApiError('FETCH_FAILED', response.status ?? 400, response.data.message || 'Failed to fetch wallet');
+      const response = await apiClient.get<ApiResponse<any>>('/shop-owner/payouts/wallet');
+      return response.data.data;
     } catch (error) {
       log.error('[payoutApi] getWallet failed:', error);
-      throw ApiError.from(error, 'Failed to fetch wallet');
+      throw ApiError.from(error, 'Failed to fetch wallet info');
     }
   },
 
   /**
-   * Fetch paginated payout transaction logs.
-   * GET /shop-owner/payouts
+   * Update payout settings (UPI/Bank, Cycle).
+   * PATCH /shop-owner/payouts/settings
    */
-  async getPayoutLogs(params?: {
-    page?: number;
-    limit?: number;
-    type?: PayoutLog['type'];
-    payout_status?: PayoutLog['payout_status'];
-  }): Promise<PaginatedData<PayoutLog>> {
+  async updateSettings(payload: {
+    payout_mode: 'upi' | 'bank';
+    payout_cycle: 'daily' | 'weekly' | 'monthly';
+    upi_id?: string;
+    bank_details?: {
+      account_number: string;
+      ifsc: string;
+      holder_name: string;
+    };
+  }): Promise<ApiResponse<any>> {
     try {
-      const response = await apiClient.get<ApiResponse<PaginatedData<PayoutLog>>>('/shop-owner/payouts', { params });
-      if (response.data.status === 1) return response.data.data;
-      throw new ApiError('FETCH_FAILED', response.status ?? 400, response.data.message || 'Failed to fetch payout logs');
+      const response = await apiClient.patch<ApiResponse<any>>('/shop-owner/payouts/settings', payload);
+      return response.data;
+    } catch (error) {
+      log.error('[payoutApi] updateSettings failed:', error);
+      throw ApiError.from(error, 'Failed to update payout settings');
+    }
+  },
+
+  /**
+   * Request instant payout.
+   * POST /shop-owner/payouts/instant
+   */
+  async getPayoutLogs(): Promise<ApiResponse<PayoutLog[]>> {
+    try {
+      const response = await apiClient.get<ApiResponse<PayoutLog[]>>('/shop-owner/payouts/logs');
+      return response.data;
     } catch (error) {
       log.error('[payoutApi] getPayoutLogs failed:', error);
       throw ApiError.from(error, 'Failed to fetch payout logs');
@@ -75,20 +90,18 @@ export const payoutApi = {
   },
 
   /**
-   * Request an instant payout of a specific amount.
+   * Request instant payout.
    * POST /shop-owner/payouts/instant
    */
-  async requestInstantPayout(amount: number): Promise<PayoutLog> {
+  async requestInstantPayout(amount?: number): Promise<ApiResponse<any>> {
     try {
-      const response = await apiClient.post<ApiResponse<PayoutLog>>('/shop-owner/payouts/instant', { amount });
-      if (response.data.status === 1) return response.data.data;
-      throw new ApiError('PAYOUT_FAILED', response.status ?? 400, response.data.message || 'Failed to request instant payout');
+      const response = await apiClient.post<ApiResponse<any>>('/shop-owner/payouts/instant');
+      return response.data;
     } catch (error) {
       log.error('[payoutApi] requestInstantPayout failed:', error);
       throw ApiError.from(error, 'Failed to request instant payout');
     }
   },
-
   /**
    * Update payout settings (mode, cycle, UPI ID).
    * PATCH /shop-owner/payouts/settings

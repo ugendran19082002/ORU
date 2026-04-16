@@ -124,6 +124,21 @@ export const adminApi = {
     const response = await apiClient.delete<ApiResponse<{ deleted: true }>>(`/admin/coupons/${id}`);
     return response.data;
   },
+
+  /** List all orders for administrative oversight */
+  listOrders: async (params?: { status?: string }): Promise<ApiResponse<any[]>> => {
+    const response = await apiClient.get<ApiResponse<any[]>>('/admin/orders', { params });
+    return response.data;
+  },
+
+  /** Force-change an order's status */
+  overrideOrderStatus: async (orderId: string, status: string, reason: string): Promise<ApiResponse<any>> => {
+    const response = await apiClient.patch<ApiResponse<any>>(`/admin/orders/${orderId}/override-status`, {
+      status,
+      reason,
+    });
+    return response.data;
+  },
 };
 
 // Keep ApiError accessible for callers that need to catch it

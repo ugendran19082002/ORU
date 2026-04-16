@@ -236,6 +236,10 @@ export default function OrderDetailScreen() {
             <Text style={styles.billValue}>Rs. {order.total_amount}</Text>
           </View>
           <View style={styles.billRow}>
+            <Text style={styles.billLabel}>Can Deposits</Text>
+            <Text style={styles.billValue}>Rs. {((order?.items[0]?.quantity || 1) * 150)}</Text>
+          </View>
+          <View style={styles.billRow}>
             <Text style={styles.billLabel}>Delivery Charge</Text>
             <Text style={styles.billValue}>Rs. {order.delivery_charge}</Text>
           </View>

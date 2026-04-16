@@ -13,6 +13,8 @@ import { BackButton } from '@/components/ui/BackButton';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
 import { useFleetStore } from '@/stores/fleetStore';
+import { orderApi } from '@/api/orderApi';
+import Toast from 'react-native-toast-message';
 
 export default function ShopDeliveredOrderScreen() {
   const router = useRouter();
@@ -24,15 +26,46 @@ export default function ShopDeliveredOrderScreen() {
 
   const { id } = useLocalSearchParams();
 
-  const { orders, updateStatus } = useOrderStore();
+  const { orders, updateStatus, assignDelivery } = useOrderStore();
   const { shops } = useShopStore();
   const { agents: deliveryAgents } = useFleetStore();
   const [isAssignModalOpen, setAssignModalOpen] = React.useState(false);
+  const [isRescheduleModalOpen, setRescheduleModalOpen] = React.useState(false);
+  const [isRefundModalOpen, setRefundModalOpen] = React.useState(false);
+  const [refundReason, setRefundReason] = React.useState('');
 
-  const handleAssignAgent = (agentName: string) => {
-    // In real app, we update backend order.deliveryAgentId
-    updateStatus(orderId, 'assigned');
-    setAssignModalOpen(false);
+  const handleAssignAgent = async (agentId: string) => {
+    try {
+      await assignDelivery(orderId, agentId);
+      Toast.show({ type: 'success', text1: 'Agent Assigned', text2: 'Delivery agent notified.' });
+      setAssignModalOpen(false);
+    } catch (err) {
+      Toast.show({ type: 'error', text1: 'Assignment Failed', text2: 'Please try again.' });
+    }
+  };
+
+  const handleReschedule = async (date: string, slotId: number) => {
+    try {
+      await orderApi.rescheduleOrder(orderId, date, slotId);
+      Toast.show({ type: 'success', text1: 'Rescheduled', text2: 'Customer will be notified.' });
+      setRescheduleModalOpen(false);
+    } catch (err) {
+      Toast.show({ type: 'error', text1: 'Action Failed', text2: 'Could not reschedule order.' });
+    }
+  };
+
+  const handleRefund = async () => {
+    try {
+       if (!refundReason) {
+         Toast.show({ type: 'error', text1: 'Error', text2: 'Please provide a reason for refund.' });
+         return;
+       }
+       await orderApi.initiateRefund(orderId, order?.total || 0, refundReason);
+       Toast.show({ type: 'success', text1: 'Refund Initiated', text2: 'The amount will be credited back.' });
+       setRefundModalOpen(false);
+    } catch (err) {
+       Toast.show({ type: 'error', text1: 'Refund Failed', text2: 'Could not process refund.' });
+    }
   };
 
   const order = orders.find((item) => item.id === id) ?? orders[0];
@@ -95,6 +128,27 @@ export default function ShopDeliveredOrderScreen() {
             <Text style={styles.assignBtnText}>Assign Delivery Driver</Text>
           </TouchableOpacity>
         )}
+
+        {/* RESCHEDULE & REFUND ACTIONS */}
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
+           <TouchableOpacity 
+             style={[styles.actionBtn, { backgroundColor: '#f1f5f9' }]} 
+             onPress={() => setRescheduleModalOpen(true)}
+           >
+              <Ionicons name="calendar-outline" size={18} color="#475569" />
+              <Text style={[styles.actionBtnText, { color: '#475569' }]}>Reschedule</Text>
+           </TouchableOpacity>
+           
+           {(order?.paymentMethod !== 'cod') && (
+             <TouchableOpacity 
+               style={[styles.actionBtn, { backgroundColor: '#fff1f2' }]} 
+               onPress={() => setRefundModalOpen(true)}
+             >
+                <Ionicons name="refresh-outline" size={18} color="#e11d48" />
+                <Text style={[styles.actionBtnText, { color: '#e11d48' }]}>Initiate Refund</Text>
+             </TouchableOpacity>
+           )}
+        </View>
 
         {/* CUSTOMER DETAILS */}
         <View style={styles.card}>
@@ -170,13 +224,17 @@ export default function ShopDeliveredOrderScreen() {
               <Text style={styles.summaryVal}>Rs. {order?.total || 135}</Text>
             </View>
             <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Can Deposits</Text>
+              <Text style={styles.summaryVal}>Rs. {((order?.items[0]?.quantity || 1) * 150)}</Text>
+            </View>
+            <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Delivery Fee</Text>
               <Text style={styles.summaryVal}>Free</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.summaryRow}>
               <Text style={styles.grandTotalLabel}>Grand Total</Text>
-              <Text style={styles.grandTotalVal}>Rs. {order?.total || 135}</Text>
+              <Text style={styles.grandTotalVal}>Rs. {(order?.total || 135) + ((order?.items[0]?.quantity || 1) * 150)}</Text>
             </View>
           </View>
         </View>
@@ -221,7 +279,7 @@ export default function ShopDeliveredOrderScreen() {
                 <TouchableOpacity 
                   key={agent.id} 
                   style={[styles.agentCard, agent.status !== 'active' && { opacity: 0.5 }]}
-                  onPress={() => agent.status === 'active' && handleAssignAgent(agent.name)}
+                  onPress={() => agent.status === 'active' && handleAssignAgent(String(agent.id))}
                 >
                   <View style={styles.agentAvatar}>
                     <Text style={styles.agentAvatarText}>{agent.name.charAt(0)}</Text>
@@ -315,4 +373,7 @@ const styles = StyleSheet.create({
   agentAvatarText: { fontSize: 16, fontWeight: '800', color: '#2e7d32' },
   agentName: { fontSize: 16, fontWeight: '800', color: '#181c20' },
   agentStatus: { fontSize: 13, color: '#707881', fontWeight: '500' },
+
+  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 12 },
+  actionBtnText: { fontSize: 13, fontWeight: '700' },
 });

@@ -16,6 +16,7 @@ type OrderState = {
   placeOrder: (payload: OrderPayload) => Promise<OrderSubmitResult>;
   fetchOrders: (params?: { status?: string }) => Promise<void>;
   updateStatus: (orderId: string, status: OrderStatus) => void;
+  assignDelivery: (orderId: string, agentId: number) => Promise<void>;
   setActiveOrder: (orderId: string | null) => void;
   clearSubmitError: () => void;
 };
@@ -101,7 +102,7 @@ export const useOrderStore = create<OrderState>((set) => ({
     }
   },
 
-  updateStatus: async (orderId, status) => {
+  updateStatus: async (orderId, status, reason?: string) => {
     try {
       const apiStatusMap: Record<string, string> = {
         pending: 'placed', accepted: 'accepted', picked: 'dispatched',
@@ -115,6 +116,20 @@ export const useOrderStore = create<OrderState>((set) => ({
       }));
     } catch (err) {
       log.error('[orderStore] updateStatus failed:', err);
+    }
+  },
+
+  assignDelivery: async (orderId: string, agentId: number) => {
+    try {
+      await orderApi.assignDelivery(orderId, agentId);
+      set((state) => ({
+        orders: state.orders.map((order) =>
+          order.id === orderId ? { ...order, status: 'assigned' } : order,
+        ),
+      }));
+    } catch (err) {
+      log.error('[orderStore] assignDelivery failed:', err);
+      throw err;
     }
   },
 

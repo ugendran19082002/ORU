@@ -29,6 +29,7 @@ export default function EditProfileScreen() {
   const [altMobile, setAltMobile] = useState('');
   const [email, setEmail] = useState('');
   const [pan, setPan] = useState('');
+  const [upiId, setUpiId] = useState('');
 
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -39,6 +40,7 @@ export default function EditProfileScreen() {
       setName(user.name || '');
       setMobile(user.phone || '');
       setEmail(user.email || '');
+      setUpiId(user.upi_id || '');
       // Add other fields if present in user object
     }
   }, [user]);
@@ -83,6 +85,7 @@ export default function EditProfileScreen() {
       await updateUser({
         name,
         email,
+        upi_id: upiId,
       });
 
       Toast.show({
@@ -233,10 +236,21 @@ export default function EditProfileScreen() {
                 </View>
               </View>
 
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>UPI ID (for Refunds)</Text>
+                <View style={styles.inputWrap}>
+                  <Ionicons name="card-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+                  <TextInput 
+                    style={styles.input}
+                    value={upiId}
+                    onChangeText={setUpiId}
+                    placeholder="e.g. name@upi"
+                    autoCapitalize="none"
+                  />
+                </View>
+              </View>
+
             </View>
-
-
-            {/* SAVE ACTION */}
 
             <View style={{ height: 60 }} />
 

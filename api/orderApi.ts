@@ -80,4 +80,69 @@ export const orderApi = {
       throw ApiError.from(error, 'Failed to update order status');
     }
   },
+
+  /**
+   * Assign a delivery person to an order.
+   * POST /shop-owner/orders/:orderId/assign-delivery
+   */
+  async assignDelivery(orderId: string, agentId: number): Promise<ApiResponse<any>> {
+    try {
+      const response = await apiClient.post<ApiResponse<any>>(`/shop-owner/orders/${orderId}/assign-delivery`, { 
+        delivery_person_id: agentId 
+      });
+      return response.data;
+    } catch (error) {
+      log.error('[orderApi] assignDelivery failed:', error);
+      throw ApiError.from(error, 'Failed to assign delivery person');
+    }
+  },
+
+  /**
+   * Reschedule an order to a new slot.
+   * POST /shop-owner/orders/:orderId/reschedule
+   */
+  async rescheduleOrder(id: string, date: string, slotId: number): Promise<void> {
+    try {
+      await apiClient.post(`/shop-owner/orders/${id}/reschedule`, { 
+        scheduled_date: date, 
+        slot_id: slotId 
+      });
+    } catch (error) {
+      log.error('[orderApi] rescheduleOrder failed:', error);
+      throw ApiError.from(error, 'Failed to reschedule order');
+    }
+  },
+
+  /**
+   * Reorder a past order.
+   * POST /orders/:orderId/reorder
+   */
+  async reorder(id: string, paymentMethod: string = 'cod'): Promise<any> {
+    try {
+      const response = await apiClient.post<ApiResponse<any>>(`/orders/${id}/reorder`, {
+        payment_method: paymentMethod
+      });
+      return response.data;
+    } catch (error) {
+      log.error('[orderApi] reorder failed:', error);
+      throw ApiError.from(error, 'Failed to reorder');
+    }
+  },
+
+  /**
+   * Initiate a refund.
+   * POST /refunds
+   */
+  async initiateRefund(orderId: string, amount: number, reason: string): Promise<void> {
+    try {
+      await apiClient.post('/refunds', { 
+        order_id: parseInt(orderId), 
+        amount, 
+        reason 
+      });
+    } catch (error) {
+      log.error('[orderApi] initiateRefund failed:', error);
+      throw ApiError.from(error, 'Failed to initiate refund');
+    }
+  },
 };
