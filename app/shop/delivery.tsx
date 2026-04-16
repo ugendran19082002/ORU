@@ -1,22 +1,18 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, BackHandler
+  StyleSheet, ActivityIndicator, RefreshControl,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
-
-import { useDeliveryStore } from '@/stores/deliveryStore';
-import { useOrderStore } from '@/stores/orderStore';
+import { apiClient } from '@/api/client';
 
 const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
   pending: { bg: '#f1f5f9', color: '#64748b', label: 'Pending' },
@@ -31,11 +27,44 @@ const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }
 const FILTERS = ['All', 'Active', 'Delivered', 'Failed'];
 
 export default function ShopDeliveryManagementScreen() {
-  const { orders } = useOrderStore();
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   const [filter, setFilter] = useState('All');
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
+  const fetchOrders = useCallback(async () => {
+    try {
+      const res = await apiClient.get('/shop-owner/orders', {
+        params: { limit: 100 },
+      });
+      if (res.data?.status === 1) {
+        const raw: any[] = res.data.data?.data ?? res.data.data ?? [];
+        setOrders(raw.map((o: any) => ({
+          id: String(o.id),
+          status: o.status,
+          customerName: o.User?.name ?? o.customer_name ?? 'Customer',
+          address: o.delivery_address ?? o.address ?? '—',
+          deliveryAgentName: o.DeliveryPerson?.name ?? o.delivery_agent_name ?? null,
+          eta: o.eta ?? '—',
+          total: o.total_amount ?? o.total ?? 0,
+          paymentMethod: o.payment_method ?? 'cod',
+        })));
+      }
+    } catch {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to load delivery orders.' });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  useAndroidBackHandler(() => {
+    safeBack('/shop/settings');
+  });
 
   const filtered = orders.filter((t) => {
     if (filter === 'All') return true;
@@ -44,11 +73,6 @@ export default function ShopDeliveryManagementScreen() {
     if (filter === 'Failed') return t.status === 'cancelled';
     return true;
   });
-
-  useAndroidBackHandler(() => {
-    safeBack('/shop/settings');
-  });
-
 
   const activeCount = orders.filter(t => ['assigned', 'accepted', 'picked'].includes(t.status)).length;
   const deliveredToday = orders.filter(t => ['delivered', 'completed'].includes(t.status)).length;
@@ -84,7 +108,11 @@ export default function ShopDeliveryManagementScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchOrders(); }} />}
+      >
         <View style={styles.titleRow}>
           <Text style={styles.pageTitle}>Delivery Management</Text>
           <TouchableOpacity style={styles.manageBtn} onPress={() => router.push('/shop/delivery-fleet' as any)}>
@@ -124,8 +152,9 @@ export default function ShopDeliveryManagementScreen() {
         </ScrollView>
 
         {/* TRIP LIST */}
-        <Text style={styles.sectionTitle}>{filtered.length} trips</Text>
-        {filtered.map((trip) => {
+        <Text style={styles.sectionTitle}>{loading ? '…' : `${filtered.length} trips`}</Text>
+        {loading && <ActivityIndicator color="#005d90" style={{ marginVertical: 32 }} />}
+        {!loading && filtered.map((trip) => {
           const status = STATUS_COLORS[trip.status] || STATUS_COLORS.pending;
           return (
             <View key={trip.id} style={styles.tripCard}>

@@ -26,6 +26,7 @@ type NavItem = {
 
 const QUICK_ACTIONS: NavItem[] = [
   { label: 'Inventory', icon: 'cube-outline', route: '/shop/inventory', color: '#005d90' },
+  { label: 'Can Stock', icon: 'water-outline', route: '/shop/inventory-cans', color: '#0077b6' },
   { label: 'Earnings', icon: 'cash-outline', route: '/shop/earnings', color: '#10b981' },
   { label: 'Delivery Slots', icon: 'calendar-outline', route: '/shop/slots', color: '#f59e0b' },
   { label: 'Business Hours', icon: 'time-outline', route: '/shop/schedule', color: '#6366f1' },
@@ -35,6 +36,8 @@ const SHOP_MGMT_MENU: NavItem[] = [
   { label: 'Operational Rules', icon: 'settings-outline', route: '/shop/operational-settings' },
   { label: 'Shop Profile & Address', icon: 'storefront-outline', route: '/shop/profile' },
   { label: 'Promotions & Coupons', icon: 'pricetag-outline', route: '/shop/promotions', badge: 'NEW' },
+  { label: 'Staff Management', icon: 'people-outline', route: '/shop/staff' },
+  { label: 'Customer Reviews', icon: 'star-outline', route: '/shop/reviews' },
   { label: 'Delivery Management', icon: 'bicycle-outline', route: '/shop/delivery' },
   { label: 'Subscription Plans', icon: 'shield-checkmark-outline', route: '/shop/subscription-plans' },
 ];

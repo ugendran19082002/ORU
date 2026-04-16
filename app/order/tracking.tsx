@@ -38,8 +38,7 @@ interface Step {
 // Tracking markers computed dynamically inside component (from active order data)
 // In production, subscribe to Firebase Realtime DB for live driver coordinates
 
-const DRIVER_PHONE = '+919876543210';
-const SHOP_PHONE   = '+919123456789';
+// Phone numbers are resolved from the order/shop data at runtime
 
 function StepNode({ step, isLast }: { step: Step; isLast: boolean }) {
   const pulse = useRef(new Animated.Value(1)).current;
@@ -124,9 +123,13 @@ export default function OrderTrackingScreen() {
   });
 
   const shop = shops.find((item) => item.id === activeOrder?.shopId);
-  const quantity = activeOrder?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 2;
-  const deliveryFee = 20;
-  const subtotal = Math.max((activeOrder?.total ?? 110) - deliveryFee, 0);
+  const quantity = activeOrder?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
+  const deliveryFee = (activeOrder as any)?.delivery_fee ?? 20;
+  const subtotal = Math.max((activeOrder?.total ?? 0) - deliveryFee, 0);
+
+  // Resolve phone numbers from real data
+  const shopPhone: string | null = (shop as any)?.phone ?? null;
+  const [driverPhone, setDriverPhone] = useState<string | null>(null);
 
   // Dynamic markers — offset by shop index until real GPS data is available
   const shopIdx = shops.indexOf(shop ?? shops[0]);
@@ -152,10 +155,11 @@ export default function OrderTrackingScreen() {
     try {
       const response = await apiService.get<any>(`/orders/${activeOrder?.id}/tracking`);
       if (response && response.status === 1 && response.data) {
-        setDriverLocation({ 
-          lat: parseFloat(response.data.data.latitude), 
-          lng: parseFloat(response.data.data.longitude) 
-        });
+        const d = response.data.data ?? response.data;
+        if (d.latitude && d.longitude) {
+          setDriverLocation({ lat: parseFloat(d.latitude), lng: parseFloat(d.longitude) });
+        }
+        if (d.driver_phone) setDriverPhone(d.driver_phone);
       }
     } catch (error) {
       console.warn('[Tracking] Initial fetch failed:', error);
@@ -437,9 +441,10 @@ export default function OrderTrackingScreen() {
               <Text style={styles.driverName}>{activeOrder?.deliveryAgentName ?? 'Assigned shortly'}</Text>
             </View>
             <TouchableOpacity
-              style={styles.callDriverBtn}
-              onPress={() => callNumber(DRIVER_PHONE, 'Driver')}
+              style={[styles.callDriverBtn, !driverPhone && { opacity: 0.4 }]}
+              onPress={() => driverPhone && callNumber(driverPhone, 'Driver')}
               activeOpacity={0.8}
+              disabled={!driverPhone}
             >
               <Ionicons name="call" size={16} color="white" />
             </TouchableOpacity>
@@ -459,9 +464,10 @@ export default function OrderTrackingScreen() {
         {/* ── QUICK ACTIONS ── */}
         <View style={styles.actionRow}>
           <TouchableOpacity
-            style={styles.actionCard}
+            style={[styles.actionCard, !shopPhone && { opacity: 0.4 }]}
             activeOpacity={0.8}
-            onPress={() => callNumber(SHOP_PHONE, 'Shop')}
+            onPress={() => shopPhone && callNumber(shopPhone, 'Shop')}
+            disabled={!shopPhone}
           >
             <View style={[styles.actionIcon, { backgroundColor: '#ebeef4' }]}>
               <Ionicons name="storefront-outline" size={22} color="#404850" />
@@ -470,9 +476,10 @@ export default function OrderTrackingScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionCard, styles.actionCardPrimary]}
+            style={[styles.actionCard, styles.actionCardPrimary, !driverPhone && { opacity: 0.4 }]}
             activeOpacity={0.8}
-            onPress={() => callNumber(DRIVER_PHONE, 'Driver')}
+            onPress={() => driverPhone && callNumber(driverPhone, 'Driver')}
+            disabled={!driverPhone}
           >
             <View style={[styles.actionIcon, { backgroundColor: '#005d90' }]}>
               <Ionicons name="call" size={22} color="white" />
@@ -483,9 +490,10 @@ export default function OrderTrackingScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.actionCard]}
+            style={[styles.actionCard, !driverPhone && { opacity: 0.4 }]}
             activeOpacity={0.8}
-            onPress={() => Linking.openURL(`whatsapp://send?phone=${DRIVER_PHONE}&text=Hi, I%27m tracking my water delivery order.`)}
+            onPress={() => driverPhone && Linking.openURL(`whatsapp://send?phone=${driverPhone}&text=Hi, I%27m tracking my water delivery order.`)}
+            disabled={!driverPhone}
           >
             <View style={[styles.actionIcon, { backgroundColor: '#e8f5e9' }]}>
               <Ionicons name="logo-whatsapp" size={22} color="#25D366" />
@@ -502,18 +510,27 @@ export default function OrderTrackingScreen() {
               <Text style={styles.prepaidText}>{activeOrder?.paymentMethod === 'cod' ? 'COD' : 'PREPAID'}</Text>
             </View>
           </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryKey}>20L Water Can (×2)</Text>
-            <Text style={styles.summaryVal}>₹90</Text>
-          </View>
+          {(activeOrder?.items ?? []).length > 0 ? (
+            activeOrder!.items.map((item: any, idx: number) => (
+              <View key={idx} style={styles.summaryRow}>
+                <Text style={styles.summaryKey}>{item.name ?? item.product_name ?? 'Item'} (×{item.quantity})</Text>
+                <Text style={styles.summaryVal}>₹{((item.price ?? 0) * item.quantity).toFixed(0)}</Text>
+              </View>
+            ))
+          ) : quantity > 0 ? (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryKey}>Items (×{quantity})</Text>
+              <Text style={styles.summaryVal}>₹{subtotal.toFixed(0)}</Text>
+            </View>
+          ) : null}
           <View style={styles.summaryRow}>
             <Text style={styles.summaryKey}>Delivery Fee</Text>
-            <Text style={styles.summaryVal}>₹20</Text>
+            <Text style={styles.summaryVal}>₹{deliveryFee}</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryRow}>
             <Text style={styles.summaryTotalKey}>Total</Text>
-            <Text style={styles.summaryTotalVal}>₹110.00</Text>
+            <Text style={styles.summaryTotalVal}>₹{(activeOrder?.total ?? 0).toFixed(2)}</Text>
           </View>
 
           {/* Rate order CTA when delivered */}

@@ -17,14 +17,15 @@ import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
 
 
-function OrderCard({ order, onTrack, onReorder, onSupport }: {
+function OrderCard({ order, onTrack, onReorder, onSupport, onPress }: {
   order: any;
   onTrack: () => void;
   onReorder: () => void;
   onSupport: () => void;
+  onPress: () => void;
 }) {
   return (
-    <View style={styles.orderCard}>
+    <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.orderCard}>
       {/* Top Row */}
       <View style={styles.orderTop}>
         <View style={styles.orderIconWrap}>
@@ -59,22 +60,22 @@ function OrderCard({ order, onTrack, onReorder, onSupport }: {
       {/* Actions */}
       <View style={styles.orderActions}>
         {order.isActive ? (
-          <TouchableOpacity style={styles.trackBtn} onPress={onTrack}>
+          <TouchableOpacity style={styles.trackBtn} onPress={(e) => { e.stopPropagation(); onTrack(); }}>
             <Ionicons name="navigate-outline" size={15} color="#005d90" />
             <Text style={styles.trackBtnText}>Track Order</Text>
           </TouchableOpacity>
         ) : order.status === 'Delivered' ? (
-          <TouchableOpacity style={styles.trackBtn} onPress={onReorder}>
+          <TouchableOpacity style={styles.trackBtn} onPress={(e) => { e.stopPropagation(); onReorder(); }}>
             <Ionicons name="refresh-outline" size={15} color="#005d90" />
             <Text style={styles.trackBtnText}>Reorder</Text>
           </TouchableOpacity>
         ) : null}
-        <TouchableOpacity style={styles.supportBtn} onPress={onSupport}>
+        <TouchableOpacity style={styles.supportBtn} onPress={(e) => { e.stopPropagation(); onSupport(); }}>
           <Ionicons name="chatbubble-outline" size={15} color="#707881" />
           <Text style={styles.supportBtnText}>Support</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -190,6 +191,7 @@ export default function OrdersScreen() {
             <OrderCard
               key={order.id}
               order={order}
+              onPress={() => router.push(`/order/${order.id}` as any)}
               onTrack={() => {
                 setActiveOrder(order.id);
                 router.push('/order/tracking');

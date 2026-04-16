@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   RefreshControl, ActivityIndicator, Share,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { StatusBar } from 'expo-status-bar';
@@ -11,7 +12,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppSession } from '@/hooks/use-app-session';
-import { addressApi } from '@/api/addressApi';
 import { apiClient } from '@/api/client';
 
 export default function RewardsScreen() {
@@ -25,20 +25,24 @@ export default function RewardsScreen() {
   const [tiers, setTiers] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>(null);
   const [coupons, setCoupons] = useState<any[]>([]);
+  const [referralData, setReferralData] = useState<{ code: string; total_referred: number; total_earned: number } | null>(null);
+  const [generatingCode, setGeneratingCode] = useState(false);
 
   const fetchRewardsData = useCallback(async () => {
     try {
-      const [historyRes, tierRes, settingRes, couponRes] = await Promise.all([
+      const [historyRes, tierRes, settingRes, couponRes, referralRes] = await Promise.all([
         apiClient.get('/promotion/loyalty/ledger'),
         apiClient.get('/promotion/loyalty/levels'),
         apiClient.get('/promotion/loyalty/settings'),
-        apiClient.get('/promotion/coupons/active')
+        apiClient.get('/promotion/coupons/active'),
+        apiClient.get('/promotion/referrals/mine').catch(() => null),
       ]);
 
       if (historyRes.data?.status === 1) setHistory(historyRes.data.data?.data || []);
       if (tierRes.data?.status === 1) setTiers(tierRes.data.data || []);
       if (settingRes.data?.status === 1) setSettings(settingRes.data.data || null);
       if (couponRes.data?.status === 1) setCoupons((couponRes.data.data || []).filter((c: any) => c?.is_active));
+      if (referralRes?.data?.status === 1) setReferralData(referralRes.data.data || null);
     } catch (err) {
       console.error('Failed to fetch rewards data', err);
     } finally {
@@ -47,17 +51,30 @@ export default function RewardsScreen() {
     }
   }, []);
 
+  const generateReferralCode = async () => {
+    try {
+      setGeneratingCode(true);
+      const res = await apiClient.post('/promotion/referrals/generate');
+      if (res.data?.status === 1) {
+        setReferralData(res.data.data || null);
+        Toast.show({ type: 'success', text1: 'Code Generated!', text2: 'Your referral code is ready to share.' });
+      }
+    } catch {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Could not generate referral code.' });
+    } finally {
+      setGeneratingCode(false);
+    }
+  };
+
   useEffect(() => { fetchRewardsData(); }, [fetchRewardsData]);
 
   const currentPoints = user?.loyalty_points || 0;
-  // Note: For total orders, we'd ideally fetch from an analytics endpoint.
-  // Using points as a proxy for progress if levels are point-based.
   const currentTier = (tiers || []).find(t => currentPoints >= t.min_points && (!t.max_points || currentPoints <= t.max_points)) || tiers[0] || { name: 'Bronze', discount_percent: 0, min_points: 0 };
   const nextTier = (tiers || []).find(t => t.min_points > currentPoints);
-  
+
   const pointsToNext = nextTier ? nextTier.min_points - currentPoints : 0;
   const tierProgress = nextTier ? (currentPoints / nextTier.min_points) : 1;
-  const referralCode = user?.referral_code || 'THANNIGO-INVITE';
+  const referralCode = referralData?.code ?? user?.referral_code ?? null;
 
   const handleShare = async () => {
     await Share.share({
@@ -151,31 +168,52 @@ export default function RewardsScreen() {
               <Text style={styles.referralSub}>Share your code and earn points on their first signup and order.</Text>
             </View>
           </View>
-          <View style={styles.codeBox}>
-            <Text style={styles.codeLabel}>YOUR REFERRAL CODE</Text>
-            <Text style={styles.codeValue}>{referralCode}</Text>
-          </View>
-          <View style={styles.referralActions}>
-            <TouchableOpacity 
-              style={styles.copyBtn} 
-              onPress={() => {
-                Toast.show({
-                  type: 'success',
-                  text1: 'Copied!',
-                  text2: `${referralCode} copied to clipboard.`
-                });
-              }}
+          {referralCode ? (
+            <>
+              <View style={styles.codeBox}>
+                <Text style={styles.codeLabel}>YOUR REFERRAL CODE</Text>
+                <Text style={styles.codeValue}>{referralCode}</Text>
+                {referralData && (
+                  <Text style={styles.referralStats}>
+                    {referralData.total_referred} referred · ₹{referralData.total_earned} earned
+                  </Text>
+                )}
+              </View>
+              <View style={styles.referralActions}>
+                <TouchableOpacity
+                  style={styles.copyBtn}
+                  onPress={async () => {
+                    await Clipboard.setStringAsync(referralCode);
+                    Toast.show({ type: 'success', text1: 'Copied!', text2: `${referralCode} copied to clipboard.` });
+                  }}
+                >
+                  <Ionicons name="copy-outline" size={16} color="#005d90" />
+                  <Text style={styles.copyBtnText}>Copy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+                  <LinearGradient colors={['#005d90', '#0077b6']} style={styles.shareBtnGrad}>
+                    <Ionicons name="share-social-outline" size={16} color="white" />
+                    <Text style={styles.shareBtnText}>Share Invite</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            <TouchableOpacity
+              style={styles.generateBtn}
+              onPress={generateReferralCode}
+              disabled={generatingCode}
             >
-              <Ionicons name="copy-outline" size={16} color="#005d90" />
-              <Text style={styles.copyBtnText}>Copy</Text>
+              {generatingCode ? (
+                <ActivityIndicator color="#005d90" size="small" />
+              ) : (
+                <>
+                  <Ionicons name="add-circle-outline" size={18} color="#005d90" />
+                  <Text style={styles.generateBtnText}>Generate My Referral Code</Text>
+                </>
+              )}
             </TouchableOpacity>
-            <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-              <LinearGradient colors={['#005d90', '#0077b6']} style={styles.shareBtnGrad}>
-                <Ionicons name="share-social-outline" size={16} color="white" />
-                <Text style={styles.shareBtnText}>Share Invite</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
+          )}
         </View>
 
         {/* VOUCHERS */}
@@ -300,6 +338,9 @@ const styles = StyleSheet.create({
   shareBtn: { flex: 0.6, borderRadius: 14, overflow: 'hidden' },
   shareBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 },
   shareBtnText: { color: 'white', fontWeight: '800', fontSize: 13 },
+  referralStats: { fontSize: 11, color: '#707881', fontWeight: '600', marginTop: 4 },
+  generateBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, borderWidth: 1.5, borderColor: '#bfdbf7', backgroundColor: '#f0f7ff' },
+  generateBtnText: { color: '#005d90', fontWeight: '700', fontSize: 14 },
 
   sectionTitle: { fontSize: 16, fontWeight: '800', color: '#181c20', letterSpacing: -0.3 },
 

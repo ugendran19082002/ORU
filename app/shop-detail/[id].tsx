@@ -1,11 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  StatusBar as RNStatusBar,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Image } from 'expo-image';
@@ -18,53 +13,99 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
-
-import { useShopStore } from '@/stores/shopStore';
 import { useCartStore } from '@/stores/cartStore';
 import { Logo } from '@/components/ui/Logo';
+import { apiClient } from '@/api/client';
 
-const ASSET_IMAGES: Record<string, any> = {
-  water_can_1: require('@/assets/images/water_can_1.jpg'),
-  water_can_2: require('@/assets/images/water_can_2.jpg'),
-  water_can_3: require('@/assets/images/water_can_3.jpg'),
-};
+interface ShopProduct {
+  id: number;
+  name: string;
+  price: number;
+  deposit_amount: number;
+  stock_quantity: number;
+  is_available: boolean;
+  image_url: string | null;
+  type: string;
+}
+
+interface ShopDetail {
+  id: number;
+  name: string;
+  city: string;
+  state: string;
+  address_line1: string;
+  phone: string;
+  avg_rating: number;
+  total_ratings: number;
+  is_open: boolean;
+  logo_url: string | null;
+  banner_url: string | null;
+  delivery_radius_km: number;
+  min_order_value: number;
+  Products: ShopProduct[];
+}
 
 export default function ShopDetailScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
 
-  useAndroidBackHandler(() => {
-    safeBack('/(tabs)');
-  });
+  useAndroidBackHandler(() => { safeBack('/(tabs)'); });
 
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { shops } = useShopStore();
-  const { items, setQuantity, getSubtotal, getTotal } = useCartStore();
+  const { items, setQuantity, getSubtotal } = useCartStore();
 
-  const shop = shops.find((s) => s.id === id) ?? shops[0];
+  const [shop, setShop] = useState<ShopDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'products' | 'info'>('products');
+
+  const fetchShop = useCallback(async () => {
+    if (!id) return;
+    try {
+      setError(null);
+      const res = await apiClient.get(`/shops/${id}`);
+      if (res.data.status === 1) {
+        setShop(res.data.data);
+      } else {
+        setError('Shop not found');
+      }
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? 'Failed to load shop');
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => { fetchShop(); }, [fetchShop]);
 
   const totalItems = Object.values(items).reduce((a, b) => a + b.quantity, 0);
   const subtotal = getSubtotal();
 
   const handleGoToCheckout = () => {
     if (totalItems === 0) {
-      Toast.show({
-        type: 'error',
-        text1: 'Empty Cart',
-        text2: 'Please add at least one product before checking out.'
-      });
+      Toast.show({ type: 'error', text1: 'Empty Cart', text2: 'Please add at least one product before checking out.' });
       return;
     }
-    router.push({ pathname: '/order/checkout', params: { shopId: shop.id } } as any);
+    router.push({ pathname: '/order/checkout', params: { shopId: String(id) } } as any);
   };
 
-  if (!shop) {
+  if (loading) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#005d90" />
+      </View>
+    );
+  }
+
+  if (error || !shop) {
+    return (
+      <View style={styles.center}>
         <Ionicons name="storefront-outline" size={64} color="#bfc7d1" />
-        <Text style={styles.errorText}>Shop not found</Text>
-        <BackButton fallback="/(tabs)" style={styles.errorBack} />
+        <Text style={styles.errorText}>{error ?? 'Shop not found'}</Text>
+        <TouchableOpacity style={styles.retryBtn} onPress={fetchShop}>
+          <Text style={styles.retryText}>Retry</Text>
+        </TouchableOpacity>
+        <BackButton fallback="/(tabs)" style={styles.backBtnCenter} />
       </View>
     );
   }
@@ -75,73 +116,42 @@ export default function ShopDetailScreen() {
 
       {/* HERO HEADER */}
       <View style={styles.heroWrapper}>
-        <Image
-          source={ASSET_IMAGES[shop.heroImage] ?? ASSET_IMAGES.water_can_1}
-          style={styles.heroImage}
-          contentFit="cover"
-          transition={400}
-        />
-        <LinearGradient
-          colors={['rgba(0,0,0,0.45)', 'rgba(0,0,0,0.7)']}
-          style={StyleSheet.absoluteFill}
-        />
+        {shop.banner_url ? (
+          <Image source={{ uri: shop.banner_url }} style={styles.heroImage} contentFit="cover" />
+        ) : (
+          <LinearGradient colors={['#003a5c', '#005d90']} style={styles.heroImage} />
+        )}
+        <LinearGradient colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)']} style={StyleSheet.absoluteFill} />
 
-        {/* Header Row */}
         <SafeAreaView edges={['top']} style={styles.headerOverlay}>
-          <BackButton 
-            fallback="/(tabs)" 
-            variant="transparent" 
-            iconColor="white" 
-            style={styles.backBtn} 
-          />
+          <BackButton fallback="/(tabs)" variant="transparent" iconColor="white" style={styles.backBtn} />
           <View style={styles.brandRow}>
-
             <Logo size="sm" />
             <Text style={styles.brandName}>ThanniGo</Text>
           </View>
           <TouchableOpacity
             style={styles.shareBtn}
-            onPress={() => Toast.show({
-              type: 'info',
-              text1: 'Share',
-              text2: 'Sharing this shop link...'
-            })}
+            onPress={() => Toast.show({ type: 'info', text1: 'Share', text2: 'Sharing shop link...' })}
           >
             <Ionicons name="share-social-outline" size={20} color="white" />
           </TouchableOpacity>
         </SafeAreaView>
 
-        {/* Shop Identity */}
         <View style={styles.heroBottom}>
-          <View style={styles.heroTags}>
-            {shop.tags.map((tag) => (
-              <View key={tag} style={styles.tag}>
-                <Text style={styles.tagText}>{tag}</Text>
-              </View>
-            ))}
-            {shop.verified && (
-              <View style={[styles.tag, styles.tagVerified]}>
-                <Ionicons name="shield-checkmark" size={10} color="#2e7d32" />
-                <Text style={[styles.tagText, { color: '#2e7d32' }]}>Verified</Text>
-              </View>
-            )}
-          </View>
           <Text style={styles.heroShopName}>{shop.name}</Text>
           <View style={styles.heroMeta}>
             <Ionicons name="location-outline" size={13} color="rgba(255,255,255,0.8)" />
-            <Text style={styles.heroMetaText}>{shop.area}</Text>
+            <Text style={styles.heroMetaText}>{shop.city}</Text>
             <View style={styles.heroMetaDot} />
             <Ionicons name="star" size={13} color="#fbbf24" />
-            <Text style={styles.heroMetaText}>{shop.rating}</Text>
-            <View style={styles.heroMetaDot} />
-            <Ionicons name="time-outline" size={13} color="rgba(255,255,255,0.8)" />
-            <Text style={styles.heroMetaText}>{shop.eta}</Text>
+            <Text style={styles.heroMetaText}>{shop.avg_rating?.toFixed(1) ?? '—'}</Text>
+            {shop.total_ratings > 0 && (
+              <Text style={styles.heroMetaText}>({shop.total_ratings})</Text>
+            )}
           </View>
-
-          {/* Open status */}
-          <View style={[styles.openBadge, { backgroundColor: shop.isOpen ? '#22c55e' : '#ef4444' }]}>
+          <View style={[styles.openBadge, { backgroundColor: shop.is_open ? '#22c55e' : '#ef4444' }]}>
             <View style={styles.openDot} />
-            <Text style={styles.openText}>{shop.isOpen ? 'Open Now' : 'Closed'}</Text>
+            <Text style={styles.openText}>{shop.is_open ? 'Open Now' : 'Closed'}</Text>
           </View>
         </View>
       </View>
@@ -173,38 +183,45 @@ export default function ShopDetailScreen() {
         {activeTab === 'products' ? (
           <>
             <Text style={styles.sectionTitle}>Available Products</Text>
-            {!shop.isOpen && (
+            {!shop.is_open && (
               <View style={styles.closedBanner}>
                 <Ionicons name="time-outline" size={18} color="#b45309" />
-                <Text style={styles.closedBannerText}>
-                  This shop is currently closed. You can still browse products.
-                </Text>
+                <Text style={styles.closedBannerText}>This shop is currently closed. You can still browse products.</Text>
               </View>
             )}
-            {shop.products.map((product) => {
-              const qty = items[product.id]?.quantity ?? 0;
+            {shop.Products?.length === 0 && (
+              <View style={styles.emptyProducts}>
+                <Ionicons name="water-outline" size={40} color="#bfc7d1" />
+                <Text style={styles.emptyProductsText}>No products listed yet.</Text>
+              </View>
+            )}
+            {shop.Products?.map((product) => {
+              const qty = items[String(product.id)]?.quantity ?? 0;
+              const inStock = product.is_available && product.stock_quantity > 0;
               return (
                 <View key={product.id} style={styles.productCard}>
-                  <Image
-                    source={ASSET_IMAGES[product.image] ?? ASSET_IMAGES.water_can_1}
-                    style={styles.productImage}
-                    contentFit="cover"
-                  />
+                  {product.image_url ? (
+                    <Image source={{ uri: product.image_url }} style={styles.productImage} contentFit="cover" />
+                  ) : (
+                    <View style={[styles.productImage, styles.productImagePlaceholder]}>
+                      <Ionicons name="water" size={28} color="#005d90" />
+                    </View>
+                  )}
                   <View style={styles.productInfo}>
                     <Text style={styles.productName}>{product.name}</Text>
-                    <Text style={styles.productDesc} numberOfLines={2}>{product.description}</Text>
                     <View style={styles.productBottom}>
                       <View>
                         <Text style={styles.productPrice}>₹{product.price}</Text>
-                        <Text style={styles.productUnit}>{product.unitLabel}</Text>
+                        {product.deposit_amount > 0 && (
+                          <Text style={styles.productUnit}>+₹{product.deposit_amount} deposit</Text>
+                        )}
                       </View>
-                      {/* Quantity Stepper */}
-                      {product.inStock ? (
+                      {inStock ? (
                         <View style={styles.stepper}>
                           {qty === 0 ? (
                             <TouchableOpacity
                               style={styles.addBtn}
-                              onPress={() => setQuantity(product.id, 1, shop.id, { name: product.name, price: product.price })}
+                              onPress={() => setQuantity(String(product.id), 1, String(id), { name: product.name, price: product.price })}
                             >
                               <Ionicons name="add" size={18} color="white" />
                               <Text style={styles.addBtnText}>Add</Text>
@@ -213,14 +230,14 @@ export default function ShopDetailScreen() {
                             <>
                               <TouchableOpacity
                                 style={styles.stepperBtn}
-                                onPress={() => setQuantity(product.id, qty - 1, shop.id, { name: product.name, price: product.price })}
+                                onPress={() => setQuantity(String(product.id), qty - 1, String(id), { name: product.name, price: product.price })}
                               >
                                 <Ionicons name="remove" size={18} color="#005d90" />
                               </TouchableOpacity>
                               <Text style={styles.stepperQty}>{qty}</Text>
                               <TouchableOpacity
                                 style={styles.stepperBtn}
-                                onPress={() => setQuantity(product.id, qty + 1, shop.id, { name: product.name, price: product.price })}
+                                onPress={() => setQuantity(String(product.id), qty + 1, String(id), { name: product.name, price: product.price })}
                               >
                                 <Ionicons name="add" size={18} color="#005d90" />
                               </TouchableOpacity>
@@ -233,10 +250,10 @@ export default function ShopDetailScreen() {
                         </View>
                       )}
                     </View>
-                    {product.stockCount < 30 && product.inStock && (
+                    {product.stock_quantity < 20 && inStock && (
                       <View style={styles.lowStockRow}>
                         <Ionicons name="alert-circle-outline" size={12} color="#b45309" />
-                        <Text style={styles.lowStockText}>Only {product.stockCount} left</Text>
+                        <Text style={styles.lowStockText}>Only {product.stock_quantity} left</Text>
                       </View>
                     )}
                   </View>
@@ -249,10 +266,10 @@ export default function ShopDetailScreen() {
             <Text style={styles.sectionTitle}>About this Shop</Text>
             {[
               { icon: 'storefront-outline', label: 'Shop Name', value: shop.name },
-              { icon: 'location-outline', label: 'Area', value: shop.area },
-              { icon: 'time-outline', label: 'Estimated delivery', value: shop.deliveryTime },
-              { icon: 'cash-outline', label: 'Price per can (20L)', value: `₹${shop.pricePerCan}` },
-              { icon: 'star-outline', label: 'Rating', value: `${shop.rating} / 5.0` },
+              { icon: 'location-outline', label: 'Address', value: [shop.address_line1, shop.city, shop.state].filter(Boolean).join(', ') },
+              { icon: 'star-outline', label: 'Rating', value: `${shop.avg_rating?.toFixed(1) ?? '—'} / 5.0 (${shop.total_ratings} reviews)` },
+              { icon: 'arrow-down-circle-outline', label: 'Min. Order', value: `₹${shop.min_order_value ?? 0}` },
+              { icon: 'navigate-outline', label: 'Delivery Radius', value: `${shop.delivery_radius_km ?? '—'} km` },
             ].map((item, idx) => (
               <View key={idx} style={styles.infoRow}>
                 <View style={styles.infoIconWrap}>
@@ -265,31 +282,17 @@ export default function ShopDetailScreen() {
               </View>
             ))}
 
-            <View style={{ marginVertical: 20, gap: 12 }}>
-              <TouchableOpacity
-                style={[styles.contactBtn, styles.callBtn]}
-                onPress={() => Linking.openURL('tel:919876543210')}
-              >
-                <Ionicons name="call" size={20} color="white" />
-                <Text style={styles.contactBtnText}>Call Shop Now</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.contactBtn, styles.waBtn]}
-                onPress={() => Linking.openURL('whatsapp://send?phone=+919876543210&text=Hi, I have a question about my order')}
-              >
-                <Ionicons name="logo-whatsapp" size={18} color="white" />
-                <Text style={styles.contactBtnText}>WhatsApp</Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Tags</Text>
-            <View style={styles.tagsWrap}>
-              {shop.tags.map((tag) => (
-                <View key={tag} style={styles.infoTag}>
-                  <Text style={styles.infoTagText}>{tag}</Text>
-                </View>
-              ))}
-            </View>
+            {shop.phone ? (
+              <View style={{ marginVertical: 20, gap: 12 }}>
+                <TouchableOpacity
+                  style={[styles.contactBtn, styles.callBtn]}
+                  onPress={() => Linking.openURL(`tel:${shop.phone}`)}
+                >
+                  <Ionicons name="call" size={20} color="white" />
+                  <Text style={styles.contactBtnText}>Call Shop Now</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
           </>
         )}
       </ScrollView>
@@ -315,35 +318,19 @@ export default function ShopDetailScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#f7f9ff' },
-
-  errorContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, backgroundColor: '#f7f9ff' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, backgroundColor: '#f7f9ff' },
   errorText: { fontSize: 17, fontWeight: '700', color: '#707881' },
-  errorBack: { backgroundColor: '#005d90', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14 },
-  errorBackText: { color: 'white', fontWeight: '800' },
-
-  // HERO
+  retryBtn: { backgroundColor: '#005d90', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14 },
+  retryText: { color: 'white', fontWeight: '800' },
+  backBtnCenter: { marginTop: 8 },
   heroWrapper: { height: 260, position: 'relative' },
   heroImage: { width: '100%', height: '100%' },
-  headerOverlay: {
-    position: 'absolute', top: 0, left: 0, right: 0,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingBottom: 10,
-  },
-  backBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center',
-  },
+  headerOverlay: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 10 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   brandName: { fontSize: 18, fontWeight: '900', color: 'white', letterSpacing: -0.5 },
-  shareBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center',
-  },
+  shareBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' },
   heroBottom: { position: 'absolute', bottom: 16, left: 20, right: 20 },
-  heroTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
-  tag: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20, flexDirection: 'row', alignItems: 'center', gap: 4 },
-  tagVerified: { backgroundColor: 'rgba(232,245,233,0.85)' },
-  tagText: { fontSize: 10, fontWeight: '700', color: 'white' },
   heroShopName: { fontSize: 26, fontWeight: '900', color: 'white', letterSpacing: -0.5, marginBottom: 6 },
   heroMeta: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 10 },
   heroMetaText: { fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: '600' },
@@ -351,93 +338,45 @@ const styles = StyleSheet.create({
   openBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, alignSelf: 'flex-start' },
   openDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'white' },
   openText: { fontSize: 11, fontWeight: '700', color: 'white' },
-
-  // TABS
-  tabBar: {
-    flexDirection: 'row', backgroundColor: 'white',
-    borderBottomWidth: 1, borderBottomColor: '#f1f4f9',
-  },
+  tabBar: { flexDirection: 'row', backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f4f9' },
   tabBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 13 },
   tabBtnActive: { borderBottomWidth: 2, borderBottomColor: '#005d90' },
   tabText: { fontSize: 13, fontWeight: '700', color: '#9ca3af' },
   tabTextActive: { color: '#005d90' },
-
   sectionTitle: { fontSize: 17, fontWeight: '800', color: '#181c20', marginTop: 20, marginBottom: 14, letterSpacing: -0.3 },
-
-  closedBanner: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
-    backgroundColor: '#fef3c7', borderRadius: 14, padding: 14, marginBottom: 16,
-  },
+  closedBanner: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: '#fef3c7', borderRadius: 14, padding: 14, marginBottom: 16 },
   closedBannerText: { flex: 1, fontSize: 13, color: '#92400e', fontWeight: '600' },
-
-  // PRODUCT CARD
-  productCard: {
-    backgroundColor: 'white', borderRadius: 18, marginBottom: 14,
-    flexDirection: 'row', overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
-  },
+  emptyProducts: { alignItems: 'center', paddingVertical: 40, gap: 12 },
+  emptyProductsText: { fontSize: 14, color: '#94a3b8', fontWeight: '600' },
+  productCard: { backgroundColor: 'white', borderRadius: 18, marginBottom: 14, flexDirection: 'row', overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   productImage: { width: 90, height: 110 },
+  productImagePlaceholder: { backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
   productInfo: { flex: 1, padding: 14 },
-  productName: { fontSize: 14, fontWeight: '800', color: '#181c20', marginBottom: 4 },
-  productDesc: { fontSize: 12, color: '#707881', lineHeight: 16, marginBottom: 10 },
+  productName: { fontSize: 14, fontWeight: '800', color: '#181c20', marginBottom: 8 },
   productBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   productPrice: { fontSize: 18, fontWeight: '900', color: '#005d90' },
   productUnit: { fontSize: 10, color: '#9ca3af', fontWeight: '600', marginTop: 1 },
-
-  // STEPPER
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  stepperBtn: {
-    width: 30, height: 30, borderRadius: 10,
-    backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center',
-  },
+  stepperBtn: { width: 30, height: 30, borderRadius: 10, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
   stepperQty: { fontSize: 16, fontWeight: '900', color: '#005d90', minWidth: 24, textAlign: 'center' },
-  addBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#005d90', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12,
-  },
+  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#005d90', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12 },
   addBtnText: { color: 'white', fontWeight: '800', fontSize: 13 },
   outOfStock: { backgroundColor: '#f1f4f9', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10 },
   outOfStockText: { fontSize: 11, color: '#9ca3af', fontWeight: '700' },
   lowStockRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
   lowStockText: { fontSize: 11, color: '#b45309', fontWeight: '700' },
-
-  // INFO TAB
-  infoRow: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 14,
-    backgroundColor: 'white', borderRadius: 16, padding: 16, marginBottom: 10,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1,
-  },
-  infoIconWrap: {
-    width: 40, height: 40, borderRadius: 12,
-    backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center',
-  },
+  infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, backgroundColor: 'white', borderRadius: 16, padding: 16, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
+  infoIconWrap: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
   infoLabel: { fontSize: 11, color: '#9ca3af', fontWeight: '600', marginBottom: 2 },
   infoValue: { fontSize: 15, fontWeight: '800', color: '#181c20' },
-  tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  infoTag: { backgroundColor: '#e0f0ff', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
-  infoTagText: { fontSize: 13, fontWeight: '700', color: '#005d90' },
-
-  contactActions: { flexDirection: 'row', gap: 12, marginTop: 16 },
   contactBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14 },
   callBtn: { backgroundColor: '#005d90' },
-  waBtn: { backgroundColor: '#25D366' },
   contactBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
-
-  // CHECKOUT BAR
-  checkoutBar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: 'white', paddingHorizontal: 20, paddingVertical: 14, paddingBottom: 28,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-    borderTopWidth: 1, borderTopColor: '#f1f4f9',
-    shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 10,
-  },
+  checkoutBar: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'white', paddingHorizontal: 20, paddingVertical: 14, paddingBottom: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderTopWidth: 1, borderTopColor: '#f1f4f9', shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 10 },
   checkoutInfo: { gap: 2 },
   checkoutQty: { fontSize: 11, color: '#9ca3af', fontWeight: '600' },
   checkoutSubtotal: { fontSize: 20, fontWeight: '900', color: '#181c20' },
   checkoutBtn: { flex: 1, borderRadius: 16, overflow: 'hidden' },
-  checkoutBtnGrad: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    paddingVertical: 16,
-  },
+  checkoutBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16 },
   checkoutBtnText: { color: 'white', fontWeight: '900', fontSize: 15 },
 });

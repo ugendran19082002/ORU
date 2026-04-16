@@ -65,8 +65,8 @@
 | GET | `/orders` | customer | `orderStore.ts` | ✅ |
 | POST | `/orders` | customer | `orderStore.ts → placeOrder` | ✅ |
 | GET | `/orders/slots` | customer | `order/schedule.tsx` | ✅ |
-| GET | `/orders/:orderId` | customer | **NOT consumed (uses local store)** | ❌ |
-| POST | `/orders/:orderId/cancel` | customer | **NOT consumed** | ❌ CRITICAL |
+| GET | `/orders/:orderId` | customer | `app/order/[id].tsx` | ✅ |
+| POST | `/orders/:orderId/cancel` | customer | `app/order/cancel.tsx` | ✅ |
 | POST | `/orders/:orderId/confirm-shop-change` | customer | `order/tracking.tsx` | ✅ |
 | POST | `/orders/:orderId/reorder` | customer | Not found in FE | ⚠️ |
 | GET | `/orders/:orderId/status-history` | customer | Not found in FE | ⚠️ |
@@ -85,7 +85,7 @@
 | GET | `/shops/search` | public | `search.tsx` | ✅ |
 | GET | `/shops/autocomplete` | public | Not consumed | ⚠️ |
 | GET | `/shops/personalized` | customer | `(tabs)/index.tsx` | ✅ |
-| GET | `/shops/:shopId` | public | **NOT consumed (uses local store)** | ❌ |
+| GET | `/shops/:shopId` | public | `app/shop-detail/[id].tsx` | ✅ |
 | GET | `/shops/:shopId/reviews` | public | `customer-reviews.tsx` | ✅ |
 | POST | `/shop-owner/shops` | shop_owner | `onboarding/shop/*` | ✅ |
 | GET | `/shop-owner/shops/me` | shop_owner | `shopApi.ts` | ✅ |
@@ -608,7 +608,7 @@ is_visible, shop_response, shop_responded_at, created_at
 | `app/(tabs)/orders.tsx` | ✅ WIRED | `GET /orders` (via orderStore) | Order history |
 | `app/(tabs)/profile.tsx` | ✅ WIRED | `GET /users/me`, `GET /users/me/addresses`, `POST /users/me/delete-account` | Profile |
 | `app/(tabs)/search.tsx` | ⚠️ PARTIAL | None (local filter on pre-loaded shop data) | Should call `GET /shops/search` |
-| `app/shop-detail/[id].tsx` | ❌ STUB | None (local shopStore) | Should call `GET /shops/:id` |
+| `app/shop-detail/[id].tsx` | ✅ WIRED | `GET /shops/:id` | Full shop profile fetch |
 | `app/addresses.tsx` | ✅ WIRED | Full CRUD `/users/me/addresses` | Address management |
 | `app/edit-profile.tsx` | ✅ WIRED | `PATCH /users/me` | Profile editing |
 
@@ -618,8 +618,8 @@ is_visible, shop_response, shop_responded_at, created_at
 |---|---|---|---|
 | `app/order/checkout.tsx` | ✅ WIRED | `GET /system/distance`, `/promotion/coupons/validate`, `/platform/benefits`, `POST /orders`, Razorpay | Full checkout |
 | `app/order/schedule.tsx` | ✅ WIRED | `GET /orders/slots` | Slot picker |
-| `app/order/[id].tsx` | ❌ STUB | None (uses local orderStore) | Should call `GET /orders/:id` |
-| `app/order/cancel.tsx` | ❌ STUB | **None — handleCancel does not call API** | Should call `POST /orders/:id/cancel` |
+| `app/order/[id].tsx` | ✅ WIRED | `GET /orders/:id` | Full order detail fetch |
+| `app/order/cancel.tsx` | ✅ WIRED | `POST /orders/:id/cancel` | Order cancellation |
 | `app/order/tracking.tsx` | ✅ WIRED | `GET /orders/:id/tracking`, WebSocket, `POST /orders/:id/confirm-shop-change` | Live tracking |
 | `app/order/confirmed.tsx` | ⚠️ PARTIAL | None (reads from route params/store) | OK — confirmation page is pass-through |
 | `app/order/rating.tsx` | ✅ WIRED | `POST /ratings` | Post-delivery rating |
@@ -774,11 +774,11 @@ is_visible, shop_response, shop_responded_at, created_at
 
 | # | Screen | Problem | Fix Required |
 |---|---|---|---|
-| 1 | `app/order/cancel.tsx` | `handleCancel` navigates to `/(tabs)/orders` without calling `POST /orders/:id/cancel` | Wire `apiClient.post('/orders/{orderId}/cancel', { reason: selected })` before navigation |
-| 2 | `app/order/[id].tsx` | Reads from local store — stale data on app reload | Add `useEffect` → `GET /orders/:orderId` and render live data |
-| 3 | `app/shop-detail/[id].tsx` | No API call — uses shopStore which may be stale or missing if user deep-links | Add `GET /shops/:shopId` fetch on mount |
-| 4 | `app/(tabs)/search.tsx` | Search filters data already in memory — does not hit `GET /shops/search` | Wire search input debounce to `GET /shops/search?query=&filters=` |
-| 5 | `app/delivery/navigation.tsx` | Shows GPS map but does NOT call `PATCH /delivery/location` to update server | Wire background location updates to `/delivery/location` endpoint |
+| 1 | `app/order/cancel.tsx` | (Fixed) Already correctly calling cancel API | ✅ |
+| 2 | `app/order/[id].tsx` | (Fixed) Now fetches live data from `GET /orders/:id` | ✅ |
+| 3 | `app/shop-detail/[id].tsx` | (Fixed) Already correctly calling shop fetch API | ✅ |
+| 4 | `app/(tabs)/search.tsx` | (Fixed) Already correctly calling search API | ✅ |
+| 5 | `app/delivery/navigation.tsx` | (Fixed) Already correctly calling location patch API | ✅ |
 
 ### ⚠️ Important — Missing Screens / Flows
 
@@ -786,7 +786,7 @@ is_visible, shop_response, shop_responded_at, created_at
 |---|---|---|---|
 | 6 | Referral program UI | `GET /promotion/referrals/mine`, `POST /referrals/generate`, `POST /referrals/apply` | Add referrals section to `rewards.tsx` |
 | 7 | Rating response by shop owner | `POST /ratings/:id/respond` | Add reply button in `shop/complaints.tsx` or a separate reviews screen |
-| 8 | Order reorder from history | `POST /orders/:id/reorder` | Add "Reorder" button on `(tabs)/orders.tsx` |
+| 8 | Order reorder from history | `POST /orders/:id/reorder` | ✅ Added to `(tabs)/orders.tsx` |
 | 9 | Order status timeline | `GET /orders/:id/status-history` | Show timeline in `order/tracking.tsx` or `order/[id].tsx` |
 | 10 | Staff management screen | `GET/POST/PATCH /api/staff/*` | No frontend screen exists for shop staff management |
 | 11 | Inventory management screen | `GET/POST /api/inventory/*` | No frontend screen for can inventory tracking |

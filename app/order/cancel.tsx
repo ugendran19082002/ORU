@@ -26,14 +26,14 @@ const REASONS = [
 export default function CancelOrderScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
-  const { orderId: paramOrderId } = useLocalSearchParams<{ orderId: string }>();
+  const { orderId: paramOrderId, id: paramId } = useLocalSearchParams<{ orderId: string; id: string }>();
   const { activeOrderId, orders } = useOrderStore();
 
   useAndroidBackHandler(() => {
     safeBack('/(tabs)/orders');
   });
 
-  const orderId = paramOrderId ?? activeOrderId;
+  const orderId = paramOrderId ?? paramId ?? activeOrderId;
   const order = orders.find((o) => o.id === orderId);
 
   const [selected, setSelected] = useState<string | null>(null);
