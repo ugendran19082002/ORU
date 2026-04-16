@@ -19,7 +19,6 @@ export default function ShopLayout() {
       <Stack.Screen name="analytics" />
       <Stack.Screen name="delivery-fleet" />
       <Stack.Screen name="manual-order" />
-      <Stack.Screen name="customers" />
       <Stack.Screen name="promotions" />
       <Stack.Screen name="delivery" />
       <Stack.Screen name="profile" />
