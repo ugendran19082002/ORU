@@ -25,15 +25,16 @@ type NavItem = {
 };
 
 const SHOP_MENU: NavItem[] = [
-  { label: 'Shop Analytics & Trends', icon: 'bar-chart-outline', route: '/shop/analytics' },
+  { label: 'Inventory Management', icon: 'cube-outline', route: '/shop/inventory' },
   { label: 'Revenue & Earnings', icon: 'cash-outline', route: '/shop/earnings' },
+  { label: 'Shop Analytics & Trends', icon: 'bar-chart-outline', route: '/shop/analytics' },
+  { label: 'Business Hours Master', icon: 'time-outline', route: '/shop/schedule', color: '#006878' },
+  { label: 'Delivery Slots Config', icon: 'calendar-outline', route: '/shop/slots', color: '#006878' },
   { label: 'Shop Profile & Address', icon: 'storefront-outline', route: '/shop/profile' },
   { label: 'Promotions & Coupons', icon: 'pricetag-outline', route: '/shop/promotions', badge: 'NEW' },
   { label: 'Delivery Management', icon: 'bicycle-outline', route: '/shop/delivery' },
-  { label: 'Business Hours Master', icon: 'time-outline', route: '/shop/schedule', color: '#006878' },
-  { label: 'Delivery Slots Config', icon: 'calendar-outline', route: '/shop/slots', color: '#006878' },
   { label: 'Customer Complaints', icon: 'warning-outline', route: '/shop/complaints' },
-  { label: 'Subscription Plans', icon: 'calendar-outline', route: '/shop/subscription-plans' },
+  { label: 'Subscription Plans', icon: 'shield-checkmark-outline', route: '/shop/subscription-plans' },
 ];
 
 const ACCOUNT_MENU: NavItem[] = [

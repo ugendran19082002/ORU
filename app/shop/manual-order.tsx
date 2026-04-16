@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  TextInput,
+  TextInput, ActivityIndicator,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,7 +14,8 @@ import { BackButton } from '@/components/ui/BackButton';
 import { useOrderStore } from '@/stores/orderStore';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
-
+import { inventoryApi } from '@/api/inventoryApi';
+import { shopApi } from '@/api/shopApi';
 
 // Manual order entry for shop staff
 export default function ManualOrderScreen() {
@@ -26,16 +27,43 @@ export default function ManualOrderScreen() {
     safeBack('/shop');
   });
 
+  const [loading, setLoading] = useState(true);
+  const [shop, setShop] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [address, setAddress] = useState('');
   const [quantity, setQuantity] = useState('1');
-  const [canType, setCanType] = useState('20L');
   const [paymentMode, setPaymentMode] = useState<'cash' | 'upi'>('cash');
   const [notes, setNotes] = useState('');
 
-  const canTypes = ['5L', '10L', '20L', '50L'];
-  const price = canType === '5L' ? 20 : canType === '10L' ? 40 : canType === '50L' ? 200 : 50;
+  useEffect(() => {
+    initData();
+  }, []);
+
+  const initData = async () => {
+    try {
+      setLoading(true);
+      const [shopData, productsData] = await Promise.all([
+        shopApi.getMyShop(),
+        inventoryApi.getMyProducts()
+      ]);
+      setShop(shopData);
+      setProducts(productsData);
+      if (productsData.length > 0) {
+        setSelectedProduct(productsData[0]);
+      }
+    } catch (error) {
+      console.error('[ManualOrder] Init failed:', error);
+      Toast.show({ type: 'error', text1: 'Initialization Failed' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const price = selectedProduct?.price || 0;
   const total = price * parseInt(quantity || '1');
 
   const handlePlace = () => {
@@ -48,13 +76,18 @@ export default function ManualOrderScreen() {
       return;
     }
 
+    if (!selectedProduct) {
+      Toast.show({ type: 'error', text1: 'Product Required', text2: 'Please select a product.' });
+      return;
+    }
+
     const orderPayload = {
       customerName: customerName.trim(),
-      customerPhone: customerPhone.trim() || 'Not provided',
+      customerPhone: customerPhone.trim(),
       address: address.trim(),
-      items: [{ productId: 'manual_can', quantity: parseInt(quantity || '1') }],
+      items: [{ productId: selectedProduct.id, quantity: parseInt(quantity || '1') }],
       total: total,
-      shopId: 'shop_1',
+      shopId: shop?.id,
       paymentMethod: paymentMode as 'cash' | 'upi',
       eta: '30-45 mins',
       notes: notes,
@@ -65,10 +98,18 @@ export default function ManualOrderScreen() {
     Toast.show({
       type: 'success',
       text1: 'Order Placed!',
-      text2: `Manual order for ${customerName} — ₹${total} (${paymentMode.toUpperCase()})`
+      text2: `Manual order for ${customerName} — ₹${total}`
     });
-    router.replace('/shop' as any);
+    router.replace('/shop');
   };
+
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#005d90" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -79,9 +120,7 @@ export default function ManualOrderScreen() {
         <Text style={styles.headerTitle}>Manual Order Entry</Text>
       </View>
 
-
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-
         <View style={styles.infoCard}>
           <Ionicons name="information-circle-outline" size={18} color="#005d90" />
           <Text style={styles.infoText}>
@@ -97,7 +136,7 @@ export default function ManualOrderScreen() {
         </View>
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Phone Number *</Text>
-          <TextInput style={styles.input} placeholder="+91 XXXXX XXXXX" value={customerPhone} onChangeText={setCustomerPhone} keyboardType="phone-pad" />
+          <TextInput style={styles.input} placeholder="Phone number" value={customerPhone} onChangeText={setCustomerPhone} keyboardType="phone-pad" />
         </View>
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Delivery Address *</Text>
@@ -106,18 +145,19 @@ export default function ManualOrderScreen() {
 
         {/* ORDER DETAILS */}
         <Text style={styles.sectionTitle}>Order Details</Text>
-        <Text style={styles.inputLabel}>Can Type</Text>
-        <View style={styles.typeRow}>
-          {canTypes.map((t) => (
+        <Text style={styles.inputLabel}>Select Product</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.typeRow}>
+          {products.map((p) => (
             <TouchableOpacity
-              key={t}
-              style={[styles.typePill, canType === t && styles.typePillActive]}
-              onPress={() => setCanType(t)}
+              key={p.id}
+              style={[styles.productPill, selectedProduct?.id === p.id && styles.productPillActive]}
+              onPress={() => setSelectedProduct(p)}
             >
-              <Text style={[styles.typePillText, canType === t && styles.typePillTextActive]}>{t}</Text>
+              <Text style={[styles.typePillText, selectedProduct?.id === p.id && styles.typePillTextActive]}>{p.name}</Text>
+              <Text style={[styles.priceTag, selectedProduct?.id === p.id && { color: '#005d90' }]}>₹{p.price}</Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
 
         <View style={styles.inputGroup}>
           <Text style={styles.inputLabel}>Quantity</Text>
@@ -163,7 +203,7 @@ export default function ManualOrderScreen() {
         <View style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>Order Summary</Text>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>{quantity}× {canType} Can</Text>
+            <Text style={styles.summaryLabel}>{quantity}× {selectedProduct?.name}</Text>
             <Text style={styles.summaryValue}>₹{price} × {quantity}</Text>
           </View>
           <View style={styles.divider} />
@@ -192,6 +232,7 @@ export default function ManualOrderScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
@@ -202,9 +243,10 @@ const styles = StyleSheet.create({
   inputGroup: { gap: 6 },
   inputLabel: { fontSize: 12, fontWeight: '700', color: '#707881' },
   input: { backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, fontWeight: '600', color: '#181c20', borderWidth: 1, borderColor: '#e0e2e8' },
-  typeRow: { flexDirection: 'row', gap: 8 },
-  typePill: { flex: 1, paddingVertical: 12, borderRadius: 14, borderWidth: 1.5, borderColor: '#e0e2e8', alignItems: 'center', backgroundColor: 'white' },
-  typePillActive: { borderColor: '#005d90', backgroundColor: '#e0f0ff' },
+  typeRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
+  productPill: { minWidth: 100, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1.5, borderColor: '#e0e2e8', alignItems: 'center', backgroundColor: 'white', marginRight: 10 },
+  productPillActive: { borderColor: '#005d90', backgroundColor: '#e0f0ff' },
+  priceTag: { fontSize: 11, fontWeight: '800', color: '#94a3b8', marginTop: 2 },
   typePillText: { fontSize: 14, fontWeight: '700', color: '#707881' },
   typePillTextActive: { color: '#005d90' },
   qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 20, backgroundColor: 'white', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: '#e0e2e8', alignSelf: 'flex-start' },

@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, ActivityIndicator, Alert, TextInput,
+  useWindowDimensions, KeyboardAvoidingView, Platform,Switch
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { Logo } from '@/components/ui/Logo';
+import { BackButton } from '@/components/ui/BackButton';
 import { shopApi } from '@/api/shopApi';
 import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
@@ -22,24 +26,32 @@ interface DeliverySlot {
   start_time: string;
   end_time: string;
   max_orders: number;
+  is_active: boolean;
 }
 
 export default function ShopSlotsScreen() {
   const router = useRouter();
+  const { width, height } = useWindowDimensions();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [slots, setSlots] = useState<DeliverySlot[]>([]);
   
-  // Modal state
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newSlot, setNewSlot] = useState<DeliverySlot>({
+  const [isEditing, setIsEditing] = useState(false);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  
+  const [currentSlot, setCurrentSlot] = useState<DeliverySlot>({
     day_of_week: 1,
     start_time: '09:00:00',
     end_time: '11:00:00',
-    max_orders: 10
+    max_orders: 10,
+    is_active: true,
   });
-  const [pickingDay, setPickingDay] = useState(false);
   const [activeTimePicker, setActiveTimePicker] = useState<'start' | 'end' | null>(null);
+
+  const isSmallScreen = width < 380;
+  const isShortScreen = height < 700;
+  const horizontalPadding = isSmallScreen ? 16 : 24;
 
   useEffect(() => {
     fetchSlots();
@@ -49,7 +61,10 @@ export default function ShopSlotsScreen() {
     try {
       setLoading(true);
       const data = await shopApi.getSlots();
-      setSlots(data);
+      setSlots(data.map((s: any) => ({
+        ...s,
+        is_active: s.is_active ?? true
+      })));
     } catch (error) {
       console.error('[Slots] Fetch failed:', error);
       Toast.show({ type: 'error', text1: 'Failed to load delivery slots' });
@@ -58,20 +73,41 @@ export default function ShopSlotsScreen() {
     }
   };
 
-  const handleAddSlot = () => {
-    setSlots(prev => [...prev, { ...newSlot }]);
-    setShowAddModal(false);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  const handleOpenAdd = () => {
+    setIsEditing(false);
+    setEditIndex(null);
+    setCurrentSlot({
+      day_of_week: 1,
+      start_time: '09:00:00',
+      end_time: '11:00:00',
+      max_orders: 10,
+      is_active: true
+    });
+    setShowAddModal(true);
   };
 
-  const handleRemoveSlot = (index: number) => {
-    Alert.alert('Remove Slot', 'Are you sure you want to remove this delivery window?', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Remove', style: 'destructive', onPress: () => {
-            setSlots(prev => prev.filter((_, i) => i !== index));
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }}
-    ]);
+  const handleOpenEdit = (index: number) => {
+    setIsEditing(true);
+    setEditIndex(index);
+    setCurrentSlot({ ...slots[index] });
+    setShowAddModal(true);
+  };
+
+  const handleToggleSlot = (index: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSlots(prev => prev.map((s, i) => 
+      i === index ? { ...s, is_active: !s.is_active } : s
+    ));
+  };
+
+  const handleSaveSlot = () => {
+    if (isEditing && editIndex !== null) {
+        setSlots(prev => prev.map((s, i) => i === editIndex ? { ...currentSlot } : s));
+    } else {
+        setSlots(prev => [...prev, { ...currentSlot }]);
+    }
+    setShowAddModal(false);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
   const handleSave = async () => {
@@ -92,7 +128,7 @@ export default function ShopSlotsScreen() {
   const groupedSlots = DAYS.map((day, index) => ({
     day,
     index,
-    daySlots: slots.filter(s => s.day_of_week === index)
+    daySlots: slots.map((s, i) => ({ ...s, originalIndex: i })).filter(s => s.day_of_week === index)
   }));
 
   if (loading) {
@@ -105,133 +141,165 @@ export default function ShopSlotsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <Stack.Screen options={{ 
-        title: 'Delivery Slots',
-        headerShown: true,
-        headerLeft: () => (
-          <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 10 }}>
-            <Ionicons name="arrow-back" size={24} color="#003a5c" />
-          </TouchableOpacity>
-        ),
-        headerRight: () => (
-          <TouchableOpacity onPress={() => setShowAddModal(true)} style={{ marginRight: 15 }}>
-            <Ionicons name="add-circle-outline" size={28} color="#005d90" />
-          </TouchableOpacity>
-        )
-      }} />
+      <StatusBar style="dark" />
+      <Stack.Screen options={{ headerShown: false }} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      {/* CUSTOM HEADER */}
+      <View style={styles.header}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          <BackButton fallback="/shop/settings" />
+          <View>
+            <View style={styles.brandRow}>
+              <Logo size="md" />
+              <Text style={styles.brandName}>ThanniGo</Text>
+            </View>
+            <Text style={styles.roleLabel}>SHOP PANEL</Text>
+          </View>
+        </View>
+      </View>
+
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding }]}
+      >
+        <View style={styles.titleRow}>
+          <Text style={styles.pageTitle}>Delivery Slots</Text>
+          <View style={styles.actionGroup}>
+            <TouchableOpacity style={styles.addBtnSmall} onPress={handleOpenAdd}>
+              <Ionicons name="add" size={16} color="white" />
+              <Text style={styles.addBtnText}>New</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.saveBtnSmall, saving && { opacity: 0.7 }]} 
+              onPress={handleSave}
+              disabled={saving}
+            >
+              {saving ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.saveBtnTextSmall}>Save</Text>}
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <View style={styles.infoCard}>
           <Ionicons name="bicycle-outline" size={20} color="#005d90" />
-          <Text style={styles.infoText}>
-            Define delivery windows and maximum orders per window. Customers will choose from these slots during checkout.
+          <Text style={[styles.infoText, isSmallScreen && { fontSize: 12 }]}>
+            Define delivery windows. Slots can be toggled on/off to pause delivery specific times.
           </Text>
         </View>
 
         {groupedSlots.map((group) => (
           <View key={group.day} style={styles.dayGroup}>
-            <Text style={styles.dayHeader}>{group.day}</Text>
+            <Text style={styles.sectionHeader}>{group.day.toUpperCase()}</Text>
             {group.daySlots.length === 0 ? (
-              <Text style={styles.emptyText}>No delivery slots for this day</Text>
+              <Text style={styles.emptyText}>No delivery slots defined</Text>
             ) : (
-              group.daySlots.map((slot, i) => {
-                const globalIndex = slots.findIndex(s => s === slot);
-                return (
-                  <View key={i} style={styles.slotCard}>
-                    <View style={styles.slotInfo}>
-                        <Text style={styles.slotTime}>
-                            {moment(slot.start_time, 'HH:mm:ss').format('hh:mm A')} - {moment(slot.end_time, 'HH:mm:ss').format('hh:mm A')}
-                        </Text>
-                        <View style={styles.capacityBadge}>
-                            <Text style={styles.capacityText}>{slot.max_orders} Orders Max</Text>
-                        </View>
+              group.daySlots.map((slot, i) => (
+                <View key={i} style={[styles.slotCard, !slot.is_active && styles.slotCardDisabled]}>
+                  <View style={styles.slotInfo}>
+                    <Text style={[styles.slotTime, { fontSize: isSmallScreen ? 14 : 15 }, !slot.is_active && { color: '#94a3b8' }]}>
+                      {moment(slot.start_time, 'HH:mm:ss').format('hh:mm A')} - {moment(slot.end_time, 'HH:mm:ss').format('hh:mm A')}
+                    </Text>
+                    <View style={[styles.capacityBadge, !slot.is_active && { backgroundColor: '#f1f4f9' }]}>
+                      <Ionicons name="cube-outline" size={10} color={slot.is_active ? "#006878" : "#94a3b8"} style={{ marginRight: 4 }} />
+                      <Text style={[styles.capacityText, !slot.is_active && { color: '#94a3b8' }]}>{slot.max_orders} Max Orders</Text>
                     </View>
-                    <TouchableOpacity onPress={() => handleRemoveSlot(globalIndex)}>
-                        <Ionicons name="trash-outline" size={20} color="#ba1a1a" />
-                    </TouchableOpacity>
                   </View>
-                );
-              })
+                  
+                  <View style={styles.slotActions}>
+                    <TouchableOpacity onPress={() => handleOpenEdit(slot.originalIndex)} style={styles.iconActionBtn}>
+                      <Ionicons name="pencil-outline" size={18} color="#005d90" />
+                    </TouchableOpacity>
+                    <Switch
+                      value={slot.is_active}
+                      onValueChange={() => handleToggleSlot(slot.originalIndex)}
+                      trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
+                      thumbColor={slot.is_active ? '#006878' : '#707881'}
+                      style={{ transform: [{ scale: 0.8 }] }}
+                    />
+                  </View>
+                </View>
+              ))
             )}
           </View>
         ))}
-
-        <TouchableOpacity 
-          style={[styles.fullSaveBtn, saving && { opacity: 0.7 }]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving ? <ActivityIndicator color="white" /> : <Text style={styles.fullSaveBtnText}>Save All Changes</Text>}
-        </TouchableOpacity>
       </ScrollView>
 
-      {/* Add Slot Modal Simulation (Simplified for brevity) */}
       {showAddModal && (
-        <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Add Delivery Slot</Text>
-                
-                <Text style={styles.label}>Day of Week</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayPicker}>
-                    {DAYS.map((d, i) => (
-                        <TouchableOpacity 
-                            key={d} 
-                            style={[styles.dayItem, newSlot.day_of_week === i && styles.dayItemActive]}
-                            onPress={() => setNewSlot({...newSlot, day_of_week: i})}
-                        >
-                            <Text style={[styles.dayItemText, newSlot.day_of_week === i && styles.dayItemTextActive]}>{d.slice(0, 3)}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-
-                <View style={styles.row}>
-                    <TouchableOpacity style={styles.timeInput} onPress={() => setActiveTimePicker('start')}>
-                        <Text style={styles.label}>Start Time</Text>
-                        <Text style={styles.timeVal}>{moment(newSlot.start_time, 'HH:mm:ss').format('hh:mm A')}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.timeInput} onPress={() => setActiveTimePicker('end')}>
-                        <Text style={styles.label}>End Time</Text>
-                        <Text style={styles.timeVal}>{moment(newSlot.end_time, 'HH:mm:ss').format('hh:mm A')}</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <Text style={styles.label}>Max Orders for this window</Text>
-                <TextInput 
-                    style={styles.input}
-                    value={String(newSlot.max_orders)}
-                    onChangeText={(v) => setNewSlot({...newSlot, max_orders: parseInt(v) || 0})}
-                    keyboardType="numeric"
-                />
-
-                <View style={styles.modalActions}>
-                    <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowAddModal(false)}>
-                        <Text style={styles.cancelText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.confirmBtn} onPress={handleAddSlot}>
-                        <Text style={styles.confirmText}>Add Slot</Text>
-                    </TouchableOpacity>
-                </View>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <View style={[styles.modalContent, { padding: isSmallScreen ? 20 : 24, borderRadius: 24 }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{isEditing ? 'Edit Slot' : 'Add Delivery Slot'}</Text>
+              <TouchableOpacity onPress={() => setShowAddModal(false)} style={styles.closeBtn}>
+                <Ionicons name="close" size={20} color="#707881" />
+              </TouchableOpacity>
             </View>
-        </View>
+            
+            <Text style={styles.label}>Select Day</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayPicker}>
+              {DAYS.map((d, i) => (
+                <TouchableOpacity 
+                  key={d} 
+                  style={[styles.dayItem, currentSlot.day_of_week === i && styles.dayItemActive]}
+                  onPress={() => setCurrentSlot({...currentSlot, day_of_week: i})}
+                >
+                  <Text style={[styles.dayItemText, currentSlot.day_of_week === i && styles.dayItemTextActive]}>{d.slice(0, 3)}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <View style={[styles.row, isSmallScreen && { gap: 12 }]}>
+              <TouchableOpacity style={styles.timeInputBox} onPress={() => setActiveTimePicker('start')}>
+                <Text style={styles.label}>Start Window</Text>
+                <Text style={[styles.timeVal, { fontSize: isSmallScreen ? 14 : 15 }]}>{moment(currentSlot.start_time, 'HH:mm:ss').format('hh:mm A')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.timeInputBox} onPress={() => setActiveTimePicker('end')}>
+                <Text style={styles.label}>End Window</Text>
+                <Text style={[styles.timeVal, { fontSize: isSmallScreen ? 14 : 15 }]}>{moment(currentSlot.end_time, 'HH:mm:ss').format('hh:mm A')}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.label}>Max Order Capacity</Text>
+            <TextInput 
+              style={styles.input}
+              value={String(currentSlot.max_orders)}
+              onChangeText={(v) => setCurrentSlot({...currentSlot, max_orders: parseInt(v) || 0})}
+              keyboardType="numeric"
+              placeholder="e.g. 10"
+              placeholderTextColor="#94a3b8"
+            />
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowAddModal(false)}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.confirmBtn} onPress={handleSaveSlot}>
+                <Text style={styles.confirmText}>{isEditing ? 'Update Slot' : 'Add to List'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
       )}
 
       {activeTimePicker && (
         <DateTimePicker
-          value={moment(activeTimePicker === 'start' ? newSlot.start_time : newSlot.end_time, 'HH:mm:ss').toDate()}
+          value={moment(activeTimePicker === 'start' ? currentSlot.start_time : currentSlot.end_time, 'HH:mm:ss').toDate()}
           mode="time"
           display="default"
           onChange={(event, selectedDate) => {
-              if (event.type === 'dismissed' || !selectedDate) {
-                  setActiveTimePicker(null);
-                  return;
-              }
-              const timeStr = moment(selectedDate).format('HH:mm:ss');
-              if (activeTimePicker === 'start') {
-                  setNewSlot({...newSlot, start_time: timeStr});
-              } else {
-                  setNewSlot({...newSlot, end_time: timeStr});
-              }
+            if (event.type === 'dismissed' || !selectedDate) {
               setActiveTimePicker(null);
+              return;
+            }
+            const timeStr = moment(selectedDate).format('HH:mm:ss');
+            if (activeTimePicker === 'start') {
+              setCurrentSlot({...currentSlot, start_time: timeStr});
+            } else {
+              setCurrentSlot({...currentSlot, end_time: timeStr});
+            }
+            setActiveTimePicker(null);
           }}
         />
       )}
@@ -242,68 +310,101 @@ export default function ShopSlotsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  scrollContent: { padding: 20, paddingBottom: 60 },
+  header: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    paddingHorizontal: 24, 
+    paddingVertical: 14, 
+    backgroundColor: 'rgba(255,255,255,0.92)' 
+  },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
+  roleLabel: { fontSize: 9, fontWeight: '700', color: '#006878', letterSpacing: 1.5, marginTop: 3 },
   
+  scrollContent: { paddingVertical: 10, paddingBottom: 120 },
+  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, gap: 12 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, flex: 1 },
+  actionGroup: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  addBtnSmall: { 
+    flexDirection: 'row', alignItems: 'center', gap: 4, 
+    backgroundColor: '#005d90', 
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 
+  },
+  saveBtnSmall: { 
+    flexDirection: 'row', alignItems: 'center', gap: 4, 
+    backgroundColor: '#10b981', 
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 
+  },
+  saveBtnTextSmall: { color: 'white', fontSize: 13, fontWeight: '800' },
+  addBtnText: { color: 'white', fontSize: 13, fontWeight: '800' },
+
   infoCard: {
     flexDirection: 'row',
     backgroundColor: '#f1f4f9',
     padding: 16,
     borderRadius: 16,
-    marginBottom: 20,
+    marginBottom: 24,
     alignItems: 'center',
     gap: 12,
   },
   infoText: { flex: 1, fontSize: 13, color: '#475569', lineHeight: 18, fontWeight: '500' },
 
-  dayGroup: { marginBottom: 24 },
-  dayHeader: { fontSize: 18, fontWeight: '900', color: '#003a5c', marginBottom: 12 },
-  emptyText: { fontSize: 13, color: '#94a3b8', fontStyle: 'italic', marginLeft: 4 },
+  dayGroup: { marginBottom: 20 },
+  sectionHeader: { fontSize: 12, fontWeight: '800', color: '#94a3b8', marginBottom: 12, letterSpacing: 0.5 },
+  emptyText: { fontSize: 13, color: '#94a3b8', fontStyle: 'italic', marginLeft: 4, marginBottom: 10 },
 
   slotCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 10,
+    padding: 18,
+    borderRadius: 20,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  slotCardDisabled: {
+    opacity: 0.6,
+    backgroundColor: '#f8fafc'
   },
   slotInfo: { flex: 1 },
-  slotTime: { fontSize: 15, fontWeight: '700', color: '#181c20', marginBottom: 4 },
-  capacityBadge: { backgroundColor: '#e0f7fa', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, alignSelf: 'flex-start' },
-  capacityText: { fontSize: 10, fontWeight: '800', color: '#006878' },
-
-  fullSaveBtn: {
-    backgroundColor: '#005d90',
-    height: 56,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
+  slotTime: { fontWeight: '700', color: '#181c20', marginBottom: 6 },
+  capacityBadge: { 
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#e0f7fa', 
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, 
+    alignSelf: 'flex-start' 
   },
-  fullSaveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
+  capacityText: { fontSize: 11, fontWeight: '800', color: '#006878' },
+  slotActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  iconActionBtn: { padding: 6, backgroundColor: '#f1f4f9', borderRadius: 8 },
 
-  // Modal styles
-  modalOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: 'white', borderRadius: 24, padding: 24 },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: '#181c20', marginBottom: 20 },
-  label: { fontSize: 12, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, marginTop: 12 },
-  dayPicker: { flexDirection: 'row', marginBottom: 16 },
-  dayItem: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, backgroundColor: '#f1f4f9', marginRight: 8 },
+  modalOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(15,23,42,0.6)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: 'white' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: '#181c20' },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
+  
+  label: { fontSize: 11, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, marginTop: 12 },
+  dayPicker: { flexDirection: 'row', marginBottom: 8 },
+  dayItem: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: '#f1f4f9', marginRight: 10 },
   dayItemActive: { backgroundColor: '#005d90' },
   dayItemText: { fontSize: 13, fontWeight: '700', color: '#475569' },
   dayItemTextActive: { color: 'white' },
-  row: { flexDirection: 'row', gap: 16, marginBottom: 16 },
-  timeInput: { flex: 1, backgroundColor: '#f1f4f9', padding: 12, borderRadius: 12 },
-  timeVal: { fontSize: 15, fontWeight: '700', color: '#181c20' },
-  input: { backgroundColor: '#f1f4f9', padding: 12, borderRadius: 12, fontSize: 15, fontWeight: '700' },
-  modalActions: { flexDirection: 'row', gap: 12, marginTop: 24 },
-  cancelBtn: { flex: 1, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f4f9' },
-  cancelText: { fontWeight: '700', color: '#475569' },
-  confirmBtn: { flex: 1, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: '#005d90' },
-  confirmText: { fontWeight: '700', color: 'white' },
+  
+  row: { flexDirection: 'row', gap: 16 },
+  timeInputBox: { flex: 1, backgroundColor: '#f1f4f9', padding: 14, borderRadius: 14 },
+  timeVal: { fontWeight: '700', color: '#181c20' },
+  input: { backgroundColor: '#f1f4f9', padding: 14, borderRadius: 14, fontSize: 16, fontWeight: '700', color: '#1e293b', marginTop: 8 },
+  
+  modalActions: { flexDirection: 'row', gap: 12, marginTop: 30 },
+  cancelBtn: { flex: 1, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f4f9' },
+  cancelText: { fontWeight: '800', color: '#475569' },
+  confirmBtn: { flex: 1, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: '#005d90' },
+  confirmText: { fontWeight: '800', color: 'white' },
 });
+

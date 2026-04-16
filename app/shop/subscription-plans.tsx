@@ -12,24 +12,9 @@ import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
-import { apiClient } from '@/api/client';
+import { subscriptionApi, SubscriptionData } from '@/api/subscriptionApi';
 
 type SubStatus = 'INACTIVE' | 'PENDING_PAYMENT' | 'ACTIVE' | 'PAYMENT_FAILED' | 'EXPIRED' | 'CANCELLED';
-
-interface SubscriptionData {
-  status: SubStatus;
-  plan_id: number | null;
-  start_date: string | null;
-  end_date: string | null;
-  next_renewal_at: string | null;
-  auto_renew: boolean;
-  features: {
-    priority_listing: boolean;
-    analytics: boolean;
-    lower_commission: boolean;
-    instant_delivery: boolean;
-  };
-}
 
 const PLAN_FEATURES = [
   { icon: 'checkmark-circle', text: 'Priority listing in search results', color: '#2e7d32' },
@@ -39,7 +24,7 @@ const PLAN_FEATURES = [
   { icon: 'checkmark-circle', text: 'Cancel anytime', color: '#2e7d32' },
 ];
 
-const STATUS_COLOR: Record<SubStatus, string> = {
+const STATUS_COLOR: Record<string, string> = {
   ACTIVE: '#2e7d32',
   INACTIVE: '#707881',
   PENDING_PAYMENT: '#b45309',
@@ -48,7 +33,7 @@ const STATUS_COLOR: Record<SubStatus, string> = {
   CANCELLED: '#94a3b8',
 };
 
-const STATUS_LABEL: Record<SubStatus, string> = {
+const STATUS_LABEL: Record<string, string> = {
   ACTIVE: 'Active',
   INACTIVE: 'Inactive',
   PENDING_PAYMENT: 'Pending Payment',
@@ -68,20 +53,15 @@ export default function ShopSubscriptionPlansScreen() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
-  const [autoRenew, setAutoRenew] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchSubscription = useCallback(async () => {
     try {
       setError(null);
-      const res = await apiClient.get('/shop-owner/subscription');
-      if (res.data.status === 1) {
-        const data: SubscriptionData = res.data.data;
-        setSubscription(data);
-        setAutoRenew(data.auto_renew);
-      }
+      const data = await subscriptionApi.getSubscription();
+      setSubscription(data);
     } catch (e: any) {
-      setError(e?.response?.data?.message ?? 'Failed to load subscription.');
+      setError(e.message || 'Failed to load subscription.');
     } finally {
       setLoading(false);
     }
@@ -104,14 +84,11 @@ export default function ShopSubscriptionPlansScreen() {
           onPress: async () => {
             try {
               setActionLoading(true);
-              const res = await apiClient.post('/shop-owner/subscription/activate', { auto_renew: autoRenew });
-              if (res.data.status === 1) {
-                Toast.show({ type: 'success', text1: 'Subscribed!', text2: 'Shop subscription is now active.' });
-                await fetchSubscription();
-              }
+              await subscriptionApi.activateSubscription();
+              Toast.show({ type: 'success', text1: 'Subscribed!', text2: 'Shop subscription is now active.' });
+              await fetchSubscription();
             } catch (e: any) {
-              const msg = e?.response?.data?.message ?? 'Activation failed.';
-              Toast.show({ type: 'error', text1: 'Error', text2: msg });
+              Toast.show({ type: 'error', text1: 'Error', text2: e.message || 'Activation failed.' });
             } finally {
               setActionLoading(false);
             }
@@ -133,14 +110,11 @@ export default function ShopSubscriptionPlansScreen() {
           onPress: async () => {
             try {
               setActionLoading(true);
-              const res = await apiClient.post('/shop-owner/subscription/cancel', { reason: 'User requested cancellation' });
-              if (res.data.status === 1) {
-                Toast.show({ type: 'success', text1: 'Cancelled', text2: 'Subscription has been cancelled.' });
-                await fetchSubscription();
-              }
+              await subscriptionApi.cancelSubscription('User requested cancellation');
+              Toast.show({ type: 'success', text1: 'Cancelled', text2: 'Subscription has been cancelled.' });
+              await fetchSubscription();
             } catch (e: any) {
-              const msg = e?.response?.data?.message ?? 'Cancellation failed.';
-              Toast.show({ type: 'error', text1: 'Error', text2: msg });
+              Toast.show({ type: 'error', text1: 'Error', text2: e.message || 'Cancellation failed.' });
             } finally {
               setActionLoading(false);
             }
@@ -184,8 +158,8 @@ export default function ShopSubscriptionPlansScreen() {
               <View style={[styles.statusDot, { backgroundColor: STATUS_COLOR[subscription?.status ?? 'INACTIVE'] }]} />
               <Text style={styles.heroStatus}>{STATUS_LABEL[subscription?.status ?? 'INACTIVE']}</Text>
             </View>
-            {isActive && subscription?.end_date && (
-              <Text style={styles.heroSub}>Renews on {new Date(subscription.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
+            {isActive && subscription?.subscription?.end_date && (
+              <Text style={styles.heroSub}>Renews on {new Date(subscription.subscription.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
             )}
             {!isActive && (
               <Text style={styles.heroSub}>Activate to unlock premium features — first plan is FREE</Text>
@@ -198,10 +172,10 @@ export default function ShopSubscriptionPlansScreen() {
               <Text style={styles.sectionTitle}>Active Features</Text>
               <View style={styles.featureGrid}>
                 {[
-                  { key: 'priority_listing', label: 'Priority Listing', icon: 'star' },
-                  { key: 'analytics', label: 'Analytics', icon: 'bar-chart' },
-                  { key: 'lower_commission', label: 'Lower Commission', icon: 'trending-down' },
-                  { key: 'instant_delivery', label: 'Instant Delivery', icon: 'flash' },
+                  { key: 'priorityListing', label: 'Priority Listing', icon: 'star' },
+                  { key: 'analyticsAccess', label: 'Analytics', icon: 'bar-chart' },
+                  { key: 'lowCommission', label: 'Lower Commission', icon: 'trending-down' },
+                  { key: 'instantDelivery', label: 'Instant Delivery', icon: 'flash' },
                 ].map((f) => {
                   const enabled = subscription.features[f.key as keyof typeof subscription.features];
                   return (
