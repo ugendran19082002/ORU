@@ -12,6 +12,8 @@ export type ShopStatus =
   | 'approved'
   | 'rejected'
   | 'active'
+  | 'partially_rejected'
+  | 'ready_for_activation'
   | 'error';
 
 /** Onboarding completion status */
@@ -21,6 +23,8 @@ export type OnboardingStatus =
   | 'submitted'
   | 'completed'
   | 'rejected'
+  | 'partially_rejected'
+  | 'ready_for_activation'
   | 'error';
 
 // ─── Session state ────────────────────────────────────────────────────────────

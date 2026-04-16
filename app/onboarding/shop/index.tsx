@@ -202,8 +202,8 @@ export default function ShopOnboardingDashboard() {
         <View style={styles.header}>
           <BackButton
             fallback="/auth/role"
-            onPress={isSubmissionLocked ? undefined : handleRoleReset}
-            show={!isSubmissionLocked}
+            onPress={isGloballyLocked ? undefined : handleRoleReset}
+            show={!isGloballyLocked}
           />
           <View style={{ marginLeft: 16, flex: 1 }}>
             <Text style={styles.welcome}>Partner Onboarding</Text>
@@ -214,7 +214,7 @@ export default function ShopOnboardingDashboard() {
           </View>
         </View>
 
-        {!isSubmissionLocked && (
+        {!isGloballyLocked && (
           <View style={styles.roleSwitchTip}>
             <Ionicons name="help-circle-outline" size={16} color="#64748b" />
             <Text style={styles.roleSwitchText}>Wrong role?</Text>

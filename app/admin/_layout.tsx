@@ -7,18 +7,13 @@ import { View, ActivityIndicator } from 'react-native';
 export default function AdminRootLayout() {
   const { user, status, isHydrated } = useAppSession();
 
-  // Block rendering until session is fully hydrated — prevents blank/black screen
-  // during the async transition from OTP verification into the admin stack.
-  if (!isHydrated || status === 'loading') {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f7f9ff' }}>
-        <ActivityIndicator size="large" color="#ba1a1a" />
-      </View>
-    );
-  }
-
-  // Authenticated but wrong role — RouteGuard is redirecting, show spinner to avoid flash.
-  if (status === 'authenticated' && (!user || user.role !== 'admin')) {
+  // Only render the admin Stack once the session is fully confirmed as admin.
+  // This covers every transition state:
+  //   - status 'loading' / 'anonymous' while signIn() state batches propagate
+  //   - authenticated but user object not yet available
+  //   - authenticated as a different role (RouteGuard will redirect away)
+  // All of the above show the same spinner to prevent a black/blank screen.
+  if (!isHydrated || status !== 'authenticated' || !user || user.role !== 'admin') {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f7f9ff' }}>
         <ActivityIndicator size="large" color="#ba1a1a" />
