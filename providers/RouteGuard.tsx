@@ -97,7 +97,10 @@ export function AppRouteGuard() {
           user.shopStatus === 'pending_review' ||
           user.shopStatus === 'under_review'
         ) return '/onboarding/shop/waitlist';
-        if (user.shopStatus === 'rejected') return '/onboarding/shop/rejected';
+        // Per-step rejection: route to dashboard so user can edit only rejected steps
+        if (user.onboardingStatus === 'partially_rejected') return '/onboarding/shop';
+        // Whole-shop rejection (legacy): also route to dashboard for correction
+        if (user.shopStatus === 'rejected') return '/onboarding/shop';
         return '/onboarding/shop';
       }
       return '/auth/role';

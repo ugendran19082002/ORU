@@ -76,7 +76,7 @@ export default function ShopOnboardingDashboard() {
   );
 
   const handleStepPress = (step: any) => {
-    if (isSubmissionLocked) return;
+    if (!canEditStep(step)) return;
 
     if (step.screen_route) {
       router.push(step.screen_route as any);
@@ -90,7 +90,7 @@ export default function ShopOnboardingDashboard() {
   };
 
   const handleResubmit = async () => {
-    if (!data?.is_ready_for_review || isSubmissionLocked) return;
+    if (isGloballyLocked) return;
 
     try {
       setResubmitting(true);
@@ -174,8 +174,26 @@ export default function ShopOnboardingDashboard() {
   }
 
   const progressPercent = data ? (data.completed_mandatory / data.total_mandatory) * 100 : 0;
-  const isSubmissionLocked = user?.shopStatus === 'pending_review' || user?.shopStatus === 'under_review' || user?.shopStatus === 'active' || user?.shopStatus != 'rejected';
-  const canShowSubmit = (data?.is_ready_for_review && !isSubmissionLocked);
+
+  // Global lock: user cannot touch anything
+  const isGloballyLocked =
+    user?.shopStatus === 'pending_review' ||
+    user?.shopStatus === 'under_review' ||
+    user?.shopStatus === 'active';
+
+  // Partial rejection mode: some steps were rejected, only those are editable
+  const isPartiallyRejected = user?.onboardingStatus === 'partially_rejected';
+
+  // Per-step: can this step be tapped/edited?
+  const canEditStep = (step: any): boolean => {
+    if (isGloballyLocked) return false;
+    if (step.status === 'rejected') return true;           // always editable when rejected
+    if (isPartiallyRejected && step.status === 'completed') return false; // lock approved steps
+    return step.status !== 'completed';                    // editable if not yet approved
+  };
+
+  const hasRejectedSteps = data?.steps.some((s: any) => s.status === 'rejected') ?? false;
+  const canShowSubmit = data?.is_ready_for_review && !isGloballyLocked && !hasRejectedSteps;
 
   return (
     <View style={styles.container}>
@@ -224,19 +242,19 @@ export default function ShopOnboardingDashboard() {
           contentContainerStyle={styles.scrollContent}
           refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchStatus} />}
         >
-          {user?.shopStatus === 'rejected' && (
-            <View style={styles.rejectionBanner}>
-              <View style={styles.rejectionIcon}>
-                <Ionicons name="alert-circle" size={24} color="#ba1a1a" />
+          {isPartiallyRejected && (
+            <View style={styles.partialRejectionBanner}>
+              <View style={[styles.rejectionIcon, { backgroundColor: '#fef3c7' }]}>
+                <Ionicons name="alert-circle" size={24} color="#d97706" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.rejectionTitle}>Action Required: Changes Needed</Text>
-                <Text style={styles.rejectionMsg}>Please correct the items marked and resubmit for approval.</Text>
+                <Text style={styles.partialRejectionTitle}>Some Steps Need Corrections</Text>
+                <Text style={styles.partialRejectionMsg}>Only rejected steps can be edited. Approved steps are locked.</Text>
               </View>
             </View>
           )}
 
-          {isSubmissionLocked && (
+          {isGloballyLocked && (
             <View style={[styles.rejectionBanner, { backgroundColor: '#f0f9ff', borderColor: '#bae6fd' }] as any}>
               <View style={[styles.rejectionIcon, { backgroundColor: '#e0f2fe' }]}>
                 <Ionicons name="time" size={24} color="#0369a1" />
@@ -256,8 +274,9 @@ export default function ShopOnboardingDashboard() {
             const isRejected = step.status === 'rejected';
             const isSkipped = step.status === 'skipped';
             const isInProgress = step.status === 'in_progress';
-
-            const canEdit = !isSubmissionLocked;
+            const isEditable = canEditStep(step);
+            // Locked because approved while other steps are rejected
+            const isPartialLock = isPartiallyRejected && isCompleted && !isRejected;
             const hasData = isCompleted || isRejected || isSkipped || isInProgress || isReview;
 
             return (
@@ -265,21 +284,26 @@ export default function ShopOnboardingDashboard() {
                 key={step.id}
                 style={[
                   styles.stepCard,
-                  ((isReview && isSubmissionLocked) || (isCompleted && isSubmissionLocked) ? styles.stepCardMuted : undefined) as any,
-                  (isRejected ? styles.stepCardRejected : undefined) as any
+                  isPartialLock ? styles.stepCardPartialLock : undefined,
+                  (isReview && isGloballyLocked) ? styles.stepCardMuted : undefined,
+                  isRejected ? styles.stepCardRejected : undefined,
                 ] as any}
                 onPress={() => handleStepPress(step)}
-                activeOpacity={((isReview && isSubmissionLocked) || (isCompleted && isSubmissionLocked)) ? 1 : 0.7}
+                activeOpacity={isEditable ? 0.7 : 1}
               >
                 <View style={[
                   styles.iconWrap,
                   { backgroundColor: isCompleted ? '#ecfdf5' : isReview ? '#fff7ed' : isRejected ? '#fef2f2' : isSkipped ? '#f1f5f9' : '#f8fafc' }
                 ]}>
-                  <Ionicons
-                    name={isCompleted ? "checkmark-circle" : isReview ? "time" : isRejected ? "close-circle" : isSkipped ? "eye-off" : (step.icon_name as any || "document-text")}
-                    size={22}
-                    color={isCompleted ? "#059669" : isReview ? "#d97706" : isRejected ? "#dc2626" : isSkipped ? "#94a3b8" : "#006878"}
-                  />
+                  {isPartialLock ? (
+                    <Ionicons name="lock-closed" size={20} color="#94a3b8" />
+                  ) : (
+                    <Ionicons
+                      name={isCompleted ? "checkmark-circle" : isReview ? "time" : isRejected ? "close-circle" : isSkipped ? "eye-off" : (step.icon_name as any || "document-text")}
+                      size={22}
+                      color={isCompleted ? "#059669" : isReview ? "#d97706" : isRejected ? "#dc2626" : isSkipped ? "#94a3b8" : "#006878"}
+                    />
+                  )}
                 </View>
 
                 <View style={styles.stepInfo}>
@@ -287,32 +311,40 @@ export default function ShopOnboardingDashboard() {
                   <Text style={styles.stepDesc} numberOfLines={1}>{step.description}</Text>
 
                   {isReview && (
-                    <Text style={[styles.reviewTag, !isSubmissionLocked && { color: '#0369a1' }]}>
-                      {isSubmissionLocked ? 'Under Admin Review' : 'Ready for Review'}
+                    <Text style={[styles.reviewTag, !isGloballyLocked && { color: '#0369a1' }]}>
+                      {isGloballyLocked ? 'Under Admin Review' : 'Ready for Review'}
                     </Text>
                   )}
 
-                  {canEdit && hasData && (
+                  {isRejected && (
+                    <>
+                      <View style={[styles.editBadge, { backgroundColor: '#dc2626' }]}>
+                        <Ionicons name="create-outline" size={12} color="white" />
+                        <Text style={styles.editBadgeText}>EDIT REQUIRED</Text>
+                      </View>
+                      <View style={styles.notesBox}>
+                        <Text style={styles.notesLabel}>REJECTION NOTE:</Text>
+                        <Text style={styles.notesText}>{step.admin_notes || "Information incomplete or incorrect."}</Text>
+                      </View>
+                    </>
+                  )}
+
+                  {!isRejected && isEditable && hasData && (
                     <View style={styles.editBadge}>
                       <Ionicons name="create-outline" size={12} color="white" />
                       <Text style={styles.editBadgeText}>EDIT DATA</Text>
                     </View>
                   )}
 
-                  {isRejected && (
-                    <View style={styles.notesBox}>
-                      <Text style={styles.notesLabel}>REJECTION NOTE:</Text>
-                      <Text style={styles.notesText}>{step.admin_notes || "Information incomplete or incorrect."}</Text>
-                    </View>
-                  )}
-                  {isSkipped && !canEdit && <Text style={[styles.reviewTag, { color: '#94a3b8' }]}>Skipped for now</Text>}
+                  {isSkipped && !isEditable && <Text style={[styles.reviewTag, { color: '#94a3b8' }]}>Skipped for now</Text>}
+                  {isPartialLock && <Text style={[styles.reviewTag, { color: '#059669', marginTop: 4 }]}>Approved — Locked</Text>}
                 </View>
 
-                {canEdit && (
+                {isEditable && (
                   <Ionicons
                     name={hasData ? "pencil" : "arrow-forward-circle-outline"}
                     size={hasData ? 20 : 24}
-                    color={hasData ? "#94a3b8" : "#006878"}
+                    color={isRejected ? "#dc2626" : hasData ? "#94a3b8" : "#006878"}
                   />
                 )}
               </TouchableOpacity>
@@ -343,7 +375,7 @@ export default function ShopOnboardingDashboard() {
                 ) : (
                   <>
                     <Text style={styles.resubmitText}>
-                      {user?.shopStatus === 'rejected' ? 'Submit for Final Review' : 'Submit Application for Review'}
+                      {isPartiallyRejected ? 'Resubmit Changed Steps' : 'Submit Application for Review'}
                     </Text>
                     <Ionicons name="send-outline" size={18} color="white" />
                   </>
@@ -439,6 +471,21 @@ const styles = StyleSheet.create({
   rejectionIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#ffe4e4', alignItems: 'center', justifyContent: 'center' },
   rejectionTitle: { fontSize: 14, fontWeight: '800', color: '#ba1a1a' },
   rejectionMsg: { fontSize: 12, color: '#7f1d1d', marginTop: 2 },
+
+  partialRejectionBanner: {
+    backgroundColor: '#fffbeb',
+    padding: 16,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: '#fde68a',
+    gap: 12
+  },
+  partialRejectionTitle: { fontSize: 14, fontWeight: '800', color: '#92400e' },
+  partialRejectionMsg: { fontSize: 12, color: '#78350f', marginTop: 2 },
+  stepCardPartialLock: { opacity: 0.55, backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
 
   resubmitBtn: { marginTop: 32, shadowColor: '#005d90', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 15, elevation: 8 },
   resubmitGradient: { height: 60, borderRadius: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },

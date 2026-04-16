@@ -106,17 +106,20 @@ export default function OTPScreen() {
           tension: 60,
         }).start();
 
-        // 2. Navigate immediately — don't rely solely on RouteGuard re-render
+        // 2. Navigate — single path via next_step or role root.
+        // RouteGuard handles stack correction after hydration; we do one explicit
+        // push here so the user doesn't stay on the OTP screen while waiting.
         const { user, next_step, is_new_user } = response.data;
-        if (is_new_user || !user.onboarding_completed) {
-          router.replace((next_step?.screen_route || '/auth/role') as any);
-        } else if (user.role === 'shop_owner') {
-          router.replace('/shop' as any);
-        } else if (user.role === 'admin') {
-          router.replace('/admin' as any);
-        } else {
-          router.replace('/(tabs)' as any);
-        }
+        const destination = (() => {
+          if (is_new_user || !user.onboarding_completed) {
+            return (next_step?.screen_route || '/auth/role') as string;
+          }
+          if (user.role === 'admin') return '/admin';
+          if (user.role === 'shop_owner') return '/shop';
+          if (user.role === 'delivery') return '/delivery';
+          return '/(tabs)';
+        })();
+        router.replace(destination as any);
       } else {
         throw new Error(response.message || "Verification failed");
       }

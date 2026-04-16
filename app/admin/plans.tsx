@@ -7,7 +7,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BackButton } from '@/components/ui/BackButton';
 import { platformSubscriptionApi, PlatformPlan } from '@/api/platformSubscriptionApi';
 import { apiClient } from '@/api/client';
 import { useRouter } from 'expo-router';
@@ -18,6 +17,12 @@ import { useWindowDimensions } from 'react-native';
 const ROLE_COLORS: Record<string, string> = {
   customer: '#ba1a1a', shop_owner: '#cc6600', delivery: '#7c3aed', admin: '#ba1a1a',
 };
+
+const NUMERIC_KEYS = new Set(['price_monthly', 'price_yearly', 'auto_discount_pct', 'monthly_coupon_count',
+  'monthly_coupon_value', 'loyalty_boost_pct', 'free_delivery_count', 'commission_rate']);
+
+const parseFieldValue = (key: string, value: string): string | number =>
+  NUMERIC_KEYS.has(key) ? Number(value) : value;
 
 export default function AdminPlansScreen() {
   const { width } = useWindowDimensions();
@@ -196,7 +201,7 @@ export default function AdminPlansScreen() {
                   <TextInput
                     style={styles.fieldInput}
                     value={String((editPlan as any)?.[field.key] ?? '')}
-                    onChangeText={(v) => setEditPlan((p) => ({ ...p, [field.key]: field.key.includes('price') || field.key.includes('pct') || field.key.includes('count') || field.key.includes('value') || field.key === 'commission_rate' ? Number(v) : v }))}
+                    onChangeText={(v) => setEditPlan((p) => ({ ...p, [field.key]: parseFieldValue(field.key, v) }))}
                     placeholder={field.placeholder}
                     keyboardType={field.key === 'name' || field.key === 'slug' || field.key === 'category' || field.key === 'role' ? 'default' : 'numeric'}
                     placeholderTextColor="#94a3b8"

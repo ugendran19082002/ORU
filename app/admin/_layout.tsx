@@ -1,23 +1,27 @@
-import React, { useEffect } from 'react';
-import { Stack, useRouter } from 'expo-router';
+import React from 'react';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAppSession } from '@/providers/AppSessionProvider';
 import { View, ActivityIndicator } from 'react-native';
 
 export default function AdminRootLayout() {
-  const { user, status } = useAppSession();
-  const router = useRouter();
+  const { user, status, isHydrated } = useAppSession();
 
-  // Redundant local guard removed: RouteGuard in AppSessionProvider handles role redirection.
+  // Block rendering until session is fully hydrated — prevents blank/black screen
+  // during the async transition from OTP verification into the admin stack.
+  if (!isHydrated || status === 'loading') {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f7f9ff' }}>
+        <ActivityIndicator size="large" color="#ba1a1a" />
+      </View>
+    );
+  }
 
-
-  // Ensure we have a user and they are an admin before rendering the stack.
-  // We show a loading spinner if the user object is not yet available,
-  // preventing a black screen during the transition.
+  // Authenticated but wrong role — RouteGuard is redirecting, show spinner to avoid flash.
   if (status === 'authenticated' && (!user || user.role !== 'admin')) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f7f9ff' }}>
-        <ActivityIndicator size="large" color="#005d90" />
+        <ActivityIndicator size="large" color="#ba1a1a" />
       </View>
     );
   }
