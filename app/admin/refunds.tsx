@@ -181,7 +181,7 @@ function RefundCard({ refund, onApprove, onDeny, actionLoadingId }: RefundCardPr
       {isPending && (
         <View style={styles.actionRow}>
           {isActing ? (
-            <ActivityIndicator size="small" color="#005d90" style={{ marginVertical: 8 }} />
+            <ActivityIndicator size="small" color="#ba1a1a" style={{ marginVertical: 8 }} />
           ) : (
             <>
               <TouchableOpacity
@@ -358,7 +358,7 @@ export default function AdminRefundsScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#005d90" />
+              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={styles.pageTitle}>Refunds</Text>
@@ -390,7 +390,7 @@ export default function AdminRefundsScreen() {
 
       {/* Content */}
       {loading ? (
-        <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 80 }} />
+        <ActivityIndicator size="large" color="#ba1a1a" style={{ marginTop: 80 }} />
       ) : error ? (
         <View style={styles.emptyWrap}>
           <Ionicons name="cloud-offline-outline" size={64} color="#c8d6e0" />
@@ -413,8 +413,8 @@ export default function AdminRefundsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#005d90']}
-              tintColor="#005d90"
+              colors={['#ba1a1a']}
+              tintColor="#ba1a1a"
             />
           }
           ListEmptyComponent={renderEmpty}
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: '#f1f5f9',
   },
-  tabActive: { backgroundColor: '#005d90' },
+  tabActive: { backgroundColor: '#ba1a1a' },
   tabText: { fontSize: 13, fontWeight: '800', color: '#64748b' },
   tabTextActive: { color: 'white' },
 
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
   cardAmountRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 8 },
   cardCustomer: { fontSize: 15, fontWeight: '800', color: '#181c20', marginBottom: 4 },
   cardReason: { fontSize: 13, color: '#64748b', lineHeight: 19 },
-  cardAmount: { fontSize: 22, fontWeight: '900', color: '#005d90', letterSpacing: -0.5 },
+  cardAmount: { fontSize: 22, fontWeight: '900', color: '#ba1a1a', letterSpacing: -0.5 },
   denyReasonRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
   },
   retryBtn: {
     marginTop: 8,
-    backgroundColor: '#005d90',
+    backgroundColor: '#ba1a1a',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 14,

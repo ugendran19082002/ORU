@@ -59,7 +59,7 @@ interface SummaryBannerProps {
 function SummaryBanner({ summary, loading }: SummaryBannerProps) {
   return (
     <LinearGradient
-      colors={['#005d90', '#0077b6']}
+      colors={['#ba1a1a', '#e32424']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.summaryBanner}
@@ -70,7 +70,7 @@ function SummaryBanner({ summary, loading }: SummaryBannerProps) {
         <View style={styles.summaryRow}>
           <View style={styles.summaryItem}>
             <View style={styles.summaryIconBox}>
-              <Ionicons name="time-outline" size={20} color="#005d90" />
+              <Ionicons name="time-outline" size={20} color="#ba1a1a" />
             </View>
             <View>
               <Text style={styles.summaryLabel}>Pending Amount</Text>
@@ -84,7 +84,7 @@ function SummaryBanner({ summary, loading }: SummaryBannerProps) {
 
           <View style={styles.summaryItem}>
             <View style={styles.summaryIconBox}>
-              <Ionicons name="business-outline" size={20} color="#005d90" />
+              <Ionicons name="business-outline" size={20} color="#ba1a1a" />
             </View>
             <View>
               <Text style={styles.summaryLabel}>Shops Waiting</Text>
@@ -114,7 +114,7 @@ function PayoutCard({ payout, onProcess, actionLoadingId }: PayoutCardProps) {
       {/* Top row: shop name + status */}
       <View style={styles.cardTopRow}>
         <View style={styles.shopIconBox}>
-          <Ionicons name="business" size={20} color="#005d90" />
+          <Ionicons name="business" size={20} color="#ba1a1a" />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.cardShopName} numberOfLines={1}>{payout.shop_name}</Text>
@@ -158,13 +158,13 @@ function PayoutCard({ payout, onProcess, actionLoadingId }: PayoutCardProps) {
         {/* Mark Processed button — only for pending */}
         {isPending && (
           isActing ? (
-            <ActivityIndicator size="small" color="#005d90" />
+            <ActivityIndicator size="small" color="#ba1a1a" />
           ) : (
             <TouchableOpacity
               style={styles.processBtn}
               onPress={() => onProcess(payout.id)}
             >
-              <Ionicons name="checkmark-done-outline" size={14} color="#005d90" />
+              <Ionicons name="checkmark-done-outline" size={14} color="#ba1a1a" />
               <Text style={styles.processBtnText}>Mark Processed</Text>
             </TouchableOpacity>
           )
@@ -315,7 +315,7 @@ export default function AdminPayoutsScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#005d90" />
+              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={styles.pageTitle}>Payouts</Text>
@@ -347,7 +347,7 @@ export default function AdminPayoutsScreen() {
 
       {/* Content */}
       {loading ? (
-        <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 80 }} />
+        <ActivityIndicator size="large" color="#ba1a1a" style={{ marginTop: 80 }} />
       ) : error ? (
         <View style={styles.emptyWrap}>
           <Ionicons name="cloud-offline-outline" size={64} color="#c8d6e0" />
@@ -373,8 +373,8 @@ export default function AdminPayoutsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#005d90']}
-              tintColor="#005d90"
+              colors={['#ba1a1a']}
+              tintColor="#ba1a1a"
             />
           }
           ListEmptyComponent={renderEmpty}
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: '#f1f5f9',
   },
-  tabActive: { backgroundColor: '#005d90' },
+  tabActive: { backgroundColor: '#ba1a1a' },
   tabText: { fontSize: 13, fontWeight: '800', color: '#64748b' },
   tabTextActive: { color: 'white' },
 
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#e0f0ff',
+    backgroundColor: '#ffdad6',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -545,11 +545,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
-    backgroundColor: '#e0f0ff',
+    backgroundColor: '#ffdad6',
     borderWidth: 1,
-    borderColor: '#b0d4f0',
+    borderColor: '#ffb4ab',
   },
-  processBtnText: { fontSize: 12, fontWeight: '800', color: '#005d90' },
+  processBtnText: { fontSize: 12, fontWeight: '800', color: '#ba1a1a' },
 
   // Empty / error
   emptyWrap: { alignItems: 'center', marginTop: 80, gap: 12 },
@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
   },
   retryBtn: {
     marginTop: 8,
-    backgroundColor: '#005d90',
+    backgroundColor: '#ba1a1a',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 14,

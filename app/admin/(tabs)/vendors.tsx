@@ -26,7 +26,7 @@ export default function AdminShopsScreen() {
   if (status === 'loading') {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#005d90" />
+        <ActivityIndicator size="large" color="#ba1a1a" />
       </View>
     );
   }
@@ -125,7 +125,7 @@ export default function AdminShopsScreen() {
       </View>
 
       <ScrollView 
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />} 
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ba1a1a']} tintColor="#ba1a1a" />} 
         contentContainerStyle={[
           styles.scrollContent, 
           { paddingBottom: 120, alignItems: 'center' }
@@ -133,7 +133,7 @@ export default function AdminShopsScreen() {
       >
         <View style={{ width: '100%', maxWidth: 1200 }}>
           {loading ? (
-            <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 60 }} />
+            <ActivityIndicator size="large" color="#ba1a1a" style={{ marginTop: 60 }} />
           ) : filteredShops.length === 0 ? (
             <View style={styles.emptyWrap}>
               <Ionicons name="storefront-outline" size={64} color="#e2e8f0" />
@@ -155,7 +155,7 @@ export default function AdminShopsScreen() {
                   >
                     <View style={styles.cardTop}>
                       <View style={styles.shopIcon}>
-                        <Ionicons name="business" size={24} color="#005d90" />
+                        <Ionicons name="business" size={24} color="#ba1a1a" />
                       </View>
                       <View style={[styles.statusBadge, { backgroundColor: theme.bg }]}>
                         <Ionicons name={theme.icon} size={12} color={theme.text} />
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
   tabScroll: { marginTop: 4 },
   tabContent: { gap: 8, paddingRight: 24 },
   tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: '#f1f5f9' },
-  tabActive: { backgroundColor: '#005d90' },
+  tabActive: { backgroundColor: '#ba1a1a' },
   tabText: { fontSize: 11, fontWeight: '800', color: '#64748b' },
   tabTextActive: { color: 'white' },
 

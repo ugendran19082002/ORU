@@ -9,7 +9,7 @@ export default function AdminTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#005d90',
+        tabBarActiveTintColor: '#ba1a1a',
         tabBarInactiveTintColor: '#94a3b8',
         tabBarStyle: {
           position: 'absolute',

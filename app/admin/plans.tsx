@@ -16,7 +16,7 @@ import Toast from 'react-native-toast-message';
 import { useWindowDimensions } from 'react-native';
 
 const ROLE_COLORS: Record<string, string> = {
-  customer: '#005d90', shop_owner: '#006878', delivery: '#7c3aed', admin: '#b45309',
+  customer: '#ba1a1a', shop_owner: '#cc6600', delivery: '#7c3aed', admin: '#ba1a1a',
 };
 
 export default function AdminPlansScreen() {
@@ -88,14 +88,14 @@ export default function AdminPlansScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#005d90" />
+              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={styles.pageTitle}>Plans</Text>
               <Text style={styles.headerSub}>{plans.length} total configurations</Text>
             </View>
             <TouchableOpacity style={styles.addBtnHeader} onPress={openCreate}>
-              <Ionicons name="add" size={24} color="#005d90" />
+              <Ionicons name="add" size={24} color="#ba1a1a" />
             </TouchableOpacity>
           </View>
         </View>
@@ -103,13 +103,13 @@ export default function AdminPlansScreen() {
 
       <ScrollView
         style={{ flex: 1 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchPlans(); }} colors={['#005d90']} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchPlans(); }} colors={['#ba1a1a']} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { alignItems: 'center' }]}
       >
         <View style={{ width: '100%', maxWidth: 1200 }}>
         {loading ? (
-          <View style={styles.centered}><ActivityIndicator size="large" color="#005d90" /></View>
+          <View style={styles.centered}><ActivityIndicator size="large" color="#ba1a1a" /></View>
         ) : plans.length === 0 ? (
           <View style={styles.centered}>
             <Ionicons name="card-outline" size={56} color="#94a3b8" />
@@ -119,8 +119,8 @@ export default function AdminPlansScreen() {
           plans.map((plan) => (
             <View key={plan.id} style={styles.planCard}>
               <View style={styles.planTop}>
-                <View style={[styles.planIcon, { backgroundColor: (ROLE_COLORS[plan.role || 'customer'] ?? '#005d90') + '18' }]}>
-                  <Ionicons name="card-outline" size={22} color={ROLE_COLORS[plan.role || 'customer'] ?? '#005d90'} />
+                <View style={[styles.planIcon, { backgroundColor: (ROLE_COLORS[plan.role || 'customer'] ?? '#ba1a1a') + '18' }]}>
+                  <Ionicons name="card-outline" size={22} color={ROLE_COLORS[plan.role || 'customer'] ?? '#ba1a1a'} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={styles.planNameRow}>
@@ -134,7 +134,7 @@ export default function AdminPlansScreen() {
                   <Text style={styles.planSlug}>{plan.slug}</Text>
                 </View>
                 <TouchableOpacity onPress={() => openEdit(plan)} style={styles.editBtn}>
-                  <Ionicons name="pencil-outline" size={18} color="#005d90" />
+                  <Ionicons name="pencil-outline" size={18} color="#ba1a1a" />
                 </TouchableOpacity>
               </View>
 
@@ -153,7 +153,7 @@ export default function AdminPlansScreen() {
                   { icon: 'ribbon-outline', label: 'Loyalty boost', value: `${plan.loyalty_boost_pct}%` },
                 ].map((b) => (
                   <View key={b.label} style={styles.benefitItem}>
-                    <Ionicons name={b.icon as any} size={16} color="#005d90" />
+                    <Ionicons name={b.icon as any} size={16} color="#ba1a1a" />
                     <View>
                       <Text style={styles.benefitLabel}>{b.label}</Text>
                       <Text style={styles.benefitValue}>{b.value}</Text>
@@ -221,7 +221,7 @@ export default function AdminPlansScreen() {
               onPress={handleSave}
               disabled={saving}
             >
-              <LinearGradient colors={['#005d90', '#0077b6']} style={styles.saveBtnGrad}>
+              <LinearGradient colors={['#ba1a1a', '#e32424']} style={styles.saveBtnGrad}>
                 {saving ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>Save Plan</Text>}
               </LinearGradient>
             </TouchableOpacity>
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   planSlug: { fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' },
   editBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 14 },
-  price: { fontSize: 28, fontWeight: '900', color: '#005d90' },
+  price: { fontSize: 28, fontWeight: '900', color: '#ba1a1a' },
   pricePeriod: { fontSize: 14, fontWeight: '600', color: '#707881' },
   priceYearly: { fontSize: 14, fontWeight: '700', color: '#64748b' },
   benefitsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f5f9', paddingVertical: 12, paddingHorizontal: 16,
     borderRadius: 12, borderWidth: 1.5, borderColor: '#e0e2e8', alignItems: 'center',
   },
-  toggleBtnActive: { backgroundColor: '#e0f0ff', borderColor: '#005d90' },
+  toggleBtnActive: { backgroundColor: '#ffdad6', borderColor: '#ba1a1a' },
   toggleBtnText: { color: '#64748b', fontWeight: '700', fontSize: 15 },
-  toggleBtnActiveText: { color: '#005d90' },
+  toggleBtnActiveText: { color: '#ba1a1a' },
 });

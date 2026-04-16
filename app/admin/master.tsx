@@ -224,14 +224,14 @@ export default function MasterMenuScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#005d90" />
+              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={styles.pageTitle}>Master Menu</Text>
               <Text style={styles.headerSub}>Categories & Product Hierarchy</Text>
             </View>
             <TouchableOpacity style={styles.addBtnHeader} onPress={handleAddCat} activeOpacity={0.8}>
-               <LinearGradient colors={['#005d90', '#0077b6']} style={styles.addBtnGrad} start={{x:0,y:0}} end={{x:1,y:0}}>
+               <LinearGradient colors={['#ba1a1a', '#e32424']} style={styles.addBtnGrad} start={{x:0,y:0}} end={{x:1,y:0}}>
                   <Ionicons name="add" size={20} color="white" />
                   <Text style={styles.addBtnText}>New</Text>
                </LinearGradient>
@@ -261,7 +261,7 @@ export default function MasterMenuScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchMasterData(); }} />}
       >
         {loading && !refreshing ? (
-          <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 100 }} />
+          <ActivityIndicator size="large" color="#ba1a1a" style={{ marginTop: 100 }} />
         ) : categories
             .filter(cat => showArchived || cat.is_active)
             .map((cat) => (
@@ -273,7 +273,7 @@ export default function MasterMenuScreen() {
             >
               <View style={styles.catInfo}>
                 <View style={[styles.chevronWrap, !cat.is_active && { backgroundColor: '#f1f5f9' }]}>
-                  <Ionicons name={expandedCat === cat.id ? "chevron-down" : "chevron-forward"} size={18} color={cat.is_active ? "#005d90" : "#94a3b8"} />
+                  <Ionicons name={expandedCat === cat.id ? "chevron-down" : "chevron-forward"} size={18} color={cat.is_active ? "#ba1a1a" : "#94a3b8"} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
@@ -281,7 +281,7 @@ export default function MasterMenuScreen() {
                       {cat.name_en}
                     </Text>
                     <View style={[styles.statusBadge, { backgroundColor: cat.is_active ? '#e0f2fe' : '#fee2e2' }]}>
-                      <Text style={[styles.statusText, { color: cat.is_active ? '#0369a1' : '#ba1a1a' }]}>
+                      <Text style={[styles.statusText, { color: cat.is_active ? '#2e7d32' : '#ba1a1a' }]}>
                         {cat.is_active ? 'ACTIVE' : 'ARCHIVED'}
                       </Text>
                     </View>
@@ -291,7 +291,7 @@ export default function MasterMenuScreen() {
               </View>
               <View style={styles.actions}>
                 <TouchableOpacity style={styles.actionBtn} onPress={() => handleEditCat(cat)}>
-                  <Ionicons name="pencil-outline" size={16} color="#005d90" />
+                  <Ionicons name="pencil-outline" size={16} color="#ba1a1a" />
                 </TouchableOpacity>
                 <TouchableOpacity 
                    style={[styles.archiveBtn, !cat.is_active && styles.restoreBtn]} 
@@ -326,7 +326,7 @@ export default function MasterMenuScreen() {
                         </View>
                         {sub.is_water_can && (
                           <View style={styles.waterBadge}>
-                            <Ionicons name="water" size={8} color="#0369a1" />
+                            <Ionicons name="water" size={8} color="#ba1a1a" />
                             <Text style={styles.waterText}>Water Logic</Text>
                           </View>
                         )}
@@ -355,7 +355,7 @@ export default function MasterMenuScreen() {
                   activeOpacity={0.6}
                 >
                   <View style={styles.addSubIcon}>
-                    <Ionicons name="add" size={16} color="#005d90" />
+                    <Ionicons name="add" size={16} color="#ba1a1a" />
                   </View>
                   <Text style={styles.addSubText}>Create New Subcategory</Text>
                 </TouchableOpacity>
@@ -480,24 +480,24 @@ const styles = StyleSheet.create({
   filterRowWrap: { backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingVertical: 12 },
   filterRowInside: { paddingHorizontal: 24 },
   filterBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f1f5f9', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#e2e8f0' },
-  filterBtnActive: { backgroundColor: '#005d90', borderColor: '#005d90' },
+  filterBtnActive: { backgroundColor: '#ba1a1a', borderColor: '#ba1a1a' },
   filterText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
 
   scroll: { padding: 20, paddingBottom: 100 },
   catCard: { backgroundColor: 'white', borderRadius: 24, marginBottom: 16, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.02, shadowRadius: 10, elevation: 2, overflow: 'hidden' },
   catHeader: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   catInfo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 16 },
-  chevronWrap: { width: 32, height: 32, borderRadius: 10, backgroundColor: '#f0f9ff', alignItems: 'center', justifyContent: 'center' },
+  chevronWrap: { width: 32, height: 32, borderRadius: 10, backgroundColor: '#fff8f7', alignItems: 'center', justifyContent: 'center' },
   catName: { fontSize: 17, fontWeight: '800', color: '#1e293b', flexShrink: 1 },
   catSubText: { fontSize: 12, color: '#94a3b8', fontWeight: '600', marginTop: 1 },
   
   actions: { flexDirection: 'row', gap: 10, alignItems: 'center', flexShrink: 0 },
   actionBtn: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#f1f5f9' },
   archiveBtn: { height: 36, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: '#fee2e2', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
-  restoreBtn: { backgroundColor: '#005d90', borderColor: '#005d90' },
+  restoreBtn: { backgroundColor: '#ba1a1a', borderColor: '#ba1a1a' },
   restoreText: { color: 'white', fontSize: 13, fontWeight: '800' },
   subArchiveBtn: { width: 32, height: 32, borderRadius: 10, borderWidth: 1, borderColor: '#fee2e2', alignItems: 'center', justifyContent: 'center' },
-  subRestoreBtn: { backgroundColor: '#005d90', borderColor: '#005d90' },
+  subRestoreBtn: { backgroundColor: '#ba1a1a', borderColor: '#ba1a1a' },
   
   statusBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8 },
   statusText: { fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
@@ -509,11 +509,11 @@ const styles = StyleSheet.create({
   subDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#cbd5e1' },
   subName: { fontSize: 14, fontWeight: '700', color: '#334155' },
   waterBadge: { backgroundColor: '#e0f2fe', alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 4 },
-  waterText: { fontSize: 10, color: '#0369a1', fontWeight: '800', textTransform: 'uppercase' },
+  waterText: { fontSize: 10, color: '#ba1a1a', fontWeight: '800', textTransform: 'uppercase' },
   
   addSubBtn: { marginTop: 16, flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
-  addSubIcon: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#f0f9ff', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#e0f2fe' },
-  addSubText: { fontSize: 14, fontWeight: '800', color: '#005d90' },
+  addSubIcon: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#fff8f7', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ffdad6' },
+  addSubText: { fontSize: 14, fontWeight: '800', color: '#ba1a1a' },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.4)', justifyContent: 'center', alignItems: 'center' },
   modalContent: { width: '92%', maxWidth: 440, backgroundColor: 'white', borderRadius: 32, padding: 32, shadowColor: '#000', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.15, shadowRadius: 30, elevation: 10 },
@@ -523,12 +523,12 @@ const styles = StyleSheet.create({
   input: { backgroundColor: '#f8fafc', borderRadius: 16, padding: 16, fontSize: 15, fontWeight: '600', color: '#1e293b', borderWidth: 1, borderColor: '#f1f5f9' },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 24, padding: 16, backgroundColor: '#f8fafc', borderRadius: 20, borderWidth: 1, borderColor: '#f1f5f9' },
   checkbox: { width: 24, height: 24, borderRadius: 8, borderWidth: 2, borderColor: '#e2e8f0', backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
-  checkboxActive: { backgroundColor: '#005d90', borderColor: '#005d90' },
+  checkboxActive: { backgroundColor: '#ba1a1a', borderColor: '#ba1a1a' },
   checkLabel: { fontSize: 15, fontWeight: '800', color: '#1e293b' },
   checkSub: { fontSize: 12, color: '#94a3b8', fontWeight: '500' },
   modalBtns: { flexDirection: 'row', gap: 12, marginTop: 8 },
   cancelBtn: { flex: 1, padding: 18, alignItems: 'center', justifyContent: 'center' },
   cancelText: { fontWeight: '800', color: '#94a3b8', fontSize: 15 },
-  saveBtn: { flex: 1.5, backgroundColor: '#005d90', padding: 18, borderRadius: 18, alignItems: 'center', justifyContent: 'center', shadowColor: '#005d90', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 15, elevation: 4 },
+  saveBtn: { flex: 1.5, backgroundColor: '#ba1a1a', padding: 18, borderRadius: 18, alignItems: 'center', justifyContent: 'center', shadowColor: '#ba1a1a', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 15, elevation: 4 },
   saveText: { color: 'white', fontWeight: '900', fontSize: 15 },
 });

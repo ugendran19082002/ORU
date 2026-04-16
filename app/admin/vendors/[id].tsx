@@ -228,7 +228,7 @@ export default function AdminShopReviewScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#005d90" />
+        <ActivityIndicator size="large" color="#ba1a1a" />
       </View>
     );
   }
@@ -249,7 +249,7 @@ export default function AdminShopReviewScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#005d90" />
+              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={styles.pageTitle}>Shop Review</Text>
@@ -332,7 +332,7 @@ export default function AdminShopReviewScreen() {
                       style={styles.viewDataBtn}
                       onPress={() => onViewStepData(step)}
                     >
-                      <Ionicons name="eye-outline" size={16} color="#005d90" />
+                      <Ionicons name="eye-outline" size={16} color="#ba1a1a" />
                       <Text style={styles.viewDataBtnText}>View Data</Text>
                     </TouchableOpacity>
 
@@ -389,7 +389,7 @@ export default function AdminShopReviewScreen() {
                 disabled={!canActivate || processing}
               >
                 <LinearGradient
-                  colors={canActivate ? ['#005d90', '#003a5c'] : ['#e2e8f0', '#cbd5e1']}
+                  colors={canActivate ? ['#ba1a1a', '#e32424'] : ['#e2e8f0', '#cbd5e1']}
                   style={styles.activateGradient}
                 >
                   {processing ? <ActivityIndicator color="white" /> : (
@@ -452,7 +452,7 @@ export default function AdminShopReviewScreen() {
                 {(selectedDoc?.details || selectedDoc?.metadata) && (
                   <View style={styles.premiumDataContainer}>
                     <View style={styles.premiumDataHeader}>
-                      <Ionicons name="apps" size={20} color="#005d90" />
+                      <Ionicons name="apps" size={20} color="#ba1a1a" />
                       <Text style={styles.premiumDataTitle}>Step Metadata Details</Text>
                     </View>
                     
@@ -475,7 +475,7 @@ export default function AdminShopReviewScreen() {
                 {selectedDoc?.document_url && (
                   <View style={styles.premiumDataContainer}>
                     <View style={styles.premiumDataHeader}>
-                      <Ionicons name="image" size={20} color="#005d90" />
+                      <Ionicons name="image" size={20} color="#ba1a1a" />
                       <Text style={styles.premiumDataTitle}>Attached Evidence</Text>
                     </View>
 
@@ -575,14 +575,14 @@ const styles = StyleSheet.create({
   stepHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
   stepTitleGroup: { flex: 1, gap: 4 },
   stepTitleMain: { fontSize: 16, fontWeight: '800', color: '#1e293b' },
-  mandatoryTag: { fontSize: 9, fontWeight: '900', color: '#005d90', textTransform: 'uppercase', letterSpacing: 1 },
+  mandatoryTag: { fontSize: 9, fontWeight: '900', color: '#ba1a1a', textTransform: 'uppercase', letterSpacing: 1 },
   
   stepStatusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   stepStatusText: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
 
   stepActionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
   viewDataBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f0f9ff', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
-  viewDataBtnText: { fontSize: 13, fontWeight: '800', color: '#005d90' },
+  viewDataBtnText: { fontSize: 13, fontWeight: '800', color: '#ba1a1a' },
 
   decisionGroup: { flexDirection: 'row', gap: 10 },
   miniBtnReject: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'white', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: '#fee2e2' },
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   globalActionBox: { marginTop: 8, padding: 32, backgroundColor: '#f8fafc', borderRadius: 32, alignItems: 'center', gap: 20 },
   globalActionHint: { fontSize: 13, color: '#64748b', textAlign: 'center', lineHeight: 20, fontWeight: '600' },
   
-  activateBtn: { width: '100%', shadowColor: '#005d90', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 15, elevation: 8 },
+  activateBtn: { width: '100%', shadowColor: '#ba1a1a', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 15, elevation: 8 },
   activateBtnDisabled: { shadowOpacity: 0, elevation: 0 },
   activateGradient: { height: 64, borderRadius: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
   activateBtnText: { color: 'white', fontSize: 18, fontWeight: '800' },
@@ -652,7 +652,7 @@ const styles = StyleSheet.create({
   fullScreenImg: { width: '100%', height: '80%' },
   fullScreenCloseBtn: { position: 'absolute', top: 50, right: 30, zIndex: 10 },
   
-  linkBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#005d90', padding: 14, borderRadius: 12, justifyContent: 'center', marginTop: 12 },
+  linkBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#ba1a1a', padding: 14, borderRadius: 12, justifyContent: 'center', marginTop: 12 },
   linkBtnText: { color: 'white', fontWeight: '800', fontSize: 14 }
 });
 

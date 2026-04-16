@@ -8,15 +8,15 @@ import { useAppSession } from '@/providers/AppSessionProvider';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const SECONDARY_MENUS = [
-  { name: 'Users', path: '/admin/users', icon: 'people', color: '#005d90' },
-  { name: 'Payouts', path: '/admin/payouts', icon: 'card', color: '#006878' },
-  { name: 'Refunds', path: '/admin/refunds', icon: 'refresh-circle', color: '#7c3aed' },
+  { name: 'Users', path: '/admin/users', icon: 'people', color: '#ba1a1a' },
+  { name: 'Payouts', path: '/admin/payouts', icon: 'card', color: '#ba1a1a' },
+  { name: 'Refunds', path: '/admin/refunds', icon: 'refresh-circle', color: '#ba1a1a' },
   { name: 'Complaints', path: '/admin/complaints', icon: 'alert-circle', color: '#ba1a1a' },
-  { name: 'Growth', path: '/admin/growth', icon: 'trending-up', color: '#16a34a' },
-  { name: 'Coupons', path: '/admin/coupons', icon: 'ticket', color: '#b45309' },
-  { name: 'Plans', path: '/admin/plans', icon: 'calendar', color: '#005d90' },
-  { name: 'Features', path: '/admin/features', icon: 'toggle', color: '#475569' },
-  { name: 'Master Menu', path: '/admin/master', icon: 'list', color: '#005d90' },
+  { name: 'Growth', path: '/admin/growth', icon: 'trending-up', color: '#ba1a1a' },
+  { name: 'Coupons', path: '/admin/coupons', icon: 'ticket', color: '#ba1a1a' },
+  { name: 'Plans', path: '/admin/plans', icon: 'calendar', color: '#ba1a1a' },
+  { name: 'Features', path: '/admin/features', icon: 'toggle', color: '#ba1a1a' },
+  { name: 'Master Menu', path: '/admin/master', icon: 'list', color: '#ba1a1a' },
 ];
 
 export default function MoreMenuScreen() {

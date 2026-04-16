@@ -15,7 +15,8 @@ export const thannigoPalette = {
   customerBlue: '#1565C0',
   shopTeal: '#006878',
   shopTealDark: '#004E5B',
-  adminSlate: '#23616B',
+  adminRed: '#ba1a1a',
+  adminRedLight: '#ffdad6',
   borderSoft: '#E0EAF5',
   infoSoft: '#E8F4FD',
   dangerSoft: '#FFEBEE',
@@ -25,7 +26,7 @@ export const thannigoPalette = {
 export const roleGradients = {
   customer: { start: '#005D90', end: '#0077B6' },
   shop_owner: { start: '#006878', end: '#008E9B' },
-  admin: { start: '#23616B', end: '#2D828F' },
+  admin: { start: '#ba1a1a', end: '#e32424' },
   delivery: { start: '#2e7d32', end: '#388E3C' },
   guest: { start: '#707881', end: '#94A3B8' },
 } as const;

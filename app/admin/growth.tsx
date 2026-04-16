@@ -72,7 +72,7 @@ export default function AdminGrowthScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#005d90" />
+        <ActivityIndicator size="large" color="#ba1a1a" />
       </View>
     );
   }
@@ -84,14 +84,14 @@ export default function AdminGrowthScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#005d90" />
+              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={styles.pageTitle}>Growth Engine</Text>
               <Text style={styles.headerSub}>Loyalty & Referral Mechanics</Text>
             </View>
             <TouchableOpacity style={styles.refreshBtn} onPress={fetchData}>
-              <Ionicons name="refresh" size={20} color="#005d90" />
+              <Ionicons name="refresh" size={20} color="#ba1a1a" />
             </TouchableOpacity>
           </View>
         </View>
@@ -124,7 +124,7 @@ export default function AdminGrowthScreen() {
             <>
               {/* LOYALTY SECTION */}
               <View style={styles.sectionHeader}>
-                <Ionicons name="ribbon-outline" size={20} color="#005d90" />
+                <Ionicons name="ribbon-outline" size={20} color="#ba1a1a" />
                 <Text style={styles.sectionTitle}>Loyalty Settings (Phase 1)</Text>
               </View>
               <View style={styles.card}>
@@ -166,7 +166,7 @@ export default function AdminGrowthScreen() {
 
               {/* REFERRAL SECTION */}
               <View style={styles.sectionHeader}>
-                <Ionicons name="people-outline" size={20} color="#005d90" />
+                <Ionicons name="people-outline" size={20} color="#ba1a1a" />
                 <Text style={styles.sectionTitle}>Referral Rewards (Admin Funded)</Text>
               </View>
               <View style={styles.card}>
@@ -198,7 +198,7 @@ export default function AdminGrowthScreen() {
               </View>
 
               <View style={styles.infoBox}>
-                <Ionicons name="information-circle-outline" size={18} color="#005d90" />
+                <Ionicons name="information-circle-outline" size={18} color="#ba1a1a" />
                 <Text style={styles.infoText}>
                   Note: All loyalty points issued currently are Admin-Funded. Payouts to shops are NOT reduced when customers use these points.
                 </Text>
@@ -209,7 +209,7 @@ export default function AdminGrowthScreen() {
           {activeTab === 'tiers' && (
             <View style={{ gap: 12 }}>
               <View style={styles.sectionHeader}>
-                <Ionicons name="trophy-outline" size={20} color="#005d90" />
+                <Ionicons name="trophy-outline" size={20} color="#ba1a1a" />
                 <Text style={styles.sectionTitle}>Platform Tiers</Text>
                 <TouchableOpacity 
                   style={styles.addBtn}
@@ -225,7 +225,7 @@ export default function AdminGrowthScreen() {
                     setModalVisible(true);
                   }}
                 >
-                  <Ionicons name="add" size={20} color="#005d90" />
+                  <Ionicons name="add" size={20} color="#ba1a1a" />
                 </TouchableOpacity>
               </View>
               {levels.map((level) => (
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10 },
   tabActive: { backgroundColor: 'white', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1 },
   tabText: { fontSize: 14, fontWeight: '700', color: '#707881' },
-  tabTextActive: { color: '#005d90' },
+  tabTextActive: { color: '#ba1a1a' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   sectionTitle: { fontSize: 16, fontWeight: '800', color: '#1a1c1e' },
   card: { backgroundColor: 'white', borderRadius: 20, padding: 20, marginBottom: 25, borderWidth: 1, borderColor: '#ebeef4' },
@@ -377,8 +377,8 @@ const styles = StyleSheet.create({
   helperText: { fontSize: 11, color: '#94a3b8', marginTop: 4, fontWeight: '500' },
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8 },
   toggleLabel: { fontSize: 14, fontWeight: '700', color: '#1a1c1e' },
-  infoBox: { flexDirection: 'row', gap: 10, backgroundColor: '#eef6ff', borderRadius: 15, padding: 15, marginBottom: 25 },
-  infoText: { flex: 1, fontSize: 12, color: '#005d90', lineHeight: 18, fontWeight: '600' },
+  infoBox: { flexDirection: 'row', gap: 10, backgroundColor: '#ffdad6', borderRadius: 15, padding: 15, marginBottom: 25 },
+  infoText: { flex: 1, fontSize: 12, color: '#ba1a1a', lineHeight: 18, fontWeight: '600' },
   tierCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: 'white', borderRadius: 18, padding: 18, borderWidth: 1, borderColor: '#ebeef4',
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   tierName: { fontSize: 16, fontWeight: '900', color: '#1a1c1e', marginBottom: 2 },
   tierReq: { fontSize: 12, color: '#707881', fontWeight: '600' },
   tierBenefit: { alignItems: 'flex-end' },
-  tierDiscount: { fontSize: 18, fontWeight: '900', color: '#005d90' },
+  tierDiscount: { fontSize: 18, fontWeight: '900', color: '#ba1a1a' },
   tierSub: { fontSize: 10, color: '#94a3b8', fontWeight: '700', letterSpacing: 0.5 },
   addBtn: { marginLeft: 'auto', backgroundColor: '#f1f5f9', width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   modalTitle: { fontSize: 20, fontWeight: '900', color: '#1a1c1e' },
   modalForm: { marginBottom: 20 },
-  saveBtn: { backgroundColor: '#005d90', paddingVertical: 15, borderRadius: 15, alignItems: 'center' },
+  saveBtn: { backgroundColor: '#ba1a1a', paddingVertical: 15, borderRadius: 15, alignItems: 'center' },
   saveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
 });
 

@@ -29,7 +29,7 @@ type Feature = {
 
 const PRICING_COLORS: Record<string, { bg: string; text: string }> = {
   free: { bg: '#e8f5e9', text: '#2e7d32' },
-  plan_only: { bg: '#e0f0ff', text: '#005d90' },
+  plan_only: { bg: '#ffdad6', text: '#ba1a1a' },
   pay_per_use: { bg: '#fef3c7', text: '#b45309' },
 };
 
@@ -177,7 +177,7 @@ export default function AdminFeaturesScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#005d90" />
+              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={styles.pageTitle}>Feature Flags</Text>
@@ -194,7 +194,7 @@ export default function AdminFeaturesScreen() {
                 setShowModal(true);
               }}
             >
-              <Ionicons name="add" size={24} color="#005d90" />
+              <Ionicons name="add" size={24} color="#ba1a1a" />
             </TouchableOpacity>
           </View>
         </View>
@@ -220,7 +220,7 @@ export default function AdminFeaturesScreen() {
       </View>
 
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchFeatures(); }} colors={['#005d90']} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchFeatures(); }} colors={['#ba1a1a']} />}
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { alignItems: 'center', paddingBottom: 100 }]}
@@ -228,7 +228,7 @@ export default function AdminFeaturesScreen() {
         <View style={{ width: '100%', maxWidth: 1200 }}>
         {loading ? (
           <View style={styles.centered}>
-            <ActivityIndicator size="large" color="#005d90" />
+            <ActivityIndicator size="large" color="#ba1a1a" />
           </View>
         ) : filtered.length === 0 ? (
           <View style={styles.centered}>
@@ -258,13 +258,13 @@ export default function AdminFeaturesScreen() {
                     }}
                     style={styles.actionBtn}
                   >
-                    <Ionicons name="shield-checkmark-outline" size={18} color="#005d90" />
+                    <Ionicons name="shield-checkmark-outline" size={18} color="#ba1a1a" />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => { setEditFeature({ ...feature }); setShowModal(true); }}>
                     <Ionicons name="settings-outline" size={20} color="#64748b" />
                   </TouchableOpacity>
                   {toggling === feature.id ? (
-                    <ActivityIndicator size="small" color="#005d90" />
+                    <ActivityIndicator size="small" color="#ba1a1a" />
                   ) : (
                     <Switch
                       value={feature.globally_enabled}
@@ -300,7 +300,7 @@ export default function AdminFeaturesScreen() {
                 </View>
                 {feature.category && (
                   <View style={[styles.featureTag, { backgroundColor: '#f0f7ff' }]}>
-                    <Text style={[styles.featureTagText, { color: '#005d90' }]}>{feature.category}</Text>
+                    <Text style={[styles.featureTagText, { color: '#ba1a1a' }]}>{feature.category}</Text>
                   </View>
                 )}
                 <View style={[styles.featureTag, { backgroundColor: feature.globally_enabled ? '#e8f5e9' : '#ffebee' }]}>
@@ -375,7 +375,7 @@ export default function AdminFeaturesScreen() {
               onPress={handleSave}
               disabled={saving}
             >
-              <LinearGradient colors={['#005d90', '#0077b6']} style={styles.saveBtnGrad}>
+              <LinearGradient colors={['#ba1a1a', '#e32424']} style={styles.saveBtnGrad}>
                 {saving ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>Save Feature</Text>}
               </LinearGradient>
             </TouchableOpacity>
@@ -421,7 +421,7 @@ export default function AdminFeaturesScreen() {
                 onChangeText={setSearchQuery}
                 placeholderTextColor="#94a3b8"
               />
-              {targetLoading && <ActivityIndicator size="small" color="#005d90" />}
+              {targetLoading && <ActivityIndicator size="small" color="#ba1a1a" />}
             </View>
 
             <ScrollView style={{ maxHeight: 200 }} showsVerticalScrollIndicator={false}>
@@ -437,7 +437,7 @@ export default function AdminFeaturesScreen() {
                     </Text>
                     <Text style={styles.targetSub}>{t.phone} • {t.email || 'No email'}</Text>
                   </View>
-                  {selectedTarget?.id === t.id && <Ionicons name="checkmark-circle" size={20} color="#005d90" />}
+                  {selectedTarget?.id === t.id && <Ionicons name="checkmark-circle" size={20} color="#ba1a1a" />}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -466,7 +466,7 @@ export default function AdminFeaturesScreen() {
               onPress={handleSetOverride}
               disabled={!selectedTarget || saving}
             >
-              <LinearGradient colors={['#005d90', '#0077b6']} style={styles.saveBtnGrad}>
+              <LinearGradient colors={['#ba1a1a', '#e32424']} style={styles.saveBtnGrad}>
                 {saving ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>Grant Access</Text>}
               </LinearGradient>
             </TouchableOpacity>
@@ -508,7 +508,7 @@ const styles = StyleSheet.create({
   tabBarWrap: { paddingVertical: 10, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   tabs: { paddingHorizontal: 24, gap: 8 },
   tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#f1f5f9' },
-  tabActive: { backgroundColor: '#005d90' },
+  tabActive: { backgroundColor: '#ba1a1a' },
   tabText: { fontSize: 13, fontWeight: '800', color: '#64748b' },
   tabTextActive: { color: 'white' },
   content: { padding: 16, gap: 12 },
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
   actionBtn: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#f0f7ff', alignItems: 'center', justifyContent: 'center' },
   typeSelector: { flexDirection: 'row', gap: 10, marginBottom: 16 },
   typeOption: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#e2e8f0' },
-  typeOptionActive: { backgroundColor: '#005d90', borderColor: '#005d90' },
+  typeOptionActive: { backgroundColor: '#ba1a1a', borderColor: '#ba1a1a' },
   typeOptionText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
   typeOptionActiveText: { color: 'white' },
   searchBox: { 
@@ -569,8 +569,8 @@ const styles = StyleSheet.create({
     padding: 12, borderRadius: 12, marginBottom: 8, backgroundColor: 'white',
     borderWidth: 1.5, borderColor: '#f1f5f9'
   },
-  targetItemActive: { borderColor: '#005d90', backgroundColor: '#f0f7ff' },
+  targetItemActive: { borderColor: '#ba1a1a', backgroundColor: '#fff8f7' },
   targetName: { fontSize: 14, fontWeight: '800', color: '#1e293b' },
-  targetItemActiveText: { color: '#005d90' },
+  targetItemActiveText: { color: '#ba1a1a' },
   targetSub: { fontSize: 11, color: '#64748b', fontWeight: '500' },
 });

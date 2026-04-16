@@ -35,9 +35,12 @@ export const subscriptionApi = {
    * Activate a subscription plan.
    * POST /shop-owner/subscription/activate
    */
-  async activateSubscription(planId?: number): Promise<any> {
+  async activateSubscription(planId?: number, autoRenew: boolean = true): Promise<any> {
     try {
-      const response = await apiClient.post<ApiResponse<any>>('/shop-owner/subscription/activate', { plan_id: planId });
+      const response = await apiClient.post<ApiResponse<any>>('/shop-owner/subscription/activate', { 
+        plan_id: planId,
+        is_auto_renew: autoRenew,
+      });
       if (response.data.status === 1) return response.data.data;
       throw new ApiError('ACTIVATE_FAILED', response.status ?? 400, response.data.message || 'Failed to activate plan');
     } catch (error) {

@@ -48,7 +48,7 @@ function formatTime(iso: string): string {
 function getStatusTheme(status: Complaint['status']) {
   switch (status) {
     case 'open':
-      return { bg: '#e0f0ff', text: '#005d90', label: 'Open' };
+      return { bg: '#ffdad6', text: '#ba1a1a', label: 'Open' };
     case 'in_progress':
       return { bg: '#fff3e0', text: '#e65100', label: 'In Progress' };
     case 'resolved':
@@ -201,14 +201,14 @@ function ComplaintCard({ complaint, expanded, onToggle, onAction, actionLoading 
           {canAction && (
             <View style={styles.actionRow}>
               {actionLoading ? (
-                <ActivityIndicator size="small" color="#005d90" style={{ marginVertical: 8 }} />
+                <ActivityIndicator size="small" color="#ba1a1a" style={{ marginVertical: 8 }} />
               ) : (
                 <>
                   <TouchableOpacity
                     style={[styles.actionBtn, { flex: 1, minWidth: 120 }]}
                     onPress={() => onAction(complaint.id, 'refund')}
                   >
-                    <LinearGradient colors={['#005d90', '#0077b6']} style={styles.actionBtnGrad}>
+                    <LinearGradient colors={['#ba1a1a', '#e32424']} style={styles.actionBtnGrad}>
                       <Ionicons name="cash-outline" size={14} color="white" />
                       <Text style={styles.actionBtnText}>Approve + Refund</Text>
                     </LinearGradient>
@@ -361,7 +361,7 @@ export default function AdminComplaintsScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#005d90" />
+              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <View style={styles.headerTitleRow}>
@@ -418,8 +418,8 @@ export default function AdminComplaintsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#005d90']}
-            tintColor="#005d90"
+            colors={['#ba1a1a']}
+            tintColor="#ba1a1a"
           />
         }
         style={{ flex: 1 }}
@@ -431,7 +431,7 @@ export default function AdminComplaintsScreen() {
       >
         <View style={{ width: '100%', maxWidth: 1200 }}>
         {loading ? (
-          <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 80 }} />
+          <ActivityIndicator size="large" color="#ba1a1a" style={{ marginTop: 80 }} />
         ) : complaints.length === 0 ? (
           <View style={styles.emptyWrap}>
             <Ionicons name="checkmark-circle-outline" size={64} color="#c8d6e0" />
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#f1f5f9',
   },
-  tabActive: { backgroundColor: '#005d90' },
+  tabActive: { backgroundColor: '#ba1a1a' },
   tabText: { fontSize: 12, fontWeight: '800', color: '#64748b' },
   tabTextActive: { color: 'white' },
 

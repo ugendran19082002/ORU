@@ -63,7 +63,7 @@ function getRoleBadgeTheme(role: AppRole | string) {
     case 'admin':
       return { bg: '#ffdad6', text: '#ba1a1a' };
     case 'shop_owner':
-      return { bg: '#e0f0ff', text: '#005d90' };
+      return { bg: '#ffdad6', text: '#ba1a1a' };
     case 'delivery':
       return { bg: '#fff3e0', text: '#e65100' };
     case 'customer':
@@ -301,7 +301,7 @@ function UserDetailModal({ user, visible, onClose, onUpdated }: UserDetailModalP
                     {opt.label}
                   </Text>
                   {user.role === opt.key && (
-                    <Ionicons name="checkmark" size={16} color="#005d90" />
+                    <Ionicons name="checkmark" size={16} color="#ba1a1a" />
                   )}
                 </TouchableOpacity>
               ))}
@@ -318,11 +318,11 @@ function UserDetailModal({ user, visible, onClose, onUpdated }: UserDetailModalP
                 disabled={roleLoading || actionLoading}
               >
                 {roleLoading ? (
-                  <ActivityIndicator size="small" color="#005d90" />
+                  <ActivityIndicator size="small" color="#ba1a1a" />
                 ) : (
                   <>
-                    <Ionicons name="swap-horizontal-outline" size={16} color="#005d90" />
-                    <Text style={[styles.modalActionBtnText, { color: '#005d90' }]}>Change Role</Text>
+                    <Ionicons name="swap-horizontal-outline" size={16} color="#ba1a1a" />
+                    <Text style={[styles.modalActionBtnText, { color: '#ba1a1a' }]}>Change Role</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -451,7 +451,7 @@ export default function AdminUsersScreen() {
 
   const renderFooter = () => {
     if (!loadingMore) return null;
-    return <ActivityIndicator size="small" color="#005d90" style={{ marginVertical: 20 }} />;
+    return <ActivityIndicator size="small" color="#ba1a1a" style={{ marginVertical: 20 }} />;
   };
 
   const renderEmpty = () => {
@@ -478,7 +478,7 @@ export default function AdminUsersScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#005d90" />
+              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={styles.pageTitle}>User Management</Text>
@@ -525,7 +525,7 @@ export default function AdminUsersScreen() {
 
       {/* List */}
       {loading ? (
-        <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 80 }} />
+        <ActivityIndicator size="large" color="#ba1a1a" style={{ marginTop: 80 }} />
       ) : error ? (
         <View style={styles.emptyWrap}>
           <Ionicons name="cloud-offline-outline" size={64} color="#c8d6e0" />
@@ -617,7 +617,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#f1f5f9',
   },
-  tabActive: { backgroundColor: '#005d90' },
+  tabActive: { backgroundColor: '#ba1a1a' },
   tabText: { fontSize: 12, fontWeight: '800', color: '#64748b' },
   tabTextActive: { color: 'white' },
 
@@ -642,11 +642,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#e0f0ff',
+    backgroundColor: '#ffdad6',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontSize: 18, fontWeight: '900', color: '#005d90' },
+  avatarText: { fontSize: 18, fontWeight: '900', color: '#ba1a1a' },
   cardInfo: { flex: 1, gap: 2 },
   cardName: { fontSize: 15, fontWeight: '800', color: '#181c20' },
   cardPhone: { fontSize: 13, color: '#707881', fontWeight: '500' },
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
   },
   retryBtn: {
     marginTop: 8,
-    backgroundColor: '#005d90',
+    backgroundColor: '#ba1a1a',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 14,
@@ -719,11 +719,11 @@ const styles = StyleSheet.create({
     width: 54,
     height: 54,
     borderRadius: 27,
-    backgroundColor: '#e0f0ff',
+    backgroundColor: '#ffdad6',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalAvatarText: { fontSize: 22, fontWeight: '900', color: '#005d90' },
+  modalAvatarText: { fontSize: 22, fontWeight: '900', color: '#ba1a1a' },
   modalName: { fontSize: 18, fontWeight: '900', color: '#181c20', letterSpacing: -0.3 },
   modalPhone: { fontSize: 14, color: '#707881', fontWeight: '500', marginTop: 2 },
   modalCloseBtn: {
@@ -751,8 +751,8 @@ const styles = StyleSheet.create({
   modalActionBtnText: { fontSize: 14, fontWeight: '800' },
   modalActionBtnOutline: {
     borderWidth: 1.5,
-    borderColor: '#d0e8ff',
-    backgroundColor: '#f0f8ff',
+    borderColor: '#ffdad6',
+    backgroundColor: '#fff8f7',
   },
   modalActionBtnDanger: { backgroundColor: '#ba1a1a' },
   modalActionBtnSuccess: { backgroundColor: '#2e7d32' },
@@ -778,11 +778,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   roleOptionActive: {
-    backgroundColor: '#e0f0ff',
-    borderColor: '#b0d4f0',
+    backgroundColor: '#ffdad6',
+    borderColor: '#ffb4ab',
   },
   roleOptionText: { fontSize: 14, fontWeight: '600', color: '#505860' },
-  roleOptionTextActive: { color: '#005d90', fontWeight: '800' },
+  roleOptionTextActive: { color: '#ba1a1a', fontWeight: '800' },
   rolePickerCancel: {
     alignItems: 'center',
     paddingVertical: 12,

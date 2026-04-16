@@ -43,7 +43,7 @@ export default function AdminSettingsScreen() {
         {/* PROFILE PREVIEW */}
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Ionicons name="person" size={32} color="#005d90" />
+            <Ionicons name="person" size={32} color="#ba1a1a" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.userName}>{user?.name || 'Admin User'}</Text>
@@ -68,7 +68,7 @@ export default function AdminSettingsScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.menuIconBox}>
-                  <Ionicons name={item.icon as any} size={20} color="#005d90" />
+                  <Ionicons name={item.icon as any} size={20} color="#ba1a1a" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuLabel}>{item.label}</Text>
@@ -101,7 +101,7 @@ export default function AdminSettingsScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.menuIconBox}>
-                  <Ionicons name={item.icon as any} size={20} color="#005d90" />
+                  <Ionicons name={item.icon as any} size={20} color="#ba1a1a" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuLabel}>{item.label}</Text>
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     width: 60, 
     height: 60, 
     borderRadius: 30, 
-    backgroundColor: '#e0f0ff', 
+    backgroundColor: '#ffdad6', 
     alignItems: 'center', 
     justifyContent: 'center', 
     marginRight: 16 
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f4f9', 
     borderRadius: 12 
   },
-  editBtnText: { color: '#005d90', fontWeight: '700', fontSize: 13 },
+  editBtnText: { color: '#ba1a1a', fontWeight: '700', fontSize: 13 },
 
   sectionHeader: { fontSize: 14, fontWeight: '800', color: '#707881', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12, marginLeft: 4 },
   menuCard: { backgroundColor: 'white', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#e0e2e8' },

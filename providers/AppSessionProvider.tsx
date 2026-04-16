@@ -399,6 +399,7 @@ export function AppSessionProvider({
         setRefreshToken(refresh_token ?? refreshToken);
         setNextStepState(resNextStep ?? null);
         setPreferredRoleState(mappedUser.role as AppRole);
+        setIsVerified(true);
         setStatus(nextAccessToken ? "authenticated" : "anonymous");
 
         await writeSession({
@@ -489,12 +490,12 @@ export function AppSessionProvider({
       <View
         style={{
           flex: 1,
-          backgroundColor: 'white',
+          backgroundColor: '#ffffff',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <ActivityIndicator size="large" color="#005d90" />
+        <ActivityIndicator size="large" color="#ba1a1a" />
       </View>
     );
   }
