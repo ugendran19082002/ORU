@@ -24,26 +24,48 @@ type NavItem = {
   color?: string;
 };
 
-const SHOP_MENU: NavItem[] = [
-  { label: 'Inventory Management', icon: 'cube-outline', route: '/shop/inventory' },
-  { label: 'Revenue & Earnings', icon: 'cash-outline', route: '/shop/earnings' },
-  { label: 'Shop Analytics & Trends', icon: 'bar-chart-outline', route: '/shop/analytics' },
-  { label: 'Business Hours Master', icon: 'time-outline', route: '/shop/schedule', color: '#006878' },
-  { label: 'Delivery Slots Config', icon: 'calendar-outline', route: '/shop/slots', color: '#006878' },
+const QUICK_ACTIONS: NavItem[] = [
+  { label: 'Inventory', icon: 'cube-outline', route: '/shop/inventory', color: '#005d90' },
+  { label: 'Earnings', icon: 'cash-outline', route: '/shop/earnings', color: '#10b981' },
+  { label: 'Delivery Slots', icon: 'calendar-outline', route: '/shop/slots', color: '#f59e0b' },
+  { label: 'Business Hours', icon: 'time-outline', route: '/shop/schedule', color: '#6366f1' },
+];
+
+const SHOP_MGMT_MENU: NavItem[] = [
+  { label: 'Operational Rules', icon: 'settings-outline', route: '/shop/operational-settings' },
   { label: 'Shop Profile & Address', icon: 'storefront-outline', route: '/shop/profile' },
   { label: 'Promotions & Coupons', icon: 'pricetag-outline', route: '/shop/promotions', badge: 'NEW' },
   { label: 'Delivery Management', icon: 'bicycle-outline', route: '/shop/delivery' },
-  { label: 'Customer Complaints', icon: 'warning-outline', route: '/shop/complaints' },
   { label: 'Subscription Plans', icon: 'shield-checkmark-outline', route: '/shop/subscription-plans' },
 ];
 
-const ACCOUNT_MENU: NavItem[] = [
+const SUPPORT_MENU: NavItem[] = [
   { label: 'Notifications', icon: 'notifications-outline', route: '/notifications' },
+  { label: 'Customer Complaints', icon: 'warning-outline', route: '/shop/complaints' },
   { label: 'Report an Issue', icon: 'chatbubble-ellipses-outline', route: '/report-issue' },
   { label: 'Emergency Help', icon: 'warning-outline', route: '/emergency-help', color: '#c62828' },
+];
+
+const LEGAL_MENU: NavItem[] = [
   { label: 'Terms of Service', icon: 'document-text-outline', route: '/terms' },
   { label: 'Support & Help', icon: 'help-buoy-outline', route: '/report-issue' },
 ];
+
+function GridItem({ item }: { item: NavItem }) {
+  const router = useRouter();
+  return (
+    <TouchableOpacity
+      style={styles.gridCard}
+      onPress={() => item.route && router.push(item.route as any)}
+      activeOpacity={0.7}
+    >
+      <View style={[styles.gridIcon, { backgroundColor: item.color + '15' }]}>
+        <Ionicons name={item.icon} size={24} color={item.color} />
+      </View>
+      <Text style={styles.gridLabel}>{item.label}</Text>
+    </TouchableOpacity>
+  );
+}
 
 function MenuRow({ item }: { item: NavItem }) {
   const router = useRouter();
@@ -79,9 +101,6 @@ export default function ShopSettingsScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [deliveryActive, setDeliveryActive] = useState(false);
-  const [minOrderAmount, setMinOrderAmount] = useState('0');
-  const [deliveryCharge, setDeliveryCharge] = useState('0');
-  const [taxPercentage, setTaxPercentage] = useState('0');
   const [shopName, setShopName] = useState('');
   const [shopAddress, setShopAddress] = useState('');
   const [showPinModal, setShowPinModal] = useState(false);
@@ -103,9 +122,6 @@ export default function ShopSettingsScreen() {
       const settings = await shopApi.getShopSettings();
       if (settings) {
         setDeliveryActive(!settings.busy_mode);
-        setMinOrderAmount(String(settings.min_order_amount || '0'));
-        setDeliveryCharge(String(settings.base_delivery_charge || '0'));
-        setTaxPercentage(String(settings.tax_percentage || '0'));
       }
     } catch (error) {
       console.error('[Settings] Fetch failed:', error);
@@ -151,22 +167,6 @@ export default function ShopSettingsScreen() {
     }
   };
 
-  const handleUpdateOperationalSettings = async () => {
-    try {
-      setIsLoading(true);
-      await shopApi.updateShopSettings({
-        min_order_amount: parseFloat(minOrderAmount),
-        base_delivery_charge: parseFloat(deliveryCharge),
-        tax_percentage: parseFloat(taxPercentage)
-      });
-      Toast.show({ type: 'success', text1: 'Settings Saved' });
-    } catch (error) {
-      console.error('[Settings] Save failed:', error);
-      Toast.show({ type: 'error', text1: 'Save Failed' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSetPin = async (newPin: string) => {
     await enablePinRemote(newPin);
@@ -252,64 +252,28 @@ export default function ShopSettingsScreen() {
           </View>
         </View>
 
-        {/* OPERATIONAL RULES */}
-        <Text style={styles.sectionHeader}>Operational Rules</Text>
-        <View style={styles.statusCard}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Min. Order Amount (₹)</Text>
-            <TextInput
-              style={styles.settingInput}
-              value={minOrderAmount}
-              onChangeText={setMinOrderAmount}
-              keyboardType="numeric"
-              placeholder="0.00"
-            />
-          </View>
-          <View style={styles.statusDivider} />
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Base Delivery Charge (₹)</Text>
-            <TextInput
-              style={styles.settingInput}
-              value={deliveryCharge}
-              onChangeText={setDeliveryCharge}
-              keyboardType="numeric"
-              placeholder="0.00"
-            />
-          </View>
-          <View style={styles.statusDivider} />
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Tax / GST (%)</Text>
-            <TextInput
-              style={styles.settingInput}
-              value={taxPercentage}
-              onChangeText={setTaxPercentage}
-              keyboardType="numeric"
-              placeholder="0.00"
-            />
-          </View>
-          
-          <TouchableOpacity 
-            style={[styles.saveBtn, isLoading && { opacity: 0.7 }]} 
-            onPress={handleUpdateOperationalSettings}
-            disabled={isLoading}
-          >
-            <Text style={styles.saveBtnText}>{isLoading ? 'Saving...' : 'Save Changes'}</Text>
-          </TouchableOpacity>
+
+        {/* QUICK ACTIONS GRID */}
+        <Text style={styles.sectionHeader}>Quick Operations</Text>
+        <View style={styles.gridContainer}>
+          {QUICK_ACTIONS.map((item) => (
+            <GridItem key={item.label} item={item} />
+          ))}
         </View>
 
-        {/* SHOP MENU */}
+        {/* SHOP MANAGEMENT */}
         <Text style={styles.sectionHeader}>Shop Management</Text>
         <View style={styles.menuCard}>
-          {SHOP_MENU.map((item, i) => (
+          {SHOP_MGMT_MENU.map((item, i) => (
             <View key={item.label}>
               <MenuRow item={item} />
-              {i < SHOP_MENU.length - 1 && <View style={styles.menuDivider} />}
+              {i < SHOP_MGMT_MENU.length - 1 && <View style={styles.menuDivider} />}
             </View>
           ))}
         </View>
 
-        {/* SECURITY SETTINGS */}
-        <Text style={styles.sectionHeader}>Privacy & Security</Text>
+        {/* SUPPORT & PRIVACY */}
+        <Text style={styles.sectionHeader}>Privacy & Support</Text>
         <View style={styles.menuCard}>
           <View style={styles.menuRow}>
             <View style={[styles.menuIcon, { backgroundColor: '#f1f4f9' }]}>
@@ -384,35 +348,28 @@ export default function ShopSettingsScreen() {
               </TouchableOpacity>
             </>
           )}
-        </View>
 
-        {/* ACCOUNT MENU */}
-        <Text style={styles.sectionHeader}>Account & Support</Text>
-        <View style={styles.menuCard}>
-          {ACCOUNT_MENU.map((item, i) => (
+          <View style={styles.menuDivider} />
+
+          {SUPPORT_MENU.map((item, i) => (
             <View key={item.label}>
               <MenuRow item={item} />
-              {i < ACCOUNT_MENU.length - 1 && <View style={styles.menuDivider} />}
+              {i < SUPPORT_MENU.length - 1 && <View style={styles.menuDivider} />}
             </View>
           ))}
         </View>
 
-        {/* PROFILE CARD */}
-        <TouchableOpacity
-          style={styles.profileCard}
-          onPress={() => router.push('/shop/profile' as any)}
-        >
-          <View style={styles.profileIconWrap}>
-            <Ionicons name="storefront" size={24} color="#006878" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.shopName}>{shopName || 'My Shop'}</Text>
-            <Text style={styles.shopAddress}>{shopAddress || 'Tap to update shop profile'}</Text>
-          </View>
-          <View style={styles.editBtn}>
-            <Ionicons name="pencil" size={16} color="#005d90" />
-          </View>
-        </TouchableOpacity>
+        <Text style={styles.sectionHeader}>Legal & More</Text>
+        <View style={styles.menuCard}>
+          {LEGAL_MENU.map((item, i) => (
+            <View key={item.label}>
+              <MenuRow item={item} />
+              {i < LEGAL_MENU.length - 1 && <View style={styles.menuDivider} />}
+            </View>
+          ))}
+        </View>
+
+ 
 
         {/* SIGN OUT */}
         <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
@@ -463,9 +420,16 @@ const styles = StyleSheet.create({
   sectionHeader: { fontSize: 12, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12, marginLeft: 4 },
 
   menuCard: {
-    backgroundColor: 'white', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 4, marginBottom: 22,
+    backgroundColor: 'white', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 4, marginBottom: 20,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
+  gridContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 },
+  gridCard: {
+    flex: 1, minWidth: '45%', backgroundColor: 'white', borderRadius: 20, padding: 16,
+    alignItems: 'center', gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
+  },
+  gridIcon: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  gridLabel: { fontSize: 13, fontWeight: '800', color: '#181c20' },
   menuRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
   menuIcon: { width: 38, height: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   menuLabel: { flex: 1, fontSize: 14, fontWeight: '700', color: '#181c20' },

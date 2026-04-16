@@ -24,6 +24,8 @@ export default function ShopLayout() {
       <Stack.Screen name="profile" />
       <Stack.Screen name="vendor-register" />
       <Stack.Screen name="subscription-plans" />
+      <Stack.Screen name="complaints" />
+      <Stack.Screen name="operational-settings" />
       <Stack.Screen name="schedule" options={{ title: 'Business Hours' }} />
       <Stack.Screen name="slots" options={{ title: 'Delivery Slots' }} />
     </Stack>
