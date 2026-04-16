@@ -37,6 +37,7 @@ export type AdminShop = {
   admin_notes?: string | null;
   city?: string | null;
   created_at: string;
+  onboarding_status?: string | null;
   owner?: {
     name: string;
     phone: string;

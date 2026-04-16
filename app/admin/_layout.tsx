@@ -31,6 +31,7 @@ export default function AdminRootLayout() {
           animation: 'slide_from_right',
         }}
       >
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         
         {/* Detail/Stack screens accessible from 'More' */}

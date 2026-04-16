@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  View, Text, ScrollView, RefreshControl, TouchableOpacity, 
-  StyleSheet, ActivityIndicator, TextInput, useWindowDimensions 
+import {
+  View, Text, ScrollView, RefreshControl, TouchableOpacity,
+  StyleSheet, ActivityIndicator, TextInput, useWindowDimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -11,7 +11,7 @@ import { adminApi, AdminShop } from '@/api/adminApi';
 import Toast from 'react-native-toast-message';
 import { useAppSession } from '@/providers/AppSessionProvider';
 
-type FilterStatus = 'all' | 'pending_review' | 'active' | 'rejected';
+type FilterStatus = 'all' | 'pending_review' | 'active' | 'rejected' | 'ready_for_activation' | 'partially_rejected';
 
 export default function AdminShopsScreen() {
   const { width } = useWindowDimensions();
@@ -48,6 +48,8 @@ export default function AdminShopsScreen() {
   const fetchShops = useCallback(async () => {
     try {
       setLoading(true);
+      // If we are filtering by one of the onboarding statuses, we fetch 'all' or multiple and filter locally
+      // Or we can just pass the filter if the backend supports it.
       const filter = statusFilter === 'all' ? undefined : statusFilter;
       const res = await adminApi.listShops(filter);
       if (res.status === 1) {
@@ -71,18 +73,28 @@ export default function AdminShopsScreen() {
     fetchShops();
   }, [fetchShops]);
 
-  const filteredShops = (shops || []).filter(shop => 
+  const filteredShops = (shops || []).filter(shop =>
     (shop?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (shop?.owner?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return { bg: '#ecfdf5', text: '#059669', icon: 'checkmark-circle' as const };
-      case 'pending_review': return { bg: '#fff7ed', text: '#d97706', icon: 'time' as const };
-      case 'rejected': return { bg: '#fef2f2', text: '#dc2626', icon: 'close-circle' as const };
-      default: return { bg: '#f1f5f9', text: '#64748b', icon: 'help-circle' as const };
+  const getShopUI = (shop: AdminShop) => {
+    if (shop.status === 'active') {
+      return { label: 'ACTIVE', bg: '#ecfdf5', text: '#059669', icon: 'checkmark-circle' as const };
     }
+    if (shop.onboarding_status === 'ready_for_activation') {
+      return { label: 'READY', bg: '#ecfdf5', text: '#059669', icon: 'checkmark-circle' as const };
+    }
+    if (shop.onboarding_status === 'partially_rejected') {
+      return { label: 'FIX REQ', bg: '#fff7ed', text: '#d97706', icon: 'alert-circle' as const };
+    }
+    if (shop.status === 'pending_review') {
+      return { label: 'PENDING', bg: '#fff7ed', text: '#d97706', icon: 'time' as const };
+    }
+    if (shop.status === 'rejected') {
+      return { label: 'REJECTED', bg: '#fef2f2', text: '#dc2626', icon: 'close-circle' as const };
+    }
+    return { label: shop.status.toUpperCase(), bg: '#f1f5f9', text: '#64748b', icon: 'help-circle' as const };
   };
 
   return (
@@ -95,7 +107,7 @@ export default function AdminShopsScreen() {
         </View>
       </SafeAreaView>
 
-      <View style={[styles.filterBar, isDesktop && { alignItems: 'center' }]}>
+          <View style={[styles.filterBar, isDesktop && { alignItems: 'center' }]}>
         <View style={{ width: '100%', maxWidth: 1200, paddingHorizontal: isDesktop ? 24 : 0, gap: 16 }}>
           <View style={styles.searchWrap}>
             <Ionicons name="search" size={18} color="#94a3b8" />
@@ -109,14 +121,14 @@ export default function AdminShopsScreen() {
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll} contentContainerStyle={styles.tabContent}>
-            {(['all', 'pending_review', 'active', 'rejected'] as FilterStatus[]).map((s) => (
-              <TouchableOpacity 
-                key={s} 
+            {(['all', 'pending_review', 'active', 'rejected', 'ready_for_activation', 'partially_rejected'] as FilterStatus[]).map((s) => (
+              <TouchableOpacity
+                key={s}
                 onPress={() => setStatusFilter(s)}
                 style={[styles.tab, statusFilter === s && styles.tabActive]}
               >
                 <Text style={[styles.tabText, statusFilter === s && styles.tabTextActive]}>
-                  {s.replace('_', ' ').toUpperCase()}
+                  {s.replace(/_/g, ' ').toUpperCase()}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -124,10 +136,10 @@ export default function AdminShopsScreen() {
         </View>
       </View>
 
-      <ScrollView 
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ba1a1a']} tintColor="#ba1a1a" />} 
+      <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ba1a1a']} tintColor="#ba1a1a" />}
         contentContainerStyle={[
-          styles.scrollContent, 
+          styles.scrollContent,
           { paddingBottom: 120, alignItems: 'center' }
         ]}
       >
@@ -142,13 +154,13 @@ export default function AdminShopsScreen() {
           ) : (
             <View style={[styles.grid, { flexDirection: 'row', flexWrap: 'wrap', gap: 16 }]}>
               {filteredShops.map((shop) => {
-                const theme = getStatusColor(shop.status);
+                const theme = getShopUI(shop);
                 return (
-                  <TouchableOpacity 
-                    key={shop.id} 
+                  <TouchableOpacity
+                    key={shop.id}
                     onPress={() => router.push(`/admin/vendors/${shop.id}` as Href)}
                     style={[
-                      styles.shopCard, 
+                      styles.shopCard,
                       { width: isDesktop ? '48%' : '100%', marginBottom: 0 }
                     ]}
                     activeOpacity={0.7}
@@ -159,7 +171,7 @@ export default function AdminShopsScreen() {
                       </View>
                       <View style={[styles.statusBadge, { backgroundColor: theme.bg }]}>
                         <Ionicons name={theme.icon} size={12} color={theme.text} />
-                        <Text style={[styles.statusText, { color: theme.text }]}>{shop.status.replace('_', ' ')}</Text>
+                        <Text style={[styles.statusText, { color: theme.text }]}>{theme.label}</Text>
                       </View>
                     </View>
 
@@ -191,9 +203,9 @@ export default function AdminShopsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fdfdfd' },
-  headerSafe: { 
-    backgroundColor: 'white', 
-    borderBottomWidth: 1, 
+  headerSafe: {
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',
     alignItems: 'center',
   },
@@ -205,11 +217,11 @@ const styles = StyleSheet.create({
   },
   pageTitle: { fontSize: 28, fontWeight: '900', color: '#1a1c1e', letterSpacing: -0.5 },
   headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
-  
+
   filterBar: { paddingVertical: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   searchWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f1f5f9', borderRadius: 16, paddingHorizontal: 16, height: 48 },
   searchInput: { flex: 1, marginLeft: 10, fontSize: 14, fontWeight: '600', color: '#1e293b' },
-  
+
   tabScroll: { marginTop: 4 },
   tabContent: { gap: 8, paddingRight: 24 },
   tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: '#f1f5f9' },

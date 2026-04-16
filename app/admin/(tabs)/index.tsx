@@ -77,12 +77,21 @@ export default function AdminOverviewScreen() {
   const fetchDashboard = useCallback(async () => {
     try {
       const [shopsRes, analytics] = await Promise.allSettled([
-        adminApi.listShops('pending_review'),
+        adminApi.listShops('pending_review,under_review,in_progress'),
         analyticsApi.getAdminDashboard({ period: 'today' }),
       ]);
 
       if (shopsRes.status === 'fulfilled' && shopsRes.value.data) {
-        setPendingShops(shopsRes.value.data);
+        // Filter to shops that actually need admin attention: 
+        // 1. New/Ready (pending_review)
+        // 2. Currently being reviewed (under_review)
+        // 3. Needs fix (partially_rejected)
+        const queue = shopsRes.value.data.filter(s => 
+          s.status === 'pending_review' || 
+          s.status === 'under_review' || 
+          s.onboarding_status === 'partially_rejected'
+        );
+        setPendingShops(queue);
       }
       if (analytics.status === 'fulfilled') {
         setDashboardData(analytics.value);
@@ -235,24 +244,36 @@ export default function AdminOverviewScreen() {
               <Text style={styles.emptySub}>No vendors awaiting review</Text>
             </View>
           ) : (
-            pendingShops.slice(0, 3).map((shop, i) => (
-              <TouchableOpacity 
-                key={shop.id} 
-                style={[styles.verifItem, i === 0 && { borderTopWidth: 0 }]}
-                onPress={() => router.push(`/admin/vendors/${shop.id}` as Href)}
-              >
-                <View style={styles.verifIconWrap}>
-                   <Ionicons name="business" size={20} color="#ba1a1a" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.verifName}>{shop.name}</Text>
-                  <Text style={styles.verifLocation}>{shop.city} • {shop.shop_type || 'General'}</Text>
-                </View>
-                <View style={styles.verifTag}>
-                   <Text style={styles.verifTagText}>REVIEW</Text>
-                </View>
-              </TouchableOpacity>
-            ))
+            pendingShops.slice(0, 5).map((shop, i) => {
+              const isReady = shop.onboarding_status === 'ready_for_activation';
+              const isPartial = shop.onboarding_status === 'partially_rejected';
+              
+              const statusTag = isReady ? 'READY' : isPartial ? 'FIX' : 'REVIEW';
+              const tagColor = isReady ? '#059669' : isPartial ? '#d97706' : '#ba1a1a';
+              const tagBg = isReady ? '#ecfdf5' : isPartial ? '#fff7ed' : '#fff5f5';
+
+              return (
+                <TouchableOpacity 
+                  key={shop.id} 
+                  style={[styles.verifItem, i === 0 && { borderTopWidth: 0 }]}
+                  onPress={() => router.push(`/admin/vendors/${shop.id}` as Href)}
+                >
+                  <View style={[styles.verifIconWrap, { backgroundColor: tagBg }]}>
+                     <Ionicons name="business" size={20} color={tagColor} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={styles.verifName}>{shop.name}</Text>
+                      {isReady && <Ionicons name="checkmark-circle" size={14} color="#059669" />}
+                    </View>
+                    <Text style={styles.verifLocation}>{shop.city || 'Location Pending'} • {shop.shop_type || 'General'}</Text>
+                  </View>
+                  <View style={[styles.verifTag, { backgroundColor: tagColor }]}>
+                     <Text style={styles.verifTagText}>{statusTag}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
           )}
         </View>
 

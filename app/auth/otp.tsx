@@ -111,12 +111,14 @@ export default function OTPScreen() {
         // push here so the user doesn't stay on the OTP screen while waiting.
         const { user, next_step, is_new_user } = response.data;
         const destination = (() => {
+          // Professional roles bypass onboarding entirely to prevent navigation race conditions
+          if (user.role === 'admin') return '/admin';
+          if (user.role === 'delivery') return '/delivery';
+
           if (is_new_user || !user.onboarding_completed) {
             return (next_step?.screen_route || '/auth/role') as string;
           }
-          if (user.role === 'admin') return '/admin';
           if (user.role === 'shop_owner') return '/shop';
-          if (user.role === 'delivery') return '/delivery';
           return '/(tabs)';
         })();
         router.replace(destination as any);
