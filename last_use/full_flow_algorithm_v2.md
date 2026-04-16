@@ -326,15 +326,10 @@ Audit log is append-only — no updates, no deletes.
   ├── Service Area & Pincodes (→ Section 3e)
   │
   ├── Notification Settings
-  │     └── Toggle per type: new order | cancel | payment | low stock | payout | complaint
+  │     └── Toggle per type: new order | cancel | payment | low stock | payout | complaint (view)
   │         Channels: Push | SMS | WhatsApp
   │
-  ├── Customer Visibility
-  │     ├── Show / hide shop in customer listing
-  │     ├── Featured shop request (admin approves)
-  │     └── Visibility radius override
-  │
-  └── Fraud & Abuse Control
+  └── Fraud & Abuse Control (Shop-level only)
         ├── Block specific users from ordering at this shop
         └── Flag repeated COD no-show users → auto-block COD for that user
 
@@ -389,7 +384,7 @@ Metrics:
   ├── Top products
   ├── Avg delivery time
   ├── Ratings breakdown
-  └── Complaint rate
+  └── Complaint rate (Read-only)
 
 Export: CSV download (date range selectable)
 Note: Analytics access is a SHOP SUBSCRIPTION feature (see Section 3k)
@@ -1294,18 +1289,17 @@ UNIQUE (referred_id, referral_type)
 
 ### Shop Owner
 
-| Method | Path                               | Auth       | Description           |
-| ------ | ---------------------------------- | ---------- | --------------------- |
-| GET    | /shop-owner/fleet                  | Shop Owner | Delivery staff roster |
-| POST   | /shop-owner/fleet                  | Shop Owner | Add delivery person   |
-| PATCH  | /shop-owner/fleet/:id              | Shop Owner | Edit delivery person  |
-| GET    | /staff                             | Shop Owner | Staff list            |
-| GET    | /shop-owner/complaints             | Shop Owner | Shop complaints list  |
-| PATCH  | /shop-owner/complaints/:id/resolve | Shop Owner | Resolve complaint     |
-| GET    | /shop-owner/products               | Shop Owner | Product list          |
-| POST   | /shop-owner/products               | Shop Owner | Add product           |
-| POST   | /inventory/update                  | Shop Owner | Update stock          |
-| PATCH  | /shop-owner/shops/me/settings      | Shop Owner | Save shop settings    |
+| Method | Path                          | Auth       | Description                      |
+| ------ | ----------------------------- | ---------- | -------------------------------- |
+| GET    | /shop-owner/fleet             | Shop Owner | Delivery staff roster            |
+| POST   | /shop-owner/fleet             | Shop Owner | Add delivery person              |
+| PATCH  | /shop-owner/fleet/:id         | Shop Owner | Edit delivery person             |
+| GET    | /staff                        | Shop Owner | Staff list                       |
+| GET    | /shop-owner/complaints        | Shop Owner | Shop complaints list (Read-only) |
+| GET    | /shop-owner/products          | Shop Owner | Product list                     |
+| POST   | /shop-owner/products          | Shop Owner | Add product                      |
+| POST   | /inventory/update             | Shop Owner | Update stock                     |
+| PATCH  | /shop-owner/shops/me/settings | Shop Owner | Save shop settings               |
 
 ### Admin
 
@@ -1376,18 +1370,17 @@ UNIQUE (referred_id, referral_type)
 
 ### ⚠️ Backend Exists — Frontend Not Yet Wired
 
-| Screen / Feature                         | Missing Connection                                                       |
-| ---------------------------------------- | ------------------------------------------------------------------------ |
-| `app/shop/delivery-fleet.tsx`            | `GET/POST /shop-owner/fleet` not called — static list                    |
-| `app/shop/(tabs)/inventory.tsx`          | `POST /shop-owner/products` add form not connected to API                |
-| `app/shop/(tabs)/settings.tsx`           | `PATCH /shop-owner/shops/me/settings` toggles not wired                  |
-| `app/shop/(tabs)/promotions.tsx`         | Coupon creation/list APIs not connected                                  |
-| `app/shop/customers.tsx`                 | No backend route exists yet (`GET /shop-owner/customers` missing)        |
-| Shop complaint management                | `GET /shop-owner/complaints`, `PATCH /shop-owner/complaints/:id/resolve` |
-| `app/admin/refunds.tsx`                  | `POST /payments/:paymentId/reconcile` not triggered from UI              |
-| `app/admin/users.tsx`                    | `PATCH /users/:id/status` ban/suspend buttons not wired                  |
-| `app/admin/master.tsx` + `analytics.tsx` | Charts using static props instead of `/admin/analytics/dashboard`        |
-| Customer account deletion                | `POST /users/me/delete-account` button missing in settings               |
+| Screen / Feature                         | Missing Connection                                                |
+| ---------------------------------------- | ----------------------------------------------------------------- |
+| `app/shop/delivery-fleet.tsx`            | `GET/POST /shop-owner/fleet` not called — static list             |
+| `app/shop/(tabs)/inventory.tsx`          | `POST /shop-owner/products` add form not connected to API         |
+| `app/shop/(tabs)/settings.tsx`           | `PATCH /shop-owner/shops/me/settings` toggles not wired           |
+| `app/shop/(tabs)/promotions.tsx`         | Coupon creation/list APIs not connected                           |
+| Shop complaint view (Read-only)          | `GET /shop-owner/complaints` (Resolution by Admin)                |
+| `app/admin/refunds.tsx`                  | `POST /payments/:paymentId/reconcile` not triggered from UI       |
+| `app/admin/users.tsx`                    | `PATCH /users/:id/status` ban/suspend buttons not wired           |
+| `app/admin/master.tsx` + `analytics.tsx` | Charts using static props instead of `/admin/analytics/dashboard` |
+| Customer account deletion                | `POST /users/me/delete-account` button missing in settings        |
 
 ### ❌ Backend API Missing — Needs to be Built
 
@@ -1396,7 +1389,6 @@ UNIQUE (referred_id, referral_type)
 | Delivery charge calculation | `GET /system/distance?shop=...&user=...` | `checkout.tsx` hardcodes 1.2 km — fix needed |
 | Razorpay webhooks           | `POST /webhooks/razorpay`                | payment.captured, subscription.charged, etc. |
 | Shop subscription           | `GET/POST /shop-owner/subscription`      | Full CRUD for shop plan management           |
-| Shop customers list         | `GET /shop-owner/customers`              | For `app/shop/customers.tsx`                 |
 
 ---
 

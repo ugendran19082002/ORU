@@ -16,12 +16,6 @@ export default function ShopComplaintsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'open' | 'resolved'>('open');
 
-  // Modal
-  const [resolveModalVisible, setResolveModalVisible] = useState(false);
-  const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
-  const [resolutionNotes, setResolutionNotes] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const fetchComplaints = async () => {
     try {
       const data = await complaintApi.shopGetComplaints({ limit: 100 });
@@ -43,34 +37,6 @@ export default function ShopComplaintsScreen() {
     fetchComplaints().finally(() => setRefreshing(false));
   }, []);
 
-  const handleResolveOpen = (complaint: Complaint) => {
-    setSelectedComplaint(complaint);
-    setResolutionNotes('');
-    setResolveModalVisible(true);
-  };
-
-  const handleResolveSubmit = async () => {
-    if (!selectedComplaint) return;
-    if (!resolutionNotes.trim()) {
-      Toast.show({ type: 'error', text1: 'Notes required', text2: 'Please provide resolution notes.' });
-      return;
-    }
-    try {
-      setIsSubmitting(true);
-      await complaintApi.shopResolveComplaint(selectedComplaint.id, {
-        resolution_notes: resolutionNotes,
-        resolution_type: 'shop_resolved'
-      });
-      Toast.show({ type: 'success', text1: 'Complaint Resolved' });
-      setResolveModalVisible(false);
-      fetchComplaints();
-    } catch (error) {
-      Toast.show({ type: 'error', text1: 'Failed to resolve' });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const filteredComplaints = complaints.filter(c =>
     activeTab === 'open' ? (c.status === 'open' || c.status === 'in_progress') : (c.status === 'resolved' || c.status === 'closed')
   );
@@ -85,7 +51,7 @@ export default function ShopComplaintsScreen() {
           <BackButton fallback="/shop/settings" />
           <View>
             <Text style={styles.headerTitle}>Customer Complaints</Text>
-            <Text style={styles.headerSub}>Manage & Resolve Issues</Text>
+            <Text style={styles.headerSub}>Viewing & Responding to Issues</Text>
           </View>
         </View>
       </View>
@@ -96,7 +62,7 @@ export default function ShopComplaintsScreen() {
           style={[styles.tab, activeTab === 'open' && styles.activeTab]}
           onPress={() => setActiveTab('open')}
         >
-          <Text style={[styles.tabText, activeTab === 'open' && styles.activeTabText]}>Action Required</Text>
+          <Text style={[styles.tabText, activeTab === 'open' && styles.activeTabText]}>In Progress</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'resolved' && styles.activeTab]}
@@ -144,12 +110,6 @@ export default function ShopComplaintsScreen() {
                 <Text style={styles.orderText}>Order: {c.Order?.order_number || `#${c.order_id}`}</Text>
               </View>
 
-              {activeTab === 'open' && (
-                <TouchableOpacity style={styles.resolveBtn} onPress={() => handleResolveOpen(c)}>
-                  <Text style={styles.resolveBtnText}>Mark as Resolved</Text>
-                </TouchableOpacity>
-              )}
-
               {activeTab === 'resolved' && c.resolution_notes && (
                 <View style={styles.resolutionBox}>
                   <Text style={styles.resolutionLabel}>Resolution Notes:</Text>
@@ -161,37 +121,7 @@ export default function ShopComplaintsScreen() {
         )}
       </ScrollView>
 
-      {/* RESOLVE MODAL */}
-      <Modal visible={resolveModalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Resolve Complaint</Text>
-              <TouchableOpacity onPress={() => setResolveModalVisible(false)} style={styles.closeBtn}>
-                <Ionicons name="close" size={20} color="#64748b" />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.modalSub}>Provide details on how this issue was resolved.</Text>
-
-            <TextInput
-              style={styles.textArea}
-              value={resolutionNotes}
-              onChangeText={setResolutionNotes}
-              placeholder="e.g. Sent replacement can via delivery agent."
-              multiline
-              textAlignVertical="top"
-            />
-
-            <TouchableOpacity
-              style={[styles.submitBtn, isSubmitting && { opacity: 0.7 }]}
-              onPress={handleResolveSubmit}
-              disabled={isSubmitting}
-            >
-              <Text style={styles.submitBtnText}>{isSubmitting ? 'Resolving...' : 'Submit Resolution'}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      {/* Resolution Modal removed - Admin now handles final decisions */}
 
     </SafeAreaView>
   );
