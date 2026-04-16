@@ -25,8 +25,6 @@ export default function ShopOperationalSettingsScreen() {
   const [minOrderAmount, setMinOrderAmount] = useState('0');
   const [deliveryCharge, setDeliveryCharge] = useState('0');
   const [taxPercentage, setTaxPercentage] = useState('0');
-  const [returnWindowHours, setReturnWindowHours] = useState('24');
-  const [replacementEnabled, setReplacementEnabled] = useState(true);
 
   useAndroidBackHandler(() => {
     safeBack('/shop/settings');
@@ -44,8 +42,6 @@ export default function ShopOperationalSettingsScreen() {
         setMinOrderAmount(String(settings.min_order_amount || '0'));
         setDeliveryCharge(String(settings.base_delivery_charge || '0'));
         setTaxPercentage(String(settings.tax_percentage || '0'));
-        setReturnWindowHours(String(settings.return_window_hours || '24'));
-        setReplacementEnabled(settings.replacement_enabled ?? true);
       }
     } catch (error) {
       console.error('[OperationalSettings] Fetch failed:', error);
@@ -64,8 +60,6 @@ export default function ShopOperationalSettingsScreen() {
         min_order_amount: parseFloat(minOrderAmount) || 0,
         base_delivery_charge: parseFloat(deliveryCharge) || 0,
         tax_percentage: parseFloat(taxPercentage) || 0,
-        return_window_hours: parseInt(returnWindowHours) || 24,
-        replacement_enabled: replacementEnabled
       });
       
       Toast.show({ type: 'success', text1: 'Settings Saved', text2: 'Your operational rules have been updated.' });
@@ -168,33 +162,6 @@ export default function ShopOperationalSettingsScreen() {
                 <Text style={styles.hintText}>Calculated as a percentage of the subtotal. (%)</Text>
               </View>
 
-              <View style={styles.inputGroup}>
-                <View style={styles.labelRow}>
-                  <Ionicons name="time-outline" size={16} color="#64748b" />
-                  <Text style={styles.inputLabel}>Return Window (Hours)</Text>
-                </View>
-                <TextInput
-                  style={styles.input}
-                  value={returnWindowHours}
-                  onChangeText={setReturnWindowHours}
-                  keyboardType="numeric"
-                  placeholder="24"
-                />
-                <Text style={styles.hintText}>Time within which customers can request returns.</Text>
-              </View>
-
-              <View style={styles.switchGroup}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.inputLabel}>Allow Replacements</Text>
-                  <Text style={styles.hintText}>Allow customers to request product replacements.</Text>
-                </View>
-                <Switch 
-                  value={replacementEnabled} 
-                  onValueChange={setReplacementEnabled}
-                  trackColor={{ false: "#e2e8f0", true: "#005d90" }}
-                  thumbColor="white"
-                />
-              </View>
 
               <TouchableOpacity 
                 style={[styles.saveBtn, saving && { opacity: 0.7 }]} 

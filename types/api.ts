@@ -144,8 +144,6 @@ export type ShopSettings = {
   tax_percentage: number;
   auto_accept_orders: boolean;
   busy_mode: boolean;
-  return_window_hours: number;
-  replacement_enabled: boolean;
 };
 
 export type ShopToggleResult = {

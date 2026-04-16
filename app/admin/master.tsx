@@ -429,7 +429,7 @@ export default function MasterMenuScreen() {
                </View>
                <View>
                   <Text style={styles.checkLabel}>Water Can Logic</Text>
-                  <Text style={styles.checkSub}>Enable deposit/return management for this item</Text>
+                  <Text style={styles.checkSub}>Enable deposit management for this item</Text>
                </View>
             </TouchableOpacity>
             <View style={styles.modalBtns}>
