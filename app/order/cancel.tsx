@@ -1,62 +1,89 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView,
+  View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
-
-
+import { useOrderStore } from '@/stores/orderStore';
+import { apiClient } from '@/api/client';
 
 const REASONS = [
-  { id: '1', label: 'Ordered by mistake', icon: 'hand-left-outline' },
-  { id: '2', label: 'Wrong item / quantity', icon: 'swap-horizontal-outline' },
-  { id: '3', label: 'Delivery time too long', icon: 'time-outline' },
-  { id: '4', label: 'Found a better price', icon: 'pricetag-outline' },
-  { id: '5', label: 'Changed my mind', icon: 'refresh-outline' },
-  { id: '6', label: 'Other', icon: 'ellipsis-horizontal-outline' },
+  { id: 'ordered_by_mistake', label: 'Ordered by mistake', icon: 'hand-left-outline' },
+  { id: 'wrong_item_quantity', label: 'Wrong item / quantity', icon: 'swap-horizontal-outline' },
+  { id: 'delivery_time_too_long', label: 'Delivery time too long', icon: 'time-outline' },
+  { id: 'found_better_price', label: 'Found a better price', icon: 'pricetag-outline' },
+  { id: 'changed_mind', label: 'Changed my mind', icon: 'refresh-outline' },
+  { id: 'other', label: 'Other', icon: 'ellipsis-horizontal-outline' },
 ];
 
 export default function CancelOrderScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
+  const { orderId: paramOrderId } = useLocalSearchParams<{ orderId: string }>();
+  const { activeOrderId, orders } = useOrderStore();
 
   useAndroidBackHandler(() => {
     safeBack('/(tabs)/orders');
   });
 
+  const orderId = paramOrderId ?? activeOrderId;
+  const order = orders.find((o) => o.id === orderId);
 
   const [selected, setSelected] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
-  const orderTotal = '₹90';
-  const refundNote = 'Full refund of ₹90 will be credited to your original payment method within 5 mins.';
-
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (!selected) {
-      Toast.show({
-        type: 'error',
-        text1: 'Select Reason',
-        text2: 'Please select a reason for cancellation.'
-      });
+      Toast.show({ type: 'error', text1: 'Select Reason', text2: 'Please select a reason for cancellation.' });
       return;
     }
-    require('react-native').Alert.alert('Cancel Order?', 'This action cannot be undone.', [
-      { text: 'Keep Order', style: 'cancel' },
-      {
-        text: 'Yes, Cancel',
-        style: 'destructive',
-        onPress: () => {
-          router.replace('/(tabs)/orders' as any);
+    if (!orderId) {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Order not found.' });
+      return;
+    }
+
+    require('react-native').Alert.alert(
+      'Cancel Order?',
+      'This action cannot be undone.',
+      [
+        { text: 'Keep Order', style: 'cancel' },
+        {
+          text: 'Yes, Cancel',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setCancelling(true);
+              const reasonLabel = REASONS.find((r) => r.id === selected)?.label ?? selected;
+              const res = await apiClient.post(`/orders/${orderId}/cancel`, { reason: reasonLabel });
+              if (res.data.status === 1) {
+                Toast.show({ type: 'success', text1: 'Order Cancelled', text2: 'Your refund will be processed shortly.' });
+                router.replace('/(tabs)/orders' as any);
+              } else {
+                throw new Error(res.data.message ?? 'Cancellation failed');
+              }
+            } catch (e: any) {
+              Toast.show({ type: 'error', text1: 'Cancellation Failed', text2: e?.response?.data?.message ?? e?.message ?? 'Could not cancel order.' });
+            } finally {
+              setCancelling(false);
+            }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
+
+  const orderTotal = order ? `₹${order.total}` : '₹—';
+  const orderNumber = order?.id ?? orderId ?? '—';
+  const refundNote = order
+    ? `Full refund of ₹${order.total} will be credited to your original payment method within 5–7 business days.`
+    : 'Refund will be processed to your original payment method.';
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -67,13 +94,11 @@ export default function CancelOrderScreen() {
         <Text style={styles.headerTitle}>Cancel Order</Text>
       </View>
 
-
-      <ScrollView 
-        showsVerticalScrollIndicator={false} 
+      <ScrollView
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-
         {/* ORDER SUMMARY */}
         <View style={styles.orderCard}>
           <View style={styles.orderRow}>
@@ -81,8 +106,8 @@ export default function CancelOrderScreen() {
               <Ionicons name="receipt-outline" size={20} color="#c62828" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.orderTitle}>Order #9831</Text>
-              <Text style={styles.orderMeta}>Blue Spring Aquatics · 1× 20L Can</Text>
+              <Text style={styles.orderTitle}>Order #{orderNumber}</Text>
+              <Text style={styles.orderMeta}>{order?.shopName ?? 'Your Order'}</Text>
             </View>
             <Text style={styles.orderTotal}>{orderTotal}</Text>
           </View>
@@ -124,18 +149,22 @@ export default function CancelOrderScreen() {
         </View>
 
         {/* CANCEL BUTTON */}
-        <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel}>
+        <TouchableOpacity style={[styles.cancelBtn, cancelling && { opacity: 0.7 }]} onPress={handleCancel} disabled={cancelling}>
           <LinearGradient colors={['#c62828', '#ef4444']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.cancelBtnGrad}>
-            <Ionicons name="close-circle" size={20} color="white" />
-            <Text style={styles.cancelBtnText}>Confirm Cancellation</Text>
+            {cancelling ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <>
+                <Ionicons name="close-circle" size={20} color="white" />
+                <Text style={styles.cancelBtnText}>Confirm Cancellation</Text>
+              </>
+            )}
           </LinearGradient>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.keepBtn} onPress={() => safeBack('/(tabs)/orders')}>
+        <TouchableOpacity style={styles.keepBtn} onPress={() => safeBack('/(tabs)/orders')} disabled={cancelling}>
           <Text style={styles.keepBtnText}>Keep My Order</Text>
         </TouchableOpacity>
-
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -144,7 +173,6 @@ export default function CancelOrderScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
   content: { padding: 20, gap: 14, paddingBottom: 40 },
   orderCard: { backgroundColor: 'white', borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
@@ -174,5 +202,3 @@ const styles = StyleSheet.create({
   keepBtn: { paddingVertical: 14, alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: '#e0e2e8', backgroundColor: 'white' },
   keepBtnText: { fontSize: 14, fontWeight: '700', color: '#64748b' },
 });
-
-
