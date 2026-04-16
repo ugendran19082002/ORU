@@ -336,15 +336,7 @@ Audit log is append-only — no updates, no deletes.
 [All settings changes audit-logged: actor | field | old value | new value | timestamp]
 ```
 
-### 3h. Staff Role Management (within shop)
-
-| Action          | Manager | Staff | Delivery Person |
-| --------------- | ------- | ----- | --------------- |
-| View orders     | ✅      | ✅    | Own only        |
-| Edit products   | ✅      | ✅    | ❌              |
-| Manage settings | ✅      | ❌    | ❌              |
-| Assign delivery | ✅      | ❌    | ❌              |
-| View financials | ✅      | ❌    | ❌              |
+ 
 
 ### 3i. Payout & Financials
 
