@@ -85,7 +85,7 @@ export default function ShopSubscriptionPlansScreen() {
           onPress: async () => {
             try {
               setActionLoading(true);
-              await subscriptionApi.activateSubscription();
+              await subscriptionApi.activateSubscription(undefined, autoRenew);
               Toast.show({ type: 'success', text1: 'Subscribed!', text2: 'Shop subscription is now active.' });
               await fetchSubscription();
             } catch (e: any) {
