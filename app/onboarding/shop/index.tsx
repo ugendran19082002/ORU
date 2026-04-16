@@ -37,9 +37,9 @@ export default function ShopOnboardingDashboard() {
         if (shopRes.data) shopId = shopRes.data.id;
       } catch (err: any) {
         // 404 means no shop yet, which is fine, we continue to get steps (null shopId)
-        if (err.response?.status !== 404) throw err; 
+        if (err.response?.status !== 404) throw err;
       }
-      
+
       // 2. Fetch steps (backend now handles null shopId by returning default pending steps)
       const res = await onboardingApi.getShopSteps(shopId);
       if (res.status === 1) {
@@ -53,7 +53,7 @@ export default function ShopOnboardingDashboard() {
       }
     } catch (error: any) {
       if (error.response?.status === 404) return;
-      
+
       if (error.response?.status === 403) {
         Toast.show({
           type: 'error',
@@ -77,7 +77,7 @@ export default function ShopOnboardingDashboard() {
 
   const handleStepPress = (step: any) => {
     if (isSubmissionLocked) return;
-    
+
     if (step.screen_route) {
       router.push(step.screen_route as any);
     } else {
@@ -91,7 +91,7 @@ export default function ShopOnboardingDashboard() {
 
   const handleResubmit = async () => {
     if (!data?.is_ready_for_review || isSubmissionLocked) return;
-    
+
     try {
       setResubmitting(true);
       // We fetch the shop ID from the loaded data
@@ -110,7 +110,7 @@ export default function ShopOnboardingDashboard() {
       }
     } catch (error: any) {
       if (error.response?.status === 404) return;
-      
+
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -127,8 +127,8 @@ export default function ShopOnboardingDashboard() {
       "Are you sure you want to switch to a Customer account? All your current shop data, progress, and settings will be permanently deleted.",
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Yes, Reset & Switch", 
+        {
+          text: "Yes, Reset & Switch",
           style: "destructive",
           onPress: async () => {
             try {
@@ -174,7 +174,7 @@ export default function ShopOnboardingDashboard() {
   }
 
   const progressPercent = data ? (data.completed_mandatory / data.total_mandatory) * 100 : 0;
-  const isSubmissionLocked = user?.shopStatus === 'pending_review' || user?.shopStatus === 'under_review' || user?.shopStatus === 'active';
+  const isSubmissionLocked = user?.shopStatus === 'pending_review' || user?.shopStatus === 'under_review' || user?.shopStatus === 'active' || user?.shopStatus != 'rejected';
   const canShowSubmit = (data?.is_ready_for_review && !isSubmissionLocked);
 
   return (
@@ -182,9 +182,9 @@ export default function ShopOnboardingDashboard() {
       <StatusBar style="dark" />
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
-          <BackButton 
-            fallback="/auth/role" 
-            onPress={isSubmissionLocked ? undefined : handleRoleReset} 
+          <BackButton
+            fallback="/auth/role"
+            onPress={isSubmissionLocked ? undefined : handleRoleReset}
             show={!isSubmissionLocked}
           />
           <View style={{ marginLeft: 16, flex: 1 }}>
@@ -197,13 +197,13 @@ export default function ShopOnboardingDashboard() {
         </View>
 
         {!isSubmissionLocked && (
-            <View style={styles.roleSwitchTip}>
-                <Ionicons name="help-circle-outline" size={16} color="#64748b" />
-                <Text style={styles.roleSwitchText}>Wrong role?</Text>
-                <TouchableOpacity onPress={handleRoleReset}>
-                    <Text style={styles.roleSwitchLink}>Switch to Customer</Text>
-                </TouchableOpacity>
-            </View>
+          <View style={styles.roleSwitchTip}>
+            <Ionicons name="help-circle-outline" size={16} color="#64748b" />
+            <Text style={styles.roleSwitchText}>Wrong role?</Text>
+            <TouchableOpacity onPress={handleRoleReset}>
+              <Text style={styles.roleSwitchLink}>Switch to Customer</Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         <LinearGradient
@@ -249,14 +249,14 @@ export default function ShopOnboardingDashboard() {
           )}
 
           <Text style={styles.sectionTitle}>Verification Checklist</Text>
-          
+
           {data?.steps.map((step) => {
             const isCompleted = step.status === 'completed';
             const isReview = step.status === 'under_review';
             const isRejected = step.status === 'rejected';
             const isSkipped = step.status === 'skipped';
             const isInProgress = step.status === 'in_progress';
-            
+
             const canEdit = !isSubmissionLocked;
             const hasData = isCompleted || isRejected || isSkipped || isInProgress || isReview;
 
@@ -285,13 +285,13 @@ export default function ShopOnboardingDashboard() {
                 <View style={styles.stepInfo}>
                   <Text style={[styles.stepTitle, isRejected ? { color: '#991b1b' } : undefined]}>{step.title}</Text>
                   <Text style={styles.stepDesc} numberOfLines={1}>{step.description}</Text>
-                  
+
                   {isReview && (
                     <Text style={[styles.reviewTag, !isSubmissionLocked && { color: '#0369a1' }]}>
-                        {isSubmissionLocked ? 'Under Admin Review' : 'Ready for Review'}
+                      {isSubmissionLocked ? 'Under Admin Review' : 'Ready for Review'}
                     </Text>
                   )}
-                  
+
                   {canEdit && hasData && (
                     <View style={styles.editBadge}>
                       <Ionicons name="create-outline" size={12} color="white" />
@@ -300,19 +300,19 @@ export default function ShopOnboardingDashboard() {
                   )}
 
                   {isRejected && (
-                      <View style={styles.notesBox}>
-                          <Text style={styles.notesLabel}>REJECTION NOTE:</Text>
-                          <Text style={styles.notesText}>{step.admin_notes || "Information incomplete or incorrect."}</Text>
-                      </View>
+                    <View style={styles.notesBox}>
+                      <Text style={styles.notesLabel}>REJECTION NOTE:</Text>
+                      <Text style={styles.notesText}>{step.admin_notes || "Information incomplete or incorrect."}</Text>
+                    </View>
                   )}
                   {isSkipped && !canEdit && <Text style={[styles.reviewTag, { color: '#94a3b8' }]}>Skipped for now</Text>}
                 </View>
 
                 {canEdit && (
-                  <Ionicons 
-                    name={hasData ? "pencil" : "arrow-forward-circle-outline"} 
-                    size={hasData ? 20 : 24} 
-                    color={hasData ? "#94a3b8" : "#006878"} 
+                  <Ionicons
+                    name={hasData ? "pencil" : "arrow-forward-circle-outline"}
+                    size={hasData ? 20 : 24}
+                    color={hasData ? "#94a3b8" : "#006878"}
                   />
                 )}
               </TouchableOpacity>
@@ -326,8 +326,8 @@ export default function ShopOnboardingDashboard() {
           </View>
 
           {canShowSubmit && (
-            <TouchableOpacity 
-              style={styles.resubmitBtn} 
+            <TouchableOpacity
+              style={styles.resubmitBtn}
               onPress={handleResubmit}
               disabled={resubmitting}
               activeOpacity={0.8}
@@ -403,7 +403,7 @@ const styles = StyleSheet.create({
   notesBox: { backgroundColor: '#fef2f2', padding: 12, borderRadius: 12, marginTop: 10, borderWidth: 1, borderColor: '#fee2e2' },
   notesLabel: { fontSize: 9, fontWeight: '900', color: '#dc2626', letterSpacing: 1 },
   notesText: { fontSize: 13, color: '#991b1b', marginTop: 4, fontWeight: '600', lineHeight: 18 },
-  
+
   editBadge: {
     backgroundColor: '#059669',
     paddingHorizontal: 8,

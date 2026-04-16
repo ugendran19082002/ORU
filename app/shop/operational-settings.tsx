@@ -238,7 +238,14 @@ export default function ShopOperationalSettingsScreen() {
   );
 }
 
-const Stepper = ({ label, value, onUpdate, unit = '' }: any) => {
+interface StepperProps {
+  label: string;
+  value: number;
+  onUpdate: (value: number) => void;
+  unit?: string;
+}
+
+const Stepper = ({ label, value, onUpdate, unit = '' }: StepperProps) => {
   const increment = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onUpdate(Number(value) + 1);
@@ -274,7 +281,15 @@ const Stepper = ({ label, value, onUpdate, unit = '' }: any) => {
   );
 };
 
-const CustomDropdown = ({ label, value, onUpdate, options: initialOptions, unit = '' }: any) => {
+interface DropdownProps {
+  label: string;
+  value: number;
+  onUpdate: (value: number) => void;
+  options: number[];
+  unit?: string;
+}
+
+const CustomDropdown = ({ label, value, onUpdate, options: initialOptions, unit = '' }: DropdownProps) => {
   // Ensure the current value is in the options list so it always shows as selected
   const options = React.useMemo(() => {
     const list = [...initialOptions];
@@ -322,7 +337,17 @@ const CustomDropdown = ({ label, value, onUpdate, options: initialOptions, unit 
   );
 };
 
-const DraggableSlider = ({ label, value, onUpdate, min, max, unit = '', step = 1 }: any) => {
+interface SliderProps {
+  label: string;
+  value: number;
+  onUpdate: (value: number) => void;
+  min: number;
+  max: number;
+  unit?: string;
+  step?: number;
+}
+
+const DraggableSlider = ({ label, value, onUpdate, min, max, unit = '', step = 1 }: SliderProps) => {
   const [sliderWidth, setSliderWidth] = useState(0);
   const sliderWidthRef = React.useRef(0);
   const isDragging = React.useRef(false);
