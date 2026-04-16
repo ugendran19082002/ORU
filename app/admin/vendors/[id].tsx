@@ -4,6 +4,7 @@ import {
   ActivityIndicator, Linking, TextInput, Modal, Image, useWindowDimensions
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -70,7 +71,7 @@ export default function AdminShopReviewScreen() {
                   text1: 'Success',
                   text2: 'Shop has been approved and is now active.'
                 });
-                router.replace('/admin/shops');
+                router.replace('/admin/vendors');
               }
             } catch (error: any) {
               Toast.show({
@@ -107,7 +108,7 @@ export default function AdminShopReviewScreen() {
           text1: 'Rejected',
           text2: 'Application has been rejected and partner notified.'
         });
-        router.replace('/admin/shops');
+        router.replace('/admin/vendors');
       }
     } catch (error: any) {
       Toast.show({
@@ -243,13 +244,23 @@ export default function AdminShopReviewScreen() {
 
   return (
     <View style={styles.container}>
-        <View style={[styles.header, isDesktop && { paddingHorizontal: 40, height: 80 }]}>
-          <BackButton fallback="/admin" />
-          <Text style={[styles.headerTitle, isDesktop && { fontSize: 24 }]}>Application Review</Text>
-          <View style={{ width: 40 }} />
+      <StatusBar style="dark" />
+      <SafeAreaView style={styles.headerSafe} edges={['top']}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerTitleRow}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={20} color="#005d90" />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.pageTitle}>Shop Review</Text>
+              <Text style={styles.headerSub}>{shop.name || 'Application Details'}</Text>
+            </View>
+          </View>
         </View>
+      </SafeAreaView>
 
-        <ScrollView contentContainerStyle={[styles.scroll, isDesktop && { paddingHorizontal: width * 0.1 }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { alignItems: 'center' }]}>
+        <View style={{ width: '100%', maxWidth: 1200 }}>
           {/* Shop Identity Card */}
           <View style={styles.section}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -390,7 +401,8 @@ export default function AdminShopReviewScreen() {
                 </LinearGradient>
               </TouchableOpacity>
           </View>
-        </ScrollView>
+        </View>
+      </ScrollView>
 
         {/* Individual Step Rejection Modal */}
         <Modal visible={showStepRejectModal !== null} transparent animationType="slide">
@@ -516,14 +528,35 @@ export default function AdminShopReviewScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#f7f9ff' },
+
+  headerSafe: { 
+    backgroundColor: 'white', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f1f5f9',
+    alignItems: 'center',
+  },
+  headerContent: {
+    width: '100%',
+    maxWidth: 1200,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: '#1a1c1e', letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  
   statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
   statusBadgeText: { fontSize: 11, fontWeight: '900', letterSpacing: 0.5 },
-
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc' },
-  container: { flex: 1, backgroundColor: 'white' },
-  safe: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b' },
   
   scroll: { paddingBottom: 100 },
   section: { padding: 24, borderBottomWidth: 8, borderBottomColor: '#f8fafc' },

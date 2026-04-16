@@ -3,89 +3,77 @@ import { ApiError } from './apiError';
 import { log } from '@/utils/logger';
 import type { ApiResponse } from '@/types/api';
 
-export type BackendNotification = {
-  id: number;
-  type: string;
-  title: string;
-  body: string;
-  is_read: boolean;
-  created_at: string;
+export type SosPayload = {
+  latitude?: number;
+  longitude?: number;
+  note?: string;
 };
 
-export type LoyaltyLedgerEntry = {
-  id: number;
-  type: 'earn' | 'redeem';
-  points: number;
-  created_at: string;
-  description?: string;
-};
+export const engagementApi = {
+  /**
+   * Trigger an SOS alert on the backend.
+   * POST /sos
+   */
+  async triggerSos(payload: SosPayload): Promise<any> {
+    try {
+      const response = await apiClient.post<ApiResponse<any>>('/sos', payload);
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('SOS_FAILED', 400, 'Failed to trigger emergency alert');
+    } catch (error) {
+      log.error('[engagementApi] triggerSos failed:', error);
+      throw ApiError.from(error, 'SOS trigger failed');
+    }
+  },
 
-export type LoyaltyBalance = {
-  total_points: number;
-  redeemable_points: number;
-  tier?: string;
-  referral_code?: string;
+  /**
+   * File a formal complaint for an order.
+   * POST /complaints
+   */
+  async fileComplaint(data: any): Promise<any> {
+    try {
+      const response = await apiClient.post<ApiResponse<any>>('/complaints', data);
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('COMPLAINT_FAILED', 400, 'Failed to file complaint');
+    } catch (error) {
+      log.error('[engagementApi] fileComplaint failed:', error);
+      throw ApiError.from(error, 'Failed to file complaint');
+    }
+  },
 };
 
 export const notificationApi = {
-  async getNotifications(params?: { page?: number; limit?: number; unread_only?: boolean }): Promise<{ data: BackendNotification[]; unread_count: number }> {
+  async getNotifications(params?: any): Promise<any> {
     try {
-      const response = await apiClient.get<ApiResponse<{ data: BackendNotification[]; unread_count: number }>>('/notifications', { params });
+      const response = await apiClient.get<ApiResponse<any>>('/notifications', { params });
       if (response.data.status === 1) return response.data.data;
-      return { data: [], unread_count: 0 };
+      throw new ApiError('FETCH_FAILED', 400, 'Failed to fetch notifications');
     } catch (error) {
       log.error('[notificationApi] getNotifications failed:', error);
       throw ApiError.from(error, 'Failed to fetch notifications');
     }
   },
 
-  async markRead(id: string): Promise<void> {
+  async markRead(id: string): Promise<any> {
     try {
-      await apiClient.post(`/notifications/${id}/read`);
+      const response = await apiClient.post<ApiResponse<any>>(`/notifications/${id}/read`);
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('UPDATE_FAILED', 400, 'Failed to mark read');
     } catch (error) {
       log.error('[notificationApi] markRead failed:', error);
-    }
-  },
-
-  async markAllRead(): Promise<void> {
-    try {
-      await apiClient.post('/notifications/read-all');
-    } catch (error) {
-      log.error('[notificationApi] markAllRead failed:', error);
-    }
-  },
-
-  async getUnreadCount(): Promise<number> {
-    try {
-      const response = await apiClient.get<ApiResponse<{ count: number }>>('/notifications/unread-count');
-      if (response.data.status === 1) return response.data.data.count;
-      return 0;
-    } catch (error) {
-      return 0;
+      throw ApiError.from(error, 'Failed to mark notifications read');
     }
   },
 };
 
 export const loyaltyApi = {
-  async getBalance(userId?: string): Promise<LoyaltyBalance> {
+  async getLedger(params?: any): Promise<any> {
     try {
-      const response = await apiClient.get<ApiResponse<LoyaltyBalance>>('/loyalty/balance');
+      const response = await apiClient.get<ApiResponse<any>>('/promotion/loyalty/ledger', { params });
       if (response.data.status === 1) return response.data.data;
-      return { total_points: 0, redeemable_points: 0 };
-    } catch (error) {
-      log.error('[loyaltyApi] getBalance failed:', error);
-      return { total_points: 0, redeemable_points: 0 };
-    }
-  },
-
-  async getLedger(params?: { page?: number; limit?: number }): Promise<{ data: LoyaltyLedgerEntry[]; total_points: number }> {
-    try {
-      const response = await apiClient.get<ApiResponse<{ data: LoyaltyLedgerEntry[]; total_points: number }>>('/loyalty/ledger', { params });
-      if (response.data.status === 1) return response.data.data;
-      return { data: [], total_points: 0 };
+      throw new ApiError('FETCH_FAILED', 400, 'Failed to fetch loyalty data');
     } catch (error) {
       log.error('[loyaltyApi] getLedger failed:', error);
-      return { data: [], total_points: 0 };
+      throw ApiError.from(error, 'Failed to fetch loyalty data');
     }
   },
 };

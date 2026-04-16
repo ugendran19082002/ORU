@@ -7,9 +7,12 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { BackButton } from '@/components/ui/BackButton';
-import { useAppNavigation } from '@/hooks/use-app-navigation';
-import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+import { useSecurityStore } from '@/stores/securityStore';
+import { apiClient } from '@/api/client';
+import { engagementApi } from '@/api/engagementApi';
+import Toast from 'react-native-toast-message';
+import * as Haptics from 'expo-haptics';
+import { log } from '@/utils/logger';
 
 
 
@@ -21,6 +24,11 @@ const EMERGENCY_TYPES = [
   { id: 'delivery', label: 'Delivery Agent in Danger', icon: 'warning-outline', color: '#b45309', bg: '#fef3c7', phone: '112' },
 ];
 
+import { systemApi, SystemSetting } from '@/api/systemApi';
+import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+import { BackButton } from '@/components/ui/BackButton';
+
 export default function EmergencyHelpScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
@@ -29,7 +37,59 @@ export default function EmergencyHelpScreen() {
     safeBack('/(tabs)/profile');
   });
 
-  const [calling, setCalling] = useState(false);
+  const [isTrigering, setIsTriggering] = useState(false);
+  const [supportInfo, setSupportInfo] = useState<{ phone: string, whatsapp: string }>({
+    phone: '1800-123-4567', // Default fallback
+    whatsapp: '919876543210'
+  });
+
+  React.useEffect(() => {
+    loadSupportInfo();
+  }, []);
+
+  const loadSupportInfo = async () => {
+    try {
+      const settings = await systemApi.getSettings('support');
+      if (settings.data && Array.isArray(settings.data)) {
+        const phone = settings.data.find(s => s.setting_key === 'support_phone')?.setting_value;
+        const whatsapp = settings.data.find(s => s.setting_key === 'support_whatsapp')?.setting_value;
+        setSupportInfo({
+          phone: phone || '1800-123-4567',
+          whatsapp: whatsapp || '919876543210'
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load support info:', err);
+    }
+  };
+
+  const triggerSosAPI = async () => {
+    try {
+      setIsTriggering(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      
+      await engagementApi.triggerSos({
+        note: "User triggered SOS from Emergency Help Screen"
+      });
+
+      Toast.show({
+        type: 'success',
+        text1: 'SOS Triggered!',
+        text2: 'Emergency services and ThanniGo support notified.',
+        position: 'bottom',
+        visibilityTime: 5000,
+      });
+    } catch (error) {
+      log.error('[SOS] Trigger failed:', error);
+      Toast.show({ 
+        type: 'error', 
+        text1: 'SOS Trigger Failed', 
+        text2: 'Please call emergency services manually.' 
+      });
+    } finally {
+      setIsTriggering(false);
+    }
+  };
 
   const callNumber = (number: string) => {
     const url = `tel:${number}`;
@@ -42,7 +102,7 @@ export default function EmergencyHelpScreen() {
   const callSupport = () => {
     require('react-native').Alert.alert('ThanniGo Support', 'Connecting you to our emergency support team.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Connect', onPress: () => Linking.openURL('tel:1800-123-4567') },
+      { text: 'Connect', onPress: () => Linking.openURL(`tel:${supportInfo.phone}`) },
     ]);
   };
 
@@ -66,14 +126,27 @@ export default function EmergencyHelpScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
         {/* QUICK SOS */}
-        <TouchableOpacity style={styles.sosBtn} onPress={() => callNumber('112')}>
+        <TouchableOpacity 
+          style={[styles.sosBtn, isTrigering && { opacity: 0.7 }]} 
+          onPress={() => {
+            require('react-native').Alert.alert(
+              'Confirm SOS', 
+              'This will alert authorities and ThanniGo support immediately. Are you sure?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'TRIGGER SOS', style: 'destructive', onPress: triggerSosAPI }
+              ]
+            );
+          }}
+          disabled={isTrigering}
+        >
           <LinearGradient colors={['#c62828', '#ef4444']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.sosBtnGrad}>
             <View style={styles.sosIconWrap}>
-              <Ionicons name="call" size={28} color="#c62828" />
+              <Ionicons name="megaphone" size={28} color="#c62828" />
             </View>
             <View>
-              <Text style={styles.sosBtnTitle}>SOS — Call 112</Text>
-              <Text style={styles.sosBtnSub}>National Emergency Number</Text>
+              <Text style={styles.sosBtnTitle}>SILENT SOS</Text>
+              <Text style={styles.sosBtnSub}>Alert Admins & Shop Owner</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
           </LinearGradient>
@@ -106,7 +179,7 @@ export default function EmergencyHelpScreen() {
             </View>
             <View>
               <Text style={styles.supportTitle}>Call ThanniGo Support</Text>
-              <Text style={styles.supportSub}>24/7 emergency helpline · 1800-123-4567</Text>
+              <Text style={styles.supportSub}>24/7 emergency helpline · {supportInfo.phone}</Text>
             </View>
           </View>
           <View style={styles.callBadge}>

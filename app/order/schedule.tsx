@@ -83,7 +83,7 @@ export default function ScheduleDeliveryScreen() {
     // Strategy: Go back with params or update global store
     // For now, let's navigate back to checkout with the choice
     router.push({
-      pathname: '/order-summary' as any,
+      pathname: '/order/checkout' as any,
       params: { 
         slotId: selectedSlotId, 
         date: selectedDate,

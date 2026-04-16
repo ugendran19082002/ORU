@@ -3,7 +3,8 @@ import dayjs from 'dayjs';
 
 import type { Order, OrderStatus } from '@/types/domain';
 import { orderApi } from '@/api/orderApi';
-import type { OrderPayload } from '@/types/api';
+import type { OrderPayload, OrderSubmitResult } from '@/types/api';
+import { log } from '@/utils/logger';
 
 type OrderState = {
   orders: Order[];
@@ -12,7 +13,7 @@ type OrderState = {
   isFetching: boolean;
   /** Populated when placeOrder fails so callers can surface it in UI */
   submitError: string | null;
-  placeOrder: (payload: OrderPayload) => Promise<Order>;
+  placeOrder: (payload: OrderPayload) => Promise<OrderSubmitResult>;
   fetchOrders: (params?: { status?: string }) => Promise<void>;
   updateStatus: (orderId: string, status: OrderStatus) => void;
   setActiveOrder: (orderId: string | null) => void;
@@ -80,7 +81,7 @@ export const useOrderStore = create<OrderState>((set) => ({
         status: 'pending',
         eta: apiRes.data.estimated_delivery ?? '30 mins',
         createdAtLabel: dayjs().format('D MMM, h:mm A'),
-        deliveryOtp: apiRes.data.delivery_otp,
+        deliveryOtp: apiRes.data.delivery_otp ?? '—',
         total: 0,
         notes: payload.notes,
       };
@@ -91,7 +92,7 @@ export const useOrderStore = create<OrderState>((set) => ({
         isSubmitting: false,
       }));
 
-      return order;
+      return apiRes.data;
     } catch (err: unknown) {
       const message =
         (err as { message?: string }).message ?? 'Failed to place order';
@@ -100,12 +101,22 @@ export const useOrderStore = create<OrderState>((set) => ({
     }
   },
 
-  updateStatus: (orderId, status) =>
-    set((state) => ({
-      orders: state.orders.map((order) =>
-        order.id === orderId ? { ...order, status } : order,
-      ),
-    })),
+  updateStatus: async (orderId, status) => {
+    try {
+      const apiStatusMap: Record<string, string> = {
+        pending: 'placed', accepted: 'accepted', picked: 'dispatched',
+        delivered: 'delivered', completed: 'completed', cancelled: 'cancelled'
+      };
+      await orderApi.updateStatus(orderId, apiStatusMap[status] || status);
+      set((state) => ({
+        orders: state.orders.map((order) =>
+          order.id === orderId ? { ...order, status } : order,
+        ),
+      }));
+    } catch (err) {
+      log.error('[orderStore] updateStatus failed:', err);
+    }
+  },
 
   setActiveOrder: (activeOrderId) => set({ activeOrderId }),
 

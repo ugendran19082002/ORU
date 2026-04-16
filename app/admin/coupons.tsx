@@ -84,21 +84,31 @@ export default function AdminCouponsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
       <StatusBar style="dark" />
-      <View style={styles.header}>
-        <BackButton />
-        <Text style={styles.headerTitle}>Platform Coupons</Text>
-        <TouchableOpacity style={styles.createBtn} onPress={() => setShowCreate(true)}>
-           <Ionicons name="add" size={20} color="white" />
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={styles.headerSafe} edges={['top']}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerTitleRow}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={20} color="#005d90" />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.pageTitle}>Platform Coupons</Text>
+              <Text style={styles.headerSub}>Manage global discount codes</Text>
+            </View>
+            <TouchableOpacity style={styles.createBtn} onPress={() => setShowCreate(true)}>
+               <Ionicons name="add" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { alignItems: 'center', paddingBottom: 100 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} />}
       >
+        <View style={{ width: '100%', maxWidth: 1200 }}>
         <View style={styles.infoBox}>
            <Ionicons name="megaphone-outline" size={20} color="#ba1a1a" />
            <Text style={styles.infoText}>
@@ -205,20 +215,40 @@ export default function AdminCouponsScreen() {
              </View>
           </View>
         ))}
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fcfdff' },
+  container: { flex: 1, backgroundColor: '#f7f9ff' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ebeef4',
+  headerSafe: { 
+    backgroundColor: 'white', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f1f5f9',
+    alignItems: 'center',
   },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#1a1c1e' },
-  createBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#ba1a1a', alignItems: 'center', justifyContent: 'center' },
+  headerContent: {
+    width: '100%',
+    maxWidth: 1200,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: '#1a1c1e', letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+
+  createBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#ba1a1a', alignItems: 'center', justifyContent: 'center' },
   scrollContent: { padding: 20 },
   infoBox: { flexDirection: 'row', gap: 10, backgroundColor: '#fff8f7', borderRadius: 15, padding: 15, marginBottom: 25, borderWidth: 1, borderColor: '#ffdad6' },
   infoText: { flex: 1, fontSize: 12, color: '#ba1a1a', lineHeight: 18, fontWeight: '600' },

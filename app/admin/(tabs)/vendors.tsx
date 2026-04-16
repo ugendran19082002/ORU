@@ -3,8 +3,10 @@ import {
   View, Text, ScrollView, RefreshControl, TouchableOpacity, 
   StyleSheet, ActivityIndicator, TextInput, useWindowDimensions 
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, Href } from 'expo-router';
 import { adminApi, AdminShop } from '@/api/adminApi';
 import Toast from 'react-native-toast-message';
 import { useAppSession } from '@/providers/AppSessionProvider';
@@ -69,9 +71,9 @@ export default function AdminShopsScreen() {
     fetchShops();
   }, [fetchShops]);
 
-  const filteredShops = shops.filter(shop => 
-    shop.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    shop.owner?.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredShops = (shops || []).filter(shop => 
+    (shop?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (shop?.owner?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getStatusColor = (status: string) => {
@@ -85,92 +87,103 @@ export default function AdminShopsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, isDesktop && { paddingHorizontal: 40, height: 80 }]}>
-        <View>
-          <Text style={[styles.pageTitle, isDesktop && { fontSize: 28 }]}>Shop Management</Text>
-          <Text style={styles.subtitle}>{shops.length} total partners registered</Text>
+      <StatusBar style="dark" />
+      <SafeAreaView style={styles.headerSafe} edges={['top']}>
+        <View style={styles.headerContent}>
+          <Text style={styles.pageTitle}>Vendors</Text>
+          <Text style={styles.headerSub}>{shops.length} total partners registered</Text>
         </View>
-      </View>
+      </SafeAreaView>
 
-      <View style={[styles.filterBar, isDesktop && { paddingHorizontal: 40 }]}>
-        <View style={styles.searchWrap}>
-          <Ionicons name="search" size={18} color="#94a3b8" />
-          <TextInput
-            placeholder="Search by shop or owner name..."
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor="#94a3b8"
-          />
+      <View style={[styles.filterBar, isDesktop && { alignItems: 'center' }]}>
+        <View style={{ width: '100%', maxWidth: 1200, paddingHorizontal: isDesktop ? 24 : 0, gap: 16 }}>
+          <View style={styles.searchWrap}>
+            <Ionicons name="search" size={18} color="#94a3b8" />
+            <TextInput
+              placeholder="Search by shop or owner name..."
+              style={styles.searchInput}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor="#94a3b8"
+            />
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll} contentContainerStyle={styles.tabContent}>
+            {(['all', 'pending_review', 'active', 'rejected'] as FilterStatus[]).map((s) => (
+              <TouchableOpacity 
+                key={s} 
+                onPress={() => setStatusFilter(s)}
+                style={[styles.tab, statusFilter === s && styles.tabActive]}
+              >
+                <Text style={[styles.tabText, statusFilter === s && styles.tabTextActive]}>
+                  {s.replace('_', ' ').toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll} contentContainerStyle={styles.tabContent}>
-          {(['all', 'pending_review', 'active', 'rejected'] as FilterStatus[]).map((s) => (
-            <TouchableOpacity 
-              key={s} 
-              onPress={() => setStatusFilter(s)}
-              style={[styles.tab, statusFilter === s && styles.tabActive]}
-            >
-              <Text style={[styles.tabText, statusFilter === s && styles.tabTextActive]}>
-                {s.replace('_', ' ').toUpperCase()}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
       </View>
 
       <ScrollView 
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />} 
-        contentContainerStyle={[styles.scrollContent, isDesktop && { paddingHorizontal: width * 0.1 }]}
+        contentContainerStyle={[
+          styles.scrollContent, 
+          { paddingBottom: 120, alignItems: 'center' }
+        ]}
       >
-        {loading ? (
-          <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 60 }} />
-        ) : filteredShops.length === 0 ? (
-          <View style={styles.emptyWrap}>
-            <Ionicons name="storefront-outline" size={64} color="#e2e8f0" />
-            <Text style={styles.emptyText}>No shops found matching your criteria.</Text>
-          </View>
-        ) : (
-          <View style={[styles.grid, isDesktop && { flexDirection: 'row', flexWrap: 'wrap', gap: 20 }]}>
-            {filteredShops.map((shop) => {
-              const theme = getStatusColor(shop.status);
-              return (
-                <TouchableOpacity 
-                  key={shop.id} 
-                  onPress={() => router.push(`/admin/shops/${shop.id}`)}
-                  style={[styles.shopCard, isDesktop && { width: '48%', marginBottom: 0 }]}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.cardTop}>
-                    <View style={styles.shopIcon}>
-                      <Ionicons name="business" size={24} color="#005d90" />
+        <View style={{ width: '100%', maxWidth: 1200 }}>
+          {loading ? (
+            <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 60 }} />
+          ) : filteredShops.length === 0 ? (
+            <View style={styles.emptyWrap}>
+              <Ionicons name="storefront-outline" size={64} color="#e2e8f0" />
+              <Text style={styles.emptyText}>No shops found matching your criteria.</Text>
+            </View>
+          ) : (
+            <View style={[styles.grid, { flexDirection: 'row', flexWrap: 'wrap', gap: 16 }]}>
+              {filteredShops.map((shop) => {
+                const theme = getStatusColor(shop.status);
+                return (
+                  <TouchableOpacity 
+                    key={shop.id} 
+                    onPress={() => router.push(`/admin/vendors/${shop.id}` as Href)}
+                    style={[
+                      styles.shopCard, 
+                      { width: isDesktop ? '48%' : '100%', marginBottom: 0 }
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.cardTop}>
+                      <View style={styles.shopIcon}>
+                        <Ionicons name="business" size={24} color="#005d90" />
+                      </View>
+                      <View style={[styles.statusBadge, { backgroundColor: theme.bg }]}>
+                        <Ionicons name={theme.icon} size={12} color={theme.text} />
+                        <Text style={[styles.statusText, { color: theme.text }]}>{shop.status.replace('_', ' ')}</Text>
+                      </View>
                     </View>
-                    <View style={[styles.statusBadge, { backgroundColor: theme.bg }]}>
-                      <Ionicons name={theme.icon} size={12} color={theme.text} />
-                      <Text style={[styles.statusText, { color: theme.text }]}>{shop.status.replace('_', ' ')}</Text>
-                    </View>
-                  </View>
 
-                  <Text style={styles.shopName} numberOfLines={1}>{shop.name}</Text>
-                  <Text style={styles.ownerName}>{shop.owner?.name || 'Unknown Owner'}</Text>
+                    <Text style={styles.shopName} numberOfLines={1}>{shop?.name || 'Unnamed Shop'}</Text>
+                    <Text style={styles.ownerName}>{shop?.owner?.name || 'Unknown Owner'}</Text>
 
-                  <View style={styles.cardFooter}>
-                    <View style={styles.metaItem}>
-                      <Ionicons name="location-outline" size={14} color="#94a3b8" />
-                      <Text style={styles.metaText}>{shop.shop_type || 'Retailer'}</Text>
+                    <View style={styles.cardFooter}>
+                      <View style={styles.metaItem}>
+                        <Ionicons name="location-outline" size={14} color="#94a3b8" />
+                        <Text style={styles.metaText}>{shop?.shop_type || 'Retailer'}</Text>
+                      </View>
+                      <View style={styles.divider} />
+                      <View style={styles.metaItem}>
+                        <Ionicons name="calendar-outline" size={14} color="#94a3b8" />
+                        <Text style={styles.metaText}>{shop?.created_at ? new Date(shop.created_at).toLocaleDateString() : '—'}</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" style={{ marginLeft: 'auto' }} />
                     </View>
-                    <View style={styles.divider} />
-                    <View style={styles.metaItem}>
-                      <Ionicons name="calendar-outline" size={14} color="#94a3b8" />
-                      <Text style={styles.metaText}>{new Date(shop.created_at).toLocaleDateString()}</Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={18} color="#cbd5e1" style={{ marginLeft: 'auto' }} />
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </View>
       </ScrollView>
     </View>
   );
@@ -178,11 +191,22 @@ export default function AdminShopsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fdfdfd' },
-  header: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  pageTitle: { fontSize: 24, fontWeight: '900', color: '#1e293b', letterSpacing: -0.5 },
-  subtitle: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  headerSafe: { 
+    backgroundColor: 'white', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f1f5f9',
+    alignItems: 'center',
+  },
+  headerContent: {
+    width: '100%',
+    maxWidth: 1200,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: '#1a1c1e', letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
   
-  filterBar: { paddingVertical: 16, paddingHorizontal: 24, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', gap: 16 },
+  filterBar: { paddingVertical: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   searchWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f1f5f9', borderRadius: 16, paddingHorizontal: 16, height: 48 },
   searchInput: { flex: 1, marginLeft: 10, fontSize: 14, fontWeight: '600', color: '#1e293b' },
   

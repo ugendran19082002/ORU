@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { log } from '@/utils/logger';
 
 interface Props {
   children: React.ReactNode;
@@ -18,15 +19,12 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error) {
-    console.error('=== [ERROR BOUNDARY] CAUGHT ===');
-    console.error('Error:', error);
-    console.error('Stack:', error.stack);
+    log.error('[ERROR_BOUNDARY] Caught exception', error);
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    console.error('=== [ERROR BOUNDARY] COMPONENT STACK ===');
-    console.error(errorInfo.componentStack);
+    log.error('[ERROR_BOUNDARY] Component Stack Trace', error, { errorInfo });
   }
 
   handleRetry = () => {

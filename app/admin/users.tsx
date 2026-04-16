@@ -12,6 +12,8 @@ import {
   ScrollView,
   useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
@@ -41,15 +43,18 @@ const PAGE_SIZE = 20;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatDate(iso: string): string {
+function formatDate(iso?: string | null): string {
+  if (!iso) return '—';
   try {
-    return new Date(iso).toLocaleDateString('en-IN', {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString('en-IN', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
     });
   } catch {
-    return iso;
+    return iso || '—';
   }
 }
 
@@ -100,10 +105,10 @@ function UserCard({ user, onPress }: UserCardProps) {
 
         <View style={styles.cardInfo}>
           <Text style={styles.cardName} numberOfLines={1}>
-            {user.name || '—'}
+            {user?.name || '—'}
           </Text>
-          <Text style={styles.cardPhone}>{user.phone}</Text>
-          {user.email ? (
+          <Text style={styles.cardPhone}>{user?.phone || 'No Phone'}</Text>
+          {user?.email ? (
             <Text style={styles.cardEmail} numberOfLines={1}>{user.email}</Text>
           ) : null}
         </View>
@@ -112,14 +117,14 @@ function UserCard({ user, onPress }: UserCardProps) {
           {/* Role badge */}
           <View style={[styles.badge, { backgroundColor: roleBadge.bg }]}>
             <Text style={[styles.badgeText, { color: roleBadge.text }]}>
-              {getRoleLabel(user.role)}
+              {getRoleLabel(user?.role || 'customer')}
             </Text>
           </View>
           {/* Status badge */}
           <View style={[styles.badge, { backgroundColor: isActive ? '#e8f5e9' : '#f5f5f5', marginTop: 4 }]}>
             <View style={[styles.statusDot, { backgroundColor: isActive ? '#2e7d32' : '#9e9e9e' }]} />
             <Text style={[styles.badgeText, { color: isActive ? '#2e7d32' : '#757575' }]}>
-              {isActive ? 'Active' : user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+              {isActive ? 'Active' : (user?.status || 'inactive').charAt(0).toUpperCase() + (user?.status || 'inactive').slice(1)}
             </Text>
           </View>
         </View>
@@ -468,55 +473,54 @@ export default function AdminUsersScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={[styles.header, isDesktop && { paddingHorizontal: 40, height: 80 }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={20} color="#005d90" />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.pageTitle, isDesktop && { fontSize: 28 }]}>User Management</Text>
-          {!loading && (
-            <Text style={styles.subtitle}>{totalCount} total users</Text>
-          )}
-        </View>
-      </View>
-
-      {/* Search bar */}
-      <View style={[styles.searchBar, isDesktop && { paddingHorizontal: 40 }]}>
-        <View style={styles.searchInput}>
-          <Ionicons name="search-outline" size={18} color="#94a3b8" />
-          <TextInput
-            style={styles.searchField}
-            placeholder="Search by name, phone or email…"
-            placeholderTextColor="#94a3b8"
-            value={search}
-            onChangeText={setSearch}
-            returnKeyType="search"
-            clearButtonMode="while-editing"
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch('')}>
-              <Ionicons name="close-circle" size={18} color="#94a3b8" />
+      <StatusBar style="dark" />
+      <SafeAreaView style={styles.headerSafe} edges={['top']}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerTitleRow}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={20} color="#005d90" />
             </TouchableOpacity>
-          )}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.pageTitle}>User Management</Text>
+              {!loading && (
+                <Text style={styles.headerSub}>{totalCount} total users</Text>
+              )}
+            </View>
+          </View>
         </View>
-      </View>
+      </SafeAreaView>
 
-      {/* Filter Tabs */}
-      <View style={[styles.filterBar, isDesktop && { paddingHorizontal: 40 }]}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabContent}>
-          {ROLE_TABS.map((tab) => (
-            <TouchableOpacity
-              key={tab.key}
-              style={[styles.tab, activeRole === tab.key && styles.tabActive]}
-              onPress={() => setActiveRole(tab.key)}
-            >
-              <Text style={[styles.tabText, activeRole === tab.key && styles.tabTextActive]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+      <View style={[styles.controlBar, isDesktop && { alignItems: 'center' }]}>
+        <View style={{ width: '100%', maxWidth: 1200, paddingHorizontal: isDesktop ? 24 : 0 }}>
+          {/* Search bar */}
+          <View style={styles.searchInputWrap}>
+            <Ionicons name="search-outline" size={18} color="#94a3b8" />
+            <TextInput
+              style={styles.searchField}
+              placeholder="Search by name, phone or email…"
+              placeholderTextColor="#94a3b8"
+              value={search}
+              onChangeText={setSearch}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+            />
+          </View>
+
+          {/* Filter Tabs */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabContent}>
+            {ROLE_TABS.map((tab) => (
+              <TouchableOpacity
+                key={tab.key}
+                style={[styles.tab, activeRole === tab.key && styles.tabActive]}
+                onPress={() => setActiveRole(tab.key)}
+              >
+                <Text style={[styles.tabText, activeRole === tab.key && styles.tabTextActive]}>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
       </View>
 
       {/* List */}
@@ -564,42 +568,40 @@ export default function AdminUsersScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
 
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
+  headerSafe: { 
+    backgroundColor: 'white', 
+    borderBottomWidth: 1, 
     borderBottomColor: '#f1f5f9',
+    alignItems: 'center',
   },
+  headerContent: {
+    width: '100%',
+    maxWidth: 1200,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   backBtn: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#e0f0ff',
+    backgroundColor: '#f1f5f9',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 22, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
-  subtitle: { fontSize: 12, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
 
-  searchBar: {
-    paddingHorizontal: 24,
-    paddingTop: 14,
-    paddingBottom: 8,
-    backgroundColor: 'white',
-  },
-  searchInput: {
+  controlBar: { paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', gap: 12 },
+  searchInputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     backgroundColor: '#f1f5f9',
     borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 12,
   },
   searchField: {
     flex: 1,
@@ -608,16 +610,9 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  filterBar: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  tabContent: { gap: 8, paddingRight: 24 },
+  tabContent: { gap: 8, paddingHorizontal: 0 },
   tab: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 12,
     backgroundColor: '#f1f5f9',

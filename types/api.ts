@@ -134,12 +134,14 @@ export type ShopProfileRaw = {
   bank_branch?: string | null;
   account_holder_name?: string | null;
   upi_id?: string | null;
+  Products?: any[];
 };
 
 export type ShopSettings = {
   delivery_radius_km: number;
-  min_order_value: number;
-  delivery_fee: number;
+  min_order_amount: number;
+  base_delivery_charge: number;
+  tax_percentage: number;
   auto_accept_orders: boolean;
   busy_mode: boolean;
 };
@@ -157,20 +159,28 @@ export type BusyModeResult = {
 // ─── Order API response shapes ────────────────────────────────────────────────
 
 export type OrderPayload = {
-  shop_id: number;
+  shop_id?: number;
   items: Array<{ product_id: string; quantity: number }>;
   address_id: number;
   payment_method: 'upi' | 'cod';
   slot_id?: number;
   notes?: string;
   coupon_code?: string;
+  use_loyalty_points?: boolean;
+  distance_km?: number;
+  delivery_type?: 'instant' | 'scheduled';
+  scheduled_for?: string | null;
 };
 
 export type OrderSubmitResult = {
   orderId: string;
-  status: 'pending';
-  estimated_delivery: string;
-  delivery_otp: string;
+  status: 'pending' | 'placed' | 'unpaid';
+  estimated_delivery?: string;
+  delivery_otp?: string;
+  razorpay_order_id?: string;
+  amount?: number;
+  currency?: string;
+  razorpay_key?: string;
 };
 
 export type AvailableSlot = {
@@ -255,21 +265,27 @@ export type PlatformPlan = {
   id: number;
   name: string;
   slug: string;
+  category: 'customer' | 'shop';
   price_monthly: number;
   price_yearly: number | null;
+  // Customer Benefits
   free_delivery_count: number;
   auto_discount_pct: number;
   monthly_coupon_count: number;
   monthly_coupon_value: number;
   loyalty_boost_pct: number;
+  // Shop Benefits
+  commission_rate: number | null;
+  is_priority_listing: boolean;
   is_active: boolean;
+  role?: string;
   description: string | null;
 };
 
 export type PlatformSubscription = {
   id: number;
   plan_id: number;
-  status: 'active' | 'expired' | 'cancelled' | 'paused' | 'grace_period';
+  status: 'active' | 'expired' | 'cancelled' | 'paused' | 'grace_period' | 'pending_payment';
   billing_cycle: 'monthly' | 'yearly';
   amount_paid: number;
   auto_renew: boolean;
@@ -283,6 +299,7 @@ export type PlatformSubscription = {
 
 export type CheckoutBenefits = {
   has_subscription: boolean;
+  plan_name?: string;
   free_delivery: boolean;
   auto_discount_pct: number;
   loyalty_boost_pct: number;

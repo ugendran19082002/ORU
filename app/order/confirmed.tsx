@@ -11,7 +11,6 @@ import { useRouter } from 'expo-router';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
-import { mockProducts } from '@/utils/mockData';
 
 export default function OrderConfirmedScreen() {
   const router = useRouter();
@@ -25,12 +24,9 @@ export default function OrderConfirmedScreen() {
   const order = orders.find((o) => o.id === activeOrderId) ?? orders[0];
   const shop = shops.find((s) => s.id === order?.shopId);
 
-  // Build item summary string
+  // Build item summary string — no mock needed, quantity/id is sufficient
   const itemSummary = order?.items
-    .map((item) => {
-      const product = mockProducts.find((p) => p.id === item.productId);
-      return `${item.quantity}× ${product?.name ?? 'Water Can'}`;
-    })
+    .map((item) => `${item.quantity}× Water Can`)
     .join(', ') ?? '—';
 
   const shopName = shop?.name ?? 'Your Water Shop';

@@ -27,6 +27,7 @@ export type AdminRefund = {
   deny_reason?: string | null;
   created_at: string;
   resolved_at?: string | null;
+  payment_id?: number | null;
 };
 
 export type AdminPayout = {
@@ -122,6 +123,17 @@ export const adminRefundsApi = {
     const response = await apiClient.patch<ApiResponse<AdminRefund>>(
       `/admin/refunds/${refundId}/deny`,
       reason ? { reason } : {},
+    );
+    return response.data;
+  },
+
+  /**
+   * Trigger Razorpay reconcile for a stuck payment (admin only).
+   * POST /payments/:paymentId/reconcile
+   */
+  reconcilePayment: async (paymentId: number): Promise<ApiResponse<any>> => {
+    const response = await apiClient.post<ApiResponse<any>>(
+      `/payments/${paymentId}/reconcile`,
     );
     return response.data;
   },

@@ -27,10 +27,11 @@ export default function ShopDeliveryFleetScreen() {
 
 
   const [isAddModalOpen, setAddModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [fName, setFName] = useState('');
   const [fPhone, setFPhone] = useState('');
 
-  const handleAddAgent = () => {
+  const handleAddAgent = async () => {
     if (fName.length < 3 || fPhone.length < 10) {
       Toast.show({
         type: 'error',
@@ -39,10 +40,23 @@ export default function ShopDeliveryFleetScreen() {
       });
       return;
     }
-    addDeliveryAgent({ name: fName, phone: fPhone });
-    setFName('');
-    setFPhone('');
-    setAddModalOpen(false);
+    
+    setIsSubmitting(true);
+    try {
+      await addDeliveryAgent({ name: fName, phone: fPhone });
+      setFName('');
+      setFPhone('');
+      setAddModalOpen(false);
+      Toast.show({ type: 'success', text1: 'Success', text2: 'Driver onboarded to fleet' });
+    } catch (err: any) {
+      Toast.show({ 
+        type: 'error', 
+        text1: 'Onboarding Failed', 
+        text2: err.response?.data?.message || 'Could not add driver' 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleRemoveAgent = (id: string, name: string) => {
@@ -51,7 +65,18 @@ export default function ShopDeliveryFleetScreen() {
       `Are you sure you want to remove ${name} from your delivery fleet?`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Remove', style: 'destructive', onPress: () => removeDeliveryAgent(id) },
+        { 
+          text: 'Remove', 
+          style: 'destructive', 
+          onPress: async () => {
+            try {
+              await removeDeliveryAgent(id);
+              Toast.show({ type: 'success', text1: 'Removed', text2: `${name} is no longer in fleet` });
+            } catch (err) {
+              Toast.show({ type: 'error', text1: 'Error', text2: 'Could not remove driver' });
+            }
+          } 
+        },
       ]
     );
   };

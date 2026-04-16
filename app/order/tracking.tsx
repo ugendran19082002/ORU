@@ -5,6 +5,8 @@ import {
   Linking,
   RefreshControl,
   Platform,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,6 +23,8 @@ import { ExpoMap } from '@/components/maps/ExpoMap';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
 import { connectSocket, disconnectSocket, joinOrderRoom } from '@/utils/socket';
+import { apiService } from '@/api/apiService';
+import { apiClient } from '@/api/client';
 
 type StepStatus = 'done' | 'active' | 'pending';
 
@@ -101,27 +105,24 @@ const callNumber = (phone: string, label: string) => {
 };
 
 export default function OrderTrackingScreen() {
+  const { orders, activeOrderId } = useOrderStore();
+  const { shops } = useShopStore();
+  const activeOrder = orders.find((order) => order.id === activeOrderId) ?? orders[0];
+
   const [refreshing, setRefreshing] = React.useState(false);
   const [mapType, setMapType] = React.useState<'standard' | 'satellite' | 'hybrid' | 'terrain' | 'none'>('terrain');
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
-
+    fetchInitialTracking().finally(() => setRefreshing(false));
+  }, [activeOrder?.id]);
   const router = useRouter();
   const { safeBack } = useAppNavigation();
-
-  const { orders, activeOrderId } = useOrderStore();
-  const { shops } = useShopStore();
-
   const mapRef = useRef<any>(null);
 
   useAndroidBackHandler(() => {
     safeBack('/(tabs)');
   });
 
-
-  const activeOrder = orders.find((order) => order.id === activeOrderId) ?? orders[0];
   const shop = shops.find((item) => item.id === activeOrder?.shopId);
   const quantity = activeOrder?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 2;
   const deliveryFee = 20;
@@ -136,10 +137,33 @@ export default function OrderTrackingScreen() {
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [socketConnected, setSocketConnected] = useState(false);
 
+  // Shop change offer state (when current shop rejects and a new shop is found)
+  const [shopChangeOffer, setShopChangeOffer] = useState<{
+    pendingShop: { id: number; name: string; phone?: string };
+    previousTotal: number;
+    newTotal: number;
+  } | null>(null);
+  const [shopChangeLoading, setShopChangeLoading] = useState(false);
+
   // Fallback simulated position used before the first real location_update arrives
   const [driverPos, setDriverPos] = React.useState({ lat: baseLat + 0.002, lng: baseLng + 0.002 });
 
+  const fetchInitialTracking = async () => {
+    try {
+      const response = await apiService.get<any>(`/orders/${activeOrder?.id}/tracking`);
+      if (response && response.status === 1 && response.data) {
+        setDriverLocation({ 
+          lat: parseFloat(response.data.data.latitude), 
+          lng: parseFloat(response.data.data.longitude) 
+        });
+      }
+    } catch (error) {
+      console.warn('[Tracking] Initial fetch failed:', error);
+    }
+  };
+
   useEffect(() => {
+    fetchInitialTracking();
     let mounted = true;
 
     connectSocket()
@@ -161,9 +185,18 @@ export default function OrderTrackingScreen() {
           }
         });
 
-        sock.on('order_status', (data: { order_id: string; status: string }) => {
+        sock.on('order_status', (data: { order_id: string; status: string; pending_shop?: any; previous_total?: number; new_total?: number }) => {
           if (String(data.order_id) === String(activeOrder?.id) && mounted) {
-            // updateStatus is available in orderStore if needed
+            if (data.status === 'awaiting_customer_confirm' && data.pending_shop) {
+              setShopChangeOffer({
+                pendingShop: data.pending_shop,
+                previousTotal: data.previous_total ?? 0,
+                newTotal: data.new_total ?? 0,
+              });
+            }
+            if (data.status === 'cancelled') {
+              setShopChangeOffer(null);
+            }
           }
         });
       })
@@ -245,6 +278,25 @@ export default function OrderTrackingScreen() {
       status: activeOrder?.status === 'delivered' ? 'active' : 'pending',
     },
   ];
+
+  const handleShopChangeResponse = async (accept: boolean) => {
+    if (!activeOrder?.id) return;
+    try {
+      setShopChangeLoading(true);
+      await apiClient.post(`/orders/${activeOrder.id}/confirm-shop-change`, { accept });
+      setShopChangeOffer(null);
+      if (!accept) {
+        Toast.show({ type: 'info', text1: 'Order Cancelled', text2: 'Your payment will be refunded.' });
+        router.replace('/(tabs)' as any);
+      } else {
+        Toast.show({ type: 'success', text1: 'Confirmed!', text2: 'Your order is now with the new shop.' });
+      }
+    } catch (e: any) {
+      Toast.show({ type: 'error', text1: 'Error', text2: e?.response?.data?.message ?? 'Please try again.' });
+    } finally {
+      setShopChangeLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -487,6 +539,62 @@ export default function OrderTrackingScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* SHOP CHANGE OFFER MODAL */}
+      <Modal visible={!!shopChangeOffer} transparent animationType="slide">
+        <View style={styles.shopChangeOverlay}>
+          <View style={styles.shopChangeSheet}>
+            <View style={styles.shopChangePill} />
+            <View style={styles.shopChangeIconWrap}>
+              <Ionicons name="storefront" size={32} color="#b45309" />
+            </View>
+            <Text style={styles.shopChangeTitle}>Shop Rejected Your Order</Text>
+            <Text style={styles.shopChangeSub}>
+              A nearby shop <Text style={{ fontWeight: '800', color: '#181c20' }}>{shopChangeOffer?.pendingShop?.name}</Text> is available and can fulfil your order.
+            </Text>
+
+            <View style={styles.shopChangePriceRow}>
+              {shopChangeOffer && shopChangeOffer.newTotal !== shopChangeOffer.previousTotal ? (
+                <>
+                  <View style={styles.shopChangePriceBox}>
+                    <Text style={styles.shopChangePriceLabel}>Previous Total</Text>
+                    <Text style={[styles.shopChangePriceVal, { textDecorationLine: 'line-through', color: '#94a3b8' }]}>₹{shopChangeOffer.previousTotal}</Text>
+                  </View>
+                  <Ionicons name="arrow-forward" size={16} color="#94a3b8" />
+                  <View style={styles.shopChangePriceBox}>
+                    <Text style={styles.shopChangePriceLabel}>New Total</Text>
+                    <Text style={[styles.shopChangePriceVal, { color: '#005d90' }]}>₹{shopChangeOffer.newTotal}</Text>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.shopChangePriceBox}>
+                  <Text style={styles.shopChangePriceLabel}>Total</Text>
+                  <Text style={[styles.shopChangePriceVal, { color: '#005d90' }]}>₹{shopChangeOffer?.newTotal}</Text>
+                </View>
+              )}
+            </View>
+
+            <Text style={styles.shopChangeQuestion}>Would you like to continue with this shop?</Text>
+
+            <View style={styles.shopChangeBtns}>
+              <TouchableOpacity
+                style={styles.shopChangeRejectBtn}
+                onPress={() => handleShopChangeResponse(false)}
+                disabled={shopChangeLoading}
+              >
+                {shopChangeLoading ? <ActivityIndicator color="#dc2626" /> : <Text style={styles.shopChangeRejectText}>No, Cancel Order</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.shopChangeAcceptBtn}
+                onPress={() => handleShopChangeResponse(true)}
+                disabled={shopChangeLoading}
+              >
+                {shopChangeLoading ? <ActivityIndicator color="white" /> : <Text style={styles.shopChangeAcceptText}>Yes, Continue</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -644,6 +752,24 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
   },
+
+  // Shop change offer modal
+  shopChangeOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
+  shopChangeSheet: { backgroundColor: 'white', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 28, paddingBottom: 40, alignItems: 'center' },
+  shopChangePill: { width: 40, height: 4, backgroundColor: '#e0e2e8', borderRadius: 2, marginBottom: 24 },
+  shopChangeIconWrap: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  shopChangeTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a', textAlign: 'center', marginBottom: 8 },
+  shopChangeSub: { fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20, fontWeight: '500', marginBottom: 20 },
+  shopChangePriceRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20, backgroundColor: '#f8fafc', borderRadius: 16, padding: 16, width: '100%', justifyContent: 'center' },
+  shopChangePriceBox: { alignItems: 'center', gap: 4 },
+  shopChangePriceLabel: { fontSize: 11, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' },
+  shopChangePriceVal: { fontSize: 22, fontWeight: '900' },
+  shopChangeQuestion: { fontSize: 15, fontWeight: '700', color: '#181c20', textAlign: 'center', marginBottom: 20 },
+  shopChangeBtns: { flexDirection: 'row', gap: 12, width: '100%' },
+  shopChangeRejectBtn: { flex: 1, paddingVertical: 16, borderRadius: 16, borderWidth: 1.5, borderColor: '#fecaca', alignItems: 'center', backgroundColor: '#fff5f5' },
+  shopChangeRejectText: { fontSize: 14, fontWeight: '800', color: '#dc2626' },
+  shopChangeAcceptBtn: { flex: 1, paddingVertical: 16, borderRadius: 16, backgroundColor: '#005d90', alignItems: 'center' },
+  shopChangeAcceptText: { fontSize: 14, fontWeight: '800', color: 'white' },
 
   // Live socket status badge inside driver card
   driverLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 1 },

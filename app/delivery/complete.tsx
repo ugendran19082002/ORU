@@ -9,8 +9,9 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
+import { deliveryApi } from '@/api/deliveryApi';
 
 import { useDeliveryStore } from '@/stores/deliveryStore';
 import { useOrderStore } from '@/stores/orderStore';
@@ -27,15 +28,22 @@ const FAIL_REASONS: { id: FailReason; label: string; icon: string }[] = [
 
 export default function DeliveryCompleteScreen() {
   const router = useRouter();
-  const { tasks, currentTaskId, updateTaskStatus } = useDeliveryStore();
+  const { taskId, imageUri } = useLocalSearchParams<{ taskId: string; imageUri: string }>();
+  const { tasks, currentTaskId, updateTaskStatus, assignCurrentTask } = useDeliveryStore();
   const { updateStatus: updateOrderStatus } = useOrderStore();
-  const task = tasks.find((item) => item.id === currentTaskId) ?? tasks[0];
+ 
+  React.useEffect(() => {
+    if (taskId) assignCurrentTask(taskId);
+  }, [taskId]);
+ 
+  const task = tasks.find((item) => item.id === (taskId || currentTaskId)) ?? tasks[0];
   
   const [mode, setMode] = useState<'success' | 'failed'>('success');
   const [selectedReason, setSelectedReason] = useState<FailReason | null>(null);
   const [otherText, setOtherText] = useState('');
   const [rescheduleSlot, setRescheduleSlot] = useState('');
-  const [proofUri, setProofUri] = useState<string | null>(null);
+  const [proofUri, setProofUri] = useState<string | null>(imageUri || null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const orderId = '#9831';
   const customerName = 'Ananya Sharma';
@@ -60,39 +68,70 @@ export default function DeliveryCompleteScreen() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (mode === 'success' && !proofUri) {
+      Toast.show({ type: 'error', text1: 'Photo Required', text2: 'Please take a proof-of-delivery photo.' });
+      return;
+    }
     if (mode === 'failed' && !selectedReason) {
-      Toast.show({
-        type: 'error',
-        text1: 'Select Reason',
-        text2: 'Please choose a reason for the failed delivery.'
-      });
+      Toast.show({ type: 'error', text1: 'Select Reason', text2: 'Please choose a reason for the failed delivery.' });
       return;
     }
     if (mode === 'failed' && !rescheduleSlot.trim()) {
-      Toast.show({
-        type: 'error',
-        text1: 'Reschedule Required',
-        text2: 'Please suggest a next delivery slot.'
-      });
+      Toast.show({ type: 'error', text1: 'Reschedule Required', text2: 'Please suggest a next delivery slot.' });
       return;
     }
-    if (task) {
-      const finalStatus = mode === 'success' ? 'completed' : 'cancelled';
-      updateTaskStatus(task.id, finalStatus);
-      // Sync with orderStore (In real app, backend handles this sync)
-      updateOrderStatus(task.orderId, finalStatus);
+
+    setIsSubmitting(true);
+    try {
+      if (!task) throw new Error("No active delivery task found");
+      const assignmentId = Number(taskId || currentTaskId); // assuming taskId maps to assignment_id
+
+      let podUrl: string | undefined = undefined;
+
+      if (mode === 'success' && proofUri) {
+        // 1. Upload POD photo
+        const filename = proofUri.split('/').pop() ?? 'pod.jpg';
+        const uploadResult = await deliveryApi.uploadPod({
+          uri: proofUri,
+          name: filename,
+          type: 'image/jpeg',
+        });
+        podUrl = uploadResult.data?.url ?? proofUri;
+      }
+
+      // 2. Determine Failed Reason
+      const reasonLabel = selectedReason === 'other' ? otherText : FAIL_REASONS.find(r => r.id === selectedReason)?.label;
+      const finalFailedReason = mode === 'failed' ? `${reasonLabel} (Suggested: ${rescheduleSlot})` : undefined;
+
+      // 3. Submit to backend
+      await deliveryApi.submitPod({
+        assignment_id: assignmentId,
+        status: mode === 'success' ? 'delivered' : 'failed',
+        pod_photo_url: podUrl,
+        failed_reason: finalFailedReason,
+      });
+
+      // 4. Update local state
+      updateTaskStatus(task.id, mode === 'success' ? 'completed' : 'cancelled');
+      updateOrderStatus(task.orderId, mode === 'success' ? 'completed' : 'cancelled');
+
+      Toast.show({
+        type: mode === 'success' ? 'success' : 'info',
+        text1: mode === 'success' ? '✅ Trip Complete!' : '⚠️ Delivery Reported',
+        text2: mode === 'success' ? `Order ${task.orderId} marked delivered.` : `Failed delivery reported. Rescheduled for: ${rescheduleSlot}`,
+      });
+
+      router.replace('/delivery' as any);
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Submission Failed',
+        text2: err?.message ?? 'Please check your connection and try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-
-    Toast.show({
-      type: mode === 'success' ? 'success' : 'info',
-      text1: mode === 'success' ? '✅ Trip Complete!' : '⚠️ Delivery Reported',
-      text2: mode === 'success'
-        ? `Order ${task?.orderId ?? orderId} marked delivered.`
-        : `Failed delivery reported. Rescheduled for: ${rescheduleSlot}`,
-    });
-
-    router.replace('/delivery' as any);
   };
 
   return (
@@ -228,17 +267,23 @@ export default function DeliveryCompleteScreen() {
         )}
 
         {/* SUBMIT */}
-        <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
+        <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={isSubmitting}>
           <LinearGradient
             colors={mode === 'success' ? ['#2e7d32', '#388e3c'] : ['#c62828', '#ef4444']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={styles.submitBtnGrad}
+            style={[styles.submitBtnGrad, isSubmitting && { opacity: 0.7 }]}
           >
-            <Ionicons name={mode === 'success' ? 'checkmark-done' : 'flag'} size={20} color="white" />
-            <Text style={styles.submitBtnText}>
-              {mode === 'success' ? 'Complete Trip' : 'Report & Reschedule'}
-            </Text>
+            {isSubmitting ? (
+              <Text style={styles.submitBtnText}>Processing...</Text>
+            ) : (
+              <>
+                <Ionicons name={mode === 'success' ? 'checkmark-done' : 'flag'} size={20} color="white" />
+                <Text style={styles.submitBtnText}>
+                  {mode === 'success' ? 'Complete Trip' : 'Report & Reschedule'}
+                </Text>
+              </>
+            )}
           </LinearGradient>
         </TouchableOpacity>
 

@@ -43,7 +43,7 @@ export default function OrderDetailScreen() {
   const { items, setQuantity, setShop } = useCartStore();
   const shop = shops.find((item) => item.id === (id ?? '1')) ?? shops[0];
   const product = shop.products[0];
-  const quantity = items[product.id] ?? 2;
+  const quantity = items[product.id]?.quantity ?? 0;
   const pricePerUnit = product.price;
 
 
@@ -113,7 +113,7 @@ export default function OrderDetailScreen() {
               style={styles.qtyBtnMinus}
               onPress={() => {
                 setSelectedShop(shop.id);
-                setQuantity(product.id, Math.max(1, quantity - 1), shop.id);
+                setQuantity(product.id, Math.max(1, quantity - 1), shop.id, { name: product.name, price: product.price });
               }}
             >
               <Ionicons name="remove" size={22} color="#005d90" />
@@ -123,7 +123,7 @@ export default function OrderDetailScreen() {
               disabled={quantity >= 50}
               onPress={() => {
                 setSelectedShop(shop.id);
-                setQuantity(product.id, Math.min(50, quantity + 1), shop.id);
+                setQuantity(product.id, Math.min(50, quantity + 1), shop.id, { name: product.name, price: product.price });
               }}
             >
               <LinearGradient
@@ -152,7 +152,7 @@ export default function OrderDetailScreen() {
           onPress={() => {
             setSelectedShop(shop.id);
             setShop(shop.id);
-            setQuantity(product.id, quantity, shop.id);
+            setQuantity(product.id, quantity, shop.id, { name: product.name, price: product.price });
             router.push(`/order/checkout?shopId=${shop.id}&qty=${quantity}` as any);
           }}
         >

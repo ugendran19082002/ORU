@@ -27,4 +27,12 @@ export const userApi = {
     const response = await apiClient.post<{ status: number; message: string; data: { verified: boolean } }>('/users/me/security/verify', { pin });
     return response.data.data;
   },
+
+  /**
+   * Request account deletion
+   */
+  deleteAccount: async (): Promise<{ status: number; message: string }> => {
+    const response = await apiClient.post<{ status: number; message: string }>('/users/me/delete-account');
+    return response.data;
+  },
 };

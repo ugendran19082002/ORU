@@ -13,6 +13,8 @@ import {
   RefreshControl,
   useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -351,34 +353,39 @@ export default function AdminRefundsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={[styles.header, isDesktop && { paddingHorizontal: 40, height: 80 }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={20} color="#005d90" />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.pageTitle, isDesktop && { fontSize: 28 }]}>Refund Management</Text>
-          {!loading && (
-            <Text style={styles.subtitle}>{refunds.length} {activeTab} refund{refunds.length !== 1 ? 's' : ''}</Text>
-          )}
-        </View>
-      </View>
-
-      {/* Filter Tabs */}
-      <View style={[styles.filterBar, isDesktop && { paddingHorizontal: 40 }]}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabContent}>
-          {TABS.map((tab) => (
-            <TouchableOpacity
-              key={tab.key}
-              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-              onPress={() => setActiveTab(tab.key)}
-            >
-              <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-                {tab.label}
-              </Text>
+      <StatusBar style="dark" />
+      <SafeAreaView style={styles.headerSafe} edges={['top']}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerTitleRow}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={20} color="#005d90" />
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.pageTitle}>Refunds</Text>
+              {!loading && (
+                <Text style={styles.headerSub}>{refunds.length} {activeTab} requests</Text>
+              )}
+            </View>
+          </View>
+        </View>
+      </SafeAreaView>
+
+      <View style={[styles.filterBarWrap, isDesktop && { alignItems: 'center' }]}>
+        <View style={{ width: '100%', maxWidth: 1200 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabContent}>
+            {TABS.map((tab) => (
+              <TouchableOpacity
+                key={tab.key}
+                style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+                onPress={() => setActiveTab(tab.key)}
+              >
+                <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
       </View>
 
       {/* Content */}
@@ -431,44 +438,40 @@ export default function AdminRefundsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
 
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
+  headerSafe: { 
+    backgroundColor: 'white', 
+    borderBottomWidth: 1, 
     borderBottomColor: '#f1f5f9',
+    alignItems: 'center',
   },
+  headerContent: {
+    width: '100%',
+    maxWidth: 1200,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   backBtn: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#e0f0ff',
+    backgroundColor: '#f1f5f9',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 22, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
-  subtitle: { fontSize: 12, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
 
-  filterBar: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  tabContent: { gap: 8, paddingRight: 24 },
+  filterBarWrap: { paddingVertical: 18, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  tabContent: { gap: 10, paddingHorizontal: 24 },
   tab: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
     backgroundColor: '#f1f5f9',
   },
   tabActive: { backgroundColor: '#005d90' },
-  tabText: { fontSize: 12, fontWeight: '800', color: '#64748b' },
+  tabText: { fontSize: 13, fontWeight: '800', color: '#64748b' },
   tabTextActive: { color: 'white' },
 
   listContent: { padding: 20, paddingBottom: 100 },

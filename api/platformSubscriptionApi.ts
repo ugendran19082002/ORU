@@ -1,46 +1,9 @@
 import { apiClient } from './client';
 import { ApiError } from './apiError';
 import { log } from '@/utils/logger';
-import type { ApiResponse } from '@/types/api';
+import type { ApiResponse, PlatformPlan, PlatformSubscription, CheckoutBenefits } from '@/types/api';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export type PlatformPlan = {
-  id: number;
-  name: string;
-  slug: string;
-  price_monthly: number;
-  price_yearly: number | null;
-  free_delivery_count: number;
-  auto_discount_pct: number;
-  monthly_coupon_count: number;
-  monthly_coupon_value: number;
-  loyalty_boost_pct: number;
-  is_active: boolean;
-  description: string | null;
-};
-
-export type PlatformSubscription = {
-  id: number;
-  plan_id: number;
-  status: 'active' | 'expired' | 'cancelled' | 'paused' | 'grace_period';
-  billing_cycle: 'monthly' | 'yearly';
-  amount_paid: number;
-  auto_renew: boolean;
-  started_at: string;
-  expires_at: string;
-  next_billing_at: string | null;
-  free_deliveries_used: number;
-  coupons_issued_this_cycle: number;
-  plan?: PlatformPlan;
-};
-
-export type CheckoutBenefits = {
-  has_subscription: boolean;
-  free_delivery: boolean;
-  auto_discount_pct: number;
-  loyalty_boost_pct: number;
-};
+export type { PlatformPlan, PlatformSubscription, CheckoutBenefits };
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 
@@ -121,6 +84,54 @@ export const platformSubscriptionApi = {
     } catch (error) {
       log.error('[platformSubscriptionApi] getCheckoutBenefits failed:', error);
       throw ApiError.from(error, 'Failed to fetch checkout benefits');
+    }
+  },
+
+  /** POST /subscriptions/platform/initiate — create Razorpay sub + DB row */
+  async initiateSubscription(data: { plan_id: number }): Promise<{ subscription_id: number; razorpay_subscription_id: string | null }> {
+    try {
+      const response = await apiClient.post<ApiResponse<any>>('/subscriptions/platform/initiate', data);
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('INITIATE_FAILED', response.status ?? 400, response.data.message || 'Failed to initiate subscription');
+    } catch (error) {
+      log.error('[platformSubscriptionApi] initiateSubscription failed:', error);
+      throw ApiError.from(error, 'Failed to initiate subscription');
+    }
+  },
+
+  /** POST /subscriptions/platform/:id/pause */
+  async pauseSubscription(id: number, data: { pause_start: string; pause_end: string; reason?: string }): Promise<any> {
+    try {
+      const response = await apiClient.post<ApiResponse<any>>(`/subscriptions/platform/${id}/pause`, data);
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('PAUSE_FAILED', response.status ?? 400, response.data.message || 'Failed to pause subscription');
+    } catch (error) {
+      log.error('[platformSubscriptionApi] pauseSubscription failed:', error);
+      throw ApiError.from(error, 'Failed to pause subscription');
+    }
+  },
+
+  /** POST /subscriptions/platform/:id/resume */
+  async resumeSubscription(id: number): Promise<PlatformSubscription> {
+    try {
+      const response = await apiClient.post<ApiResponse<PlatformSubscription>>(`/subscriptions/platform/${id}/resume`);
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('RESUME_FAILED', response.status ?? 400, response.data.message || 'Failed to resume subscription');
+    } catch (error) {
+      log.error('[platformSubscriptionApi] resumeSubscription failed:', error);
+      throw ApiError.from(error, 'Failed to resume subscription');
+    }
+  },
+
+  /** POST /subscriptions/platform/:id/retry-payment */
+  async retryPayment(id: number): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.post<ApiResponse<{ message: string }>>(`/subscriptions/platform/${id}/retry-payment`);
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('RETRY_FAILED', response.status ?? 400, response.data.message || 'Failed to retry payment');
+    } catch (error) {
+      log.error('[platformSubscriptionApi] retryPayment failed:', error);
+      throw ApiError.from(error, 'Failed to retry payment');
     }
   },
 };

@@ -19,6 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Logo } from "@/components/ui/Logo";
 import { useOrderStore } from "@/stores/orderStore";
 import { useShopStore } from "@/stores/shopStore";
+import { apiClient } from "@/api/client";
 
 type OrderAction = "accept" | "reject" | "delivered";
 type TabState = "active" | "completed";
@@ -33,28 +34,26 @@ const REJECT_REASONS = [
 
 export default function ShopOrdersScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
-  }, []);
-
   const [actionDone, setActionDone] = useState<OrderAction | null>(null);
   const [activeTab, setActiveTab] = useState<TabState>("active");
   const [acceptingOrders, setAcceptingOrders] = useState(true);
   const [busyMode, setBusyMode] = useState(false);
-  const [rejectModalOrderId, setRejectModalOrderId] = useState<string | null>(
-    null,
-  );
-  const [selectedRejectReason, setSelectedRejectReason] = useState<
-    string | null
-  >(null);
+  const [rejectModalOrderId, setRejectModalOrderId] = useState<string | null>(null);
+  const [selectedRejectReason, setSelectedRejectReason] = useState<string | null>(null);
   const [orderSearchText, setOrderSearchText] = useState("");
 
   const router = useRouter();
-  const { orders, updateStatus, setActiveOrder } = useOrderStore();
+  const { orders, updateStatus, setActiveOrder, fetchOrders } = useOrderStore();
   const { shops } = useShopStore();
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    fetchOrders().finally(() => setRefreshing(false));
+  }, [fetchOrders]);
+
+  React.useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
   const shop = shops[0];
   const activeOrders = orders
     .filter((order) => !["completed", "cancelled"].includes(order.status))
@@ -105,20 +104,32 @@ export default function ShopOrdersScreen() {
     return () => clearTimeout(timer);
   }, [activeOrders]);
 
-  const handleAction = (action: OrderAction, orderId?: string) => {
+  const handleAction = async (action: OrderAction, orderId?: string) => {
     setActionDone(action);
     if (orderId) {
       setActiveOrder(orderId);
     }
 
     if (action === "accept" && orderId) {
-      updateStatus(orderId, "accepted");
+      try {
+        await apiClient.patch(`/shop-owner/orders/${orderId}/status`, { status: "accepted" });
+        updateStatus(orderId, "accepted");
+      } catch (e: any) {
+        Toast.show({ type: 'error', text1: 'Accept failed', text2: e?.response?.data?.message ?? 'Try again' });
+        return;
+      }
     }
 
     // 'reject' is handled by openRejectModal — never called directly here
 
     if (action === "delivered" && orderId) {
-      updateStatus(orderId, "completed");
+      try {
+        await apiClient.patch(`/shop-owner/orders/${orderId}/status`, { status: "delivered" });
+        updateStatus(orderId, "completed");
+      } catch (e: any) {
+        Toast.show({ type: 'error', text1: 'Update failed', text2: e?.response?.data?.message ?? 'Try again' });
+        return;
+      }
     }
 
     if (action === "delivered") {
@@ -139,7 +150,7 @@ export default function ShopOrdersScreen() {
     setRejectModalOrderId(orderId);
   };
 
-  const confirmReject = () => {
+  const confirmReject = async () => {
     if (!selectedRejectReason) {
       Toast.show({
         type: 'error',
@@ -149,10 +160,22 @@ export default function ShopOrdersScreen() {
       return;
     }
     if (rejectModalOrderId) {
-      setActiveOrder(rejectModalOrderId);
-      updateStatus(rejectModalOrderId, "cancelled");
-      setActionDone("reject");
-      setTimeout(() => setActionDone(null), 2000);
+      try {
+        const res = await apiClient.post(`/shop-owner/orders/${rejectModalOrderId}/reject`, { reason: selectedRejectReason });
+        setActiveOrder(rejectModalOrderId);
+        // If fallback found, backend notifies customer via socket — update local status to show searching
+        if (res.data.data?.fallback) {
+          updateStatus(rejectModalOrderId, "cancelled"); // Remove from shop queue
+          Toast.show({ type: 'info', text1: 'Searching for next shop', text2: 'Customer will be notified with a new offer.' });
+        } else {
+          updateStatus(rejectModalOrderId, "cancelled");
+          Toast.show({ type: 'success', text1: 'Order Rejected', text2: 'Order has been cancelled.' });
+        }
+        setActionDone("reject");
+        setTimeout(() => setActionDone(null), 2000);
+      } catch (e: any) {
+        Toast.show({ type: 'error', text1: 'Reject failed', text2: e?.response?.data?.message ?? 'Try again' });
+      }
     }
     setRejectModalOrderId(null);
     setSelectedRejectReason(null);

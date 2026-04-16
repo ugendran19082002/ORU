@@ -7,20 +7,38 @@ import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { LinearGradient } from 'expo-linear-gradient';
+import { analyticsApi, CustomerAnalytics } from '@/api/analyticsApi';
+import { log } from '@/utils/logger';
+import { ActivityIndicator } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-const SPENDING_DATA = [450, 520, 480, 610, 590, 320]; // Mock spending in Rs
-const CANS_DATA = [10, 12, 11, 14, 13, 8]; // Mock cans ordered
-
 export default function CustomerAnalyticsScreen() {
   const { safeBack } = useAppNavigation();
-  useAndroidBackHandler(() => { safeBack('/(tabs)/profile'); });
   const [activeTab, setActiveTab] = useState<'spending' | 'usage'>('spending');
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<CustomerAnalytics | null>(null);
 
-  const maxVal = Math.max(...(activeTab === 'spending' ? SPENDING_DATA : CANS_DATA));
-  const currentData = activeTab === 'spending' ? SPENDING_DATA : CANS_DATA;
+  useAndroidBackHandler(() => { safeBack('/(tabs)/profile'); });
+
+  React.useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const result = await analyticsApi.getCustomerAnalytics();
+      setData(result);
+    } catch (e) {
+      log.error('[CustomerAnalytics] Fetch error', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const currentData = data?.monthly_data || [];
+  const maxVal = Math.max(...currentData.map(m => activeTab === 'spending' ? m.spending : m.usage), 1);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -34,88 +52,98 @@ export default function CustomerAnalyticsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        
-        {/* TOP STATS */}
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <View style={[styles.statIconWrap, { backgroundColor: '#e0f0ff' }]}>
-              <Ionicons name="stats-chart-outline" size={20} color="#005d90" />
-            </View>
-            <Text style={styles.statValue}>₹2,970</Text>
-            <Text style={styles.statLabel}>Total Spent (YTD)</Text>
+        {loading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 100 }}>
+            <ActivityIndicator size="large" color="#005d90" />
+            <Text style={{ marginTop: 12, color: '#64748b', fontWeight: '600' }}>Loading your stats...</Text>
           </View>
-          <View style={styles.statCard}>
-            <View style={[styles.statIconWrap, { backgroundColor: '#e8f5e9' }]}>
-              <Ionicons name="water-outline" size={20} color="#2e7d32" />
-            </View>
-            <Text style={styles.statValue}>68</Text>
-            <Text style={styles.statLabel}>Cans Ordered</Text>
-          </View>
-        </View>
-
-        {/* SAVINGS TRACKER */}
-        <LinearGradient colors={['#005d90', '#0077b6']} style={styles.savingsCard}>
-          <View style={styles.savingsTop}>
-             <Ionicons name="leaf" size={24} color="#4ade80" />
-             <Text style={styles.savingsTitle}>Savings Tracker</Text>
-          </View>
-          <Text style={styles.savingsBigText}>₹450 Saved</Text>
-          <Text style={styles.savingsSub}>By using subscriptions & coupons this year.</Text>
-        </LinearGradient>
-
-        {/* CHART SECTION */}
-        <View style={styles.chartContainer}>
-          <View style={styles.chartHeader}>
-            <Text style={styles.chartTitle}>Monthly {activeTab === 'spending' ? 'Spending' : 'Consumption'}</Text>
-            <View style={styles.chartToggle}>
-              <TouchableOpacity
-                style={[styles.toggleBtn, activeTab === 'spending' && styles.toggleBtnActive]}
-                onPress={() => setActiveTab('spending')}
-              >
-                <Text style={[styles.toggleText, activeTab === 'spending' && styles.toggleTextActive]}>₹ Spent</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.toggleBtn, activeTab === 'usage' && styles.toggleBtnActive]}
-                onPress={() => setActiveTab('usage')}
-              >
-                <Text style={[styles.toggleText, activeTab === 'usage' && styles.toggleTextActive]}>💧 Cans</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.barChart}>
-            {currentData.map((val, i) => {
-              const heightPct = (val / maxVal) * 100;
-              return (
-                <View key={i} style={styles.barCol}>
-                  <Text style={styles.barValText}>{activeTab === 'spending' ? `₹${val}` : val}</Text>
-                  <View style={styles.barTrack}>
-                    <View style={[styles.barFill, { height: `${heightPct}%`, backgroundColor: activeTab === 'spending' ? '#005d90' : '#0ea5e9' }]} />
-                  </View>
-                  <Text style={styles.barLabel}>{MONTHS[i]}</Text>
+        ) : (
+          <>
+            {/* TOP STATS */}
+            <View style={styles.statsRow}>
+              <View style={styles.statCard}>
+                <View style={[styles.statIconWrap, { backgroundColor: '#e0f0ff' }]}>
+                  <Ionicons name="stats-chart-outline" size={20} color="#005d90" />
                 </View>
-              );
-            })}
-          </View>
-        </View>
+                <Text style={styles.statValue}>₹{(data?.total_spent ?? 0).toLocaleString()}</Text>
+                <Text style={styles.statLabel}>Total Spent (YTD)</Text>
+              </View>
+              <View style={styles.statCard}>
+                <View style={[styles.statIconWrap, { backgroundColor: '#e8f5e9' }]}>
+                  <Ionicons name="water-outline" size={20} color="#2e7d32" />
+                </View>
+                <Text style={styles.statValue}>{data?.total_cans ?? 0}</Text>
+                <Text style={styles.statLabel}>Cans Ordered</Text>
+              </View>
+            </View>
 
-        {/* INSIGHTS */}
-        <Text style={styles.sectionTitle}>Insights & Frequency</Text>
-        <View style={styles.insightCard}>
-          <Ionicons name="calendar-outline" size={24} color="#b45309" />
-          <View style={{ flex: 1 }}>
-             <Text style={styles.insightTitle}>Order Frequency</Text>
-             <Text style={styles.insightDesc}>You typically order a new can every <Text style={{fontWeight: 'bold', color: '#181c20'}}>4.5 days</Text>.</Text>
-          </View>
-        </View>
-        <View style={styles.insightCard}>
-          <Ionicons name="trending-up" size={24} color="#4338ca" />
-          <View style={{ flex: 1 }}>
-             <Text style={styles.insightTitle}>Summer Peak</Text>
-             <Text style={styles.insightDesc}>Your usage increased by 25% in April compared to March.</Text>
-          </View>
-        </View>
+            {/* SAVINGS TRACKER */}
+            <LinearGradient colors={['#005d90', '#0077b6']} style={styles.savingsCard}>
+              <View style={styles.savingsTop}>
+                 <Ionicons name="leaf" size={24} color="#4ade80" />
+                 <Text style={styles.savingsTitle}>Savings Tracker</Text>
+              </View>
+              <Text style={styles.savingsBigText}>₹{(data?.total_saved ?? 0).toLocaleString()} Saved</Text>
+              <Text style={styles.savingsSub}>By using subscriptions & coupons this year.</Text>
+            </LinearGradient>
 
+            {/* CHART SECTION */}
+            <View style={styles.chartContainer}>
+              <View style={styles.chartHeader}>
+                <Text style={styles.chartTitle}>Monthly {activeTab === 'spending' ? 'Spending' : 'Consumption'}</Text>
+                <View style={styles.chartToggle}>
+                  <TouchableOpacity
+                    style={[styles.toggleBtn, activeTab === 'spending' && styles.toggleBtnActive]}
+                    onPress={() => setActiveTab('spending')}
+                  >
+                    <Text style={[styles.toggleText, activeTab === 'spending' && styles.toggleTextActive]}>₹ Spent</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.toggleBtn, activeTab === 'usage' && styles.toggleBtnActive]}
+                    onPress={() => setActiveTab('usage')}
+                  >
+                    <Text style={[styles.toggleText, activeTab === 'usage' && styles.toggleTextActive]}>💧 Cans</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.barChart}>
+                {currentData.length === 0 ? (
+                  <Text style={{ width: '100%', textAlign: 'center', color: '#94a3b8' }}>Insufficient data for chart</Text>
+                ) : currentData.map((item, i) => {
+                  const val = activeTab === 'spending' ? item.spending : item.usage;
+                  const heightPct = (val / maxVal) * 100;
+                  return (
+                    <View key={i} style={styles.barCol}>
+                      <Text style={styles.barValText}>{activeTab === 'spending' ? `₹${val}` : val}</Text>
+                      <View style={styles.barTrack}>
+                        <View style={[styles.barFill, { height: `${heightPct}%`, backgroundColor: activeTab === 'spending' ? '#005d90' : '#0ea5e9' }]} />
+                      </View>
+                      <Text style={styles.barLabel}>{item.month}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* INSIGHTS */}
+            <Text style={styles.sectionTitle}>Insights & Frequency</Text>
+            <View style={styles.insightCard}>
+              <Ionicons name="calendar-outline" size={24} color="#b45309" />
+              <View style={{ flex: 1 }}>
+                 <Text style={styles.insightTitle}>Order Frequency</Text>
+                 <Text style={styles.insightDesc}>You typically order a new can every <Text style={{fontWeight: 'bold', color: '#181c20'}}>{data?.insights?.avg_frequency_days ?? 4.5} days</Text>.</Text>
+              </View>
+            </View>
+            <View style={styles.insightCard}>
+              <Ionicons name="trending-up" size={24} color="#4338ca" />
+              <View style={{ flex: 1 }}>
+                 <Text style={styles.insightTitle}>Usage Trend</Text>
+                 <Text style={styles.insightDesc}>Your water consumption is {data?.insights?.summer_peak_flag ? 'at a seasonal peak' : 'stable'} based on last month's data.</Text>
+              </View>
+            </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

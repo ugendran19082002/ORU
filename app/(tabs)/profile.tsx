@@ -14,6 +14,8 @@ import { Logo } from '@/components/ui/Logo';
 import { useAppSession } from '@/hooks/use-app-session';
 import { addressApi } from '@/api/addressApi';
 import { useSecurityStore } from '@/stores/securityStore';
+import { useOrderStore } from '@/stores/orderStore';
+import { useFocusEffect } from 'expo-router';
 
 
 
@@ -21,6 +23,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { signOut, user, emergencyReset } = useAppSession();
   const { isPinEnabled, initialize: initSecurity } = useSecurityStore();
+  const { orders, fetchOrders } = useOrderStore();
   const [refreshing, setRefreshing] = React.useState(false);
   const [addressCount, setAddressCount] = React.useState(0);
 
@@ -43,16 +46,27 @@ export default function ProfileScreen() {
     fetchAddressCount();
   }, [fetchAddressCount]);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchOrders();
+    }, [fetchOrders])
+  );
+
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    await fetchAddressCount();
+    await Promise.all([
+      fetchAddressCount(),
+      fetchOrders()
+    ]);
     setRefreshing(false);
-  }, [fetchAddressCount]);
+  }, [fetchAddressCount, fetchOrders]);
 
   const menuItems = [
     { icon: 'location-outline' as const, label: 'Saved Addresses', subtitle: `${addressCount} saved locations`, hasArrow: true },
     { icon: 'card-outline' as const, label: 'Payment Methods', subtitle: 'UPI, Cards', hasArrow: true },
     { icon: 'receipt-outline' as const, label: 'Order History', subtitle: 'View past orders', hasArrow: true },
+    { icon: 'analytics-outline' as const, label: 'My Analytics', subtitle: 'Spendings and trends', hasArrow: true },
+    { icon: 'star-outline' as const, label: 'My Reviews', subtitle: 'Manage your ratings', hasArrow: true },
     { icon: 'repeat-outline' as const, label: 'Subscriptions', subtitle: 'Manage scheduled deliveries', hasArrow: true },
     { icon: 'gift-outline' as const, label: 'Rewards', subtitle: 'Referral code and loyalty points', hasArrow: true },
     { icon: 'shield-checkmark-outline' as const, label: 'Privacy & Security', subtitle: isPinEnabled ? 'PIN Protected' : 'Manage your data', hasArrow: true, status: isPinEnabled ? 'active' : 'none' },
@@ -137,7 +151,7 @@ export default function ProfileScreen() {
           
           <View style={styles.profileStats}>
             <View style={styles.profileStat}>
-              <Text style={styles.profileStatVal}>47</Text>
+              <Text style={styles.profileStatVal}>{orders.length}</Text>
               <Text style={styles.profileStatLabel}>Orders</Text>
             </View>
             <View style={styles.profileStatDivider} />
@@ -226,6 +240,39 @@ export default function ProfileScreen() {
           <Text style={styles.logoutText}>Sign Out</Text>
         </TouchableOpacity>
 
+        {/* DELETE ACCOUNT */}
+        <TouchableOpacity
+          style={styles.deleteAccountBtn}
+          activeOpacity={0.7}
+          onPress={() => {
+            require('react-native').Alert.alert(
+              'Delete Account',
+              'This will permanently delete your account and all associated data after 30 days. This action cannot be undone.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete My Account',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      const { apiClient } = require('@/api/client');
+                      await apiClient.post('/users/me/delete-account');
+                      Toast.show({ type: 'success', text1: 'Account Scheduled for Deletion', text2: 'Your account will be removed within 30 days.' });
+                      await signOut();
+                      router.replace('/auth' as any);
+                    } catch (e: any) {
+                      Toast.show({ type: 'error', text1: 'Failed', text2: e?.message ?? 'Could not delete account.' });
+                    }
+                  },
+                },
+              ],
+            );
+          }}
+        >
+          <Ionicons name="person-remove-outline" size={16} color="#94a3b8" />
+          <Text style={styles.deleteAccountText}>Delete Account</Text>
+        </TouchableOpacity>
+
         {/* MAINTENANCE */}
         <View style={{ marginTop: 10, marginBottom: 20 }}>
           <Text style={styles.sectionTitle}>Maintenance</Text>
@@ -290,8 +337,10 @@ const styles = StyleSheet.create({
   securityBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#e0fdf4', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   securityBadgeText: { fontSize: 8, fontWeight: '900', color: '#10b981', letterSpacing: 0.5 },
 
-  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#ffdad6', borderRadius: 16, paddingVertical: 14, marginBottom: 20 },
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#ffdad6', borderRadius: 16, paddingVertical: 14, marginBottom: 12 },
   logoutText: { color: '#ba1a1a', fontWeight: '700', fontSize: 15 },
+  deleteAccountBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, marginBottom: 20 },
+  deleteAccountText: { color: '#94a3b8', fontWeight: '600', fontSize: 13, textDecorationLine: 'underline' },
   
   maintenanceBtn: { 
     flexDirection: 'row', 

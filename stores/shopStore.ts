@@ -23,7 +23,9 @@ type ShopState = {
   error: string | null;
   selectedShopId: string | null;
   filters: ShopFilters;
-  loadShops: (params?: { lat: number; lng: number }) => Promise<void>;
+  loadShops: (params?: { lat?: number; lng?: number }) => Promise<void>;
+  searchShops: (query: string, lat?: number, lng?: number) => Promise<void>;
+  fetchPersonalized: (lat?: number, lng?: number) => Promise<Shop | null>;
   setSelectedShop: (shopId: string | null) => void;
   toggleFilter: (key: keyof Omit<ShopFilters, 'maxPrice'>) => void;
   setMaxPrice: (price: number | null) => void;
@@ -47,6 +49,28 @@ export const useShopStore = create<ShopState>((set) => ({
         error: (err as { message?: string }).message ?? 'Failed to fetch shops',
         isLoading: false,
       });
+    }
+  },
+
+  searchShops: async (q, lat, lng) => {
+    set({ isLoading: true, error: null });
+    try {
+      const data = await shopApi.searchShops({ q, lat, lng });
+      set({ shops: data, isLoading: false });
+    } catch (err: unknown) {
+      set({
+        error: (err as { message?: string }).message ?? 'Search failed',
+        isLoading: false,
+      });
+    }
+  },
+
+  fetchPersonalized: async (lat, lng) => {
+    try {
+      const data = await shopApi.getPersonalizedShops({ lat, lng, limit: 1 });
+      return data[0] || null;
+    } catch {
+      return null;
     }
   },
 

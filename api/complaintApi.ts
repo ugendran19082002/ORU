@@ -129,4 +129,44 @@ export const complaintApi = {
       throw ApiError.from(error, 'Failed to review complaint');
     }
   },
+
+  /**
+   * [Shop Owner] List complaints assigned to their shop.
+   * GET /shop-owner/complaints
+   */
+  async shopGetComplaints(params?: {
+    status?: Complaint['status'];
+    page?: number;
+    limit?: number;
+  }): Promise<PaginatedData<Complaint>> {
+    try {
+      const response = await apiClient.get<ApiResponse<PaginatedData<Complaint>>>('/shop-owner/complaints', { params });
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('FETCH_FAILED', response.status ?? 400, response.data.message || 'Failed to fetch shop complaints');
+    } catch (error) {
+      log.error('[complaintApi] shopGetComplaints failed:', error);
+      throw ApiError.from(error, 'Failed to fetch shop complaints');
+    }
+  },
+
+  /**
+   * [Shop Owner] Resolve a complaint assigned to them.
+   * PATCH /shop-owner/complaints/:id/resolve
+   */
+  async shopResolveComplaint(
+    id: number,
+    data: {
+      resolution_notes: string;
+      resolution_type?: string;
+    },
+  ): Promise<Complaint> {
+    try {
+      const response = await apiClient.patch<ApiResponse<Complaint>>(`/shop-owner/complaints/${id}/resolve`, data);
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('UPDATE_FAILED', response.status ?? 400, response.data.message || 'Failed to resolve complaint');
+    } catch (error) {
+      log.error('[complaintApi] shopResolveComplaint failed:', error);
+      throw ApiError.from(error, 'Failed to resolve complaint');
+    }
+  },
 };

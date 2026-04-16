@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  ActivityIndicator, TextInput, Switch, RefreshControl, Modal
+  ActivityIndicator, TextInput, Switch, RefreshControl, Modal,
+  useWindowDimensions
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +15,8 @@ import { adminApi } from '@/api/adminApi';
 
 export default function AdminGrowthScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [settings, setSettings] = useState<any>(null);
@@ -75,166 +78,178 @@ export default function AdminGrowthScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
       <StatusBar style="dark" />
-      <View style={styles.header}>
-        <BackButton />
-        <Text style={styles.headerTitle}>Growth Engine</Text>
-        <TouchableOpacity onPress={fetchData}>
-          <Ionicons name="refresh" size={20} color="#005d90" />
-        </TouchableOpacity>
-      </View>
+      <SafeAreaView style={styles.headerSafe} edges={['top']}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerTitleRow}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={20} color="#005d90" />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.pageTitle}>Growth Engine</Text>
+              <Text style={styles.headerSub}>Loyalty & Referral Mechanics</Text>
+            </View>
+            <TouchableOpacity style={styles.refreshBtn} onPress={fetchData}>
+              <Ionicons name="refresh" size={20} color="#005d90" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        style={{ flex: 1 }}
+        contentContainerStyle={[styles.scrollContent, { alignItems: 'center', paddingBottom: 100 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} />}
       >
-        {/* TABS */}
-        <View style={styles.tabRow}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'config' && styles.tabActive]}
-            onPress={() => setActiveTab('config')}
-          >
-            <Text style={[styles.tabText, activeTab === 'config' && styles.tabTextActive]}>Configuration</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'tiers' && styles.tabActive]}
-            onPress={() => setActiveTab('tiers')}
-          >
-            <Text style={[styles.tabText, activeTab === 'tiers' && styles.tabTextActive]}>Loyalty Tiers</Text>
-          </TouchableOpacity>
-        </View>
-
-        {activeTab === 'config' && settings && (
-          <>
-            {/* LOYALTY SECTION */}
-            <View style={styles.sectionHeader}>
-              <Ionicons name="ribbon-outline" size={20} color="#005d90" />
-              <Text style={styles.sectionTitle}>Loyalty Settings (Phase 1)</Text>
-            </View>
-            <View style={styles.card}>
-              <ConfigItem
-                label="Earn Rate (Points per ₹1)"
-                value={settings.loyalty.earn_points_per_rupee.toString()}
-                onChange={(v: string) => handleUpdateSettings('loyalty', { earn_points_per_rupee: parseFloat(v) })}
-                keyboardType="numeric"
-                helper="e.g. 0.1 = 1 point per ₹10 spent"
-              />
-              <ConfigItem
-                label="Redeem Ratio (Points per ₹1)"
-                value={settings.loyalty.points_to_currency_ratio.toString()}
-                onChange={(v: string) => handleUpdateSettings('loyalty', { points_to_currency_ratio: parseFloat(v) })}
-                keyboardType="numeric"
-                helper="e.g. 10 = ₹1 discount for every 10 points"
-              />
-              <ConfigItem
-                label="Min Order for Redeem (₹)"
-                value={settings.loyalty.min_order_amount_for_redeem.toString()}
-                onChange={(v: string) => handleUpdateSettings('loyalty', { min_order_amount_for_redeem: parseFloat(v) })}
-                keyboardType="numeric"
-              />
-              <ConfigItem
-                label="New Shop Bonus Points"
-                value={settings.loyalty.new_shop_bonus_points.toString()}
-                onChange={(v: string) => handleUpdateSettings('loyalty', { new_shop_bonus_points: parseInt(v) })}
-                keyboardType="numeric"
-                helper="Bonus pts for first order ever at a specific shop"
-              />
-              <ConfigItem
-                label="Repeat Patron Boost (%)"
-                value={settings.loyalty.repeat_order_bonus_percentage.toString()}
-                onChange={(v: string) => handleUpdateSettings('loyalty', { repeat_order_bonus_percentage: parseInt(v) })}
-                keyboardType="numeric"
-                helper="Extra points multiplier after 5+ shop orders"
-              />
-            </View>
-
-            {/* REFERRAL SECTION */}
-            <View style={styles.sectionHeader}>
-              <Ionicons name="people-outline" size={20} color="#005d90" />
-              <Text style={styles.sectionTitle}>Referral Rewards (Admin Funded)</Text>
-            </View>
-            <View style={styles.card}>
-              <ConfigItem
-                label="Signup Bonus (PTS)"
-                value={settings.referral.signup_bonus_points.toString()}
-                onChange={(v: string) => handleUpdateSettings('referral', { signup_bonus_points: parseInt(v) })}
-                keyboardType="numeric"
-              />
-              <ConfigItem
-                label="First Order (Referrer) (PTS)"
-                value={settings.referral.first_order_bonus_referrer.toString()}
-                onChange={(v: string) => handleUpdateSettings('referral', { first_order_bonus_referrer: parseInt(v) })}
-                keyboardType="numeric"
-              />
-              <ConfigItem
-                label="First Order (Referee) (PTS)"
-                value={settings.referral.first_order_bonus_referee.toString()}
-                onChange={(v: string) => handleUpdateSettings('referral', { first_order_bonus_referee: parseInt(v) })}
-                keyboardType="numeric"
-              />
-              <View style={styles.toggleRow}>
-                  <Text style={styles.toggleLabel}>Enable Daily Caps</Text>
-                  <Switch 
-                    value={settings.referral.status === 'active'} 
-                    onValueChange={(val) => handleUpdateSettings('referral', { status: val ? 'active' : 'inactive' })}
-                  />
-              </View>
-            </View>
-
-            <View style={styles.infoBox}>
-              <Ionicons name="information-circle-outline" size={18} color="#005d90" />
-              <Text style={styles.infoText}>
-                Note: All loyalty points issued currently are Admin-Funded. Payouts to shops are NOT reduced when customers use these points.
-              </Text>
-            </View>
-          </>
-        )}
-
-        {activeTab === 'tiers' && (
-          <View style={{ gap: 12 }}>
-            <View style={styles.sectionHeader}>
-              <Ionicons name="trophy-outline" size={20} color="#005d90" />
-              <Text style={styles.sectionTitle}>Platform Tiers</Text>
-              <TouchableOpacity 
-                style={styles.addBtn}
-                onPress={() => {
-                  setEditingLevel({ 
-                    level_number: (levels.length + 1), 
-                    name: '', 
-                    min_points: 0, 
-                    max_points: 0, 
-                    discount_percent: 0,
-                    status: 'active' 
-                  });
-                  setModalVisible(true);
-                }}
-              >
-                <Ionicons name="add" size={20} color="#005d90" />
-              </TouchableOpacity>
-            </View>
-            {levels.map((level) => (
-              <TouchableOpacity 
-                key={level.id} 
-                style={styles.tierCard} 
-                onPress={() => {
-                  setEditingLevel(level);
-                  setModalVisible(true);
-                }}
-              >
-                <View style={styles.tierMain}>
-                  <Text style={styles.tierName}>{level.name}</Text>
-                  <Text style={styles.tierReq}>{level.min_points} - {level.max_points} pts</Text>
-                </View>
-                <View style={styles.tierBenefit}>
-                   <Text style={styles.tierDiscount}>{level.discount_percent}% OFF</Text>
-                   <Text style={styles.tierSub}>Auto-Coupon</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
+        <View style={{ width: '100%', maxWidth: 1200 }}>
+          {/* TABS */}
+          <View style={styles.tabRow}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'config' && styles.tabActive]}
+              onPress={() => setActiveTab('config')}
+            >
+              <Text style={[styles.tabText, activeTab === 'config' && styles.tabTextActive]}>Configuration</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'tiers' && styles.tabActive]}
+              onPress={() => setActiveTab('tiers')}
+            >
+              <Text style={[styles.tabText, activeTab === 'tiers' && styles.tabTextActive]}>Loyalty Tiers</Text>
+            </TouchableOpacity>
           </View>
-        )}
+
+          {activeTab === 'config' && settings && (
+            <>
+              {/* LOYALTY SECTION */}
+              <View style={styles.sectionHeader}>
+                <Ionicons name="ribbon-outline" size={20} color="#005d90" />
+                <Text style={styles.sectionTitle}>Loyalty Settings (Phase 1)</Text>
+              </View>
+              <View style={styles.card}>
+                <ConfigItem
+                  label="Earn Rate (Points per ₹1)"
+                  value={settings.loyalty.earn_points_per_rupee.toString()}
+                  onChange={(v: string) => handleUpdateSettings('loyalty', { earn_points_per_rupee: parseFloat(v) })}
+                  keyboardType="numeric"
+                  helper="e.g. 0.1 = 1 point per ₹10 spent"
+                />
+                <ConfigItem
+                  label="Redeem Ratio (Points per ₹1)"
+                  value={settings.loyalty.points_to_currency_ratio.toString()}
+                  onChange={(v: string) => handleUpdateSettings('loyalty', { points_to_currency_ratio: parseFloat(v) })}
+                  keyboardType="numeric"
+                  helper="e.g. 10 = ₹1 discount for every 10 points"
+                />
+                <ConfigItem
+                  label="Min Order for Redeem (₹)"
+                  value={settings.loyalty.min_order_amount_for_redeem.toString()}
+                  onChange={(v: string) => handleUpdateSettings('loyalty', { min_order_amount_for_redeem: parseFloat(v) })}
+                  keyboardType="numeric"
+                />
+                <ConfigItem
+                  label="New Shop Bonus Points"
+                  value={settings.loyalty.new_shop_bonus_points.toString()}
+                  onChange={(v: string) => handleUpdateSettings('loyalty', { new_shop_bonus_points: parseInt(v) })}
+                  keyboardType="numeric"
+                  helper="Bonus pts for first order ever at a specific shop"
+                />
+                <ConfigItem
+                  label="Repeat Patron Boost (%)"
+                  value={settings.loyalty.repeat_order_bonus_percentage.toString()}
+                  onChange={(v: string) => handleUpdateSettings('loyalty', { repeat_order_bonus_percentage: parseInt(v) })}
+                  keyboardType="numeric"
+                  helper="Extra points multiplier after 5+ shop orders"
+                />
+              </View>
+
+              {/* REFERRAL SECTION */}
+              <View style={styles.sectionHeader}>
+                <Ionicons name="people-outline" size={20} color="#005d90" />
+                <Text style={styles.sectionTitle}>Referral Rewards (Admin Funded)</Text>
+              </View>
+              <View style={styles.card}>
+                <ConfigItem
+                  label="Signup Bonus (PTS)"
+                  value={settings.referral.signup_bonus_points.toString()}
+                  onChange={(v: string) => handleUpdateSettings('referral', { signup_bonus_points: parseInt(v) })}
+                  keyboardType="numeric"
+                />
+                <ConfigItem
+                  label="First Order (Referrer) (PTS)"
+                  value={settings.referral.first_order_bonus_referrer.toString()}
+                  onChange={(v: string) => handleUpdateSettings('referral', { first_order_bonus_referrer: parseInt(v) })}
+                  keyboardType="numeric"
+                />
+                <ConfigItem
+                  label="First Order (Referee) (PTS)"
+                  value={settings.referral.first_order_bonus_referee.toString()}
+                  onChange={(v: string) => handleUpdateSettings('referral', { first_order_bonus_referee: parseInt(v) })}
+                  keyboardType="numeric"
+                />
+                <View style={styles.toggleRow}>
+                    <Text style={styles.toggleLabel}>Enable Daily Caps</Text>
+                    <Switch 
+                      value={settings.referral.status === 'active'} 
+                      onValueChange={(val) => handleUpdateSettings('referral', { status: val ? 'active' : 'inactive' })}
+                    />
+                </View>
+              </View>
+
+              <View style={styles.infoBox}>
+                <Ionicons name="information-circle-outline" size={18} color="#005d90" />
+                <Text style={styles.infoText}>
+                  Note: All loyalty points issued currently are Admin-Funded. Payouts to shops are NOT reduced when customers use these points.
+                </Text>
+              </View>
+            </>
+          )}
+
+          {activeTab === 'tiers' && (
+            <View style={{ gap: 12 }}>
+              <View style={styles.sectionHeader}>
+                <Ionicons name="trophy-outline" size={20} color="#005d90" />
+                <Text style={styles.sectionTitle}>Platform Tiers</Text>
+                <TouchableOpacity 
+                  style={styles.addBtn}
+                  onPress={() => {
+                    setEditingLevel({ 
+                      level_number: (levels.length + 1), 
+                      name: '', 
+                      min_points: 0, 
+                      max_points: 0, 
+                      discount_percent: 0,
+                      status: 'active' 
+                    });
+                    setModalVisible(true);
+                  }}
+                >
+                  <Ionicons name="add" size={20} color="#005d90" />
+                </TouchableOpacity>
+              </View>
+              {levels.map((level) => (
+                <TouchableOpacity 
+                  key={level.id} 
+                  style={styles.tierCard} 
+                  onPress={() => {
+                    setEditingLevel(level);
+                    setModalVisible(true);
+                  }}
+                >
+                  <View style={styles.tierMain}>
+                    <Text style={styles.tierName}>{level.name}</Text>
+                    <Text style={styles.tierReq}>{level.min_points} - {level.max_points} pts</Text>
+                  </View>
+                  <View style={styles.tierBenefit}>
+                     <Text style={styles.tierDiscount}>{level.discount_percent}% OFF</Text>
+                     <Text style={styles.tierSub}>Auto-Coupon</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
       </ScrollView>
 
       {/* EDIT MODAL */}
@@ -291,7 +306,7 @@ export default function AdminGrowthScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -317,13 +332,33 @@ function ConfigItem({ label, value, onChange, keyboardType = 'default', helper }
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fcfdff' },
+  container: { flex: 1, backgroundColor: '#f7f9ff' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#ebeef4',
+  headerSafe: { 
+    backgroundColor: 'white', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f1f5f9',
+    alignItems: 'center',
   },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#1a1c1e' },
+  headerContent: {
+    width: '100%',
+    maxWidth: 1200,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: '#1a1c1e', letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  refreshBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
+
   scrollContent: { padding: 20 },
   tabRow: {
     flexDirection: 'row', backgroundColor: '#f1f4f9', borderRadius: 14, padding: 4, marginBottom: 25,
@@ -347,6 +382,7 @@ const styles = StyleSheet.create({
   tierCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: 'white', borderRadius: 18, padding: 18, borderWidth: 1, borderColor: '#ebeef4',
+    marginBottom: 10,
   },
   tierMain: { flex: 1 },
   tierName: { fontSize: 16, fontWeight: '900', color: '#1a1c1e', marginBottom: 2 },
@@ -354,7 +390,7 @@ const styles = StyleSheet.create({
   tierBenefit: { alignItems: 'flex-end' },
   tierDiscount: { fontSize: 18, fontWeight: '900', color: '#005d90' },
   tierSub: { fontSize: 10, color: '#94a3b8', fontWeight: '700', letterSpacing: 0.5 },
-  addBtn: { marginLeft: 'auto', backgroundColor: '#eef6ff', padding: 6, borderRadius: 8 },
+  addBtn: { marginLeft: 'auto', backgroundColor: '#f1f5f9', width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalContent: { backgroundColor: 'white', borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 25, maxHeight: '80%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },

@@ -76,7 +76,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ isLoadingNotifications: true });
     try {
       const result = await notificationApi.getNotifications({ limit: 50 });
-      const mapped: NotificationItem[] = (result.data ?? []).map((n) => ({
+      const mapped: NotificationItem[] = (result.data ?? []).map((n: any) => ({
         id: String(n.id),
         type: (['order', 'payment', 'alert', 'promo'].includes(n.type) ? n.type : 'alert') as NotificationItem['type'],
         title: n.title,

@@ -10,13 +10,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BackButton } from '@/components/ui/BackButton';
 import { platformSubscriptionApi, PlatformPlan } from '@/api/platformSubscriptionApi';
 import { apiClient } from '@/api/client';
+import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
+
+import { useWindowDimensions } from 'react-native';
 
 const ROLE_COLORS: Record<string, string> = {
   customer: '#005d90', shop_owner: '#006878', delivery: '#7c3aed', admin: '#b45309',
 };
 
 export default function AdminPlansScreen() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
+  const router = useRouter();
   const [plans, setPlans] = useState<PlatformPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -76,25 +82,32 @@ export default function AdminPlansScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
       <StatusBar style="dark" />
-
-      <View style={styles.header}>
-        <BackButton fallback="/admin" />
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={styles.headerTitle}>Subscription Plans</Text>
-          <Text style={styles.headerSub}>{plans.length} plans configured</Text>
+      <SafeAreaView style={styles.headerSafe} edges={['top']}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerTitleRow}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={20} color="#005d90" />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.pageTitle}>Plans</Text>
+              <Text style={styles.headerSub}>{plans.length} total configurations</Text>
+            </View>
+            <TouchableOpacity style={styles.addBtnHeader} onPress={openCreate}>
+              <Ionicons name="add" size={24} color="#005d90" />
+            </TouchableOpacity>
+          </View>
         </View>
-        <TouchableOpacity style={styles.addBtn} onPress={openCreate}>
-          <Ionicons name="add" size={22} color="#005d90" />
-        </TouchableOpacity>
-      </View>
+      </SafeAreaView>
 
       <ScrollView
+        style={{ flex: 1 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchPlans(); }} colors={['#005d90']} />}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { alignItems: 'center' }]}
       >
+        <View style={{ width: '100%', maxWidth: 1200 }}>
         {loading ? (
           <View style={styles.centered}><ActivityIndicator size="large" color="#005d90" /></View>
         ) : plans.length === 0 ? (
@@ -102,53 +115,56 @@ export default function AdminPlansScreen() {
             <Ionicons name="card-outline" size={56} color="#94a3b8" />
             <Text style={styles.emptyText}>No plans yet. Tap + to create one.</Text>
           </View>
-        ) : plans.map((plan) => (
-          <View key={plan.id} style={styles.planCard}>
-            <View style={styles.planTop}>
-              <View style={[styles.planIcon, { backgroundColor: (ROLE_COLORS[plan.role] ?? '#005d90') + '18' }]}>
-                <Ionicons name="card-outline" size={22} color={ROLE_COLORS[plan.role] ?? '#005d90'} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <View style={styles.planNameRow}>
-                  <Text style={styles.planName}>{plan.name}</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: plan.is_active ? '#e8f5e9' : '#ffebee' }]}>
-                    <Text style={[styles.statusText, { color: plan.is_active ? '#2e7d32' : '#c62828' }]}>
-                      {plan.is_active ? 'Active' : 'Inactive'}
-                    </Text>
-                  </View>
+        ) : (
+          plans.map((plan) => (
+            <View key={plan.id} style={styles.planCard}>
+              <View style={styles.planTop}>
+                <View style={[styles.planIcon, { backgroundColor: (ROLE_COLORS[plan.role || 'customer'] ?? '#005d90') + '18' }]}>
+                  <Ionicons name="card-outline" size={22} color={ROLE_COLORS[plan.role || 'customer'] ?? '#005d90'} />
                 </View>
-                <Text style={styles.planSlug}>{plan.slug}</Text>
-              </View>
-              <TouchableOpacity onPress={() => openEdit(plan)} style={styles.editBtn}>
-                <Ionicons name="pencil-outline" size={18} color="#005d90" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.priceRow}>
-              <Text style={styles.price}>₹{plan.price_monthly}<Text style={styles.pricePeriod}>/mo</Text></Text>
-              {plan.price_yearly && (
-                <Text style={styles.priceYearly}>₹{plan.price_yearly}/yr</Text>
-              )}
-            </View>
-
-            <View style={styles.benefitsGrid}>
-              {[
-                { icon: 'bicycle-outline', label: 'Free deliveries', value: plan.free_delivery_count === 0 ? 'Unlimited' : String(plan.free_delivery_count) },
-                { icon: 'pricetag-outline', label: 'Auto discount', value: `${plan.auto_discount_pct}%` },
-                { icon: 'ticket-outline', label: 'Coupons/mo', value: String(plan.monthly_coupon_count) },
-                { icon: 'ribbon-outline', label: 'Loyalty boost', value: `${plan.loyalty_boost_pct}%` },
-              ].map((b) => (
-                <View key={b.label} style={styles.benefitItem}>
-                  <Ionicons name={b.icon as any} size={16} color="#005d90" />
-                  <View>
-                    <Text style={styles.benefitLabel}>{b.label}</Text>
-                    <Text style={styles.benefitValue}>{b.value}</Text>
+                <View style={{ flex: 1 }}>
+                  <View style={styles.planNameRow}>
+                    <Text style={styles.planName}>{plan.name}</Text>
+                    <View style={[styles.statusBadge, { backgroundColor: plan.is_active ? '#e8f5e9' : '#ffebee' }]}>
+                      <Text style={[styles.statusText, { color: plan.is_active ? '#2e7d32' : '#c62828' }]}>
+                        {plan.is_active ? 'Active' : 'Inactive'}
+                      </Text>
+                    </View>
                   </View>
+                  <Text style={styles.planSlug}>{plan.slug}</Text>
                 </View>
-              ))}
+                <TouchableOpacity onPress={() => openEdit(plan)} style={styles.editBtn}>
+                  <Ionicons name="pencil-outline" size={18} color="#005d90" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.priceRow}>
+                <Text style={styles.price}>₹{plan.price_monthly}<Text style={styles.pricePeriod}>/mo</Text></Text>
+                {plan.price_yearly && (
+                  <Text style={styles.priceYearly}>₹{plan.price_yearly}/yr</Text>
+                )}
+              </View>
+
+              <View style={styles.benefitsGrid}>
+                {[
+                  { icon: 'bicycle-outline', label: 'Free deliveries', value: plan.free_delivery_count === 0 ? 'Unlimited' : String(plan.free_delivery_count) },
+                  { icon: 'pricetag-outline', label: 'Auto discount', value: `${plan.auto_discount_pct}%` },
+                  { icon: 'ticket-outline', label: 'Coupons/mo', value: String(plan.monthly_coupon_count) },
+                  { icon: 'ribbon-outline', label: 'Loyalty boost', value: `${plan.loyalty_boost_pct}%` },
+                ].map((b) => (
+                  <View key={b.label} style={styles.benefitItem}>
+                    <Ionicons name={b.icon as any} size={16} color="#005d90" />
+                    <View>
+                      <Text style={styles.benefitLabel}>{b.label}</Text>
+                      <Text style={styles.benefitValue}>{b.value}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
             </View>
-          </View>
-        ))}
+          ))
+        )}
+        </View>
       </ScrollView>
 
       {/* EDIT / CREATE MODAL */}
@@ -165,24 +181,40 @@ export default function AdminPlansScreen() {
               {[
                 { key: 'name', label: 'Plan Name', placeholder: 'e.g. Plus' },
                 { key: 'slug', label: 'Slug', placeholder: 'e.g. plus' },
+                { key: 'category', label: 'Category (customer/shop)', placeholder: 'customer' },
+                { key: 'role', label: 'Role (customer/shop_owner)', placeholder: 'customer' },
                 { key: 'price_monthly', label: 'Monthly Price (₹)', placeholder: '99' },
+                // Customer specific
                 { key: 'auto_discount_pct', label: 'Auto Discount %', placeholder: '2' },
                 { key: 'monthly_coupon_count', label: 'Coupons / Month', placeholder: '3' },
-                { key: 'monthly_coupon_value', label: 'Coupon Value (₹)', placeholder: '50' },
                 { key: 'loyalty_boost_pct', label: 'Loyalty Boost %', placeholder: '10' },
+                // Shop specific
+                { key: 'commission_rate', label: 'Commission Rate %', placeholder: '5' },
               ].map((field) => (
                 <View key={field.key} style={styles.fieldRow}>
                   <Text style={styles.fieldLabel}>{field.label}</Text>
                   <TextInput
                     style={styles.fieldInput}
                     value={String((editPlan as any)?.[field.key] ?? '')}
-                    onChangeText={(v) => setEditPlan((p) => ({ ...p, [field.key]: field.key.includes('price') || field.key.includes('pct') || field.key.includes('count') || field.key.includes('value') ? Number(v) : v }))}
+                    onChangeText={(v) => setEditPlan((p) => ({ ...p, [field.key]: field.key.includes('price') || field.key.includes('pct') || field.key.includes('count') || field.key.includes('value') || field.key === 'commission_rate' ? Number(v) : v }))}
                     placeholder={field.placeholder}
-                    keyboardType={field.key === 'name' || field.key === 'slug' ? 'default' : 'numeric'}
+                    keyboardType={field.key === 'name' || field.key === 'slug' || field.key === 'category' || field.key === 'role' ? 'default' : 'numeric'}
                     placeholderTextColor="#94a3b8"
                   />
                 </View>
               ))}
+              
+              <View style={styles.fieldRow}>
+                <Text style={styles.fieldLabel}>Priority Listing</Text>
+                <TouchableOpacity 
+                   onPress={() => setEditPlan(p => ({ ...p, is_priority_listing: !p?.is_priority_listing }))}
+                   style={[styles.toggleBtn, editPlan?.is_priority_listing && styles.toggleBtnActive]}
+                >
+                   <Text style={[styles.toggleBtnText, editPlan?.is_priority_listing && styles.toggleBtnActiveText]}>
+                      {editPlan?.is_priority_listing ? 'Enabled' : 'Disabled'}
+                   </Text>
+                </TouchableOpacity>
+              </View>
             </ScrollView>
             <TouchableOpacity
               style={[styles.saveBtn, saving && { opacity: 0.6 }]}
@@ -196,21 +228,39 @@ export default function AdminPlansScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
-  header: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 20, paddingVertical: 14,
-    backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+
+  headerSafe: { 
+    backgroundColor: 'white', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f1f5f9',
+    alignItems: 'center',
   },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
-  headerSub: { fontSize: 12, color: '#64748b', fontWeight: '500', marginTop: 1 },
-  addBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
-  content: { padding: 16, gap: 14, paddingBottom: 100 },
+  headerContent: {
+    width: '100%',
+    maxWidth: 1200,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  addBtnHeader: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
+
+  content: { padding: 16, paddingBottom: 100 },
   centered: { paddingTop: 80, alignItems: 'center' },
   emptyText: { marginTop: 14, color: '#64748b', fontWeight: '600', fontSize: 15, textAlign: 'center' },
   planCard: {
@@ -250,4 +300,11 @@ const styles = StyleSheet.create({
   saveBtn: { borderRadius: 16, overflow: 'hidden', marginTop: 16 },
   saveBtnGrad: { paddingVertical: 16, alignItems: 'center' },
   saveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
+  toggleBtn: {
+    backgroundColor: '#f1f5f9', paddingVertical: 12, paddingHorizontal: 16,
+    borderRadius: 12, borderWidth: 1.5, borderColor: '#e0e2e8', alignItems: 'center',
+  },
+  toggleBtnActive: { backgroundColor: '#e0f0ff', borderColor: '#005d90' },
+  toggleBtnText: { color: '#64748b', fontWeight: '700', fontSize: 15 },
+  toggleBtnActiveText: { color: '#005d90' },
 });

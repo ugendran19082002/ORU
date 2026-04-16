@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter, usePathname } from 'expo-router';
+import { useRouter, usePathname, Href } from 'expo-router';
 import { useAppSession } from '@/providers/AppSessionProvider';
 import { Logo } from '@/components/ui/Logo';
 import { adminApi, AdminShop } from '@/api/adminApi';
@@ -137,75 +137,85 @@ export default function AdminOverviewScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
+      <SafeAreaView style={styles.headerSafe} edges={['top']}>
+        <View style={styles.headerContent}>
+          <Text style={styles.pageTitle}>Dashboard</Text>
+          <Text style={styles.headerSub}>System Overview & Stats</Text>
+        </View>
+      </SafeAreaView>
+
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
         style={{ flex: 1 }}
-        contentContainerStyle={{ flexGrow: 1, padding: isDesktop ? 40 : 20, paddingBottom: 80 }}
+        contentContainerStyle={{ 
+          flexGrow: 1, 
+          paddingHorizontal: isDesktop ? 40 : 20, 
+          paddingBottom: 120, 
+          alignItems: 'center' 
+        }}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.pageTitle, isDesktop && { fontSize: 40, marginBottom: 32 }]}>Dashboard Overview</Text>
+        <View style={{ width: '100%', maxWidth: 1200 }}>
 
-        {/* Stats Grid */}
-        <View style={styles.statsGrid}>
-          {(() => {
-            const revenue = dashboardData?.orders.total_revenue;
-            const revenueStr = revenue != null
-              ? '₹' + (revenue >= 100000
-                  ? (revenue / 100000).toFixed(1) + 'L'
-                  : revenue >= 1000
-                  ? (revenue / 1000).toFixed(1) + 'K'
-                  : String(revenue))
-              : '—';
+          {/* Stats Grid */}
+          <View style={[styles.statsGrid, { gap: 12 }]}>
+            {(() => {
+              const revenue = dashboardData?.orders?.total_revenue;
+              const revenueStr = revenue != null
+                ? '₹' + (revenue >= 100000
+                    ? (revenue / 100000).toFixed(1) + 'L'
+                    : revenue >= 1000
+                    ? (revenue / 1000).toFixed(1) + 'K'
+                    : String(revenue))
+                : '—';
 
-            const statsData: StatCardData[] = [
-              {
-                ...STATS_CONFIG[0],
-                value: dashboardData?.orders.total != null ? String(dashboardData.orders.total) : '—',
-                delta: dashboardData?.orders.total != null ? `+${dashboardData.orders.total}` : '—',
-                deltaPos: (dashboardData?.orders.total ?? 0) > 0,
-              },
-              {
-                ...STATS_CONFIG[1],
-                value: dashboardData?.users.total != null ? String(dashboardData.users.total) : '—',
-                delta: dashboardData?.users.new_this_period != null
-                  ? (dashboardData.users.new_this_period >= 0 ? '+' : '') + dashboardData.users.new_this_period
-                  : '—',
-                deltaPos: (dashboardData?.users.new_this_period ?? 0) >= 0,
-              },
-              {
-                ...STATS_CONFIG[2],
-                value: revenueStr,
-                delta: dashboardData?.orders.total_revenue != null
-                  ? (dashboardData.orders.total_revenue >= 0 ? '+' : '') + revenueStr
-                  : '—',
-                deltaPos: (dashboardData?.orders.total_revenue ?? 0) >= 0,
-              },
-              {
-                ...STATS_CONFIG[3],
-                value: dashboardData?.shops.active != null ? String(dashboardData.shops.active) : '—',
-                delta: dashboardData?.shops.pending != null
-                  ? `${dashboardData.shops.pending} pending`
-                  : '—',
-                deltaPos: (dashboardData?.shops.pending ?? 0) === 0,
-              },
-            ];
+              const statsData: StatCardData[] = [
+                {
+                  ...STATS_CONFIG[0],
+                  value: dashboardData?.orders?.total != null ? String(dashboardData?.orders?.total) : '—',
+                  delta: dashboardData?.orders?.total != null ? `+${dashboardData?.orders?.total}` : '—',
+                  deltaPos: (dashboardData?.orders?.total ?? 0) > 0,
+                },
+                {
+                  ...STATS_CONFIG[1],
+                  value: dashboardData?.users?.total != null ? String(dashboardData?.users?.total) : '—',
+                  delta: dashboardData?.users?.new_this_period != null
+                    ? (dashboardData?.users?.new_this_period >= 0 ? '+' : '') + dashboardData?.users?.new_this_period
+                    : '—',
+                  deltaPos: (dashboardData?.users?.new_this_period ?? 0) >= 0,
+                },
+                {
+                  ...STATS_CONFIG[2],
+                  value: revenueStr,
+                  delta: dashboardData?.orders?.total_revenue != null
+                    ? (dashboardData?.orders?.total_revenue >= 0 ? '+' : '') + revenueStr
+                    : '—',
+                  deltaPos: (dashboardData?.orders?.total_revenue ?? 0) >= 0,
+                },
+                {
+                  ...STATS_CONFIG[3],
+                  value: dashboardData?.shops?.active != null ? String(dashboardData?.shops?.active) : '—',
+                  delta: dashboardData?.shops?.pending != null
+                    ? `${dashboardData?.shops?.pending} pending`
+                    : '—',
+                  deltaPos: (dashboardData?.shops?.pending ?? 0) === 0,
+                },
+              ];
 
-            const numCols = 2;
-            return statsData.map((stat, i) => (
-              <View
-                key={i}
-                style={[
-                  styles.statCardWrapper,
-                  { width: '49%' as any },
-                  i % numCols !== numCols - 1 && { marginRight: '2%' },
-                ]}
-              >
-                <StatCard stat={stat} isDesktop={isDesktop} />
-              </View>
-            ));
-          })()}
-        </View>
-
-        <View style={{ flexDirection: isDesktop ? 'row' : 'column', marginTop: 12 }}>
+              return statsData.map((stat, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.statCardWrapper,
+                    { flex: isDesktop ? 1 : (1/2), minWidth: isDesktop ? 220 : '48%' },
+                  ]}
+                >
+                  <StatCard stat={stat} isDesktop={isDesktop} />
+                </View>
+              ));
+            })()}
+          </View>
+        
+          <View style={{ flexDirection: isDesktop ? 'row' : 'column', marginTop: 12 }}>
             {/* Verification Queue (Primary Focus) */}
             <View style={{ flex: isDesktop ? 2 : 1, marginRight: isDesktop ? 32 : 0, marginBottom: isDesktop ? 0 : 32 }}>
                 <View style={styles.sectionHeader}>
@@ -231,7 +241,7 @@ export default function AdminOverviewScreen() {
                     ) : (
                         pendingShops.slice(0, 5).map((item, index) => (
                             <View key={item?.id || index}>
-                                <TouchableOpacity style={styles.verifRow} onPress={() => item?.id && router.push(`/admin/shops/${item.id}`)}>
+                                <TouchableOpacity style={styles.verifRow} onPress={() => item?.id && router.push(`/admin/vendors/${item.id}` as Href)}>
                                     <View style={styles.verifIcon}>
                                         <Ionicons name="business" size={24} color="#005d90" />
                                     </View>
@@ -311,12 +321,12 @@ export default function AdminOverviewScreen() {
                         <View style={{ flex: 1 }}>
                             <Text style={{ fontSize: 15, fontWeight: '800', color: '#181c20' }}>Complaints</Text>
                             <Text style={{ fontSize: 12, color: '#707881' }}>
-                                {dashboardData?.complaints.open != null
-                                    ? `${dashboardData.complaints.open} open${dashboardData.complaints.sos > 0 ? ` • ${dashboardData.complaints.sos} SOS` : ''}`
+                                {dashboardData?.complaints?.open != null
+                                    ? `${dashboardData?.complaints?.open} open${(dashboardData?.complaints?.sos ?? 0) > 0 ? ` • ${dashboardData?.complaints?.sos} SOS` : ''}`
                                     : 'Review & Resolve Issues'}
                             </Text>
                         </View>
-                        {(dashboardData?.complaints.sos ?? 0) > 0 && (
+                        {(dashboardData?.complaints?.sos ?? 0) > 0 && (
                             <View style={{ backgroundColor: '#ba1a1a', borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3, marginRight: 4 }}>
                                 <Text style={{ color: 'white', fontWeight: '900', fontSize: 11 }}>SOS</Text>
                             </View>
@@ -325,6 +335,7 @@ export default function AdminOverviewScreen() {
                     </View>
                 </TouchableOpacity>
             </View>
+          </View>
         </View>
       </ScrollView>
 
@@ -344,7 +355,21 @@ export default function AdminOverviewScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
-  pageTitle: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, marginBottom: 24 },
+  headerSafe: { 
+    backgroundColor: 'white', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f1f5f9',
+    alignItems: 'center',
+  },
+  headerContent: {
+    width: '100%',
+    maxWidth: 1200,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 24 },
   statCardWrapper: { marginBottom: 16 },
   statCard: {

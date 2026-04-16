@@ -57,7 +57,7 @@ export const orderApi = {
    */
   async getAvailableSlots(shopId: number, date: string): Promise<SlotsData> {
     try {
-      const response = await apiClient.get<ApiResponse<SlotsData>>('/slots', {
+      const response = await apiClient.get<ApiResponse<SlotsData>>('/orders/slots', {
         params: { shop_id: shopId, date },
       });
       if (response.data.status === 1) return response.data.data;
@@ -65,6 +65,19 @@ export const orderApi = {
     } catch (error) {
       log.error('[orderApi] getAvailableSlots failed:', error);
       throw ApiError.from(error, 'Failed to fetch available slots');
+    }
+  },
+
+  /**
+   * Update the status of an order.
+   * PATCH /orders/:id/status
+   */
+  async updateStatus(id: string, status: string): Promise<void> {
+    try {
+      await apiClient.patch(`/orders/${id}/status`, { status });
+    } catch (error) {
+      log.error('[orderApi] updateStatus failed:', error);
+      throw ApiError.from(error, 'Failed to update order status');
     }
   },
 };

@@ -168,10 +168,22 @@ apiClient.interceptors.response.use(
     }
 
     // Log non-401 errors (including 404 which was silently swallowed before)
+    const errorBody = error.response?.data;
+    const errorMessage = typeof errorBody === 'object' ? JSON.stringify(errorBody) : (errorBody || error.message);
+
     log.error(
       `❌ [API] ${error.response?.status ?? 'Network'} ${originalRequest?.url} (${duration}ms)`,
-      error.response?.data ?? '',
+      errorMessage,
     );
+
+    // Global UI Alerts for specific errors
+    if (error.response?.status === 500) {
+      DeviceEventEmitter.emit('thannigo:show_toast', {
+        type: 'error',
+        text1: 'Server Error',
+        text2: 'Something went wrong on our end. We have logged the issue.',
+      });
+    }
 
     return Promise.reject(error);
   },

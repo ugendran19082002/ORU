@@ -67,6 +67,21 @@ export type AdminDashboard = {
   refunds: {
     total: number;
     total_amount: number;
+  },
+};
+
+export type CustomerAnalytics = {
+  total_spent: number;
+  total_cans: number;
+  total_saved: number;
+  monthly_data: Array<{
+    month: string;
+    spending: number;
+    usage: number;
+  }>;
+  insights: {
+    avg_frequency_days: number;
+    summer_peak_flag: boolean;
   };
 };
 
@@ -119,6 +134,21 @@ export const analyticsApi = {
     } catch (error) {
       log.error('[analyticsApi] getAdminDashboard failed:', error);
       throw ApiError.from(error, 'Failed to fetch admin dashboard');
+    }
+  },
+
+  /**
+   * Fetch spending and consumption stats for the current customer.
+   * GET /users/me/analytics
+   */
+  async getCustomerAnalytics(): Promise<CustomerAnalytics> {
+    try {
+      const response = await apiClient.get<ApiResponse<CustomerAnalytics>>('/users/me/analytics');
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('FETCH_FAILED', response.status ?? 400, response.data.message || 'Failed to fetch analytics');
+    } catch (error) {
+      log.error('[analyticsApi] getCustomerAnalytics failed:', error);
+      throw ApiError.from(error, 'Failed to fetch analytics');
     }
   },
 };

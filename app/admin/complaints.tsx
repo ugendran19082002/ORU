@@ -10,6 +10,8 @@ import {
   Alert,
   useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -354,64 +356,63 @@ export default function AdminComplaintsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={[styles.header, isDesktop && { paddingHorizontal: 40, height: 80 }]}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/admin')}>
-            <Ionicons name="chevron-back" size={20} color="#005d90" />
-          </TouchableOpacity>
-          <View>
-            <View style={styles.headerTitleRow}>
-              <Text style={[styles.pageTitle, isDesktop && { fontSize: 28 }]}>
-                Complaint Management
-              </Text>
-              {totalSos > 0 && (
-                <View style={styles.sosHeaderBadge}>
-                  <Ionicons name="warning" size={11} color="white" />
-                  <Text style={styles.sosHeaderBadgeText}>{totalSos} SOS</Text>
-                </View>
-              )}
+      <StatusBar style="dark" />
+      <SafeAreaView style={styles.headerSafe} edges={['top']}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={20} color="#005d90" />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <View style={styles.headerTitleRow}>
+                <Text style={styles.pageTitle}>Complaints</Text>
+                {totalSos > 0 && (
+                  <View style={styles.sosHeaderBadge}>
+                    <Ionicons name="warning" size={11} color="white" />
+                    <Text style={styles.sosHeaderBadgeText}>{totalSos} SOS</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.headerSub}>{complaints.length} active complaints</Text>
             </View>
-            <Text style={styles.subtitle}>{complaints.length} complaints shown</Text>
+            {/* SOS toggle */}
+            <TouchableOpacity
+              style={[styles.sosToggle, showSosOnly && styles.sosToggleActive]}
+              onPress={() => setShowSosOnly((v) => !v)}
+            >
+              <Ionicons
+                name="warning"
+                size={14}
+                color={showSosOnly ? 'white' : '#ba1a1a'}
+              />
+              <Text style={[styles.sosToggleText, showSosOnly && { color: 'white' }]}>SOS</Text>
+            </TouchableOpacity>
           </View>
         </View>
+      </SafeAreaView>
 
-        {/* SOS toggle */}
-        <TouchableOpacity
-          style={[styles.sosToggle, showSosOnly && styles.sosToggleActive]}
-          onPress={() => setShowSosOnly((v) => !v)}
-        >
-          <Ionicons
-            name="warning"
-            size={14}
-            color={showSosOnly ? 'white' : '#ba1a1a'}
-          />
-          <Text style={[styles.sosToggleText, showSosOnly && { color: 'white' }]}>SOS Only</Text>
-        </TouchableOpacity>
+      <View style={[styles.filterBar, isDesktop && { alignItems: 'center' }]}>
+        <View style={{ width: '100%', maxWidth: 1200, paddingHorizontal: isDesktop ? 24 : 0 }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabContent}
+          >
+            {TABS.map((tab) => (
+              <TouchableOpacity
+                key={tab.key}
+                onPress={() => setActiveTab(tab.key)}
+                style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+              >
+                <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
       </View>
 
-      {/* Filter Tabs */}
-      <View style={[styles.filterBar, isDesktop && { paddingHorizontal: 40 }]}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabContent}
-        >
-          {TABS.map((tab) => (
-            <TouchableOpacity
-              key={tab.key}
-              onPress={() => setActiveTab(tab.key)}
-              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-            >
-              <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* List */}
       <ScrollView
         refreshControl={
           <RefreshControl
@@ -421,12 +422,14 @@ export default function AdminComplaintsScreen() {
             tintColor="#005d90"
           />
         }
+        style={{ flex: 1 }}
         contentContainerStyle={[
           styles.scrollContent,
-          isDesktop && { paddingHorizontal: width * 0.08 },
+          { alignItems: 'center', paddingBottom: 100 }
         ]}
         showsVerticalScrollIndicator={false}
       >
+        <View style={{ width: '100%', maxWidth: 1200 }}>
         {loading ? (
           <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 80 }} />
         ) : complaints.length === 0 ? (
@@ -455,6 +458,7 @@ export default function AdminComplaintsScreen() {
             />
           ))
         )}
+        </View>
       </ScrollView>
     </View>
   );
@@ -464,58 +468,58 @@ export default function AdminComplaintsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
 
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 16,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
+  headerSafe: { 
+    backgroundColor: 'white', 
+    borderBottomWidth: 1, 
     borderBottomColor: '#f1f5f9',
+    alignItems: 'center',
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  headerContent: {
+    width: '100%',
+    maxWidth: 1200,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 16, flex: 1 },
   backBtn: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#e0f0ff',
+    backgroundColor: '#f1f5f9',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  pageTitle: { fontSize: 22, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
-  subtitle: { fontSize: 12, color: '#64748b', fontWeight: '600', marginTop: 2 },
-
+  pageTitle: { fontSize: 28, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  
   sosHeaderBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     backgroundColor: '#ba1a1a',
     borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
   sosHeaderBadgeText: { color: 'white', fontWeight: '800', fontSize: 11 },
 
   sosToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
     borderWidth: 1.5,
     borderColor: '#ffdad6',
     backgroundColor: '#fff8f7',
   },
   sosToggleActive: { backgroundColor: '#ba1a1a', borderColor: '#ba1a1a' },
-  sosToggleText: { fontSize: 12, fontWeight: '700', color: '#ba1a1a' },
+  sosToggleText: { fontSize: 13, fontWeight: '800', color: '#ba1a1a' },
 
   filterBar: {
     paddingVertical: 14,
-    paddingHorizontal: 24,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#f1f5f9',

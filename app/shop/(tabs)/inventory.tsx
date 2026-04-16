@@ -5,14 +5,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { BackButton } from '@/components/ui/BackButton';
-import { useAppNavigation } from '@/hooks/use-app-navigation';
 
+import { useAppNavigation } from '@/hooks/use-app-navigation';
 
 import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
 import { Logo } from '@/components/ui/Logo';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
+import { apiClient } from '@/api/client';
 import { resolveApiUrl } from '@/api/client';
 import Toast from 'react-native-toast-message';
 import * as ImagePicker from 'expo-image-picker';
@@ -234,11 +234,13 @@ export default function ShopInventoryScreen() {
  
   const handleSave = async () => {
     if (!shopId) return;
-    
+
     try {
       setSaving(true);
-      await onboardingApi.completeShopStep('product_catalog', shopId, {
-        products: products.map(p => ({
+      // Use the live product management API:
+      // For each product — if it has a backend id, PATCH it; otherwise POST as new.
+      const ops = products.map(async (p) => {
+        const body = {
           subcategory_id: p.subcategory_id,
           name: p.name,
           price: parseFloat(p.price) || 0,
@@ -246,15 +248,21 @@ export default function ShopInventoryScreen() {
           deposit_amount: parseFloat(p.deposit_amount) || 0,
           image_url: p.image_url || null,
           is_available: p.is_available !== false,
-          type: p.is_water_can ? 'WATER_CAN' : 'NORMAL'
-        }))
+          type: p.is_water_can ? 'WATER_CAN' : 'NORMAL',
+        };
+        if (p.id) {
+          return apiClient.patch(`/shop-owner/products/${p.id}`, body);
+        } else {
+          return apiClient.post('/shop-owner/products', body);
+        }
       });
-      
+      await Promise.all(ops);
+
       Toast.show({ type: 'success', text1: 'Success', text2: 'Inventory changes saved.' });
       await refreshShopStatus();
-      safeBack('/shop/settings');
+      loadData(true); // Refresh list so new IDs are populated
     } catch (error: any) {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update inventory.' });
+      Toast.show({ type: 'error', text1: 'Error', text2: error?.response?.data?.message || 'Failed to update inventory.' });
     } finally {
       setSaving(false);
     }
@@ -266,7 +274,7 @@ export default function ShopInventoryScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <BackButton fallback="/shop/settings" />
+        <View style={{ width: 40 }} />
         <View style={styles.brandRow}>
           <Logo size="sm" />
           <Text style={styles.brandName}>ThanniGo</Text>

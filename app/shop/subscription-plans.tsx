@@ -1,8 +1,8 @@
 import {
   View, Text, StyleSheet, TouchableOpacity, Switch,
-  ScrollView,
+  ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -12,14 +12,50 @@ import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+import { apiClient } from '@/api/client';
 
+type SubStatus = 'INACTIVE' | 'PENDING_PAYMENT' | 'ACTIVE' | 'PAYMENT_FAILED' | 'EXPIRED' | 'CANCELLED';
 
+interface SubscriptionData {
+  status: SubStatus;
+  plan_id: number | null;
+  start_date: string | null;
+  end_date: string | null;
+  next_renewal_at: string | null;
+  auto_renew: boolean;
+  features: {
+    priority_listing: boolean;
+    analytics: boolean;
+    lower_commission: boolean;
+    instant_delivery: boolean;
+  };
+}
 
-const PLAN_TYPES = [
-  { id: 'daily', label: 'Daily Drop', cans: 1, price: 50, billing: 'per day', color: '#006878', gradient: ['#006878', '#004e5b'] as [string, string] },
-  { id: 'weekly', label: 'Weekly Pack', cans: 7, price: 320, billing: 'per week', color: '#005d90', gradient: ['#005d90', '#003f6b'] as [string, string], tag: 'SAVE ₹30' },
-  { id: 'monthly', label: 'Monthly Plan', cans: 30, price: 1200, billing: 'per month', color: '#7c3aed', gradient: ['#7c3aed', '#5b21b6'] as [string, string], tag: 'BEST VALUE' },
+const PLAN_FEATURES = [
+  { icon: 'checkmark-circle', text: 'Priority listing in search results', color: '#2e7d32' },
+  { icon: 'checkmark-circle', text: 'Advanced analytics dashboard', color: '#2e7d32' },
+  { icon: 'checkmark-circle', text: 'Lower platform commission', color: '#2e7d32' },
+  { icon: 'checkmark-circle', text: 'Instant delivery support', color: '#2e7d32' },
+  { icon: 'checkmark-circle', text: 'Cancel anytime', color: '#2e7d32' },
 ];
+
+const STATUS_COLOR: Record<SubStatus, string> = {
+  ACTIVE: '#2e7d32',
+  INACTIVE: '#707881',
+  PENDING_PAYMENT: '#b45309',
+  PAYMENT_FAILED: '#dc2626',
+  EXPIRED: '#94a3b8',
+  CANCELLED: '#94a3b8',
+};
+
+const STATUS_LABEL: Record<SubStatus, string> = {
+  ACTIVE: 'Active',
+  INACTIVE: 'Inactive',
+  PENDING_PAYMENT: 'Pending Payment',
+  PAYMENT_FAILED: 'Payment Failed',
+  EXPIRED: 'Expired',
+  CANCELLED: 'Cancelled',
+};
 
 export default function ShopSubscriptionPlansScreen() {
   const router = useRouter();
@@ -29,24 +65,92 @@ export default function ShopSubscriptionPlansScreen() {
     safeBack('/shop/settings');
   });
 
-  const [selected, setSelected] = useState('weekly');
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   const [autoRenew, setAutoRenew] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const plan = PLAN_TYPES.find((p) => p.id === selected)!;
+  const fetchSubscription = useCallback(async () => {
+    try {
+      setError(null);
+      const res = await apiClient.get('/shop-owner/subscription');
+      if (res.data.status === 1) {
+        const data: SubscriptionData = res.data.data;
+        setSubscription(data);
+        setAutoRenew(data.auto_renew);
+      }
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? 'Failed to load subscription.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const handleSubscribe = () => {
-    require('react-native').Alert.alert('Subscribe Shop', `Subscribe shop to ${plan.label} at ₹${plan.price}/${plan.billing}?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Confirm',
-        onPress: () => Toast.show({
-          type: 'success',
-          text1: 'Subscribed!',
-          text2: `Shop enrolled in ${plan.label}.`
-        })
-      },
-    ]);
+  useEffect(() => {
+    fetchSubscription();
+  }, [fetchSubscription]);
+
+  const isActive = subscription?.status === 'ACTIVE';
+
+  const handleActivate = () => {
+    Alert.alert(
+      'Activate Subscription',
+      'Activate your shop subscription? Your first plan is FREE.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Activate',
+          onPress: async () => {
+            try {
+              setActionLoading(true);
+              const res = await apiClient.post('/shop-owner/subscription/activate', { auto_renew: autoRenew });
+              if (res.data.status === 1) {
+                Toast.show({ type: 'success', text1: 'Subscribed!', text2: 'Shop subscription is now active.' });
+                await fetchSubscription();
+              }
+            } catch (e: any) {
+              const msg = e?.response?.data?.message ?? 'Activation failed.';
+              Toast.show({ type: 'error', text1: 'Error', text2: msg });
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ]
+    );
   };
+
+  const handleCancel = () => {
+    Alert.alert(
+      'Cancel Subscription',
+      'Are you sure you want to cancel your subscription? You will lose access to premium features.',
+      [
+        { text: 'Keep Subscription', style: 'cancel' },
+        {
+          text: 'Cancel Subscription',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setActionLoading(true);
+              const res = await apiClient.post('/shop-owner/subscription/cancel', { reason: 'User requested cancellation' });
+              if (res.data.status === 1) {
+                Toast.show({ type: 'success', text1: 'Cancelled', text2: 'Subscription has been cancelled.' });
+                await fetchSubscription();
+              }
+            } catch (e: any) {
+              const msg = e?.response?.data?.message ?? 'Cancellation failed.';
+              Toast.show({ type: 'error', text1: 'Error', text2: msg });
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const heroGradient: [string, string] = isActive ? ['#2e7d32', '#1b5e20'] : ['#006878', '#004e5b'];
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -54,86 +158,115 @@ export default function ShopSubscriptionPlansScreen() {
 
       <View style={styles.header}>
         <BackButton fallback="/shop/settings" />
-        <Text style={styles.headerTitle}>Shop Subscription Plans</Text>
+        <Text style={styles.headerTitle}>Shop Subscription</Text>
       </View>
 
-
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-
-        <LinearGradient colors={plan.gradient} style={styles.heroCard}>
-          <Ionicons name="water" size={80} color="rgba(255,255,255,0.07)" style={styles.heroDecor} />
-          <Text style={styles.heroLabel}>SELECTED PLAN</Text>
-          <Text style={styles.heroName}>{plan.label}</Text>
-          <Text style={styles.heroPrice}>₹{plan.price}<Text style={styles.heroUnit}>/{plan.billing}</Text></Text>
-          <Text style={styles.heroCans}>{plan.cans} can{plan.cans > 1 ? 's' : ''} included</Text>
-        </LinearGradient>
-
-        <Text style={styles.sectionTitle}>Choose a Plan</Text>
-        {PLAN_TYPES.map((p) => (
-          <TouchableOpacity
-            key={p.id}
-            style={[styles.planCard, selected === p.id && styles.planCardActive]}
-            onPress={() => setSelected(p.id)}
-          >
-            {p.tag && (
-              <View style={[styles.tagBadge, { backgroundColor: p.color + '20' }]}>
-                <Text style={[styles.tagText, { color: p.color }]}>{p.tag}</Text>
-              </View>
-            )}
-            <View style={styles.planRow}>
-              <View style={[styles.planIcon, { backgroundColor: p.color + '15' }]}>
-                <Ionicons name="water" size={22} color={p.color} />
-              </View>
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={styles.planName}>{p.label}</Text>
-                <Text style={styles.planCans}>{p.cans} can{p.cans > 1 ? 's' : ''} / {p.billing}</Text>
-              </View>
-              <Text style={[styles.planPrice, { color: p.color }]}>₹{p.price}</Text>
-              <View style={[styles.radio, selected === p.id && { borderColor: p.color }]}>
-                {selected === p.id && <View style={[styles.radioDot, { backgroundColor: p.color }]} />}
-              </View>
-            </View>
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#005d90" />
+        </View>
+      ) : error ? (
+        <View style={styles.center}>
+          <Ionicons name="cloud-offline-outline" size={48} color="#94a3b8" />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryBtn} onPress={fetchSubscription}>
+            <Text style={styles.retryText}>Retry</Text>
           </TouchableOpacity>
-        ))}
-
-        {/* AUTO-RENEW */}
-        <View style={styles.autoRenewCard}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.autoRenewTitle}>Auto-Renew</Text>
-            <Text style={styles.autoRenewSub}>Automatically renew when the current period ends.</Text>
-          </View>
-          <Switch
-            value={autoRenew}
-            onValueChange={setAutoRenew}
-            trackColor={{ false: '#e0e2e8', true: '#bfdbf7' }}
-            thumbColor={autoRenew ? '#005d90' : '#94a3b8'}
-          />
         </View>
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
-        {/* BENEFITS */}
-        <Text style={styles.sectionTitle}>What's Included</Text>
-        <View style={styles.benefitsList}>
-          {[
-            { icon: 'checkmark-circle', text: 'Guaranteed delivery slots', color: '#2e7d32' },
-            { icon: 'checkmark-circle', text: 'Priority order queue', color: '#2e7d32' },
-            { icon: 'checkmark-circle', text: 'Fixed price — no surge pricing', color: '#2e7d32' },
-            { icon: 'checkmark-circle', text: 'Dedicated shop support line', color: '#2e7d32' },
-            { icon: 'checkmark-circle', text: 'Cancel or pause anytime', color: '#2e7d32' },
-          ].map((b) => (
-            <View key={b.text} style={styles.benefitRow}>
-              <Ionicons name={b.icon as any} size={18} color={b.color} />
-              <Text style={styles.benefitText}>{b.text}</Text>
+          {/* STATUS HERO CARD */}
+          <LinearGradient colors={heroGradient} style={styles.heroCard}>
+            <Ionicons name="water" size={80} color="rgba(255,255,255,0.07)" style={styles.heroDecor} />
+            <Text style={styles.heroLabel}>SUBSCRIPTION STATUS</Text>
+            <View style={styles.heroStatusRow}>
+              <View style={[styles.statusDot, { backgroundColor: STATUS_COLOR[subscription?.status ?? 'INACTIVE'] }]} />
+              <Text style={styles.heroStatus}>{STATUS_LABEL[subscription?.status ?? 'INACTIVE']}</Text>
             </View>
-          ))}
-        </View>
-
-        <TouchableOpacity style={styles.subscribeBtn} onPress={handleSubscribe}>
-          <LinearGradient colors={plan.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.subscribeBtnGrad}>
-            <Text style={styles.subscribeBtnText}>Subscribe — ₹{plan.price}/{plan.billing}</Text>
+            {isActive && subscription?.end_date && (
+              <Text style={styles.heroSub}>Renews on {new Date(subscription.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
+            )}
+            {!isActive && (
+              <Text style={styles.heroSub}>Activate to unlock premium features — first plan is FREE</Text>
+            )}
           </LinearGradient>
-        </TouchableOpacity>
 
-      </ScrollView>
+          {/* FEATURES */}
+          {isActive && subscription?.features && (
+            <>
+              <Text style={styles.sectionTitle}>Active Features</Text>
+              <View style={styles.featureGrid}>
+                {[
+                  { key: 'priority_listing', label: 'Priority Listing', icon: 'star' },
+                  { key: 'analytics', label: 'Analytics', icon: 'bar-chart' },
+                  { key: 'lower_commission', label: 'Lower Commission', icon: 'trending-down' },
+                  { key: 'instant_delivery', label: 'Instant Delivery', icon: 'flash' },
+                ].map((f) => {
+                  const enabled = subscription.features[f.key as keyof typeof subscription.features];
+                  return (
+                    <View key={f.key} style={[styles.featureChip, !enabled && styles.featureChipOff]}>
+                      <Ionicons name={f.icon as any} size={16} color={enabled ? '#2e7d32' : '#94a3b8'} />
+                      <Text style={[styles.featureChipText, !enabled && styles.featureChipTextOff]}>{f.label}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </>
+          )}
+
+          {/* PLAN BENEFITS */}
+          <Text style={styles.sectionTitle}>What's Included</Text>
+          <View style={styles.benefitsList}>
+            {PLAN_FEATURES.map((b) => (
+              <View key={b.text} style={styles.benefitRow}>
+                <Ionicons name={b.icon as any} size={18} color={b.color} />
+                <Text style={styles.benefitText}>{b.text}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* AUTO-RENEW (only show if not active — settings for future activation) */}
+          {!isActive && (
+            <View style={styles.autoRenewCard}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.autoRenewTitle}>Auto-Renew</Text>
+                <Text style={styles.autoRenewSub}>Automatically renew when the current period ends.</Text>
+              </View>
+              <Switch
+                value={autoRenew}
+                onValueChange={setAutoRenew}
+                trackColor={{ false: '#e0e2e8', true: '#bfdbf7' }}
+                thumbColor={autoRenew ? '#005d90' : '#94a3b8'}
+              />
+            </View>
+          )}
+
+          {/* ACTION BUTTON */}
+          {isActive ? (
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={handleCancel}
+              disabled={actionLoading}
+            >
+              {actionLoading
+                ? <ActivityIndicator color="#dc2626" />
+                : <Text style={styles.cancelBtnText}>Cancel Subscription</Text>
+              }
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.subscribeBtn} onPress={handleActivate} disabled={actionLoading}>
+              <LinearGradient colors={['#006878', '#004e5b']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.subscribeBtnGrad}>
+                {actionLoading
+                  ? <ActivityIndicator color="white" />
+                  : <Text style={styles.subscribeBtnText}>Activate Free Plan</Text>
+                }
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -141,37 +274,34 @@ export default function ShopSubscriptionPlansScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '900', color: '#0f172a' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
+  errorText: { fontSize: 14, color: '#64748b', textAlign: 'center', fontWeight: '500' },
+  retryBtn: { paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#005d90', borderRadius: 12 },
+  retryText: { color: 'white', fontWeight: '700', fontSize: 14 },
   content: { padding: 20, gap: 14, paddingBottom: 40 },
   heroCard: { borderRadius: 24, padding: 24, overflow: 'hidden', shadowColor: '#005d90', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8 },
   heroDecor: { position: 'absolute', right: -16, bottom: -16 },
-  heroLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.7)', letterSpacing: 1, marginBottom: 6 },
-  heroName: { fontSize: 26, fontWeight: '900', color: 'white', marginBottom: 6 },
-  heroPrice: { fontSize: 38, fontWeight: '900', color: 'white', letterSpacing: -1 },
-  heroUnit: { fontSize: 16, fontWeight: '500' },
-  heroCans: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 4 },
+  heroLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.7)', letterSpacing: 1, marginBottom: 8 },
+  heroStatusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
+  statusDot: { width: 10, height: 10, borderRadius: 5 },
+  heroStatus: { fontSize: 28, fontWeight: '900', color: 'white' },
+  heroSub: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 4, fontWeight: '500' },
   sectionTitle: { fontSize: 15, fontWeight: '800', color: '#181c20', letterSpacing: -0.3 },
-  planCard: { backgroundColor: 'white', borderRadius: 18, padding: 16, borderWidth: 1.5, borderColor: '#e0e2e8', overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
-  planCardActive: { borderColor: '#005d90', backgroundColor: '#f0f7ff' },
-  tagBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 8, marginBottom: 10 },
-  tagText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
-  planRow: { flexDirection: 'row', alignItems: 'center' },
-  planIcon: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  planName: { fontSize: 16, fontWeight: '800', color: '#181c20', marginBottom: 2 },
-  planCans: { fontSize: 12, color: '#707881', fontWeight: '600' },
-  planPrice: { fontSize: 20, fontWeight: '900', marginRight: 12 },
-  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#e0e2e8', alignItems: 'center', justifyContent: 'center' },
-  radioDot: { width: 10, height: 10, borderRadius: 5 },
-  autoRenewCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'white', borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
-  autoRenewTitle: { fontSize: 14, fontWeight: '800', color: '#181c20', marginBottom: 2 },
-  autoRenewSub: { fontSize: 12, color: '#707881', fontWeight: '500' },
+  featureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  featureChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#e8f5e9', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
+  featureChipOff: { backgroundColor: '#f1f5f9' },
+  featureChipText: { fontSize: 12, fontWeight: '700', color: '#2e7d32' },
+  featureChipTextOff: { color: '#94a3b8' },
   benefitsList: { backgroundColor: 'white', borderRadius: 18, padding: 18, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
   benefitRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   benefitText: { fontSize: 13, color: '#181c20', fontWeight: '600' },
+  autoRenewCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'white', borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  autoRenewTitle: { fontSize: 14, fontWeight: '800', color: '#181c20', marginBottom: 2 },
+  autoRenewSub: { fontSize: 12, color: '#707881', fontWeight: '500' },
   subscribeBtn: { borderRadius: 18, overflow: 'hidden' },
   subscribeBtnGrad: { paddingVertical: 17, alignItems: 'center' },
   subscribeBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
+  cancelBtn: { borderWidth: 1.5, borderColor: '#dc2626', borderRadius: 18, paddingVertical: 16, alignItems: 'center', backgroundColor: '#fff5f5' },
+  cancelBtnText: { color: '#dc2626', fontSize: 15, fontWeight: '800' },
 });
-
-

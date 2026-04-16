@@ -29,8 +29,16 @@ export default function AdminSettingsScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="dark" />
+      <SafeAreaView style={styles.headerSafe} edges={['top']}>
+        <View style={styles.headerContent}>
+          <Text style={styles.pageTitle}>Settings</Text>
+          <Text style={styles.headerSub}>Account & System Configuration</Text>
+        </View>
+      </SafeAreaView>
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.pageTitle}>Settings</Text>
+        <View style={{ width: '100%', maxWidth: 1200 }}>
 
         {/* PROFILE PREVIEW */}
         <View style={styles.profileCard}>
@@ -50,36 +58,6 @@ export default function AdminSettingsScreen() {
         </View>
 
         {/* SETTINGS MENU */}
-        {/* PLATFORM MANAGEMENT */}
-        <Text style={styles.sectionHeader}>Platform Management</Text>
-        <View style={[styles.menuCard, { marginBottom: 28 }]}>
-          {[
-            { label: 'Subscription Plans', icon: 'card-outline', subtitle: 'Manage Plus & other plans', path: '/admin/plans' },
-            { label: 'Feature Flags', icon: 'toggle-outline', subtitle: 'Enable / disable platform features', path: '/admin/features' },
-            { label: 'Complaint Management', icon: 'chatbubble-ellipses-outline', subtitle: 'Review SOS & open complaints', path: '/admin/complaints' },
-            { label: 'Master Data', icon: 'list-outline', subtitle: 'Categories & subcategories', path: '/admin/master' },
-            { label: 'System Settings', icon: 'settings-outline', subtitle: 'Global platform configuration', path: '/admin/settings' },
-          ].map((item, index, arr) => (
-            <React.Fragment key={item.label}>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => router.push(item.path as any)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.menuIconBox}>
-                  <Ionicons name={item.icon as any} size={20} color="#005d90" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.menuLabel}>{item.label}</Text>
-                  <Text style={styles.menuSub}>{item.subtitle}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color="#bfc7d1" />
-              </TouchableOpacity>
-              {index < arr.length - 1 && <View style={styles.divider} />}
-            </React.Fragment>
-          ))}
-        </View>
-
         <Text style={styles.sectionHeader}>Account & Security</Text>
         <View style={styles.menuCard}>
           {menuItems.map((item, index) => (
@@ -110,16 +88,58 @@ export default function AdminSettingsScreen() {
           ))}
         </View>
 
+        <Text style={styles.sectionHeader}>Support & Platform</Text>
+        <View style={styles.menuCard}>
+           {[
+            { label: 'System Settings', icon: 'settings-outline', subtitle: 'Global platform configuration', path: '/admin/settings' },
+            { label: 'Emergency Support', icon: 'headset-outline', subtitle: 'Contact developer team', path: '#' },
+          ].map((item, index, arr) => (
+            <React.Fragment key={item.label}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={() => item.path !== '#' && router.push(item.path as any)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.menuIconBox}>
+                  <Ionicons name={item.icon as any} size={20} color="#005d90" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.menuLabel}>{item.label}</Text>
+                  <Text style={styles.menuSub}>{item.subtitle}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color="#bfc7d1" />
+              </TouchableOpacity>
+              {index < arr.length - 1 && <View style={styles.divider} />}
+            </React.Fragment>
+          ))}
+        </View>
+
+
         <Text style={styles.footer}>ThanniGo Admin · v1.0.0</Text>
+        </View>
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f1f4f9' },
-  scrollContent: { padding: 24, paddingBottom: 100 },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: '#1a1c1e', marginBottom: 24 },
+  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  headerSafe: { 
+    backgroundColor: 'white', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f1f5f9',
+    alignItems: 'center',
+  },
+  headerContent: {
+    width: '100%',
+    maxWidth: 1200,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: '#1a1c1e', letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  
+  scrollContent: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 120, alignItems: 'center' },
   
   profileCard: { 
     flexDirection: 'row', 

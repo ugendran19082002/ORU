@@ -167,7 +167,29 @@ export default function PrivacySecurityScreen() {
 
         <TouchableOpacity 
           style={styles.deleteBtn}
-          onPress={() => require('react-native').Alert.alert('Request Account Deletion', 'Our team will contact you within 24 hours to process your request.', [{ text: 'Cancel' }, { text: 'Send Request', style: 'destructive' }])}
+          onPress={() => require('react-native').Alert.alert(
+            'Request Account Deletion', 
+            'This action is irreversible and will delete all your data. Are you sure?', 
+            [
+              { text: 'Cancel', style: 'cancel' }, 
+              { 
+                text: 'Delete Account', 
+                style: 'destructive',
+                onPress: async () => {
+                  try {
+                    const { userApi } = require('@/api/userApi');
+                    const { useAppSession } = require('@/hooks/use-app-session');
+                    await userApi.deleteAccount();
+                    Toast.show({ type: 'success', text1: 'Account Deleted', text2: 'Your account has been deleted.' });
+                    useAppSession.getState().logout();
+                    router.replace('/auth/role');
+                  } catch (err: any) {
+                    Toast.show({ type: 'error', text1: 'Deletion Failed', text2: err.message || 'Could not delete your account.' });
+                  }
+                }
+              }
+            ]
+          )}
         >
           <Text style={styles.deleteBtnText}>Request Account Deletion</Text>
         </TouchableOpacity>

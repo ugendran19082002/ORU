@@ -20,6 +20,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { Logo } from '@/components/ui/Logo';
 import { useShopStore } from '@/stores/shopStore';
+import { useCartStore } from '@/stores/cartStore';
+import { useOrderStore } from '@/stores/orderStore';
 import { addressApi } from '@/api/addressApi';
 import { apiClient } from '@/api/client';
 
@@ -51,7 +53,9 @@ const getShopImage = (hero: string) => {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { setSelectedShop, loadShops, shops } = useShopStore();
+  const { setSelectedShop, loadShops, searchShops, fetchPersonalized, shops } = useShopStore();
+  const { items: cartItems } = useCartStore();
+  const { orders, fetchOrders } = useOrderStore();
   const [search, setSearch] = useState('');
   
   const [loadingLoc, setLoadingLoc] = useState(true);
@@ -67,6 +71,9 @@ export default function HomeScreen() {
   const [currentAddress, setCurrentAddress] = useState('Locating...');
   const [currentAddressTitle, setCurrentAddressTitle] = useState('Location');
   const [userAddresses, setUserAddresses] = useState<any[]>([]);
+  const [personalizedShop, setPersonalizedShop] = useState<any>(null);
+
+  const cartCount = Object.values(cartItems).reduce((sum, q) => sum + q.quantity, 0);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -99,6 +106,7 @@ export default function HomeScreen() {
     useCallback(() => {
       checkLocation();
       fetchLoyaltyBalance();
+      fetchOrders(); // Ensure history is fresh for personalization fallbacks
     }, [])
   );
 
@@ -170,6 +178,10 @@ export default function HomeScreen() {
 
       // 3. Fetch approved shops from backend using these coordinates
       await loadShops({ lat: currentLat, lng: currentLng });
+
+      // 4. Fetch personalization hero content
+      const hero = await fetchPersonalized(currentLat, currentLng);
+      setPersonalizedShop(hero);
 
     } catch (err) {
       console.warn("Could not fetch location, falling back to mock area", err);
@@ -246,13 +258,15 @@ export default function HomeScreen() {
 
           <TouchableOpacity
             style={styles.iconBtn}
-            onPress={() => router.push('/(tabs)/orders' as any)}
+            onPress={() => router.push('/order/checkout' as any)}
             activeOpacity={0.8}
           >
             <Ionicons name="cart-outline" size={22} color="#005d90" />
-            <View style={styles.cartBadge}>
-              <Text style={styles.cartBadgeText}>1</Text>
-            </View>
+            {cartCount > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{cartCount}</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -264,7 +278,7 @@ export default function HomeScreen() {
         keyboardShouldPersistTaps="handled"
       >
         
-        {/* HERO BANNER (REORDER) */}
+        {/* HERO BANNER (REORDER OR DISCOVERY) */}
         <LinearGradient
           colors={['#005d90', '#0077b6']}
           start={{ x: 0, y: 0 }}
@@ -273,24 +287,28 @@ export default function HomeScreen() {
         >
           <View style={styles.heroContent}>
             <View style={styles.heroPill}>
-              <Ionicons name="water" size={12} color="white" />
-              <Text style={styles.heroPillText}>DEFAULT SHOP</Text>
+              <Ionicons name={personalizedShop ? "flash" : "compass"} size={12} color="white" />
+              <Text style={styles.heroPillText}>{personalizedShop ? 'ONE-TAP REORDER' : 'DISCOVER SHOPS'}</Text>
             </View>
-            <Text style={styles.heroTitle}>One-Tap Refresh</Text>
+            <Text style={styles.heroTitle}>{personalizedShop ? 'Welcome Back!' : 'Fresh Water, Fast'}</Text>
             <Text style={styles.heroSubtitle}>
-              Quickly reorder 2 cans of Mineral Water securely from your saved favorite shop.
+              {personalizedShop 
+                ? `Ready to reorder from ${personalizedShop.name}? Get your 20L cans delivered in 30 mins.`
+                : 'ThanniGo delivers high-quality mineral water to your doorstep in 15-45 minutes.'}
             </Text>
             <TouchableOpacity 
               activeOpacity={0.88} 
               style={styles.reorderBtn} 
               onPress={() => {
-                const shopId = '1'; // Default shop for reorder hero
-                setSelectedShop(shopId);
-                router.push(`/order/checkout?shopId=${shopId}&qty=2` as any);
+                const shopId = personalizedShop?.id || (shops[0]?.id);
+                if (shopId) {
+                  setSelectedShop(shopId);
+                  router.push(`/shop-detail/${shopId}` as any);
+                }
               }}
             >
-              <Ionicons name="refresh" size={18} color="#005d90" />
-              <Text style={styles.reorderBtnText}>Reorder Now</Text>
+              <Ionicons name={personalizedShop ? "refresh" : "search"} size={18} color="#005d90" />
+              <Text style={styles.reorderBtnText}>{personalizedShop ? 'Reorder Now' : 'Find Shops'}</Text>
             </TouchableOpacity>
           </View>
           <Ionicons name="water" size={180} color="rgba(255,255,255,0.08)" style={styles.heroDecor} />
@@ -304,7 +322,14 @@ export default function HomeScreen() {
             placeholder="Search shops..."
             placeholderTextColor="#94a3b8"
             value={search}
-            onChangeText={setSearch}
+            onChangeText={(v) => {
+              setSearch(v);
+              if (v.trim().length > 2) {
+                searchShops(v, userLoc?.lat, userLoc?.lng);
+              } else if (v.trim().length === 0) {
+                checkLocation(); // Reset to nearby shops
+              }
+            }}
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch('')}>

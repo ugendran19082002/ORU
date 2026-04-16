@@ -1,35 +1,61 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView,
-  RefreshControl, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
+  RefreshControl, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import Toast from 'react-native-toast-message';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
+import { apiClient } from '@/api/client';
+import { useOrderStore } from '@/stores/orderStore';
 
 export default function OrderRatingScreen() {
+  const router = useRouter();
+  const { safeBack } = useAppNavigation();
+  const { orderId } = useLocalSearchParams<{ orderId: string }>();
+  const { orders, activeOrderId } = useOrderStore();
   const [refreshing, setRefreshing] = React.useState(false);
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+    setTimeout(() => setRefreshing(false), 1000);
   }, []);
 
-  const router = useRouter();
-  const { safeBack } = useAppNavigation();
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useAndroidBackHandler(() => {
-    safeBack('/(tabs)');
-  });
+  const targetOrderId = orderId || activeOrderId || '';
+  const order = orders.find((o) => o.id === targetOrderId) ?? orders[0];
 
-  const submitFeedback = () => {
-    // In a real app, this would submit the feedback to the backend.
-    router.replace('/(tabs)' as any);
+  useAndroidBackHandler(() => { safeBack('/(tabs)'); });
+
+  const submitFeedback = async () => {
+    if (rating === 0) {
+      Toast.show({ type: 'error', text1: 'Rating Required', text2: 'Please select at least 1 star.' });
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await apiClient.post('/engagement/ratings', {
+        order_id: order?.id ?? targetOrderId,
+        rating,
+        comment: feedback.trim() || undefined,
+      });
+      Toast.show({ type: 'success', text1: 'Thanks for your feedback!' });
+      // Per spec: rating < 3 → route to complaint flow
+      if (rating < 3) {
+        router.replace('/report-issue' as any);
+      } else {
+        router.replace('/(tabs)' as any);
+      }
+    } catch (err: any) {
+      Toast.show({ type: 'error', text1: 'Submit Failed', text2: err?.message ?? 'Please try again.' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -50,7 +76,9 @@ export default function OrderRatingScreen() {
         </View>
         
         <Text style={styles.successTitle}>Delivery Successful!</Text>
-        <Text style={styles.successSub}>Order #TN-9412 from AquaPrime has been delivered to your location.</Text>
+        <Text style={styles.successSub}>
+          Order {order ? `#${order.id.slice(-4).toUpperCase()}` : ''} has been delivered.
+        </Text>
 
         <View style={styles.ratingCard}>
           <Text style={styles.ratingLabel}>Rate your experience</Text>
@@ -65,6 +93,11 @@ export default function OrderRatingScreen() {
               </TouchableOpacity>
             ))}
           </View>
+          {rating > 0 && rating < 3 && (
+            <Text style={{ fontSize: 12, color: '#ef4444', marginTop: 8, fontWeight: '600' }}>
+              Low rating detected — you'll be prompted to file a complaint.
+            </Text>
+          )}
         </View>
 
         <View style={styles.feedbackWrap}>
@@ -88,9 +121,13 @@ export default function OrderRatingScreen() {
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={submitFeedback}
-          style={styles.submitBtn}
+          disabled={isSubmitting}
+          style={[styles.submitBtn, isSubmitting && { opacity: 0.6 }]}
         >
-          <Text style={styles.submitBtnText}>Submit & Return Home</Text>
+          {isSubmitting
+            ? <ActivityIndicator color="white" />
+            : <Text style={styles.submitBtnText}>Submit & Return Home</Text>
+          }
         </TouchableOpacity>
       </View>
     </SafeAreaView>

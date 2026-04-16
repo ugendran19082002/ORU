@@ -82,7 +82,7 @@ export default function SubscriptionsScreen() {
 
   useAndroidBackHandler(() => { safeBack('/(tabs)/profile'); });
 
-  // ─── Product subscription (existing water-can delivery plans) ─
+  // ─── Product subscription (water-can delivery plans) ─────────
   const [selected, setSelected] = useState<PlanId>('standard');
   const [activeSub, setActiveSub] = useState<ActiveSub | null>({
     planId: 'standard',
@@ -91,11 +91,13 @@ export default function SubscriptionsScreen() {
     paused: false,
   });
 
-  // ─── Platform subscription (Plus Membership ₹99/month) ────────
+  // ─── Platform subscription (Plus ₹99/month) ──────────────────
   const [platformPlans, setPlatformPlans] = useState<PlatformPlan[]>([]);
   const [myPlatformSub, setMyPlatformSub] = useState<PlatformSubscription | null>(null);
   const [platformLoading, setPlatformLoading] = useState(true);
   const [platformSubmitting, setPlatformSubmitting] = useState(false);
+  const [showPauseModal, setShowPauseModal] = useState(false);
+  const [pauseEnd, setPauseEnd] = useState('');
 
   const fetchPlatformData = useCallback(async () => {
     try {
@@ -113,6 +115,19 @@ export default function SubscriptionsScreen() {
 
   const plusPlan = platformPlans[0] ?? null;
 
+  // ─── Helpers ──────────────────────────────────────────────────
+  const subStatus = myPlatformSub?.status ?? null;
+
+  const graceExpiresAt = (myPlatformSub as any)?.grace_expires_at ?? null;
+  const graceDaysLeft = graceExpiresAt
+    ? Math.max(0, Math.ceil((new Date(graceExpiresAt).getTime() - Date.now()) / 86400000))
+    : 0;
+
+  const freeDelivLeft = plusPlan
+    ? Math.max(0, (plusPlan.free_delivery_count ?? 99) - (myPlatformSub?.free_deliveries_used ?? 0))
+    : 99;
+
+  // ─── Actions ─────────────────────────────────────────────────
   const handleGetPlus = () => {
     if (!plusPlan) return;
     Alert.alert(
@@ -139,7 +154,7 @@ export default function SubscriptionsScreen() {
 
   const handleCancelPlus = () => {
     if (!myPlatformSub) return;
-    Alert.alert('Cancel Plus?', 'Your membership benefits will end at the current billing period.', [
+    Alert.alert('Cancel Plus?', 'Benefits end immediately. Your existing coupons remain valid.', [
       { text: 'Keep Plus', style: 'cancel' },
       {
         text: 'Cancel', style: 'destructive',
@@ -154,14 +169,52 @@ export default function SubscriptionsScreen() {
     ]);
   };
 
+  const handleRetryPayment = async () => {
+    if (!myPlatformSub) return;
+    try {
+      setPlatformSubmitting(true);
+      const result = await platformSubscriptionApi.retryPayment(myPlatformSub.id);
+      Toast.show({ type: 'success', text1: 'Retry Initiated', text2: result.message });
+    } catch (e: any) {
+      Toast.show({ type: 'error', text1: 'Retry Failed', text2: e?.message ?? 'Could not retry payment' });
+    } finally { setPlatformSubmitting(false); }
+  };
+
+  const handlePause = async () => {
+    if (!myPlatformSub || !pauseEnd) {
+      Toast.show({ type: 'error', text1: 'Enter a resume date' });
+      return;
+    }
+    try {
+      setPlatformSubmitting(true);
+      const today = new Date().toISOString().split('T')[0];
+      await platformSubscriptionApi.pauseSubscription(myPlatformSub.id, { pause_start: today, pause_end: pauseEnd });
+      Toast.show({ type: 'success', text1: 'Paused', text2: `Subscription paused until ${pauseEnd}` });
+      setShowPauseModal(false);
+      setPauseEnd('');
+      await fetchPlatformData();
+    } catch (e: any) {
+      Toast.show({ type: 'error', text1: 'Failed', text2: e?.message ?? 'Could not pause subscription' });
+    } finally { setPlatformSubmitting(false); }
+  };
+
+  const handleResume = async () => {
+    if (!myPlatformSub) return;
+    try {
+      setPlatformSubmitting(true);
+      const updated = await platformSubscriptionApi.resumeSubscription(myPlatformSub.id);
+      setMyPlatformSub(updated);
+      Toast.show({ type: 'success', text1: 'Resumed!', text2: 'Your Plus membership is active again.' });
+    } catch (e: any) {
+      Toast.show({ type: 'error', text1: 'Failed', text2: e?.message ?? 'Could not resume subscription' });
+    } finally { setPlatformSubmitting(false); }
+  };
+
+  // ─── Water delivery plan actions ─────────────────────────────
   const togglePause = () => {
     if (!activeSub) return;
     setActiveSub({ ...activeSub, paused: !activeSub.paused });
-    Toast.show({
-      type: 'success',
-      text1: activeSub.paused ? 'Resumed!' : 'Paused!',
-      text2: activeSub.paused ? 'Your subscription is active again.' : 'No deliveries until you resume.'
-    });
+    Toast.show({ type: 'success', text1: activeSub.paused ? 'Resumed!' : 'Paused!', text2: activeSub.paused ? 'Your subscription is active again.' : 'No deliveries until you resume.' });
   };
 
   const handleSubscribe = () => {
@@ -173,6 +226,8 @@ export default function SubscriptionsScreen() {
   };
 
   const activePlan = PLANS.find((p) => p.id === activeSub?.planId);
+
+
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -191,35 +246,114 @@ export default function SubscriptionsScreen() {
 
         {/* ─── PLUS MEMBERSHIP (Platform Subscription) ─────── */}
         <Text style={styles.sectionTitle}>Plus Membership</Text>
+
         {platformLoading ? (
           <View style={[styles.plusCard, { alignItems: 'center', paddingVertical: 24 }]}>
             <ActivityIndicator color="#7c3aed" />
           </View>
-        ) : myPlatformSub ? (
+
+        ) : subStatus === 'active' ? (
+          // ── ACTIVE ──────────────────────────────────────────────
           <LinearGradient colors={['#7c3aed', '#5b21b6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.plusCard}>
             <Ionicons name="diamond" size={80} color="rgba(255,255,255,0.06)" style={styles.plusDecor} />
             <View style={styles.plusTop}>
               <View>
                 <Text style={styles.plusTitle}>Plus Member</Text>
-                <Text style={styles.plusMeta}>Active · Expires {new Date(myPlatformSub.expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
+                <Text style={styles.plusMeta}>Renews {new Date(myPlatformSub!.next_billing_at!).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</Text>
               </View>
               <View style={styles.plusBadge}><Text style={styles.plusBadgeText}>ACTIVE</Text></View>
             </View>
+            {/* Free delivery counter */}
+            <View style={{ marginBottom: 12 }}>
+              <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '600', marginBottom: 6 }}>Free deliveries this month</Text>
+              <View style={{ height: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 3 }}>
+                <View style={{ height: '100%', width: `${Math.min(100, ((99 - freeDelivLeft) / 99) * 100)}%`, backgroundColor: '#a5f3fc', borderRadius: 3 }} />
+              </View>
+              <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, marginTop: 4 }}>{freeDelivLeft} / {plusPlan?.free_delivery_count ?? 99} remaining</Text>
+            </View>
             <View style={styles.plusBenefitsRow}>
-              {[
-                '✓ Free delivery',
-                `✓ ${plusPlan?.auto_discount_pct ?? 2}% discount`,
-                `✓ ${plusPlan?.monthly_coupon_count ?? 3} coupons/mo`,
-                `✓ ${plusPlan?.loyalty_boost_pct ?? 10}% loyalty boost`,
-              ].map((b) => (
+              {[`✓ ${plusPlan?.auto_discount_pct ?? 2}% discount`, `✓ ${plusPlan?.monthly_coupon_count ?? 3} coupons/mo`, `✓ ${plusPlan?.loyalty_boost_pct ?? 10}% boost`].map((b) => (
                 <View key={b} style={styles.plusBenefit}><Text style={styles.plusBenefitText}>{b}</Text></View>
               ))}
             </View>
-            <TouchableOpacity onPress={handleCancelPlus} style={styles.plusCancelBtn}>
-              <Text style={styles.plusCancelText}>Cancel Membership</Text>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+              <TouchableOpacity onPress={() => setShowPauseModal(true)} style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 12, paddingVertical: 10, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' }}>
+                <Text style={{ color: 'white', fontWeight: '700', fontSize: 13 }}>⏸ Pause</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleCancelPlus} style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12, paddingVertical: 10, alignItems: 'center' }}>
+                <Text style={{ color: 'rgba(255,255,255,0.55)', fontWeight: '700', fontSize: 12 }}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+
+        ) : subStatus === 'paused' ? (
+          // ── PAUSED ──────────────────────────────────────────────
+          <LinearGradient colors={['#92400e', '#b45309']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.plusCard}>
+            <View style={styles.plusTop}>
+              <View>
+                <Text style={styles.plusTitle}>Membership Paused</Text>
+                <Text style={styles.plusMeta}>Resumes {myPlatformSub?.next_billing_at ? new Date(myPlatformSub.next_billing_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '—'}</Text>
+              </View>
+              <View style={[styles.plusBadge, { backgroundColor: 'rgba(251,191,36,0.35)' }]}><Text style={[styles.plusBadgeText, { color: '#fbbf24' }]}>PAUSED</Text></View>
+            </View>
+            <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, marginBottom: 14 }}>Your benefits are frozen. Resume to reactivate free delivery and discounts.</Text>
+            <TouchableOpacity onPress={handleResume} disabled={platformSubmitting} style={{ backgroundColor: '#fbbf24', borderRadius: 14, paddingVertical: 13, alignItems: 'center' }}>
+              {platformSubmitting ? <ActivityIndicator color="#78350f" /> : <Text style={{ color: '#78350f', fontWeight: '800', fontSize: 14 }}>▶ Resume Membership</Text>}
             </TouchableOpacity>
           </LinearGradient>
+
+        ) : subStatus === 'grace_period' ? (
+          // ── PAYMENT FAILED / GRACE ───────────────────────────────
+          <View style={[styles.plusCard, { borderColor: '#ef4444', borderWidth: 1.5 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#fef2f2', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="warning" size={22} color="#ef4444" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#1e1e2e' }}>Payment Failed</Text>
+                <Text style={{ fontSize: 12, color: '#64748b' }}>Grace period: {graceDaysLeft} day{graceDaysLeft !== 1 ? 's' : ''} remaining</Text>
+              </View>
+            </View>
+            <Text style={{ fontSize: 13, color: '#475569', marginBottom: 14, lineHeight: 20 }}>
+              We couldn't charge your account. Your Plus benefits are preserved during the grace period. Retry payment to keep your membership active.
+            </Text>
+            <View style={{ height: 5, backgroundColor: '#fee2e2', borderRadius: 3, marginBottom: 14 }}>
+              <View style={{ height: '100%', width: `${(graceDaysLeft / 3) * 100}%`, backgroundColor: '#ef4444', borderRadius: 3 }} />
+            </View>
+            <TouchableOpacity onPress={handleRetryPayment} disabled={platformSubmitting} style={{ backgroundColor: '#ef4444', borderRadius: 14, paddingVertical: 13, alignItems: 'center' }}>
+              {platformSubmitting ? <ActivityIndicator color="white" /> : <Text style={{ color: 'white', fontWeight: '800', fontSize: 14 }}>↻ Retry Payment</Text>}
+            </TouchableOpacity>
+          </View>
+
+        ) : subStatus === 'pending_payment' ? (
+          // ── PENDING PAYMENT ─────────────────────────────────────
+          <View style={[styles.plusCard, { alignItems: 'center', gap: 10, paddingVertical: 28 }]}>
+            <ActivityIndicator color="#7c3aed" size="large" />
+            <Text style={{ color: '#7c3aed', fontWeight: '700', fontSize: 14 }}>Processing payment…</Text>
+            <Text style={{ color: '#94a3b8', fontSize: 12, textAlign: 'center' }}>Please wait while we confirm your subscription. This usually takes a few seconds.</Text>
+          </View>
+
+        ) : subStatus === 'expired' || subStatus === 'cancelled' ? (
+          // ── EXPIRED / CANCELLED ─────────────────────────────────
+          <View style={styles.plusCard}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="diamond-outline" size={22} color="#94a3b8" />
+              </View>
+              <View>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#1e1e2e' }}>{subStatus === 'expired' ? 'Subscription Expired' : 'Subscription Cancelled'}</Text>
+                <Text style={{ fontSize: 12, color: '#94a3b8' }}>Restart anytime — same ₹99/mo price</Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={handleGetPlus} disabled={platformSubmitting || !plusPlan} style={{ borderRadius: 14, overflow: 'hidden' }}>
+              <LinearGradient colors={['#7c3aed', '#5b21b6']} style={styles.plusSubscribeBtn}>
+                {platformSubmitting ? <ActivityIndicator color="white" /> : <><Ionicons name="diamond-outline" size={18} color="white" /><Text style={styles.plusSubscribeBtnText}>Renew Plus — ₹99/mo</Text></>}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+
         ) : (
+          // ── INACTIVE (no subscription) ───────────────────────────
           <View style={styles.plusCard}>
             <View style={styles.plusPromoTop}>
               <View style={[styles.plusPromoIcon, { backgroundColor: '#ede9fe' }]}>
@@ -238,22 +372,44 @@ export default function SubscriptionsScreen() {
                 </View>
               ))}
             </View>
-            <TouchableOpacity
-              onPress={handleGetPlus}
-              disabled={platformSubmitting || !plusPlan}
-              style={{ borderRadius: 14, overflow: 'hidden', marginTop: 12 }}
-            >
+            <TouchableOpacity onPress={handleGetPlus} disabled={platformSubmitting || !plusPlan} style={{ borderRadius: 14, overflow: 'hidden', marginTop: 12 }}>
               <LinearGradient colors={['#7c3aed', '#5b21b6']} style={styles.plusSubscribeBtn}>
-                {platformSubmitting ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <>
-                    <Ionicons name="diamond-outline" size={18} color="white" />
-                    <Text style={styles.plusSubscribeBtnText}>Get Plus — ₹99/mo</Text>
-                  </>
-                )}
+                {platformSubmitting ? <ActivityIndicator color="white" /> : <><Ionicons name="diamond-outline" size={18} color="white" /><Text style={styles.plusSubscribeBtnText}>Get Plus — ₹99/mo</Text></>}
               </LinearGradient>
             </TouchableOpacity>
+          </View>
+        )}
+
+        {/* ─── PAUSE MODAL ────────────────────────────────────── */}
+        {showPauseModal && (
+          <View style={{ backgroundColor: 'white', borderRadius: 20, padding: 20, borderWidth: 1, borderColor: '#e2e8f0', marginTop: -8, marginBottom: 16 }}>
+            <Text style={{ fontSize: 16, fontWeight: '800', color: '#1e1e2e', marginBottom: 4 }}>Pause Membership</Text>
+            <Text style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>Your renewal date will be extended by the pause duration.</Text>
+            <Text style={{ fontSize: 12, fontWeight: '700', color: '#475569', marginBottom: 6 }}>Resume Date (YYYY-MM-DD)</Text>
+            <View style={{ borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 16 }}>
+              <Text style={{ fontSize: 14, color: pauseEnd ? '#1e1e2e' : '#94a3b8' }} onPress={() => {}} suppressHighlighting>
+                {pauseEnd || 'e.g. 2026-05-01'}
+              </Text>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+              {[7, 14, 30].map((days) => {
+                const d = new Date(); d.setDate(d.getDate() + days);
+                const val = d.toISOString().split('T')[0];
+                return (
+                  <TouchableOpacity key={days} onPress={() => setPauseEnd(val)} style={{ backgroundColor: pauseEnd === val ? '#7c3aed' : '#f1f5f9', paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 }}>
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: pauseEnd === val ? 'white' : '#475569' }}>{days}d</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <TouchableOpacity onPress={() => { setShowPauseModal(false); setPauseEnd(''); }} style={{ flex: 1, backgroundColor: '#f1f5f9', borderRadius: 14, paddingVertical: 12, alignItems: 'center' }}>
+                <Text style={{ fontWeight: '700', color: '#475569' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handlePause} disabled={platformSubmitting || !pauseEnd} style={{ flex: 1, backgroundColor: '#7c3aed', borderRadius: 14, paddingVertical: 12, alignItems: 'center' }}>
+                {platformSubmitting ? <ActivityIndicator color="white" /> : <Text style={{ fontWeight: '700', color: 'white' }}>Confirm Pause</Text>}
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 

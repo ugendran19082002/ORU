@@ -54,8 +54,34 @@ const SECTIONS = [
   },
 ];
 
+import { systemApi } from '@/api/systemApi';
+import { ActivityIndicator } from 'react-native';
+
 export default function TermsConditionsScreen() {
   const router = useRouter();
+  const [sections, setSections] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    loadTerms();
+  }, []);
+
+  const loadTerms = async () => {
+    try {
+      const res = await systemApi.getSetting('terms_and_conditions');
+      if (res.data && res.data.setting_value) {
+        setSections(JSON.parse(res.data.setting_value));
+      }
+    } catch (err) {
+      console.error('Failed to load terms:', err);
+      // Fallback to static messaging if API fails
+      setSections([
+        { title: 'Contact Support', content: 'Unable to load dynamic terms. Please contact support@thannigo.com' }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -93,11 +119,19 @@ export default function TermsConditionsScreen() {
           These Terms and Conditions govern your use of ThanniGo — India's fastest water can delivery platform. Please read them carefully before using our service.
         </Text>
 
+        {/* LOADING STATE */}
+        {loading && (
+          <View style={{ padding: 40 }}>
+            <ActivityIndicator size="small" color="#006878" />
+            <Text style={{ textAlign: 'center', marginTop: 12, color: '#707881', fontSize: 13 }}>Loading latest terms...</Text>
+          </View>
+        )}
+
         {/* SECTIONS */}
-        {SECTIONS.map((section, index) => (
+        {!loading && sections.map((section, index) => (
           <View key={index} style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
-            <Text style={styles.sectionContent}>{section.content}</Text>
+            <Text style={styles.sectionContent}>{section.content.replace(/\\n/g, '\n')}</Text>
           </View>
         ))}
 

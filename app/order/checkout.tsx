@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import RazorpayCheckout from 'react-native-razorpay';
 
 import { BackButton } from "@/components/ui/BackButton";
 import { useAndroidBackHandler } from "@/hooks/use-back-handler";
@@ -26,7 +27,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import moment from "moment";
 import Toast from "react-native-toast-message";
 import { promotionApi } from "@/api/promotionApi";
+import { addressApi } from "@/api/addressApi";
+import { systemApi } from "@/api/systemApi";
+import { log } from "@/utils/logger";
 import { ApiError } from "@/api/apiError";
+import { platformSubscriptionApi, CheckoutBenefits } from "@/api/platformSubscriptionApi";
 
 type PaymentType = "upi" | "cod";
 
@@ -127,30 +132,40 @@ function CouponBlock({ subtotal, onApply }: { subtotal: number; onApply?: (disco
     </View>
   );
 }
+ 
+function LoyaltyBlock({ points, onToggle, isEnabled }: { points: number; onToggle: (val: boolean) => void; isEnabled: boolean }) {
+  return (
+    <View style={styles.loyaltyCard}>
+      <View style={{ flex: 1, gap: 4 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Ionicons name="gift" size={18} color="#005d90" />
+          <Text style={{ fontSize: 13, fontWeight: '800', color: '#1e293b' }}>Thanni Points</Text>
+        </View>
+        <Text style={{ fontSize: 11, color: '#64748b', fontWeight: '500' }}>
+          You have {points} points available. Use them to get a discount on this order.
+        </Text>
+      </View>
+      <TouchableOpacity 
+        onPress={() => onToggle(!isEnabled)}
+        style={[styles.loyaltyToggle, isEnabled && styles.loyaltyToggleActive]}
+      >
+        <View style={[styles.loyaltyThumb, isEnabled && styles.loyaltyThumbActive]} />
+      </TouchableOpacity>
+    </View>
+  );
+}
 
-const INITIAL_ADDRESSES = [
-  {
-    id: "1",
-    type: "Home",
-    title: "Home",
-    fullAddress: "82nd Floor, Azure Heights, Cyber City, Sector 56...",
-    isDefault: true,
-  },
-  {
-    id: "2",
-    type: "Office",
-    title: "Office",
-    fullAddress: "Floor 12, Tech Park Central, Sector 44...",
-    isDefault: false,
-  },
-  {
-    id: "3",
-    type: "Recent",
-    title: "Grand Hotel Lobby",
-    fullAddress: "Main St, Near City Square fountain...",
-    isDefault: false,
-  },
-];
+
+// Real address type based on API response
+interface Address {
+  id: string | number;
+  label: string;
+  address_line1: string;
+  city: string;
+  is_default?: boolean;
+  latitude?: number;
+  longitude?: number;
+}
 
 export default function OrderCheckoutScreen() {
   const [refreshing, setRefreshing] = React.useState(false);
@@ -190,26 +205,99 @@ export default function OrderCheckoutScreen() {
     (paymentMethod as PaymentType) || "upi",
   );
   const [showAddressModal, setShowAddressModal] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState(INITIAL_ADDRESSES[0]);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [loadingAddresses, setLoadingAddresses] = useState(true);
+  const [useLoyalty, setUseLoyalty] = useState(false);
+  const [calculatedDistance, setCalculatedDistance] = useState(1.2);
+
 
   // Sync paramNote with cartStore if provided from schedule screen
   React.useEffect(() => {
     if (slotId) setDeliveryType('scheduled');
   }, [slotId]);
 
-  useAndroidBackHandler(() => {
-    if (showAddressModal) {
-      setShowAddressModal(false);
-    } else {
-      safeBack("/(tabs)");
+  const shop = shops.find((item) => item.id === shopId) ?? shops[0];
+
+  const fetchAddresses = async () => {
+    setLoadingAddresses(true);
+    try {
+      const res = await addressApi.getAddresses();
+      const addrList = res.data.data || [];
+      setAddresses(addrList);
+      
+      // Auto-select: check for default, else first available
+      let targetAddr = addrList.find((a: any) => a.is_default) || (addrList.length > 0 ? addrList[0] : null);
+      if (targetAddr) {
+        setSelectedAddress(targetAddr);
+        calculateDistance(targetAddr);
+      }
+    } catch (err) {
+      log.error("[Checkout] Failed to fetch addresses:", err);
+      Toast.show({ type: 'error', text1: 'Address Error', text2: 'Could not load your saved addresses' });
+    } finally {
+      setLoadingAddresses(false);
     }
+  };
+
+  const calculateDistance = async (addr: Address) => {
+    if (!addr.latitude || !addr.longitude || !(shop as any)?.lat || !(shop as any)?.lng) return;
+    try {
+      const res = await systemApi.getDistance((shop as any).lat, (shop as any).lng, addr.latitude, addr.longitude);
+      if (res.data?.distance_km && res.data.distance_km > 0) {
+        setCalculatedDistance(res.data.distance_km);
+      }
+    } catch(e) {
+       console.warn("Failed to calc API distance, fallback 1.2 used", e);
+    }
+  };
+
+  const [benefits, setBenefits] = useState<CheckoutBenefits | null>(null);
+  const [loadingBenefits, setLoadingBenefits] = useState(false);
+
+  React.useEffect(() => {
+    const fetchBenefits = async () => {
+      setLoadingBenefits(true);
+      try {
+        const data = await platformSubscriptionApi.getCheckoutBenefits();
+        setBenefits(data);
+      } catch (e) {
+        log.warn('[Checkout] Failed to fetch benefits', e);
+      } finally {
+        setLoadingBenefits(false);
+      }
+    };
+    fetchBenefits();
+    fetchAddresses();
+  }, []);
+
+  useAndroidBackHandler(() => {
+    if (showAddressModal) setShowAddressModal(false);
+    else safeBack("/(tabs)");
   });
 
-  const shop = shops.find((item) => item.id === shopId) ?? shops[0];
-  const quantity = Object.values(items).reduce((sum, qty) => sum + qty, 0);
+  const quantity = Object.values(items).reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = getSubtotal();
-  const deliveryFee = getDeliveryFee();
-  const total = getTotal();
+  const rawDeliveryFee = getDeliveryFee();
+  
+  const hasFreeDelivery = benefits?.free_delivery ?? false;
+  const deliveryFee = hasFreeDelivery ? 0 : rawDeliveryFee;
+
+  const floorCharge = (shop as any)?.floor_charge || 0;
+  
+  // Stacking: Subtotal -> Coupon -> Sub Discount -> Loyalty -> Delivery
+  const couponDiscount = useCartStore(s => s.couponDiscount);
+  const postCouponTarget = Math.max(0, subtotal - couponDiscount);
+  
+  const subDiscountPct = benefits?.auto_discount_pct ?? 0;
+  const subDiscountAmt = Math.floor(postCouponTarget * (subDiscountPct / 100));
+  
+  const postSubTarget = Math.max(0, postCouponTarget - subDiscountAmt);
+
+  const maxLoyaltyUse = Math.min(user?.loyalty_points || 0, postSubTarget);
+  const loyaltyDiscount = useLoyalty ? maxLoyaltyUse : 0;
+
+  const total = Math.max(0, postSubTarget - loyaltyDiscount) + deliveryFee + floorCharge;
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -358,9 +446,9 @@ export default function OrderCheckoutScreen() {
           <View style={styles.addressIconWrap}>
             <Ionicons
               name={
-                selectedAddress.type === "Home"
+                selectedAddress?.label?.toLowerCase() === "home"
                   ? "home"
-                  : selectedAddress.type === "Office"
+                  : selectedAddress?.label?.toLowerCase() === "office"
                     ? "briefcase"
                     : "location"
               }
@@ -370,17 +458,31 @@ export default function OrderCheckoutScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.addressLabel}>
-              {selectedAddress.title.toUpperCase()}
+              {selectedAddress?.label?.toUpperCase() || 'SELECT ADDRESS'}
             </Text>
-            <Text style={styles.addressText} numberOfLines={2}>
-              {selectedAddress.fullAddress}
-            </Text>
+            {loadingAddresses ? (
+              <ActivityIndicator size="small" color="#006878" style={{ alignSelf: 'flex-start' }} />
+            ) : (
+              <Text style={styles.addressText} numberOfLines={2}>
+                {selectedAddress ? `${selectedAddress.address_line1}, ${selectedAddress.city}` : 'No address selected'}
+              </Text>
+            )}
           </View>
           <View style={styles.editWrap}>
             <Text style={styles.editText}>Change</Text>
           </View>
         </TouchableOpacity>
 
+        {/* LOYALTY POINTS */}
+        <View style={{ marginBottom: 20 }}>
+          <Text style={styles.sectionTitle}>Redeem Points</Text>
+          <LoyaltyBlock 
+            points={user?.loyalty_points || 0} 
+            isEnabled={useLoyalty}
+            onToggle={setUseLoyalty}
+          />
+        </View>
+ 
         {/* COUPON / PROMO CODE */}
         <View style={{ marginBottom: 28 }}>
           <Text style={styles.sectionTitle}>Coupon / Promo Code</Text>
@@ -399,19 +501,45 @@ export default function OrderCheckoutScreen() {
             <Text style={styles.summaryKey}>Products (×{quantity})</Text>
             <Text style={styles.summaryVal}>₹{subtotal}</Text>
           </View>
-          {(shop as any)?.floor_charge > 0 && (
+          {floorCharge > 0 && (
             <View style={styles.summaryRow}>
               <Text style={styles.summaryKey}>Floor charge</Text>
-              <Text style={styles.summaryVal}>₹{(shop as any).floor_charge}</Text>
+              <Text style={styles.summaryVal}>₹{floorCharge}</Text>
+            </View>
+          )}
+          {couponDiscount > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryKey}>Coupon Discount</Text>
+              <Text style={[styles.summaryVal, { color: '#22c55e' }]}>-₹{couponDiscount}</Text>
+            </View>
+          )}
+          {subDiscountAmt > 0 && (
+            <View style={styles.summaryRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={styles.summaryKey}>Plus Member ({subDiscountPct}%)</Text>
+                <Ionicons name="diamond" size={12} color="#7c3aed" />
+              </View>
+              <Text style={[styles.summaryVal, { color: '#7c3aed' }]}>-₹{subDiscountAmt}</Text>
+            </View>
+          )}
+          {loyaltyDiscount > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryKey}>Loyalty Points Used</Text>
+              <Text style={[styles.summaryVal, { color: '#eab308' }]}>-₹{loyaltyDiscount}</Text>
             </View>
           )}
           <View style={styles.summaryRow}>
             <Text style={styles.summaryKey}>Delivery Fee</Text>
-            <Text style={styles.summaryVal}>₹{deliveryFee}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              {hasFreeDelivery && <Text style={{ fontSize: 13, color: '#7c3aed', fontWeight: '800' }}>Plus Free</Text>}
+              <Text style={[styles.summaryVal, hasFreeDelivery && { textDecorationLine: 'line-through', color: '#94a3b8' }]}>
+                ₹{rawDeliveryFee}
+              </Text>
+            </View>
           </View>
           <View style={[styles.summaryRow, styles.summaryDivider]}>
             <Text style={styles.summaryTotal}>Total Pay</Text>
-            <Text style={styles.summaryTotalVal}>₹{total}.00</Text>
+            <Text style={styles.summaryTotalVal}>₹{total}</Text>
           </View>
         </View>
       </ScrollView>
@@ -421,7 +549,7 @@ export default function OrderCheckoutScreen() {
         <View style={styles.totalFloating}>
           <View>
             <Text style={styles.totalFloatingLabel}>TOTAL AMOUNT</Text>
-            <Text style={styles.totalFloatingValue}>₹{total}.00</Text>
+            <Text style={styles.totalFloatingValue}>₹{total}</Text>
           </View>
           <Text style={styles.totalFloatingSub}>
             via {payment.toUpperCase()}
@@ -437,21 +565,68 @@ export default function OrderCheckoutScreen() {
               return;
             }
 
-            await (placeOrder as any)({
-              shop_id: shop.id,
-              items: Object.entries(items)
-                .filter(([, qty]) => qty > 0)
-                .map(([productId, qty]) => ({ product_id: productId, quantity: qty })),
-              address_id: selectedAddress.id,
-              payment_method: payment,
-              delivery_type: deliveryType,
-              delivery_slot: slotId ? Number(slotId) : null,
-              scheduled_for: date || null,
-              distance_km: 1.2,
-              delivery_notes: note,
-            });
-            clearCart();
-            router.push("/order/confirmed" as any);
+            if (!selectedAddress) {
+              Toast.show({ type: 'error', text1: 'Missing Address', text2: 'Please select a delivery address' });
+              setShowAddressModal(true);
+              return;
+            }
+
+            try {
+              const orderData: any = await placeOrder({
+                shop_id: Number(shop.id),
+                items: Object.entries(items)
+                  .filter(([, item]) => item.quantity > 0)
+                  .map(([productId, item]) => ({ product_id: productId, quantity: item.quantity })),
+                address_id: Number(selectedAddress.id),
+                payment_method: payment,
+                delivery_type: deliveryType,
+                slot_id: slotId ? Number(slotId) : undefined,
+                scheduled_for: date || undefined,
+                distance_km: calculatedDistance,
+                notes: note,
+                use_loyalty_points: useLoyalty,
+              });
+
+              if (payment === 'upi' && orderData.razorpay_order_id) {
+                const options = {
+                  description: `Order #${orderData.orderId}`,
+                  image: (shop as any).logo_url || 'https://thannigo.com/logo.png',
+                  currency: orderData.currency || 'INR',
+                  key: orderData.razorpay_key,
+                  amount: orderData.amount,
+                  name: 'ThanniGo',
+                  order_id: orderData.razorpay_order_id,
+                  prefill: {
+                    email: user?.email || '',
+                    contact: user?.phone || '',
+                    name: user?.name || ''
+                  },
+                  theme: { color: '#005d90' }
+                };
+
+                RazorpayCheckout.open(options).then((data: any) => {
+                  // Payment success handled by backend webhook mostly, 
+                  // but we can move to confirmation screen now
+                  log.info('[Razorpay] Payment success:', data);
+                  clearCart();
+                  router.push("/order/confirmed" as any);
+                }).catch((error: any) => {
+                  log.error('[Razorpay] Payment failed:', error);
+                  Toast.show({ 
+                    type: 'error', 
+                    text1: 'Payment Failed', 
+                    text2: error.description || 'Payment was cancelled or failed.' 
+                  });
+                });
+              } else {
+                // COD or fallback
+                clearCart();
+                router.push("/order/confirmed" as any);
+              }
+            } catch (err: any) {
+              log.error('[Checkout] Place order failed:', err);
+              Toast.show({ type: 'error', text1: 'Order Failed', text2: err.message || 'Check your internet connection' });
+            }
           }}
         >
           <LinearGradient
@@ -491,47 +666,52 @@ export default function OrderCheckoutScreen() {
             <ScrollView
               style={{ maxHeight: 300, width: "100%" }}
               showsVerticalScrollIndicator={false}
+              refreshControl={<RefreshControl refreshing={loadingAddresses} onRefresh={fetchAddresses} />}
             >
-              {INITIAL_ADDRESSES.map((addr) => (
+              {addresses.length === 0 && !loadingAddresses ? (
+                <Text style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>No saved addresses found.</Text>
+              ) : null}
+              {addresses.map((addr) => (
                 <TouchableOpacity
                   key={addr.id}
                   style={[
                     styles.modalAddrCard,
-                    selectedAddress.id === addr.id &&
+                    selectedAddress?.id === addr.id &&
                       styles.modalAddrCardActive,
                   ]}
                   onPress={() => {
                     setSelectedAddress(addr);
                     setShowAddressModal(false);
+                    calculateDistance(addr);
                   }}
                 >
                   <Ionicons
                     name={
-                      addr.type === "Home"
+                      addr.label?.toLowerCase() === "home"
                         ? "home"
-                        : addr.type === "Office"
+                        : addr.label?.toLowerCase() === "office"
                           ? "briefcase"
-                          : "time"
+                          : "location"
                     }
                     size={20}
                     color={
-                      selectedAddress.id === addr.id ? "#005d90" : "#64748b"
+                      selectedAddress?.id === addr.id ? "#005d90" : "#64748b"
                     }
                   />
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text
                       style={[
                         styles.modalAddrTitle,
-                        selectedAddress.id === addr.id && { color: "#005d90" },
+                        selectedAddress?.id === addr.id && { color: "#005d90" },
                       ]}
                     >
-                      {addr.title}
+                      {addr.label}
                     </Text>
                     <Text style={styles.modalAddrText} numberOfLines={2}>
-                      {addr.fullAddress}
+                      {addr.address_line1}, {addr.city}
                     </Text>
                   </View>
-                  {selectedAddress.id === addr.id && (
+                  {selectedAddress?.id === addr.id && (
                     <Ionicons
                       name="checkmark-circle"
                       size={22}
@@ -825,6 +1005,38 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#005d90",
     marginLeft: 8,
+  },
+  loyaltyThumb: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'white',
+  },
+  loyaltyThumbActive: {
+    backgroundColor: 'white',
+    transform: [{ translateX: 22 }],
+  },
+  loyaltyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f9ff',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#bae6fd',
+    gap: 12,
+    marginBottom: 4,
+  },
+  loyaltyToggle: {
+    width: 48,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#cbd5e1',
+    padding: 2,
+    justifyContent: 'center',
+  },
+  loyaltyToggleActive: {
+    backgroundColor: '#005d90',
   },
 });
 

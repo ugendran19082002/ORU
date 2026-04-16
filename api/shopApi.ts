@@ -24,14 +24,24 @@ function mapShop(s: ShopProfileRaw): Shop {
     eta: '25-45 mins',
     phone: s.phone,
     isOpen: s.is_open ?? true,
-    tags: ['Mineral Water', 'Purified'],
-    verified: s.status === 'active',
+    tags: s.shop_type ? [s.shop_type, 'Mineral Water'] : ['Mineral Water', 'Purified'],
+    verified: s.status === 'active' || s.status === 'approved',
     pricePerCan: parseFloat(s.min_price) || 0,
     lat: parseFloat(s.latitude),
     lng: parseFloat(s.longitude),
     accent: '#005d90',
     heroImage: 'water_can_1',
-    products: [],
+    // Map products if present (usually in getShopById)
+    products: (s.Products || []).map((p: any) => ({
+      id: String(p.id),
+      name: p.name,
+      description: p.description || '20L Standard Can',
+      price: parseFloat(p.price) || 30,
+      image: p.image_url || 'water_can_1',
+      unitLabel: p.unit_label || '20L Can',
+      inStock: Boolean(p.is_available),
+      stockCount: p.stock_qty || 100,
+    })),
   };
 }
 
@@ -40,13 +50,12 @@ export const shopApi = {
    * Fetch approved nearby shops based on coordinates.
    * Falls back to mock data in dev mode when coordinates are missing.
    */
-  async getShops(params?: { lat: number; lng: number }): Promise<Shop[]> {
+  async getShops(params?: { lat?: number; lng?: number; query?: string }): Promise<Shop[]> {
     if (!params?.lat || !params?.lng) {
-      if (__DEV__) {
+      if (__DEV__ && !params?.query) {
         log.warn('[shopApi] No coords provided — returning mock shops (dev only)');
         return mockShops;
       }
-      return [];
     }
 
     try {
@@ -171,6 +180,44 @@ export const shopApi = {
     } catch (error) {
       log.error('[shopApi] toggleBusyMode failed:', error);
       throw ApiError.from(error, 'Failed to toggle busy mode');
+    }
+  },
+
+  /**
+   * Fetch personalized shop recommendations based on order history.
+   * GET /shops/personalized
+   */
+  async getPersonalizedShops(params?: { lat?: number; lng?: number; limit?: number }): Promise<Shop[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<{ data: ShopProfileRaw[] }>>('/shops/personalized', { params });
+      if (response.data.status === 1 && response.data.data?.data) {
+        return response.data.data.data.map(mapShop);
+      }
+      return [];
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        log.warn('[shopApi] Personalized shops endpoint not found (Backend incomplete) — falling back to empty list');
+        return [];
+      }
+      log.error('[shopApi] getPersonalizedShops failed:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Global search for shops by name or category.
+   * GET /shops/search
+   */
+  async searchShops(params: { q: string; lat?: number; lng?: number; limit?: number }): Promise<Shop[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<{ data: ShopProfileRaw[] }>>('/shops', { params: { ...params, query: params.q } });
+      if (response.data.status === 1 && response.data.data?.data) {
+        return response.data.data.data.map(mapShop);
+      }
+      return [];
+    } catch (error: any) {
+      log.error('[shopApi] searchShops failed:', error);
+      return [];
     }
   },
 };

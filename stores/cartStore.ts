@@ -1,17 +1,22 @@
 import { create } from 'zustand';
 
-import { mockProducts, mockShops } from '@/utils/mockData';
+type CartItem = {
+  productId: string;
+  name: string;
+  price: number;
+  quantity: number;
+};
 
 type CartState = {
   shopId: string | null;
-  items: Record<string, number>;
+  items: Record<string, CartItem>;
   note: string;
   scheduledSlot: string | null;
   paymentMethod: 'upi' | 'cod';
   couponCode: string;
   couponDiscount: number;
   setShop: (shopId: string) => void;
-  setQuantity: (productId: string, quantity: number, shopId: string) => void;
+  setQuantity: (productId: string, quantity: number, shopId: string, itemData?: { name: string, price: number }) => void;
   setNote: (note: string) => void;
   setScheduledSlot: (slot: string | null) => void;
   setPaymentMethod: (method: 'upi' | 'cod') => void;
@@ -25,25 +30,39 @@ type CartState = {
 
 const initialState = {
   shopId: null,
-  items: {} as Record<string, number>, // ✅ Fixed: start empty, not pre-seeded
+  items: {} as Record<string, CartItem>,
   note: '',
   scheduledSlot: null,
   paymentMethod: 'cod' as const,
   couponCode: '',
-  couponDiscount: 0, // ✅ Added: track active discount amount
+  couponDiscount: 0,
 };
 
 export const useCartStore = create<CartState>((set, get) => ({
   ...initialState,
   setShop: (shopId) => set({ shopId, items: {} }),
-  setQuantity: (productId, quantity, shopId) =>
-    set((state) => ({
-      shopId,
-      items: {
-        ...state.items,
-        [productId]: Math.min(50, Math.max(0, quantity)), // P0: max 50 cans per SKU
-      },
-    })),
+  setQuantity: (productId, quantity, shopId, itemData) =>
+    set((state) => {
+      const existing = state.items[productId];
+      const newQty = Math.min(50, Math.max(0, quantity));
+      
+      const newItems = { ...state.items };
+      if (newQty === 0) {
+        delete newItems[productId];
+      } else {
+        newItems[productId] = {
+          productId,
+          quantity: newQty,
+          name: itemData?.name || existing?.name || 'Water Can',
+          price: itemData?.price || existing?.price || 30,
+        };
+      }
+
+      return {
+        shopId,
+        items: newItems,
+      };
+    }),
   setNote: (note) => set({ note }),
   setScheduledSlot: (scheduledSlot) => set({ scheduledSlot }),
   setPaymentMethod: (paymentMethod) => set({ paymentMethod }),
@@ -52,15 +71,11 @@ export const useCartStore = create<CartState>((set, get) => ({
   clearCart: () => set(initialState),
   getSubtotal: () => {
     const items = get().items;
-    return Object.entries(items).reduce((sum, [productId, qty]) => {
-      const product = mockProducts.find((item) => item.id === productId);
-      return sum + (product?.price ?? 0) * qty;
-    }, 0);
+    return Object.values(items).reduce((sum, item) => sum + (item.price * item.quantity), 0);
   },
   getDeliveryFee: () => {
-    const shopId = get().shopId;
-    const shop = mockShops.find((item) => item.id === shopId);
-    return shop ? (shop.distanceKm > 2 ? 25 : 20) : 20;
+    // Dynamic fallback: Base delivery fee
+    return 25;
   },
   getTotal: () => {
     const subtotal = get().getSubtotal();

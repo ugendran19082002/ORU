@@ -44,7 +44,7 @@ export default function ShopDetailScreen() {
   const shop = shops.find((s) => s.id === id) ?? shops[0];
   const [activeTab, setActiveTab] = useState<'products' | 'info'>('products');
 
-  const totalItems = Object.values(items).reduce((a, b) => a + b, 0);
+  const totalItems = Object.values(items).reduce((a, b) => a + b.quantity, 0);
   const subtotal = getSubtotal();
 
   const handleGoToCheckout = () => {
@@ -182,7 +182,7 @@ export default function ShopDetailScreen() {
               </View>
             )}
             {shop.products.map((product) => {
-              const qty = items[product.id] ?? 0;
+              const qty = items[product.id]?.quantity ?? 0;
               return (
                 <View key={product.id} style={styles.productCard}>
                   <Image
@@ -204,7 +204,7 @@ export default function ShopDetailScreen() {
                           {qty === 0 ? (
                             <TouchableOpacity
                               style={styles.addBtn}
-                              onPress={() => setQuantity(product.id, 1, shop.id)}
+                              onPress={() => setQuantity(product.id, 1, shop.id, { name: product.name, price: product.price })}
                             >
                               <Ionicons name="add" size={18} color="white" />
                               <Text style={styles.addBtnText}>Add</Text>
@@ -213,14 +213,14 @@ export default function ShopDetailScreen() {
                             <>
                               <TouchableOpacity
                                 style={styles.stepperBtn}
-                                onPress={() => setQuantity(product.id, qty - 1, shop.id)}
+                                onPress={() => setQuantity(product.id, qty - 1, shop.id, { name: product.name, price: product.price })}
                               >
                                 <Ionicons name="remove" size={18} color="#005d90" />
                               </TouchableOpacity>
                               <Text style={styles.stepperQty}>{qty}</Text>
                               <TouchableOpacity
                                 style={styles.stepperBtn}
-                                onPress={() => setQuantity(product.id, qty + 1, shop.id)}
+                                onPress={() => setQuantity(product.id, qty + 1, shop.id, { name: product.name, price: product.price })}
                               >
                                 <Ionicons name="add" size={18} color="#005d90" />
                               </TouchableOpacity>

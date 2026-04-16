@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, RefreshControl,
-  TouchableOpacity, Switch, StyleSheet,
+  TouchableOpacity, Switch, StyleSheet, TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
 import { useAppSession } from '@/hooks/use-app-session';
-import { BackButton } from '@/components/ui/BackButton';
+
 import { useSecurityStore } from '@/stores/securityStore';
 import { PinEntryModal } from '@/components/security/PinEntryModal';
 import { shopApi } from '@/api/shopApi';
@@ -31,8 +30,7 @@ const SHOP_MENU: NavItem[] = [
   { label: 'Shop Profile & Address', icon: 'storefront-outline', route: '/shop/profile' },
   { label: 'Promotions & Coupons', icon: 'pricetag-outline', route: '/shop/promotions', badge: 'NEW' },
   { label: 'Delivery Management', icon: 'bicycle-outline', route: '/shop/delivery' },
-  { label: 'Customer Management', icon: 'people-outline', route: '/shop/customers' },
-  { label: 'Manual Order Entry', icon: 'receipt-outline', route: '/shop/manual-order' },
+  { label: 'Customer Complaints', icon: 'warning-outline', route: '/shop/complaints' },
   { label: 'Subscription Plans', icon: 'calendar-outline', route: '/shop/subscription-plans' },
 ];
 
@@ -40,8 +38,8 @@ const ACCOUNT_MENU: NavItem[] = [
   { label: 'Notifications', icon: 'notifications-outline', route: '/notifications' },
   { label: 'Report an Issue', icon: 'chatbubble-ellipses-outline', route: '/report-issue' },
   { label: 'Emergency Help', icon: 'warning-outline', route: '/emergency-help', color: '#c62828' },
-  { label: 'Terms of Service', icon: 'document-text-outline', route: '/report-issue' },
-  { label: 'Support & Help', icon: 'help-buoy-outline', route: '/emergency-help' },
+  { label: 'Terms of Service', icon: 'document-text-outline', route: '/terms' },
+  { label: 'Support & Help', icon: 'help-buoy-outline', route: '/report-issue' },
 ];
 
 function MenuRow({ item }: { item: NavItem }) {
@@ -71,13 +69,18 @@ export default function ShopSettingsScreen() {
   const { signOut } = useAppSession();
   const { 
     isPinEnabled, isBiometricsEnabled, togglePin, toggleBiometrics, 
-    enablePinRemote, authenticateBiometrics, initialize: initSecurity 
+    enablePinRemote, authenticateBiometrics,
   } = useSecurityStore();
   
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [deliveryActive, setDeliveryActive] = useState(false);
+  const [minOrderAmount, setMinOrderAmount] = useState('0');
+  const [deliveryCharge, setDeliveryCharge] = useState('0');
+  const [taxPercentage, setTaxPercentage] = useState('0');
+  const [shopName, setShopName] = useState('');
+  const [shopAddress, setShopAddress] = useState('');
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinMode, setPinMode] = useState<'set' | 'verify'>('set');
 
@@ -91,10 +94,15 @@ export default function ShopSettingsScreen() {
       const data = await shopApi.getMyShop();
       if (data) {
         setShopOpen(data.is_open);
+        setShopName(data.name ?? '');
+        setShopAddress([data.address_line1, data.city].filter(Boolean).join(', '));
       }
       const settings = await shopApi.getShopSettings();
       if (settings) {
-        setDeliveryActive(!settings.busy_mode); // deliveryActive is inverse of busy_mode
+        setDeliveryActive(!settings.busy_mode);
+        setMinOrderAmount(String(settings.min_order_amount || '0'));
+        setDeliveryCharge(String(settings.base_delivery_charge || '0'));
+        setTaxPercentage(String(settings.tax_percentage || '0'));
       }
     } catch (error) {
       console.error('[Settings] Fetch failed:', error);
@@ -140,6 +148,23 @@ export default function ShopSettingsScreen() {
     }
   };
 
+  const handleUpdateOperationalSettings = async () => {
+    try {
+      setIsLoading(true);
+      await shopApi.updateShopSettings({
+        min_order_amount: parseFloat(minOrderAmount),
+        base_delivery_charge: parseFloat(deliveryCharge),
+        tax_percentage: parseFloat(taxPercentage)
+      });
+      Toast.show({ type: 'success', text1: 'Settings Saved' });
+    } catch (error) {
+      console.error('[Settings] Save failed:', error);
+      Toast.show({ type: 'error', text1: 'Save Failed' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSetPin = async (newPin: string) => {
     await enablePinRemote(newPin);
     Toast.show({ type: 'success', text1: 'PIN Set Successfully' });
@@ -168,7 +193,7 @@ export default function ShopSettingsScreen() {
       {/* HEADER */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <BackButton fallback="/shop" />
+
           <View>
             <View style={styles.brandRow}>
               <Logo size="md" />
@@ -222,6 +247,51 @@ export default function ShopSettingsScreen() {
               thumbColor={deliveryActive ? '#006878' : '#707881'}
             />
           </View>
+        </View>
+
+        {/* OPERATIONAL RULES */}
+        <Text style={styles.sectionHeader}>Operational Rules</Text>
+        <View style={styles.statusCard}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Min. Order Amount (₹)</Text>
+            <TextInput
+              style={styles.settingInput}
+              value={minOrderAmount}
+              onChangeText={setMinOrderAmount}
+              keyboardType="numeric"
+              placeholder="0.00"
+            />
+          </View>
+          <View style={styles.statusDivider} />
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Base Delivery Charge (₹)</Text>
+            <TextInput
+              style={styles.settingInput}
+              value={deliveryCharge}
+              onChangeText={setDeliveryCharge}
+              keyboardType="numeric"
+              placeholder="0.00"
+            />
+          </View>
+          <View style={styles.statusDivider} />
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Tax / GST (%)</Text>
+            <TextInput
+              style={styles.settingInput}
+              value={taxPercentage}
+              onChangeText={setTaxPercentage}
+              keyboardType="numeric"
+              placeholder="0.00"
+            />
+          </View>
+          
+          <TouchableOpacity 
+            style={[styles.saveBtn, isLoading && { opacity: 0.7 }]} 
+            onPress={handleUpdateOperationalSettings}
+            disabled={isLoading}
+          >
+            <Text style={styles.saveBtnText}>{isLoading ? 'Saving...' : 'Save Changes'}</Text>
+          </TouchableOpacity>
         </View>
 
         {/* SHOP MENU */}
@@ -333,8 +403,8 @@ export default function ShopSettingsScreen() {
             <Ionicons name="storefront" size={24} color="#006878" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.shopName}>Ocean Breeze Water Supply</Text>
-            <Text style={styles.shopAddress}>42 Coastal Road, Koramangala, Bangalore</Text>
+            <Text style={styles.shopName}>{shopName || 'My Shop'}</Text>
+            <Text style={styles.shopAddress}>{shopAddress || 'Tap to update shop profile'}</Text>
           </View>
           <View style={styles.editBtn}>
             <Ionicons name="pencil" size={16} color="#005d90" />
@@ -410,6 +480,29 @@ const styles = StyleSheet.create({
   shopName: { fontSize: 15, fontWeight: '800', color: '#181c20', marginBottom: 2 },
   shopAddress: { fontSize: 12, color: '#707881', lineHeight: 16 },
   editBtn: { width: 34, height: 34, borderRadius: 10, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center' },
+
+  inputGroup: { paddingVertical: 4 },
+  inputLabel: { fontSize: 13, fontWeight: '700', color: '#475569', marginBottom: 8 },
+  settingInput: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 16,
+    height: 48,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+  saveBtn: {
+    backgroundColor: '#005d90',
+    borderRadius: 14,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  saveBtnText: { color: 'white', fontWeight: '800', fontSize: 16 },
 
   signOutBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,

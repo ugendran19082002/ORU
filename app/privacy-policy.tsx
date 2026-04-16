@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity,
+  View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -46,8 +46,33 @@ const SECTIONS = [
   },
 ];
 
+import { systemApi } from '@/api/systemApi';
+
 export default function PrivacyPolicyScreen() {
   const router = useRouter();
+  const [sections, setSections] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    loadPolicy();
+  }, []);
+
+  const loadPolicy = async () => {
+    try {
+      const res = await systemApi.getSetting('privacy_policy');
+      if (res.data && res.data.setting_value) {
+        setSections(JSON.parse(res.data.setting_value));
+      }
+    } catch (err) {
+      console.error('Failed to load privacy policy:', err);
+      // Fallback to static if API fails
+      setSections([
+        { title: 'Contact Support', content: 'Unable to load dynamic policy. Please contact support@thannigo.com' }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -85,11 +110,19 @@ export default function PrivacyPolicyScreen() {
           ThanniGo is committed to protecting your personal information. This policy explains what we collect, why we collect it, and how we keep it safe.
         </Text>
 
+        {/* LOADING STATE */}
+        {loading && (
+          <View style={{ padding: 40 }}>
+            <ActivityIndicator size="small" color="#005d90" />
+            <Text style={{ textAlign: 'center', marginTop: 12, color: '#707881', fontSize: 13 }}>Loading latest policy...</Text>
+          </View>
+        )}
+
         {/* SECTIONS */}
-        {SECTIONS.map((section, index) => (
+        {!loading && sections.map((section, index) => (
           <View key={index} style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
-            <Text style={styles.sectionContent}>{section.content}</Text>
+            <Text style={styles.sectionContent}>{section.content.replace(/\\n/g, '\n')}</Text>
           </View>
         ))}
 

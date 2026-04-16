@@ -26,6 +26,7 @@ export default function CustomerProfileScreen() {
   
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [referralCode, setReferralCode] = useState('');
 
   const handleContinue = async () => {
     if (!name.trim()) {
@@ -41,7 +42,11 @@ export default function CustomerProfileScreen() {
       setLoading(true);
       
       // 1. Update permanent profile
-      await userApi.updateProfile({ name, email });
+      await userApi.updateProfile({ 
+        name, 
+        email: email || undefined, 
+        referral_code: referralCode || undefined 
+      });
       
       // 2. Mark onboarding step as complete
       const res = await onboardingApi.completeCustomerStep('set_profile', { email });
@@ -119,6 +124,21 @@ export default function CustomerProfileScreen() {
                   />
                 </View>
                 <Text style={styles.helper}>We use this to send order receipts and updates.</Text>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Referral Code (Optional)</Text>
+                <View style={styles.inputWrap}>
+                  <Ionicons name="gift-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="TG-XXXX-XXXX"
+                    value={referralCode}
+                    onChangeText={setReferralCode}
+                    autoCapitalize="characters"
+                  />
+                </View>
+                <Text style={styles.helper}>Have a friend's code? Enter it here for rewards!</Text>
               </View>
             </View>
           </ScrollView>

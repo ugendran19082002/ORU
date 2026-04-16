@@ -121,13 +121,13 @@ export default function ShopAnalyticsScreen() {
             >
               <Ionicons name="bar-chart" size={120} color="rgba(255,255,255,0.05)" style={styles.heroDecor} />
               <Text style={styles.heroLabel}>GROSS REVENUE — {PERIODS.find((p) => p.key === period)?.label.toUpperCase()}</Text>
-              <Text style={styles.heroValue}>{fmt(data?.revenue.gross ?? 0)}</Text>
+              <Text style={styles.heroValue}>{fmt(data?.revenue?.gross ?? 0)}</Text>
               <View style={styles.heroRow}>
                 <View style={styles.heroChip}>
                   <Ionicons name="trending-up" size={14} color="#4ade80" />
-                  <Text style={styles.heroChipText}>Net: {fmt(data?.revenue.net ?? 0)}</Text>
+                  <Text style={styles.heroChipText}>Net: {fmt(data?.revenue?.net ?? 0)}</Text>
                 </View>
-                <Text style={styles.heroSub}>{data?.orders.total ?? 0} orders</Text>
+                <Text style={styles.heroSub}>{data?.orders?.total ?? 0} orders</Text>
               </View>
             </LinearGradient>
 
@@ -136,27 +136,27 @@ export default function ShopAnalyticsScreen() {
             <View style={styles.metricsGrid}>
               {[
                 {
-                  label: 'Revenue', value: fmt(data?.revenue.gross ?? 0),
+                  label: 'Revenue', value: fmt(data?.revenue?.gross ?? 0),
                   icon: 'trending-up-outline', color: '#005d90', bg: '#e0f0ff',
                 },
                 {
-                  label: 'Orders', value: String(data?.orders.total ?? 0),
+                  label: 'Orders', value: String(data?.orders?.total ?? 0),
                   icon: 'receipt-outline', color: '#2e7d32', bg: '#e8f5e9',
                 },
                 {
-                  label: 'Delivered', value: String(data?.orders.delivered ?? 0),
+                  label: 'Delivered', value: String(data?.orders?.delivered ?? 0),
                   icon: 'checkmark-circle-outline', color: '#006878', bg: '#e0f7fa',
                 },
                 {
-                  label: 'Avg Order', value: `₹${Math.round(data?.orders.avg_order_value ?? 0)}`,
+                  label: 'Avg Order', value: `₹${Math.round(data?.orders?.avg_order_value ?? 0)}`,
                   icon: 'calculator-outline', color: '#b45309', bg: '#fef3c7',
                 },
                 {
-                  label: 'Commission', value: fmt(data?.revenue.commission ?? 0),
+                  label: 'Commission', value: fmt(data?.revenue?.commission ?? 0),
                   icon: 'cash-outline', color: '#7c3aed', bg: '#ede9fe',
                 },
                 {
-                  label: 'Cancelled', value: String(data?.orders.cancelled ?? 0),
+                  label: 'Cancelled', value: String(data?.orders?.cancelled ?? 0),
                   icon: 'close-circle-outline', color: '#c62828', bg: '#ffebee',
                 },
               ].map((m) => (
@@ -179,23 +179,23 @@ export default function ShopAnalyticsScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.perfLabel}>Avg Delivery Time</Text>
-                  <Text style={styles.perfValue}>{Math.round(data?.delivery.avg_delivery_time_mins ?? 0)} min</Text>
+                  <Text style={styles.perfValue}>{Math.round(data?.delivery?.avg_delivery_time_mins ?? 0)} min</Text>
                 </View>
                 <View style={[styles.perfIcon, { backgroundColor: '#e8f5e9' }]}>
                   <Ionicons name="star-outline" size={20} color="#2e7d32" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.perfLabel}>Rating</Text>
-                  <Text style={styles.perfValue}>{(data?.rating.avg ?? 0).toFixed(1)} ★ ({data?.rating.count ?? 0})</Text>
+                  <Text style={styles.perfValue}>{(data?.rating?.avg ?? 0).toFixed(1)} ★ ({data?.rating?.count ?? 0})</Text>
                 </View>
               </View>
               <View style={[styles.perfRow, { marginTop: 16 }]}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.perfLabel}>On-Time Rate</Text>
                   <View style={styles.progressTrack}>
-                    <View style={[styles.progressFill, { width: `${data?.delivery.on_time_rate ?? 0}%`, backgroundColor: '#006878' }]} />
+                    <View style={[styles.progressFill, { width: `${data?.delivery?.on_time_rate ?? 0}%`, backgroundColor: '#006878' }]} />
                   </View>
-                  <Text style={[styles.perfValue, { fontSize: 13 }]}>{(data?.delivery.on_time_rate ?? 0).toFixed(0)}%</Text>
+                  <Text style={[styles.perfValue, { fontSize: 13 }]}>{(data?.delivery?.on_time_rate ?? 0).toFixed(0)}%</Text>
                 </View>
               </View>
             </View>

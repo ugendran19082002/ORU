@@ -75,6 +75,7 @@ export default function LoginScreen() {
           // Success! Redirect to app
           if (role === 'shop_owner') router.replace('/shop' as any);
           else if (role === 'admin') router.replace('/admin' as any);
+          else if (role === 'delivery') router.replace('/delivery' as any);
           else router.replace('/(tabs)' as any);
         }
       }

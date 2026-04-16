@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  Switch, RefreshControl, ActivityIndicator, Alert,
+  Switch, RefreshControl, ActivityIndicator, Alert, Modal, TextInput,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -33,12 +34,28 @@ const PRICING_COLORS: Record<string, { bg: string; text: string }> = {
 };
 
 export default function AdminFeaturesScreen() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
   const router = useRouter();
   const [features, setFeatures] = useState<Feature[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<string>('all');
   const [toggling, setToggling] = useState<number | null>(null);
+  
+  const [showModal, setShowModal] = useState(false);
+  const [editFeature, setEditFeature] = useState<Partial<Feature> | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Override State
+  const [showOverrideModal, setShowOverrideModal] = useState(false);
+  const [targetType, setTargetType] = useState<'user' | 'shop'>('user');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [targets, setTargets] = useState<any[]>([]);
+  const [targetLoading, setTargetLoading] = useState(false);
+  const [selectedTarget, setSelectedTarget] = useState<any | null>(null);
+  const [overrideReason, setOverrideReason] = useState('');
+  const [overrideEnabled, setOverrideEnabled] = useState(true);
 
   const fetchFeatures = useCallback(async () => {
     try {
@@ -53,6 +70,78 @@ export default function AdminFeaturesScreen() {
   }, []);
 
   useEffect(() => { fetchFeatures(); }, [fetchFeatures]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery.length > 2) handleSearch();
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  const handleSearch = async () => {
+    setTargetLoading(true);
+    try {
+      const endpoint = targetType === 'user' ? '/admin/users' : '/admin/vendors';
+      const res = await apiClient.get(`${endpoint}?q=${searchQuery}`);
+      if (res.data?.status === 1) setTargets(res.data.data ?? []);
+    } catch {
+      Toast.show({ type: 'error', text1: 'Search failed' });
+    } finally {
+      setTargetLoading(false);
+    }
+  };
+
+  const handleSetOverride = async () => {
+    if (!selectedTarget || !editFeature?.id) {
+      Toast.show({ type: 'error', text1: 'Target and Feature required' });
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        feature_id: editFeature.id,
+        [targetType === 'user' ? 'user_id' : 'shop_id']: selectedTarget.id,
+        is_enabled: overrideEnabled,
+        reason: overrideReason,
+      };
+      const res = await apiClient.post('/admin/features/overrides', payload);
+      if (res.data?.status === 1) {
+        Toast.show({ type: 'success', text1: 'Override granted' });
+        setShowOverrideModal(false);
+        setSearchQuery('');
+        setTargets([]);
+        setSelectedTarget(null);
+      }
+    } catch (e: any) {
+      Toast.show({ type: 'error', text1: 'Override failed', text2: e?.message });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!editFeature?.key || !editFeature?.name) {
+      Toast.show({ type: 'error', text1: 'Key and name required' });
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = editFeature.id 
+        ? await apiClient.put(`/admin/features/${editFeature.id}`, editFeature)
+        : await apiClient.post('/admin/features', editFeature);
+
+      if (res.data?.status === 1) {
+        Toast.show({ type: 'success', text1: editFeature.id ? 'Feature updated' : 'Feature created' });
+        setShowModal(false);
+        setEditFeature(null);
+        fetchFeatures();
+      }
+    } catch (e: any) {
+      Toast.show({ type: 'error', text1: 'Save failed', text2: e?.message });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleToggle = async (feature: Feature, enabled: boolean) => {
     setToggling(feature.id);
@@ -82,43 +171,61 @@ export default function AdminFeaturesScreen() {
     : features.filter((f) => (f.category ?? 'general') === filter);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
       <StatusBar style="dark" />
-
-      <View style={styles.header}>
-        <BackButton fallback="/admin" />
-        <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={styles.headerTitle}>Feature Management</Text>
-          <Text style={styles.headerSub}>{features.length} features registered</Text>
+      <SafeAreaView style={styles.headerSafe} edges={['top']}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerTitleRow}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={20} color="#005d90" />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.pageTitle}>Feature Flags</Text>
+              <Text style={styles.headerSub}>{features.length} operational features</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.addBtn}
+              onPress={() => {
+                setEditFeature({
+                  name: '', key: '', description: '', role: 'both',
+                  pricing_type: 'free', is_free: true, default_enabled: true,
+                  globally_enabled: true, category: 'general', is_beta: false
+                });
+                setShowModal(true);
+              }}
+            >
+              <Ionicons name="add" size={24} color="#005d90" />
+            </TouchableOpacity>
+          </View>
         </View>
-        <TouchableOpacity
-          style={styles.addBtn}
-          onPress={() => Toast.show({ type: 'info', text1: 'Coming soon', text2: 'Add feature via API body.' })}
-        >
-          <Ionicons name="add" size={22} color="#005d90" />
-        </TouchableOpacity>
-      </View>
+      </SafeAreaView>
 
-      {/* CATEGORY TABS */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
-        {CATEGORIES.map((cat) => (
-          <TouchableOpacity
-            key={cat}
-            style={[styles.tab, filter === cat && styles.tabActive]}
-            onPress={() => setFilter(cat)}
-          >
-            <Text style={[styles.tabText, filter === cat && styles.tabTextActive]}>
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <View style={[styles.tabBarWrap, isDesktop && { alignItems: 'center' }]}>
+        <View style={{ width: '100%', maxWidth: 1200 }}>
+          {/* CATEGORY TABS */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
+            {CATEGORIES.map((cat) => (
+              <TouchableOpacity
+                key={cat}
+                style={[styles.tab, filter === cat && styles.tabActive]}
+                onPress={() => setFilter(cat)}
+              >
+                <Text style={[styles.tabText, filter === cat && styles.tabTextActive]}>
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </View>
 
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchFeatures(); }} colors={['#005d90']} />}
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { alignItems: 'center', paddingBottom: 100 }]}
       >
+        <View style={{ width: '100%', maxWidth: 1200 }}>
         {loading ? (
           <View style={styles.centered}>
             <ActivityIndicator size="large" color="#005d90" />
@@ -142,25 +249,40 @@ export default function AdminFeaturesScreen() {
                   </View>
                   <Text style={styles.featureKey}>{feature.key}</Text>
                 </View>
-                {toggling === feature.id ? (
-                  <ActivityIndicator size="small" color="#005d90" />
-                ) : (
-                  <Switch
-                    value={feature.globally_enabled}
-                    onValueChange={(val) => {
-                      Alert.alert(
-                        val ? 'Enable Feature?' : 'Disable Feature?',
-                        `"${feature.name}" will be ${val ? 'enabled for all eligible users' : 'disabled globally — even paid plan users lose access'}`,
-                        [
-                          { text: 'Cancel', style: 'cancel' },
-                          { text: val ? 'Enable' : 'Disable', onPress: () => handleToggle(feature, val) },
-                        ]
-                      );
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  <TouchableOpacity 
+                    onPress={() => { 
+                      setEditFeature({ ...feature }); 
+                      setTargetType(feature.role === 'shop_owner' ? 'shop' : 'user');
+                      setShowOverrideModal(true); 
                     }}
-                    trackColor={{ false: '#e0e2e8', true: '#bbf7d0' }}
-                    thumbColor={feature.globally_enabled ? '#16a34a' : '#94a3b8'}
-                  />
-                )}
+                    style={styles.actionBtn}
+                  >
+                    <Ionicons name="shield-checkmark-outline" size={18} color="#005d90" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => { setEditFeature({ ...feature }); setShowModal(true); }}>
+                    <Ionicons name="settings-outline" size={20} color="#64748b" />
+                  </TouchableOpacity>
+                  {toggling === feature.id ? (
+                    <ActivityIndicator size="small" color="#005d90" />
+                  ) : (
+                    <Switch
+                      value={feature.globally_enabled}
+                      onValueChange={(val) => {
+                        Alert.alert(
+                          val ? 'Enable Feature?' : 'Disable Feature?',
+                          `"${feature.name}" will be ${val ? 'enabled for all eligible users' : 'disabled globally — even paid plan users lose access'}`,
+                          [
+                            { text: 'Cancel', style: 'cancel' },
+                            { text: val ? 'Enable' : 'Disable', onPress: () => handleToggle(feature, val) },
+                          ]
+                        );
+                      }}
+                      trackColor={{ false: '#e0e2e8', true: '#bbf7d0' }}
+                      thumbColor={feature.globally_enabled ? '#16a34a' : '#94a3b8'}
+                    />
+                  )}
+                </View>
               </View>
 
               {feature.description && (
@@ -190,27 +312,206 @@ export default function AdminFeaturesScreen() {
             </View>
           );
         })}
+        </View>
       </ScrollView>
-    </SafeAreaView>
+
+      {/* EDIT MODAL */}
+      <Modal visible={showModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{editFeature?.id ? 'Edit Feature' : 'New Feature'}</Text>
+              <TouchableOpacity onPress={() => { setShowModal(false); setEditFeature(null); }}>
+                <Ionicons name="close" size={24} color="#181c20" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {[
+                { key: 'name', label: 'Display Name', placeholder: 'e.g. Instant Payout' },
+                { key: 'key', label: 'Feature Key (unique)', placeholder: 'e.g. instant_payout' },
+                { key: 'description', label: 'Description', placeholder: 'Explain what this does' },
+                { key: 'category', label: 'Category', placeholder: 'e.g. payment, delivery' },
+                { key: 'role', label: 'Role (customer/shop_owner/both)', placeholder: 'both' },
+                { key: 'pricing_type', label: 'Pricing (free/subscription/usage)', placeholder: 'free' },
+              ].map((field) => (
+                <View key={field.key} style={styles.fieldRow}>
+                  <Text style={styles.fieldLabel}>{field.label}</Text>
+                  <TextInput
+                    style={styles.fieldInput}
+                    value={(editFeature as any)?.[field.key] || ''}
+                    onChangeText={(v) => setEditFeature(p => ({ ...p, [field.key]: v }))}
+                    placeholder={field.placeholder}
+                    placeholderTextColor="#94a3b8"
+                    autoCapitalize="none"
+                  />
+                </View>
+              ))}
+
+              <View style={styles.switchRow}>
+                <View>
+                  <Text style={styles.switchLabel}>Free Feature</Text>
+                  <Text style={styles.switchSub}>Available to all users regardless of plan</Text>
+                </View>
+                <Switch
+                  value={editFeature?.is_free}
+                  onValueChange={(v) => setEditFeature(p => ({ ...p, is_free: v, pricing_type: v ? 'free' : 'plan_only' }))}
+                />
+              </View>
+              
+              <View style={styles.switchRow}>
+                <View>
+                  <Text style={styles.switchLabel}>Is Beta</Text>
+                  <Text style={styles.switchSub}>Mark as early access functionality</Text>
+                </View>
+                <Switch
+                  value={editFeature?.is_beta}
+                  onValueChange={(v) => setEditFeature(p => ({ ...p, is_beta: v }))}
+                />
+              </View>
+            </ScrollView>
+
+            <TouchableOpacity
+              style={[styles.saveBtn, saving && { opacity: 0.6 }]}
+              onPress={handleSave}
+              disabled={saving}
+            >
+              <LinearGradient colors={['#005d90', '#0077b6']} style={styles.saveBtnGrad}>
+                {saving ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>Save Feature</Text>}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* OVERRIDE MODAL */}
+      <Modal visible={showOverrideModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Feature Override</Text>
+                <Text style={styles.headerSub}>Grant "{editFeature?.name}" to specific {targetType}s</Text>
+              </View>
+              <TouchableOpacity onPress={() => { setShowOverrideModal(false); setSelectedTarget(null); }}>
+                <Ionicons name="close" size={24} color="#181c20" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.typeSelector}>
+              <TouchableOpacity 
+                style={[styles.typeOption, targetType === 'user' && styles.typeOptionActive]}
+                onPress={() => { setTargetType('user'); setTargets([]); setSearchQuery(''); }}
+              >
+                <Text style={[styles.typeOptionText, targetType === 'user' && styles.typeOptionActiveText]}>User</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.typeOption, targetType === 'shop' && styles.typeOptionActive]}
+                onPress={() => { setTargetType('shop'); setTargets([]); setSearchQuery(''); }}
+              >
+                <Text style={[styles.typeOptionText, targetType === 'shop' && styles.typeOptionActiveText]}>Shop</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.searchBox}>
+              <Ionicons name="search" size={18} color="#94a3b8" />
+              <TextInput
+                style={styles.searchInput}
+                placeholder={`Search for ${targetType} by name or phone...`}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholderTextColor="#94a3b8"
+              />
+              {targetLoading && <ActivityIndicator size="small" color="#005d90" />}
+            </View>
+
+            <ScrollView style={{ maxHeight: 200 }} showsVerticalScrollIndicator={false}>
+              {targets.map(t => (
+                <TouchableOpacity 
+                  key={t.id} 
+                  style={[styles.targetItem, selectedTarget?.id === t.id && styles.targetItemActive]}
+                  onPress={() => setSelectedTarget(t)}
+                >
+                  <View>
+                    <Text style={[styles.targetName, selectedTarget?.id === t.id && styles.targetItemActiveText]}>
+                      {t.name}
+                    </Text>
+                    <Text style={styles.targetSub}>{t.phone} • {t.email || 'No email'}</Text>
+                  </View>
+                  {selectedTarget?.id === t.id && <Ionicons name="checkmark-circle" size={20} color="#005d90" />}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Reason for override</Text>
+              <TextInput
+                style={styles.fieldInput}
+                placeholder="e.g. VIP Trial, Support case fix"
+                value={overrideReason}
+                onChangeText={setOverrideReason}
+                placeholderTextColor="#94a3b8"
+              />
+            </View>
+
+            <View style={styles.switchRow}>
+              <View>
+                <Text style={styles.switchLabel}>Enable Feature</Text>
+                <Text style={styles.switchSub}>Turn on (Green) or Force Disable (Red)</Text>
+              </View>
+              <Switch value={overrideEnabled} onValueChange={setOverrideEnabled} />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.saveBtn, (!selectedTarget || saving) && { opacity: 0.6 }]}
+              onPress={handleSetOverride}
+              disabled={!selectedTarget || saving}
+            >
+              <LinearGradient colors={['#005d90', '#0077b6']} style={styles.saveBtnGrad}>
+                {saving ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>Grant Access</Text>}
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
-  header: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 20, paddingVertical: 14,
-    backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+  headerSafe: { 
+    backgroundColor: 'white', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f1f5f9',
+    alignItems: 'center',
   },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
-  headerSub: { fontSize: 12, color: '#64748b', fontWeight: '500', marginTop: 1 },
-  addBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
-  tabs: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
-  tab: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: 'white', borderWidth: 1, borderColor: '#e0e2e8' },
-  tabActive: { backgroundColor: '#005d90', borderColor: '#005d90' },
-  tabText: { fontSize: 13, fontWeight: '700', color: '#707881' },
+  headerContent: {
+    width: '100%',
+    maxWidth: 1200,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '500', marginTop: 2 },
+
+  addBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
+  
+  tabBarWrap: { paddingVertical: 10, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  tabs: { paddingHorizontal: 24, gap: 8 },
+  tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#f1f5f9' },
+  tabActive: { backgroundColor: '#005d90' },
+  tabText: { fontSize: 13, fontWeight: '800', color: '#64748b' },
   tabTextActive: { color: 'white' },
-  content: { padding: 16, gap: 12, paddingBottom: 100 },
+  content: { padding: 16, gap: 12 },
   centered: { paddingTop: 80, alignItems: 'center' },
   emptyText: { marginTop: 14, color: '#64748b', fontWeight: '600', fontSize: 15 },
   featureCard: {
@@ -228,4 +529,48 @@ const styles = StyleSheet.create({
   featureTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   featureTag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
   featureTagText: { fontSize: 11, fontWeight: '700', color: '#707881' },
+  // Modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalSheet: {
+    backgroundColor: 'white', borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    padding: 24, maxHeight: '85%',
+  },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: '#181c20' },
+  fieldRow: { marginBottom: 14 },
+  fieldLabel: { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 6 },
+  fieldInput: {
+    borderWidth: 1.5, borderColor: '#e0e2e8', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#181c20',
+  },
+  switchRow: { 
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', 
+    backgroundColor: '#f8fafc', padding: 12, borderRadius: 12, marginBottom: 10 
+  },
+  switchLabel: { fontSize: 14, fontWeight: '800', color: '#1e293b' },
+  switchSub: { fontSize: 11, color: '#64748b', fontWeight: '500' },
+  saveBtn: { borderRadius: 16, overflow: 'hidden', marginTop: 16 },
+  saveBtnGrad: { paddingVertical: 16, alignItems: 'center' },
+  saveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
+  actionBtn: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#f0f7ff', alignItems: 'center', justifyContent: 'center' },
+  typeSelector: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  typeOption: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#e2e8f0' },
+  typeOptionActive: { backgroundColor: '#005d90', borderColor: '#005d90' },
+  typeOptionText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
+  typeOptionActiveText: { color: 'white' },
+  searchBox: { 
+    flexDirection: 'row', alignItems: 'center', gap: 10, 
+    backgroundColor: '#f8fafc', paddingHorizontal: 16, paddingVertical: 12, 
+    borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#e2e8f0' 
+  },
+  searchInput: { flex: 1, fontSize: 14, color: '#1e293b' },
+  targetItem: { 
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: 12, borderRadius: 12, marginBottom: 8, backgroundColor: 'white',
+    borderWidth: 1.5, borderColor: '#f1f5f9'
+  },
+  targetItemActive: { borderColor: '#005d90', backgroundColor: '#f0f7ff' },
+  targetName: { fontSize: 14, fontWeight: '800', color: '#1e293b' },
+  targetItemActiveText: { color: '#005d90' },
+  targetSub: { fontSize: 11, color: '#64748b', fontWeight: '500' },
 });

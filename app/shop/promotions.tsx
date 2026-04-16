@@ -1,6 +1,6 @@
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, TextInput, Switch
+  StyleSheet, TextInput, Switch, Share, Alert,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { useEffect, useState } from 'react';
@@ -14,6 +14,8 @@ import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { apiClient } from '@/api/client';
+import { promotionApi } from '@/api/promotionApi';
+import { log } from '@/utils/logger';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 type Promo = {
@@ -62,8 +64,8 @@ export default function ShopPromotionsScreen() {
   const fetchLoyaltyData = async () => {
     try {
       const [levelsRes, settingsRes] = await Promise.all([
-        apiClient.get('/loyalty/levels'),
-        apiClient.get('/loyalty/settings')
+        apiClient.get('/promotion/loyalty/levels'),
+        apiClient.get('/promotion/loyalty/settings')
       ]);
       if (levelsRes.data.status === 1) setLoyaltyLevels(levelsRes.data.data);
       if (settingsRes.data.status === 1) setLoyaltySettings(settingsRes.data.data);
@@ -74,9 +76,11 @@ export default function ShopPromotionsScreen() {
 
   const fetchPromotions = async () => {
     try {
-      const res = await apiClient.get('/shop-owner/promotions');
-      if (res.data.status === 1) setPromos(res.data.data);
+      setLoading(true);
+      const data = await promotionApi.getShopCoupons();
+      setPromos(data);
     } catch (e) {
+      log.error('[Promotions] Fetch error', e);
       Toast.show({ type: 'error', text1: 'Failed to fetch coupons' });
     } finally {
       setLoading(false);
@@ -86,19 +90,20 @@ export default function ShopPromotionsScreen() {
 
   const togglePromo = async (id: number) => {
     try {
-      const res = await apiClient.patch(`/shop-owner/promotions/${id}/status`);
-      if (res.data.status === 1) {
-        setPromos(prev => prev.map(p => p.id === id ? { ...p, is_active: !p.is_active } : p));
-        Toast.show({ type: 'success', text1: res.data.message });
+      const data = await promotionApi.toggleCouponStatus(id);
+      if (data) {
+        setPromos(prev => prev.map(p => p.id === id ? { ...p, is_active: data.is_active } : p));
+        Toast.show({ type: 'success', text1: `Coupon ${data.is_active ? 'activated' : 'deactivated'}` });
       }
     } catch (e) {
+      log.error('[Promotions] Toggle error', e);
       Toast.show({ type: 'error', text1: 'Action failed' });
     }
   };
 
   const handleCreate = async () => {
     if (!newCode.trim() || !newValue.trim()) {
-      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Logic and value required' });
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Code and value required' });
       return;
     }
     try {
@@ -110,17 +115,15 @@ export default function ShopPromotionsScreen() {
         max_uses: parseInt(newMaxUses) || 100,
         valid_until: expiryDate.toISOString()
       };
-      const res = await apiClient.post('/shop-owner/promotions', payload);
-      if (res.data.status === 1) {
-        Toast.show({ type: 'success', text1: 'Coupon Created' });
-        fetchPromotions();
-        setShowCreate(false);
-        setNewCode(''); setNewValue(''); setNewMin('');
-      } else {
-        Toast.show({ type: 'error', text1: 'Error', text2: res.data.message });
-      }
+      
+      await promotionApi.createShopCoupon(payload);
+      Toast.show({ type: 'success', text1: 'Coupon Created' });
+      fetchPromotions();
+      setShowCreate(false);
+      setNewCode(''); setNewValue(''); setNewMin('');
     } catch (e: any) {
-      Toast.show({ type: 'error', text1: 'Creation failed', text2: e.response?.data?.message });
+      log.error('[Promotions] Create error', e);
+      Toast.show({ type: 'error', text1: 'Creation failed', text2: e.message });
     }
   };
 
@@ -322,15 +325,48 @@ export default function ShopPromotionsScreen() {
 
                 {/* ACTIONS */}
                 <View style={styles.promoActions}>
-                  <TouchableOpacity style={styles.actionBtn}>
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={() => {
+                      Share.share({ message: promo.code, title: 'Coupon Code' });
+                    }}
+                  >
                     <Ionicons name="copy-outline" size={14} color="#005d90" />
                     <Text style={styles.actionBtnText}>Copy Code</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionBtn}>
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={() => {
+                      Share.share({
+                        message: `Use code ${promo.code} to get ${promo.discount_value}${promo.type === 'percentage' ? '%' : '₹'} off on your order! Min order ₹${promo.min_order_value}.`,
+                        title: 'ThanniGo Coupon',
+                      });
+                    }}
+                  >
                     <Ionicons name="share-social-outline" size={14} color="#005d90" />
                     <Text style={styles.actionBtnText}>Share</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.actionBtn, { borderColor: '#fecaca' }]}>
+                  <TouchableOpacity
+                    style={[styles.actionBtn, { borderColor: '#fecaca' }]}
+                    onPress={() => {
+                      Alert.alert('Delete Coupon', `Delete coupon "${promo.code}"? This cannot be undone.`, [
+                        { text: 'Cancel', style: 'cancel' },
+                        {
+                          text: 'Delete',
+                          style: 'destructive',
+                          onPress: async () => {
+                            try {
+                              await promotionApi.deleteShopCoupon(promo.id);
+                              Toast.show({ type: 'success', text1: 'Coupon deleted' });
+                              fetchPromotions();
+                            } catch {
+                              Toast.show({ type: 'error', text1: 'Delete failed' });
+                            }
+                          },
+                        },
+                      ]);
+                    }}
+                  >
                     <Ionicons name="trash-outline" size={14} color="#f87171" />
                     <Text style={[styles.actionBtnText, { color: '#f87171' }]}>Delete</Text>
                   </TouchableOpacity>

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Switch, Linking,
@@ -13,6 +13,29 @@ import * as Location from 'expo-location';
 import { useDeliveryStore } from '@/stores/deliveryStore';
 import { useAppSession } from '@/hooks/use-app-session';
 import { connectSocket, disconnectSocket, getSocket } from '@/utils/socket';
+import * as ImagePicker from 'expo-image-picker';
+import * as TaskManager from 'expo-task-manager';
+import { Modal, Image } from 'react-native';
+ 
+const LOCATION_TASK_NAME = 'background-location-task';
+ 
+TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
+  if (error) {
+    console.error('[LocationTask] Error:', error);
+    return;
+  }
+  if (data) {
+    const { locations } = data;
+    const sock = getSocket();
+    if (sock?.connected) {
+      sock.emit('location_push', {
+        latitude: locations[0].coords.latitude,
+        longitude: locations[0].coords.longitude,
+        timestamp: locations[0].timestamp,
+      });
+    }
+  }
+});
 
 
 
@@ -20,6 +43,12 @@ export default function DeliveryDashboardScreen() {
   const router = useRouter();
   const { user, signOut } = useAppSession();
   const { tasks, online, toggleOnline, assignCurrentTask, updateTaskStatus, removeTask } = useDeliveryStore();
+ 
+  // POD State
+  const [podModalVisible, setPodModalVisible] = useState(false);
+  const [podTaskId, setPodTaskId] = useState<string | null>(null);
+  const [podImage, setPodImage] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   // ── Socket location push ─────────────────────────────────────────────────────
   // When the driver is online and has an active accepted task, broadcast GPS
@@ -35,6 +64,7 @@ export default function DeliveryDashboardScreen() {
         clearInterval(locationIntervalRef.current);
         locationIntervalRef.current = null;
       }
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
       disconnectSocket();
       return;
     }
@@ -59,27 +89,20 @@ export default function DeliveryDashboardScreen() {
 
       if (!mounted) return;
 
-      // Push location every 5 seconds
-      locationIntervalRef.current = setInterval(async () => {
-        const sock = getSocket();
-        if (!sock?.connected) return;
-
-        try {
-          const currentLocation = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.High,
-          });
-
-          sock.emit('location_push', {
-            latitude: currentLocation.coords.latitude,
-            longitude: currentLocation.coords.longitude,
-            order_id: activeTask.orderId,
-            accuracy: currentLocation.coords.accuracy,
-            speed: currentLocation.coords.speed,
-          });
-        } catch (locErr) {
-          console.warn('[Socket] Failed to get location:', locErr);
-        }
-      }, 5000);
+      // Start background location updates
+      try {
+        await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+          accuracy: Location.Accuracy.High,
+          distanceInterval: 10, // Update every 10 meters
+          deferredUpdatesInterval: 5000, // Or every 5 seconds
+          foregroundService: {
+            notificationTitle: 'ThanniGo Delivery',
+            notificationBody: 'Your location is being tracked for the customer.',
+          },
+        });
+      } catch (err) {
+        console.warn('[LocationTask] Failed to start background updates:', err);
+      }
     };
 
     startLocationPush();
@@ -90,6 +113,7 @@ export default function DeliveryDashboardScreen() {
         clearInterval(locationIntervalRef.current);
         locationIntervalRef.current = null;
       }
+      Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch(() => {});
     };
   }, [online, tasks]);
   // ────────────────────────────────────────────────────────────────────────────
@@ -100,6 +124,25 @@ export default function DeliveryDashboardScreen() {
 
   const handleReject = (id: string) => {
     removeTask(id);
+  };
+ 
+  const takePodPhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Toast.show({ type: 'error', text1: 'Permission Denied', text2: 'Camera access is required for POD' });
+      return;
+    }
+ 
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.5,
+    });
+ 
+    if (!result.canceled) {
+      // podImage = result.assets[0].uri;
+      // router.push('/delivery/complete' as any); // Or show modal
+      router.push({ pathname: '/delivery/complete' as any, params: { taskId: tasks.find(t => t.status === 'accepted')?.id, imageUri: result.assets[0].uri } });
+    }
   };
 
   const totalEarnings = 284;
@@ -189,14 +232,24 @@ export default function DeliveryDashboardScreen() {
         <View style={styles.quickRow}>
           {[
             { label: 'Security', icon: 'shield-checkmark-outline', color: '#005d90', bg: '#f0f9ff', path: '/privacy-security' },
-            { label: 'My Earnings', icon: 'cash-outline', color: '#2e7d32', bg: '#e8f5e9' },
-            { label: 'Trip History', icon: 'time-outline', color: '#b45309', bg: '#fef3c7' },
-            { label: 'Emergency', icon: 'warning-outline', color: '#c62828', bg: '#ffebee' },
+            { label: 'My Earnings', icon: 'cash-outline', color: '#2e7d32', bg: '#e8f5e9', path: '/delivery/earnings' },
+            { label: 'Trip History', icon: 'time-outline', color: '#b45309', bg: '#fef3c7', path: '/delivery/history' },
+            { label: 'Emergency', icon: 'warning-outline', color: '#c62828', bg: '#ffebee', path: '/emergency-help' },
           ].map((q) => (
             <TouchableOpacity 
               key={q.label} 
               style={styles.quickBtn}
-              onPress={() => q.path && router.push(q.path as any)}
+              onPress={() => {
+                if (q.path) {
+                  router.push(q.path as any);
+                } else {
+                  Toast.show({
+                    type: 'info',
+                    text1: 'Coming Soon',
+                    text2: `${q.label} feature is currently being finalized.`
+                  });
+                }
+              }}
             >
               <View style={[styles.quickIcon, { backgroundColor: q.bg }]}>
                 <Ionicons name={q.icon as any} size={20} color={q.color} />
@@ -270,6 +323,21 @@ export default function DeliveryDashboardScreen() {
                     <Text style={styles.startBtnText}>Accept</Text>
                   </TouchableOpacity>
                 </View>
+              ) : trip.status === 'picked' ? (
+                <TouchableOpacity
+                  style={styles.startBtn}
+                  onPress={takePodPhoto}
+                >
+                  <LinearGradient
+                    colors={['#2e7d32', '#388e3c']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.startBtnGrad}
+                  >
+                    <Ionicons name="camera" size={16} color="white" />
+                    <Text style={styles.startBtnText}>Complete Delivery</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
               ) : (
                 <TouchableOpacity
                   style={styles.startBtn}

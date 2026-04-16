@@ -7,6 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAppSession } from '@/providers/AppSessionProvider';
 import Toast from 'react-native-toast-message';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { apiClient } from '@/api/client';
@@ -217,29 +219,41 @@ export default function MasterMenuScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, isDesktop && { paddingHorizontal: 40, height: 100 }]}>
-        <View>
-          <Text style={[styles.title, isDesktop && { fontSize: 32 }]}>Master Menu</Text>
-          <Text style={[styles.subtitle, { maxWidth: isDesktop ? 'auto' : 200 }]}>Manage global categories and product hierarchy</Text>
+      <StatusBar style="dark" />
+      <SafeAreaView style={styles.headerSafe} edges={['top']}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerTitleRow}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={20} color="#005d90" />
+            </TouchableOpacity>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.pageTitle}>Master Menu</Text>
+              <Text style={styles.headerSub}>Categories & Product Hierarchy</Text>
+            </View>
+            <TouchableOpacity style={styles.addBtnHeader} onPress={handleAddCat} activeOpacity={0.8}>
+               <LinearGradient colors={['#005d90', '#0077b6']} style={styles.addBtnGrad} start={{x:0,y:0}} end={{x:1,y:0}}>
+                  <Ionicons name="add" size={20} color="white" />
+                  <Text style={styles.addBtnText}>New</Text>
+               </LinearGradient>
+            </TouchableOpacity>
+          </View>
         </View>
-        <TouchableOpacity style={styles.addBtn} onPress={handleAddCat} activeOpacity={0.8}>
-           <LinearGradient colors={['#005d90', '#0077b6']} style={styles.addBtnGrad} start={{x:0,y:0}} end={{x:1,y:0}}>
-              <Ionicons name="add" size={20} color="white" />
-              <Text style={styles.addBtnText}>New</Text>
-           </LinearGradient>
-        </TouchableOpacity>
-      </View>
+      </SafeAreaView>
 
-      <View style={[styles.filterRow, isDesktop && { paddingHorizontal: 40, alignSelf: 'center', maxWidth: 1200, width: '100%' }]}>
-         <TouchableOpacity 
-            style={[styles.filterBtn, showArchived && styles.filterBtnActive]} 
-            onPress={() => setShowArchived(!showArchived)}
-         >
-            <Ionicons name={showArchived ? "eye-outline" : "eye-off-outline"} size={16} color={showArchived ? "white" : "#64748b"} />
-            <Text style={[styles.filterText, showArchived && { color: 'white' }]}>
-               {showArchived ? "Hide Archived" : "Show Archived"}
-            </Text>
-         </TouchableOpacity>
+      <View style={[styles.filterRowWrap, isDesktop && { alignItems: 'center' }]}>
+        <View style={{ width: '100%', maxWidth: 1200 }}>
+          <View style={styles.filterRowInside}>
+            <TouchableOpacity 
+              style={[styles.filterBtn, showArchived && styles.filterBtnActive]} 
+              onPress={() => setShowArchived(!showArchived)}
+            >
+              <Ionicons name={showArchived ? "eye-outline" : "eye-off-outline"} size={16} color={showArchived ? "white" : "#64748b"} />
+              <Text style={[styles.filterText, showArchived && { color: 'white' }]}>
+                {showArchived ? "Hide Archived" : "Show Archived"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
       <ScrollView 
@@ -434,15 +448,37 @@ export default function MasterMenuScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { padding: 24, paddingBottom: 32, backgroundColor: 'white', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', zIndex: 10 },
-  title: { fontSize: 24, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 },
-  subtitle: { fontSize: 13, color: '#64748b', marginTop: 2, fontWeight: '500' },
-  addBtn: { borderRadius: 16, overflow: 'hidden' },
-  addBtnGrad: { paddingHorizontal: 20, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 8 },
-  addBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
+  container: { flex: 1, backgroundColor: '#f7f9ff' },
+
+  headerSafe: { 
+    backgroundColor: 'white', 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#f1f5f9',
+    alignItems: 'center',
+  },
+  headerContent: {
+    width: '100%',
+    maxWidth: 1200,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  addBtnHeader: { borderRadius: 12, overflow: 'hidden' },
+  addBtnGrad: { paddingHorizontal: 16, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  addBtnText: { color: 'white', fontWeight: '800', fontSize: 13 },
   
-  filterRow: { paddingHorizontal: 20, paddingTop: 12 },
+  filterRowWrap: { backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingVertical: 12 },
+  filterRowInside: { paddingHorizontal: 24 },
   filterBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f1f5f9', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#e2e8f0' },
   filterBtnActive: { backgroundColor: '#005d90', borderColor: '#005d90' },
   filterText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
