@@ -8,24 +8,20 @@ export default function AdminRootLayout() {
   const { user, status } = useAppSession();
   const router = useRouter();
 
-  useEffect(() => {
-    if (status === 'anonymous' || (status === 'authenticated' && user?.role !== 'admin')) {
-      router.replace('/auth');
-    }
-  }, [status, user, router]);
+  // Redundant local guard removed: RouteGuard in AppSessionProvider handles role redirection.
 
-  if (status === 'loading') {
+
+  // Ensure we have a user and they are an admin before rendering the stack.
+  // We show a loading spinner if the user object is not yet available,
+  // preventing a black screen during the transition.
+  if (status === 'authenticated' && (!user || user.role !== 'admin')) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f7f9ff' }}>
         <ActivityIndicator size="large" color="#005d90" />
       </View>
     );
   }
 
-  // Prevent flash of content for non-admins
-  if (user?.role !== 'admin') {
-    return null;
-  }
 
   return (
     <>

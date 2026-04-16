@@ -30,6 +30,8 @@ const SHOP_MENU: NavItem[] = [
   { label: 'Shop Profile & Address', icon: 'storefront-outline', route: '/shop/profile' },
   { label: 'Promotions & Coupons', icon: 'pricetag-outline', route: '/shop/promotions', badge: 'NEW' },
   { label: 'Delivery Management', icon: 'bicycle-outline', route: '/shop/delivery' },
+  { label: 'Business Hours Master', icon: 'time-outline', route: '/shop/schedule', color: '#006878' },
+  { label: 'Delivery Slots Config', icon: 'calendar-outline', route: '/shop/slots', color: '#006878' },
   { label: 'Customer Complaints', icon: 'warning-outline', route: '/shop/complaints' },
   { label: 'Subscription Plans', icon: 'calendar-outline', route: '/shop/subscription-plans' },
 ];

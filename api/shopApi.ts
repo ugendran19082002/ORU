@@ -220,4 +220,60 @@ export const shopApi = {
       return [];
     }
   },
+
+  /**
+   * Fetch 7-day business hours schedule.
+   * GET /shop-owner/schedule
+   */
+  async getSchedule(): Promise<any[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<any[]>>('/shop-owner/schedule');
+      return response.data.data || [];
+    } catch (error) {
+      log.error('[shopApi] getSchedule failed:', error);
+      throw ApiError.from(error, 'Failed to fetch schedule');
+    }
+  },
+
+  /**
+   * Update 7-day business hours schedule.
+   * PATCH /shop-owner/schedule
+   */
+  async updateSchedule(schedule: any[]): Promise<any[]> {
+    try {
+      const response = await apiClient.patch<ApiResponse<any[]>>('/shop-owner/schedule', { schedule });
+      return response.data.data || [];
+    } catch (error) {
+      log.error('[shopApi] updateSchedule failed:', error);
+      throw ApiError.from(error, 'Failed to update schedule');
+    }
+  },
+
+  /**
+   * Fetch all delivery slots.
+   * GET /shop-owner/slots
+   */
+  async getSlots(): Promise<any[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<any[]>>('/shop-owner/slots');
+      return response.data.data || [];
+    } catch (error) {
+      log.error('[shopApi] getSlots failed:', error);
+      throw ApiError.from(error, 'Failed to fetch delivery slots');
+    }
+  },
+
+  /**
+   * Sync/Replace delivery slots.
+   * PATCH /shop-owner/slots
+   */
+  async updateSlots(slots: any[]): Promise<any[]> {
+    try {
+      const response = await apiClient.patch<ApiResponse<any[]>>('/shop-owner/slots', { slots });
+      return response.data.data || [];
+    } catch (error) {
+      log.error('[shopApi] updateSlots failed:', error);
+      throw ApiError.from(error, 'Failed to sync delivery slots');
+    }
+  },
 };
