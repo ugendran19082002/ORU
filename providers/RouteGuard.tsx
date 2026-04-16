@@ -35,7 +35,7 @@ const ROLE_ROUTES: Record<AppRole, string[]> = {
 };
 
 // Screens accessible regardless of role (profile editing, notifications, etc.)
-const NEUTRAL_PREFIXES = new Set(['edit-profile', 'notifications', 'location', 'quick-login']);
+const NEUTRAL_PREFIXES = new Set(['edit-profile', 'notifications', 'location', 'quick-login', 'terms', 'privacy-policy', 'report-issue', 'emergency-help']);
 
 // Screens that belong to the security / auth setup flow — guard should not redirect from these
 const SECURITY_PREFIXES = new Set(['security-setup', 'location', 'quick-login']);

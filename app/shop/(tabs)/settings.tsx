@@ -56,7 +56,7 @@ function GridItem({ item }: { item: NavItem }) {
   return (
     <TouchableOpacity
       style={styles.gridCard}
-      onPress={() => item.route && router.push(item.route as any)}
+      onPress={() => item.route && router.navigate(item.route as any)}
       activeOpacity={0.7}
     >
       <View style={[styles.gridIcon, { backgroundColor: item.color + '15' }]}>
@@ -72,7 +72,7 @@ function MenuRow({ item }: { item: NavItem }) {
   return (
     <TouchableOpacity
       style={styles.menuRow}
-      onPress={() => item.route && router.push(item.route as any)}
+      onPress={() => item.route && router.navigate(item.route as any)}
       activeOpacity={0.7}
     >
       <View style={[styles.menuIcon, { backgroundColor: item.color ? item.color + '15' : '#f1f4f9' }]}>
