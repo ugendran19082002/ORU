@@ -72,4 +72,40 @@ export const inventoryApi = {
       throw ApiError.from(error, 'Failed to delete product');
     }
   },
+  /**
+   * Fetch detailed can inventory (Full, Empty, Damaged).
+   * GET /shop-owner/inventory
+   */
+  async getInventory(): Promise<any[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<any[]>>('/shop-owner/inventory');
+      if (response.data.status === 1) return response.data.data;
+      return [];
+    } catch (error) {
+      log.error('[inventoryApi] getInventory failed:', error);
+      throw ApiError.from(error, 'Failed to fetch inventory');
+    }
+  },
+
+  /**
+   * Update detailed inventory counts.
+   * PATCH /shop-owner/inventory
+   */
+  async updateInventorySummary(payload: {
+    product_id: number;
+    change_type: string;
+    full_cans_change?: number;
+    empty_cans_change?: number;
+    damaged_cans_change?: number;
+    notes?: string;
+  }): Promise<any> {
+    try {
+      const response = await apiClient.patch<ApiResponse<any>>('/shop-owner/inventory', payload);
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('UPDATE_FAILED', response.status ?? 400, response.data.message || 'Failed to update inventory');
+    } catch (error) {
+      log.error('[inventoryApi] updateInventorySummary failed:', error);
+      throw ApiError.from(error, 'Failed to update inventory');
+    }
+  },
 };

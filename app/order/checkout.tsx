@@ -483,6 +483,22 @@ export default function OrderCheckoutScreen() {
           />
         </View>
  
+        {/* DELIVERY NOTES */}
+        <View style={{ marginBottom: 20 }}>
+          <Text style={styles.sectionTitle}>Delivery Instructions</Text>
+          <TextInput
+            style={styles.notesInput}
+            placeholder="e.g. Gate code 1234, leave at door, call on arrival…"
+            placeholderTextColor="#a0aab4"
+            value={note}
+            onChangeText={(v) => useCartStore.getState().setNote(v)}
+            multiline
+            numberOfLines={2}
+            textAlignVertical="top"
+            maxLength={200}
+          />
+        </View>
+
         {/* COUPON / PROMO CODE */}
         <View style={{ marginBottom: 28 }}>
           <Text style={styles.sectionTitle}>Coupon / Promo Code</Text>
@@ -802,6 +818,7 @@ const styles = StyleSheet.create({
   paymentOptionLabel: { fontSize: 12, fontWeight: "800", color: "#707881" },
   paymentOptionLabelActive: { color: "#005d90" },
   paymentNote: { fontSize: 10, color: "#94a3b8", fontWeight: "600" },
+  notesInput: { backgroundColor: 'white', borderRadius: 16, padding: 14, fontSize: 14, color: '#181c20', borderWidth: 1, borderColor: '#e0e2e8', minHeight: 72, marginTop: 10 },
 
   addressCard: {
     flexDirection: "row",

@@ -64,6 +64,7 @@ export default function ProfileScreen() {
   const menuItems = [
     { icon: 'location-outline' as const, label: 'Saved Addresses', subtitle: `${addressCount} saved locations`, hasArrow: true },
     { icon: 'card-outline' as const, label: 'Payment Methods', subtitle: 'UPI, Cards', hasArrow: true },
+    { icon: 'document-text-outline' as const, label: 'Payment History', subtitle: 'All transactions', hasArrow: true },
     { icon: 'receipt-outline' as const, label: 'Order History', subtitle: 'View past orders', hasArrow: true },
     { icon: 'analytics-outline' as const, label: 'My Analytics', subtitle: 'Spendings and trends', hasArrow: true },
     { icon: 'star-outline' as const, label: 'My Reviews', subtitle: 'Manage your ratings', hasArrow: true },
@@ -192,6 +193,8 @@ export default function ProfileScreen() {
                     router.push('/rewards' as any);
                   } else if (item.label === 'My Analytics') {
                     router.push('/customer-analytics' as any);
+                  } else if (item.label === 'Payment History') {
+                    router.push('/payments/history' as any);
                   } else if (item.label === 'Payment Methods') {
                     router.push('/customer-payment-methods' as any);
                   } else if (item.label === 'My Reviews') {

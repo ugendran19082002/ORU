@@ -53,6 +53,7 @@ export default function RootLayout() {
                 <Stack.Screen name="customer-analytics" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="customer-payment-methods" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="customer-reviews" options={{ headerShown: false, animation: 'slide_from_right' }} />
+                <Stack.Screen name="customer-payment-history" options={{ headerShown: false, animation: 'slide_from_right' }} />
                 <Stack.Screen name="location" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
                 <Stack.Screen name="shop" options={{ headerShown: false, animation: 'fade' }} />
                 <Stack.Screen name="delivery" options={{ headerShown: false, animation: 'fade' }} />

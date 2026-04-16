@@ -26,7 +26,7 @@ type NavItem = {
 
 const QUICK_ACTIONS: NavItem[] = [
   { label: 'Inventory', icon: 'cube-outline', route: '/shop/inventory', color: '#005d90' },
-  { label: 'Can Stock', icon: 'water-outline', route: '/shop/inventory-cans', color: '#0077b6' },
+  { label: 'Can Management', icon: 'water-outline', route: '/shop/can-management', color: '#0077b6' },
   { label: 'Earnings', icon: 'cash-outline', route: '/shop/earnings', color: '#10b981' },
   { label: 'Delivery Slots', icon: 'calendar-outline', route: '/shop/slots', color: '#f59e0b' },
   { label: 'Business Hours', icon: 'time-outline', route: '/shop/schedule', color: '#6366f1' },
