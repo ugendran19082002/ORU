@@ -116,6 +116,7 @@ const styles = StyleSheet.create({
   orderNumber: { fontSize: 14, fontWeight: '800', color: '#0f172a' },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   statusText: { fontSize: 10, fontWeight: '900' },
+  cardBody: { marginTop: 4 },
   shopName: { fontSize: 16, fontWeight: '800', color: '#1e293b' },
   customerName: { fontSize: 13, color: '#64748b', marginTop: 2 },
   metaRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f1f5f9' },

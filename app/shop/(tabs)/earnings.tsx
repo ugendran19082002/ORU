@@ -52,16 +52,15 @@ export default function ShopEarningsScreen() {
         payoutApi.getWallet(),
         payoutApi.getPayoutLogs(),
       ]);
-      setWallet(walletData);
-      setPayoutLogs(logsData.data);
-      
-      if (walletData) {
-        setPayoutMode(walletData.payout_mode || 'bank');
-        setUpiId(walletData.upi_id || '');
+      if (walletData.status === 1) {
+        const w = walletData.data;
+        setWallet(w);
+        setPayoutMode(w.payout_mode || 'bank');
+        setUpiId(w.upi_id || '');
         setBankDetails({
-           account_number: walletData.bank_account_no || '',
-           ifsc: walletData.bank_ifsc || '',
-           holder_name: walletData.account_holder_name || ''
+           account_number: w.bank_account_no || '',
+           ifsc: w.bank_ifsc || '',
+           holder_name: w.account_holder_name || ''
         });
       }
     } catch (err) {

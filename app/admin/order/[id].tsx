@@ -102,7 +102,7 @@ export default function AdminOrderDetailScreen() {
                 <Text style={styles.statusValue}>{order.status.toUpperCase()}</Text>
               </View>
               <TouchableOpacity style={styles.overrideBtn} onPress={() => setOverrideModalOpen(true)}>
-                 <Ionicons name="shield-alert-outline" size={18} color="white" />
+                 <Ionicons name="shield-half-outline" size={18} color="white" />
                  <Text style={styles.overrideBtnText}>Force Change</Text>
               </TouchableOpacity>
            </View>

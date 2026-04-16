@@ -34,7 +34,7 @@ export default function ShopDeliveredOrderScreen() {
   const [isRefundModalOpen, setRefundModalOpen] = React.useState(false);
   const [refundReason, setRefundReason] = React.useState('');
 
-  const handleAssignAgent = async (agentId: string) => {
+  const handleAssignAgent = async (agentId: number) => {
     try {
       await assignDelivery(orderId, agentId);
       Toast.show({ type: 'success', text1: 'Agent Assigned', text2: 'Delivery agent notified.' });
@@ -279,7 +279,7 @@ export default function ShopDeliveredOrderScreen() {
                 <TouchableOpacity 
                   key={agent.id} 
                   style={[styles.agentCard, agent.status !== 'active' && { opacity: 0.5 }]}
-                  onPress={() => agent.status === 'active' && handleAssignAgent(String(agent.id))}
+                  onPress={() => agent.status === 'active' && handleAssignAgent(Number(agent.id))}
                 >
                   <View style={styles.agentAvatar}>
                     <Text style={styles.agentAvatarText}>{agent.name.charAt(0)}</Text>
