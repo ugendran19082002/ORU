@@ -54,6 +54,7 @@ export default function ShopSubscriptionPlansScreen() {
   const [actionLoading, setActionLoading] = useState(false);
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [autoRenew, setAutoRenew] = useState(true);
 
   const fetchSubscription = useCallback(async () => {
     try {
