@@ -144,6 +144,9 @@ export type ShopSettings = {
   tax_percentage: number;
   auto_accept_orders: boolean;
   busy_mode: boolean;
+  delivery_charge_per_km: number;
+  free_delivery_upto_km: number;
+  delivery_limit_per_km: number;
 };
 
 export type ShopToggleResult = {

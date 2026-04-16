@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, TextInput, ActivityIndicator,
   KeyboardAvoidingView, Platform, Switch,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -15,6 +16,8 @@ import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
+import { PanResponder } from 'react-native';
+
 
 export default function ShopOperationalSettingsScreen() {
   const router = useRouter();
@@ -25,6 +28,11 @@ export default function ShopOperationalSettingsScreen() {
   const [minOrderAmount, setMinOrderAmount] = useState('0');
   const [deliveryCharge, setDeliveryCharge] = useState('0');
   const [taxPercentage, setTaxPercentage] = useState('0');
+
+  // NEW: Distance-based fields
+  const [perKmCharge, setPerKmCharge] = useState(0);
+  const [freeKm, setFreeKm] = useState(0);
+  const [maxRange, setMaxRange] = useState(5);
 
   useAndroidBackHandler(() => {
     safeBack('/shop/settings');
@@ -42,6 +50,11 @@ export default function ShopOperationalSettingsScreen() {
         setMinOrderAmount(String(settings.min_order_amount || '0'));
         setDeliveryCharge(String(settings.base_delivery_charge || '0'));
         setTaxPercentage(String(settings.tax_percentage || '0'));
+        
+        // Load distance fields
+        setPerKmCharge(Number(settings.delivery_charge_per_km || 0));
+        setFreeKm(Number(settings.free_delivery_upto_km || 0));
+        setMaxRange(Number(settings.delivery_limit_per_km || 5));
       }
     } catch (error) {
       console.error('[OperationalSettings] Fetch failed:', error);
@@ -60,6 +73,10 @@ export default function ShopOperationalSettingsScreen() {
         min_order_amount: parseFloat(minOrderAmount) || 0,
         base_delivery_charge: parseFloat(deliveryCharge) || 0,
         tax_percentage: parseFloat(taxPercentage) || 0,
+        // Save distance fields
+        delivery_charge_per_km: perKmCharge,
+        free_delivery_upto_km: freeKm,
+        delivery_limit_per_km: maxRange,
       });
       
       Toast.show({ type: 'success', text1: 'Settings Saved', text2: 'Your operational rules have been updated.' });
@@ -72,6 +89,7 @@ export default function ShopOperationalSettingsScreen() {
       setSaving(false);
     }
   };
+
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -147,6 +165,41 @@ export default function ShopOperationalSettingsScreen() {
                 <Text style={styles.hintText}>Starting delivery fee added to every order. (₹)</Text>
               </View>
 
+              {/* DISTANCE BASED CONTROLS */}
+              <View style={styles.divider} />
+              <Text style={styles.sectionHeader}>Distance Based Delivery</Text>
+              
+              <Stepper 
+                label="Delivery Charge per KM" 
+                value={perKmCharge} 
+                onUpdate={setPerKmCharge} 
+                unit="₹" 
+              />
+              <Text style={styles.hintText}>Additional cost for every KM beyond the free limit.</Text>
+
+              <View style={{ marginTop: 16 }}>
+                <DraggableSlider 
+                  label="Free Delivery threshold" 
+                  value={freeKm} 
+                  onUpdate={setFreeKm} 
+                  min={0} max={10} unit=" KM" step={0.5} 
+                />
+                <Text style={styles.hintText}>Orders within this distance only pay the base charge.</Text>
+              </View>
+
+              <View style={{ marginTop: 16 }}>
+                <CustomDropdown 
+                  label="Max Support Range" 
+                  value={maxRange} 
+                  onUpdate={setMaxRange} 
+                  options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30, 40, 50]} 
+                  unit=" KM" 
+                />
+                <Text style={styles.hintText}>The widest radius your shop can fulfill.</Text>
+              </View>
+
+
+              <View style={styles.divider} />
               <View style={styles.inputGroup}>
                 <View style={styles.labelRow}>
                   <Ionicons name="receipt-outline" size={16} color="#64748b" />
@@ -185,6 +238,220 @@ export default function ShopOperationalSettingsScreen() {
   );
 }
 
+const Stepper = ({ label, value, onUpdate, unit = '' }: any) => {
+  const increment = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onUpdate(Number(value) + 1);
+  };
+  const decrement = () => {
+    if (value <= 0) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onUpdate(Math.max(0, Number(value) - 1));
+  };
+
+  return (
+    <View style={styles.hybridRow}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.inputLabel}>{label}</Text>
+      </View>
+      <View style={styles.stepperContainer}>
+        <TouchableOpacity onPress={decrement} style={styles.stepperBtn}>
+          <Ionicons name="remove" size={20} color="#005d90" />
+        </TouchableOpacity>
+        <TextInput
+          style={styles.stepperInput}
+          value={String(value)}
+          onChangeText={(v) => onUpdate(parseFloat(v) || 0)}
+          keyboardType="numeric"
+          selectTextOnFocus
+        />
+        <TouchableOpacity onPress={increment} style={styles.stepperBtn}>
+          <Ionicons name="add" size={20} color="#005d90" />
+        </TouchableOpacity>
+        <Text style={styles.stepperUnit}>{unit}</Text>
+      </View>
+    </View>
+  );
+};
+
+const CustomDropdown = ({ label, value, onUpdate, options: initialOptions, unit = '' }: any) => {
+  // Ensure the current value is in the options list so it always shows as selected
+  const options = React.useMemo(() => {
+    const list = [...initialOptions];
+    if (value && !list.includes(value)) {
+      list.push(value);
+      list.sort((a, b) => a - b);
+    }
+    return list;
+  }, [initialOptions, value]);
+
+  return (
+    <View style={styles.hybridColumn}>
+      <View style={styles.labelRowHybrid}>
+        <Text style={styles.inputLabel}>{label}</Text>
+        <Text style={styles.sliderValueHighlight}>{value}{unit}</Text>
+      </View>
+      <View style={styles.dropdownContainerHybrid}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          contentContainerStyle={{ gap: 8, paddingRight: 24, paddingVertical: 4 }}
+        >
+          {options.map((opt: number) => (
+            <TouchableOpacity 
+              key={opt}
+              activeOpacity={0.6}
+              onPress={() => {
+                console.log(`[Dropdown] Selected ${label}:`, opt);
+                Haptics.selectionAsync();
+                onUpdate(opt);
+              }}
+              style={[
+                styles.chip,
+                value === opt && styles.activeChip
+              ]}
+            >
+              <Text style={[styles.chipText, value === opt && styles.activeChipText]}>
+                {opt}{unit}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    </View>
+  );
+};
+
+const DraggableSlider = ({ label, value, onUpdate, min, max, unit = '', step = 1 }: any) => {
+  const [sliderWidth, setSliderWidth] = useState(0);
+  const sliderWidthRef = React.useRef(0);
+  const isDragging = React.useRef(false);
+  const valueRef = React.useRef(value);
+  const startValue = React.useRef(value);
+
+  // Sync valueRef whenever value changes
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+  
+  // Animated value for visual progress (0 to 1)
+  const animProgress = React.useRef(new Animated.Value((value - min) / (max - min))).current;
+
+  // Sync animation value when the prop 'value' changes (unless we are dragging)
+  useEffect(() => {
+    if (!isDragging.current) {
+      Animated.spring(animProgress, {
+        toValue: (value - min) / (max - min),
+        useNativeDriver: false,
+        tension: 100,
+        friction: 12
+      }).start();
+    }
+  }, [value, min, max]);
+
+  const updateFromDelta = (dx: number) => {
+    const width = sliderWidthRef.current;
+    if (width <= 0) return;
+    
+    const deltaValue = (dx / width) * (max - min);
+    let newVal = startValue.current + deltaValue;
+    
+    newVal = Math.max(min, Math.min(max, newVal));
+    newVal = Math.round(newVal / step) * step;
+    newVal = parseFloat(newVal.toFixed(2));
+    
+    if (newVal !== value) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      onUpdate(newVal);
+    }
+  };
+
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_: any, gestureState: any) => {
+        return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) || Math.abs(gestureState.dx) > 5;
+      },
+      onPanResponderGrant: () => {
+        isDragging.current = true;
+        startValue.current = valueRef.current;
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      },
+      onPanResponderMove: (_: any, gestureState: any) => {
+        const width = sliderWidthRef.current;
+        if (width > 0) {
+          const newProgress = ((startValue.current - min) / (max - min)) + (gestureState.dx / width);
+          animProgress.setValue(Math.max(0, Math.min(1, newProgress)));
+        }
+        updateFromDelta(gestureState.dx);
+      },
+      onPanResponderRelease: () => {
+        isDragging.current = false;
+        // Final snap to ensure alignment
+        Animated.spring(animProgress, {
+          toValue: (valueRef.current - min) / (max - min),
+          useNativeDriver: false,
+        }).start();
+      },
+      onPanResponderTerminate: () => {
+        isDragging.current = false;
+      }
+    })
+  ).current;
+
+  const fillWidth = animProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
+
+  return (
+    <View style={[styles.sliderGroup, { paddingHorizontal: 4 }]}>
+      <View style={styles.sliderHeader}>
+        <View style={{ flex: 1, marginRight: 12 }}>
+          <Text style={styles.inputLabel}>{label}</Text>
+        </View>
+        <View style={styles.sliderInputContainer}>
+          <TextInput
+            style={styles.sliderInput}
+            value={String(value)}
+            onChangeText={(val) => {
+              const num = parseFloat(val);
+              if (!isNaN(num)) onUpdate(num);
+              else if (val === '') onUpdate(0);
+            }}
+            keyboardType="numeric"
+            selectTextOnFocus
+          />
+          <Text style={styles.sliderUnitDisplay}>{unit}</Text>
+        </View>
+      </View>
+      
+      <View 
+        {...panResponder.panHandlers}
+        onLayout={(e) => {
+          const w = e.nativeEvent.layout.width;
+          sliderWidthRef.current = w;
+          setSliderWidth(w);
+        }}
+        style={styles.sliderTrackContainer}
+      >
+        <View style={styles.sliderTrack}>
+          <Animated.View style={[styles.sliderFill, { width: fillWidth }]} />
+          {/* Draggable Thumb */}
+          <Animated.View style={[styles.sliderThumb, { left: fillWidth }]}>
+            <View style={styles.sliderThumbInner} />
+          </Animated.View>
+        </View>
+        
+        <View style={styles.rangeLabels}>
+          <Text style={styles.rangeLabelText}>{min}{unit}</Text>
+          <Text style={styles.rangeLabelText}>{max}{unit}</Text>
+        </View>
+      </View>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
   header: {
@@ -194,7 +461,7 @@ const styles = StyleSheet.create({
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: '700', color: '#006878', letterSpacing: 1.5, marginTop: 3 },
-  content: { paddingHorizontal: 24, paddingVertical: 20, paddingBottom: 100 },
+  content: { paddingHorizontal: 24, paddingVertical: 20, paddingBottom: 120 },
   titleRow: { marginBottom: 18 },
   pageTitle: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
   infoCard: {
@@ -214,8 +481,68 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
     borderWidth: 1, borderColor: '#e2e8f0',
   },
-  hintText: { fontSize: 12, color: '#94a3b8', fontWeight: '500', marginLeft: 4 },
-  switchGroup: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: '#e2e8f0' },
+  hintText: { fontSize: 12, color: '#94a3b8', fontWeight: '500', marginLeft: 4, marginTop: -4 },
+  divider: { height: 1, backgroundColor: '#e2e8f0', marginVertical: 8 },
+  sectionHeader: { fontSize: 16, fontWeight: '900', color: '#003a5c', marginBottom: 4 },
+  
+  sliderGroup: { gap: 12, marginTop: 8 },
+  sliderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  sliderInputContainer: { 
+    flexDirection: 'row', alignItems: 'center', 
+    backgroundColor: '#fff', borderRadius: 10, 
+    paddingHorizontal: 10, paddingVertical: 6,
+    borderWidth: 1, borderColor: '#e2e8f0',
+    minWidth: 80, justifyContent: 'flex-end'
+  },
+  sliderInput: { 
+    fontSize: 16, fontWeight: '900', color: '#005d90', 
+    padding: 0, textAlign: 'right', minWidth: 40
+  },
+  sliderUnitDisplay: { fontSize: 13, fontWeight: '700', color: '#64748b', marginLeft: 4 },
+  sliderTrackContainer: { gap: 12, paddingVertical: 12 },
+
+  hybridRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },
+  hybridColumn: { gap: 10, marginTop: 16 },
+  labelRowHybrid: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 4 },
+  sliderValueHighlight: { fontSize: 16, fontWeight: '900', color: '#005d90' },
+  
+  stepperContainer: { 
+    flexDirection: 'row', alignItems: 'center', 
+    backgroundColor: '#fff', borderRadius: 12, 
+    borderWidth: 1, borderColor: '#e2e8f0',
+    padding: 4
+  },
+  stepperBtn: { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
+  stepperInput: { 
+    width: 50, textAlign: 'center', fontSize: 16, 
+    fontWeight: '800', color: '#005d90' 
+  },
+  stepperUnit: { fontSize: 12, fontWeight: '700', color: '#64748b', marginRight: 10 },
+  
+  dropdownContainer: { flex: 2, marginLeft: 12 },
+  dropdownContainerHybrid: { marginTop: 4 },
+  chip: { 
+    paddingHorizontal: 14, paddingVertical: 8, 
+    borderRadius: 10, backgroundColor: '#f1f5f9',
+    borderWidth: 1, borderColor: '#e2e8f0'
+  },
+  activeChip: { backgroundColor: '#005d90', borderColor: '#005d90' },
+  chipText: { fontSize: 13, fontWeight: '700', color: '#475569' },
+  activeChipText: { color: 'white' },
+  sliderTrack: { height: 10, backgroundColor: '#e0f0ff', borderRadius: 5, position: 'relative' },
+  sliderFill: { height: '100%', backgroundColor: '#005d90', borderRadius: 5 },
+  sliderThumb: { 
+    position: 'absolute', top: -10, width: 30, height: 30, 
+    borderRadius: 15, backgroundColor: 'white', 
+    justifyContent: 'center', alignItems: 'center',
+    marginLeft: -15, // Center the thumb on the point
+    shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 5, elevation: 5,
+    borderWidth: 2, borderColor: '#005d90',
+  },
+  sliderThumbInner: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#005d90' },
+  rangeLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 },
+  rangeLabelText: { fontSize: 11, fontWeight: '700', color: '#94a3b8' },
+
   saveBtn: {
     backgroundColor: '#005d90', height: 60, borderRadius: 18,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
