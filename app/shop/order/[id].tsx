@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Platform, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Platform, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,13 +26,15 @@ export default function ShopDeliveredOrderScreen() {
 
   const { id } = useLocalSearchParams();
 
-  const { orders, updateStatus, assignDelivery } = useOrderStore();
+  const { orders, assignDelivery } = useOrderStore();
   const { shops } = useShopStore();
   const { agents: deliveryAgents } = useFleetStore();
   const [isAssignModalOpen, setAssignModalOpen] = React.useState(false);
   const [isRescheduleModalOpen, setRescheduleModalOpen] = React.useState(false);
   const [isRefundModalOpen, setRefundModalOpen] = React.useState(false);
   const [refundReason, setRefundReason] = React.useState('');
+  const [rescheduleDate, setRescheduleDate] = React.useState('');
+  const [rescheduleSlot, setRescheduleSlot] = React.useState('');
 
   const handleAssignAgent = async (agentId: number) => {
     try {
@@ -273,11 +275,11 @@ export default function ShopDeliveredOrderScreen() {
                 <Ionicons name="close" size={20} color="#707881" />
               </TouchableOpacity>
             </View>
-            
+
             <ScrollView contentContainerStyle={{ gap: 12 }}>
               {deliveryAgents.map((agent: import('@/types/domain').DeliveryAgent) => (
-                <TouchableOpacity 
-                  key={agent.id} 
+                <TouchableOpacity
+                  key={agent.id}
                   style={[styles.agentCard, agent.status !== 'active' && { opacity: 0.5 }]}
                   onPress={() => agent.status === 'active' && handleAssignAgent(Number(agent.id))}
                 >
@@ -295,6 +297,99 @@ export default function ShopDeliveredOrderScreen() {
                 <Text style={{ textAlign: 'center', padding: 20, color: '#707881' }}>No agents onboarded yet.</Text>
               )}
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* RESCHEDULE MODAL */}
+      <Modal visible={isRescheduleModalOpen} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Reschedule Order</Text>
+              <TouchableOpacity onPress={() => setRescheduleModalOpen(false)} style={styles.closeBtn}>
+                <Ionicons name="close" size={20} color="#707881" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={{ fontSize: 13, color: '#64748b', marginBottom: 6, fontWeight: '600' }}>New Delivery Date</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="YYYY-MM-DD (e.g. 2025-12-31)"
+              placeholderTextColor="#94a3b8"
+              value={rescheduleDate}
+              onChangeText={setRescheduleDate}
+              keyboardType="numeric"
+            />
+
+            <Text style={{ fontSize: 13, color: '#64748b', marginBottom: 6, marginTop: 16, fontWeight: '600' }}>Delivery Slot ID</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Slot ID (e.g. 1, 2, 3)"
+              placeholderTextColor="#94a3b8"
+              value={rescheduleSlot}
+              onChangeText={setRescheduleSlot}
+              keyboardType="numeric"
+            />
+
+            <TouchableOpacity
+              style={[styles.modalSubmitBtn, (!rescheduleDate || !rescheduleSlot) && { opacity: 0.5 }]}
+              onPress={() => rescheduleDate && rescheduleSlot && handleReschedule(rescheduleDate, Number(rescheduleSlot))}
+              disabled={!rescheduleDate || !rescheduleSlot}
+            >
+              <Ionicons name="calendar-outline" size={18} color="white" />
+              <Text style={styles.modalSubmitText}>Confirm Reschedule</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setRescheduleModalOpen(false)}>
+              <Text style={{ color: '#64748b', fontWeight: '700', fontSize: 14 }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* REFUND MODAL */}
+      <Modal visible={isRefundModalOpen} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Initiate Refund</Text>
+              <TouchableOpacity onPress={() => setRefundModalOpen(false)} style={styles.closeBtn}>
+                <Ionicons name="close" size={20} color="#707881" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ backgroundColor: '#fff1f2', borderRadius: 12, padding: 14, marginBottom: 20, flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+              <Ionicons name="alert-circle-outline" size={20} color="#e11d48" />
+              <Text style={{ flex: 1, color: '#9f1239', fontSize: 13, fontWeight: '600', lineHeight: 18 }}>
+                Refund of Rs. {order?.total || 0} will be credited back to the customer's original payment method.
+              </Text>
+            </View>
+
+            <Text style={{ fontSize: 13, color: '#64748b', marginBottom: 6, fontWeight: '600' }}>Reason for Refund</Text>
+            <TextInput
+              style={[styles.modalInput, { height: 80, textAlignVertical: 'top' }]}
+              placeholder="Explain why you're issuing a refund..."
+              placeholderTextColor="#94a3b8"
+              value={refundReason}
+              onChangeText={setRefundReason}
+              multiline
+              maxLength={300}
+            />
+            <Text style={{ textAlign: 'right', color: '#94a3b8', fontSize: 11, marginTop: 4 }}>{refundReason.length}/300</Text>
+
+            <TouchableOpacity
+              style={[styles.modalSubmitBtn, { backgroundColor: '#e11d48', marginTop: 16 }, !refundReason && { opacity: 0.5 }]}
+              onPress={handleRefund}
+              disabled={!refundReason}
+            >
+              <Ionicons name="refresh-outline" size={18} color="white" />
+              <Text style={styles.modalSubmitText}>Confirm Refund</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setRefundModalOpen(false)}>
+              <Text style={{ color: '#64748b', fontWeight: '700', fontSize: 14 }}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -376,4 +471,9 @@ const styles = StyleSheet.create({
 
   actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 12 },
   actionBtnText: { fontSize: 13, fontWeight: '700' },
+
+  modalInput: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#0f172a', backgroundColor: '#f8fafc' },
+  modalSubmitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#005d90', paddingVertical: 14, borderRadius: 14, marginTop: 20 },
+  modalSubmitText: { color: 'white', fontWeight: '800', fontSize: 15 },
+  modalCancelBtn: { alignItems: 'center', paddingVertical: 14, marginTop: 8 },
 });

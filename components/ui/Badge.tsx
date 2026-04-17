@@ -1,66 +1,64 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { roleAccent } from '@/constants/theme';
+import type { AppRole } from '@/types/session';
 
 type BadgeVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline' | 'glass';
+type BadgeSize = 'sm' | 'md' | 'lg';
 
 interface BadgeProps {
   label: string;
   variant?: BadgeVariant;
+  /** When set, uses the role's accent colour as background and white text. Overrides `variant`. */
+  role?: Exclude<AppRole, 'guest'>;
   icon?: keyof typeof Ionicons.glyphMap;
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
+  size?: BadgeSize;
+  style?: ViewStyle;
 }
 
-export function Badge({ 
-  label, 
-  variant = 'primary', 
-  icon, 
-  size = 'md', 
-  className = '' 
-}: BadgeProps) {
-  const variantClasses = {
-    primary: 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300',
-    secondary: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
-    success: 'bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300',
-    warning: 'bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-300',
-    error: 'bg-rose-100 dark:bg-rose-900 text-rose-600 dark:text-rose-300',
-    outline: 'border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300',
-    glass: 'bg-white/20 dark:bg-black/20 backdrop-blur-md text-white border border-white/30',
+const variantTokens: Record<BadgeVariant, { bg: string; text: string; border?: string }> = {
+  primary:   { bg: '#E8F0FA', text: '#005D90' },
+  secondary: { bg: '#F1F3F5', text: '#74777C' },
+  success:   { bg: '#E8F5E9', text: '#2e7d32' },
+  warning:   { bg: '#FFF8E1', text: '#E67E22' },
+  error:     { bg: '#FFEBEE', text: '#C0392B' },
+  outline:   { bg: 'transparent', text: '#74777C', border: '#E0EAF5' },
+  glass:     { bg: 'rgba(255,255,255,0.2)', text: '#fff', border: 'rgba(255,255,255,0.3)' },
+};
+
+const sizeTokens: Record<BadgeSize, { px: number; py: number; fontSize: number; iconSize: number }> = {
+  sm: { px: 6,  py: 2,  fontSize: 10, iconSize: 10 },
+  md: { px: 10, py: 4,  fontSize: 12, iconSize: 12 },
+  lg: { px: 12, py: 6,  fontSize: 14, iconSize: 14 },
+};
+
+export function Badge({ label, variant = 'primary', role, icon, size = 'md', style }: BadgeProps) {
+  const sz = sizeTokens[size];
+
+  const bg   = role ? roleAccent[role]   : variantTokens[variant].bg;
+  const text = role ? '#fff'             : variantTokens[variant].text;
+  const border = !role ? variantTokens[variant].border : undefined;
+
+  const containerStyle: ViewStyle = {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    backgroundColor: bg,
+    paddingHorizontal: sz.px,
+    paddingVertical: sz.py,
+    ...(border ? { borderWidth: 1, borderColor: border } : {}),
+    ...style,
   };
-
-  const textSizes = {
-    sm: 'text-[10px] px-1.5 py-0.5',
-    md: 'text-xs px-2 py-1',
-    lg: 'text-sm px-3 py-1.5',
-  };
-
-  const iconSizes = {
-    sm: 10,
-    md: 12,
-    lg: 14,
-  };
-
-  const currentVariant = variantClasses[variant];
-  const currentTextSize = textSizes[size];
-  const currentIconSize = iconSizes[size];
-
-  // Logic to separate text color from background color if needed
-  const textColor = variant === 'glass' ? 'text-white' : currentVariant.split(' ').pop();
-  const bgColor = currentVariant.split(' ').slice(0, -2).join(' ');
 
   return (
-    <View 
-      className={`rounded-full flex-row items-center justify-center ${currentVariant} ${currentTextSize} ${className}`}
-    >
+    <View style={containerStyle}>
       {icon && (
-        <Ionicons 
-          name={icon} 
-          size={currentIconSize} 
-          className={`mr-1 ${textColor}`} 
-        />
+        <Ionicons name={icon} size={sz.iconSize} color={text} style={{ marginRight: 4 }} />
       )}
-      <Text className={`font-bold tracking-tight ${textColor}`}>
+      <Text style={{ fontSize: sz.fontSize, fontWeight: '700', color: text, letterSpacing: 0.2 }}>
         {label}
       </Text>
     </View>

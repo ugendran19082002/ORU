@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle, ColorValue } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
+import { Shadow, thannigoPalette } from '@/constants/theme';
 
 interface BackButtonProps {
   style?: ViewStyle;
@@ -13,64 +14,55 @@ interface BackButtonProps {
   show?: boolean;
 }
 
-/**
- * Premium BackButton Component
- * Centralizes the safe navigation logic for the entire app.
- */
-export const BackButton: React.FC<BackButtonProps> = ({ 
-  style, 
-  iconColor, 
-  iconSize = 22,
-  fallback = "/(tabs)", 
+/** Centralizes safe navigation and provides consistent back-button styling. */
+export const BackButton: React.FC<BackButtonProps> = ({
+  style,
+  iconColor,
+  iconSize = 20,
+  fallback = '/(tabs)',
   variant = 'light',
   onPress,
-  show = true
+  show = true,
 }) => {
   const { safeBack } = useAppNavigation();
-  
+
   if (!show) return null;
 
   const handlePress = () => {
-    if (onPress) {
-      onPress();
-    } else {
-      safeBack(fallback as any);
-    }
+    if (onPress) onPress();
+    else safeBack(fallback as any);
   };
 
-  const getVariantStyles = () => {
-    switch (variant) {
-      case 'dark':
-        return { backgroundColor: '#1e293b' };
-      case 'transparent':
-        return { backgroundColor: 'transparent' };
-      case 'light':
-      default:
-        return { backgroundColor: '#f8fafc' };
-    }
+  const bgMap: Record<string, string> = {
+    light:       '#FFFFFF',
+    dark:        thannigoPalette.darkText,
+    transparent: 'transparent',
   };
 
-  const getIconColor = () => {
-    if (iconColor) return iconColor;
-    return variant === 'dark' ? 'white' : '#0f172a';
-  };
+  const resolvedIconColor = iconColor
+    ?? (variant === 'dark' ? '#FFFFFF' : thannigoPalette.darkText);
 
   return (
-    <TouchableOpacity 
-      style={[styles.backBtn, getVariantStyles(), style]} 
+    <TouchableOpacity
+      style={[
+        styles.btn,
+        { backgroundColor: bgMap[variant] },
+        variant !== 'transparent' && Shadow.sm,
+        style,
+      ]}
       onPress={handlePress}
-      activeOpacity={0.7}
+      activeOpacity={0.75}
     >
-      <Ionicons name="arrow-back" size={iconSize} color={getIconColor()} />
+      <Ionicons name="arrow-back" size={iconSize} color={resolvedIconColor as string} />
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  backBtn: {
+  btn: {
     width: 40,
     height: 40,
-    borderRadius: 14,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },

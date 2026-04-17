@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
-import { Card } from './Card';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Badge } from './Badge';
 import { Button } from './Button';
-import { Ionicons } from '@expo/vector-icons';
+import { Shadow, Typography, thannigoPalette } from '@/constants/theme';
+import { useRoleTheme } from '@/hooks/use-role-theme';
 
 export interface Shop {
   id: string;
@@ -21,98 +22,101 @@ interface ShopCardProps {
   shop: Shop;
   onPress?: (shop: Shop) => void;
   onOrder?: (shop: Shop) => void;
-  className?: string;
 }
 
-export function ShopCard({ 
-  shop, 
-  onPress, 
-  onOrder, 
-  className = '' 
-}: ShopCardProps) {
+export function ShopCard({ shop, onPress, onOrder }: ShopCardProps) {
+  const { accent } = useRoleTheme();
+
   return (
-    <TouchableOpacity 
-      activeOpacity={0.9} 
+    <TouchableOpacity
+      activeOpacity={0.9}
       onPress={() => onPress?.(shop)}
-      className={`mb-6 ${className}`}
+      style={styles.wrapper}
     >
-      <Card variant="elevated" className="overflow-hidden p-0 rounded-[32px]">
-        {/* SHOP IMAGE & BADGES */}
-        <View className="h-48 w-full relative">
-          <Image 
-            source={{ uri: shop.image }} 
-            className="w-full h-full"
-            resizeMode="cover"
-          />
+      <View style={[styles.card, Shadow.sm]}>
+        {/* IMAGE */}
+        <View style={styles.imageContainer}>
+          <Image source={{ uri: shop.image }} style={styles.image} resizeMode="cover" />
           {shop.isVerified && (
-            <View className="absolute top-4 left-4">
-              <Badge 
-                label="Verified" 
-                variant="glass" 
-                icon="checkmark-circle" 
-                size="sm" 
-              />
+            <View style={styles.verifiedBadge}>
+              <Badge label="Verified" variant="glass" icon="checkmark-circle" size="sm" />
             </View>
           )}
-          <View className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md rounded-2xl px-3 py-1 shadow-sm">
-            <Text className="text-blue-600 font-bold text-xs">
-              {shop.deliveryTime}
-            </Text>
+          <View style={styles.deliveryChip}>
+            <Text style={[styles.deliveryText, { color: accent }]}>{shop.deliveryTime}</Text>
           </View>
         </View>
 
-        {/* SHOP DETAILS */}
-        <View className="p-6">
-          <View className="flex-row justify-between items-start mb-3">
-            <View className="flex-1 mr-4">
-              <Text className="text-xl font-bold text-gray-900 dark:text-white mb-1 leading-tight">
-                {shop.name}
-              </Text>
-              <View className="flex-row items-center">
-                <View className="flex-row items-center mr-2">
-                  <Ionicons name="star" size={14} color="#f59e0b" />
-                  <Text className="text-sm font-bold text-gray-900 dark:text-white ml-1">
-                    {shop.rating}
-                  </Text>
-                </View>
-                <Text className="text-xs font-semibold text-gray-500 dark:text-gray-400">
-                  • {shop.distance}
-                </Text>
+        {/* DETAILS */}
+        <View style={styles.details}>
+          <View style={styles.infoRow}>
+            <View style={styles.infoLeft}>
+              <Text style={styles.shopName}>{shop.name}</Text>
+              <View style={styles.metaRow}>
+                <Ionicons name="star" size={13} color={thannigoPalette.warning} />
+                <Text style={styles.rating}>{shop.rating}</Text>
+                <Text style={styles.distance}> · {shop.distance}</Text>
               </View>
             </View>
-            <View className="items-end">
-              <Text className="text-xl font-black text-blue-600 dark:text-blue-400 leading-tight">
-                {shop.price}
-              </Text>
-              <Text className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
-                Per Can
-              </Text>
+            <View style={styles.priceBlock}>
+              <Text style={[styles.price, { color: accent }]}>{shop.price}</Text>
+              <Text style={styles.priceLabel}>PER CAN</Text>
             </View>
           </View>
 
-          {/* TAGS & CTA */}
-          <View className="flex-row items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800 mt-2">
-            <View className="flex-row flex-wrap flex-1 gap-1.5">
-              {shop.tags?.map((tag, index) => (
-                <Badge 
-                  key={index}
-                  label={tag} 
-                  variant="secondary" 
-                  size="sm" 
-                  className="bg-gray-100 dark:bg-gray-800"
-                />
+          {/* TAGS + CTA */}
+          <View style={styles.footer}>
+            <View style={styles.tags}>
+              {shop.tags?.map((tag, i) => (
+                <Badge key={i} label={tag} variant="secondary" size="sm" />
               ))}
             </View>
-            <Button 
-              title="Order" 
-              variant="primary" 
-              size="sm" 
-              onPress={() => onOrder?.(shop)}
-              className="px-6 rounded-xl"
-            />
+            <Button title="Order" variant="primary" size="sm" onPress={() => onOrder?.(shop)} />
           </View>
         </View>
-      </Card>
+      </View>
     </TouchableOpacity>
   );
 }
+
+const styles = StyleSheet.create({
+  wrapper: { marginBottom: 20 },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  imageContainer: { height: 180, width: '100%', position: 'relative' },
+  image: { width: '100%', height: '100%' },
+  verifiedBadge: { position: 'absolute', top: 12, left: 12 },
+  deliveryChip: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  deliveryText: { ...Typography.caption, fontWeight: '700' },
+  details: { padding: 16, gap: 14 },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  infoLeft: { flex: 1, marginRight: 12, gap: 4 },
+  shopName: { ...Typography.h4, color: thannigoPalette.darkText },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  rating: { ...Typography.caption, fontWeight: '700', color: thannigoPalette.darkText, marginLeft: 3 },
+  distance: { ...Typography.caption, color: thannigoPalette.neutral },
+  priceBlock: { alignItems: 'flex-end', gap: 2 },
+  price: { ...Typography.h3, fontWeight: '900' },
+  priceLabel: { ...Typography.overline, color: thannigoPalette.neutral },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: thannigoPalette.borderSoft,
+    gap: 8,
+  },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', flex: 1, gap: 6 },
+});

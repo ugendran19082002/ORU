@@ -39,6 +39,61 @@ export const roleAccent = {
   guest: roleGradients.guest.start,
 } as const;
 
+/** Role-specific soft background tints */
+export const roleSurface = {
+  customer: '#E8F0FA',
+  shop_owner: '#E0F2F4',
+  admin: '#FFDAD6',
+  delivery: '#E8F5E9',
+  guest: '#F1F3F5',
+} as const;
+
+/** Standard shadow definitions — use these instead of ad-hoc elevation/shadowOpacity values */
+export const Shadow = {
+  none: {},
+  xs: {
+    shadowColor: '#003a5c',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  sm: {
+    shadowColor: '#003a5c',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#003a5c',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  lg: {
+    shadowColor: '#003a5c',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.10,
+    shadowRadius: 24,
+    elevation: 6,
+  },
+} as const;
+
+/** Standard typography scale — H1: 32, H2: 24, Body: 16, Caption: 12 */
+export const Typography = {
+  h1: { fontSize: 32, fontWeight: '900' as const, letterSpacing: -0.8, lineHeight: 38 },
+  h2: { fontSize: 24, fontWeight: '800' as const, letterSpacing: -0.4, lineHeight: 30 },
+  h3: { fontSize: 20, fontWeight: '700' as const, letterSpacing: -0.2, lineHeight: 26 },
+  h4: { fontSize: 18, fontWeight: '700' as const, letterSpacing: -0.1, lineHeight: 24 },
+  body: { fontSize: 16, fontWeight: '400' as const, lineHeight: 24 },
+  bodyMedium: { fontSize: 16, fontWeight: '600' as const, lineHeight: 24 },
+  label: { fontSize: 14, fontWeight: '600' as const, lineHeight: 20 },
+  caption: { fontSize: 12, fontWeight: '500' as const, lineHeight: 16 },
+  overline: { fontSize: 10, fontWeight: '700' as const, letterSpacing: 1, lineHeight: 14 },
+} as const;
+
 export const Colors = {
   light: {
     text: thannigoPalette.darkText,
@@ -93,7 +148,7 @@ export const Radius = {
   sm: 8,
   md: 12,
   lg: 16,
-  xl: 20,
+  xl: 24,
   pill: 24,
   full: 9999,
 } as const;

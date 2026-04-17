@@ -17,9 +17,13 @@ import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Logo } from "@/components/ui/Logo";
+import { Shadow, roleAccent, roleGradients, thannigoPalette } from "@/constants/theme";
 import { useOrderStore } from "@/stores/orderStore";
 import { useShopStore } from "@/stores/shopStore";
 import { apiClient } from "@/api/client";
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
 
 type OrderAction = "accept" | "reject" | "delivered";
 type TabState = "active" | "completed";
@@ -199,13 +203,13 @@ export default function ShopOrdersScreen() {
             style={styles.iconBtn}
             onPress={() => router.push("/shop/settings" as any)}
           >
-            <Ionicons name="grid-outline" size={20} color="#005d90" />
+            <Ionicons name="grid-outline" size={20} color={SHOP_ACCENT} />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.iconBtn}
             onPress={() => router.push("/notifications" as any)}
           >
-            <Ionicons name="notifications-outline" size={22} color="#005d90" />
+            <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
             <View style={styles.notifDot} />
           </TouchableOpacity>
         </View>
@@ -253,7 +257,7 @@ export default function ShopOrdersScreen() {
           onPress={() => router.push("/delivery" as any)}
         >
           <LinearGradient
-            colors={["#006878", "#004e5b"]}
+            colors={SHOP_GRAD}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.deliveryHeroCard}
@@ -412,7 +416,7 @@ export default function ShopOrdersScreen() {
 
                 <View style={styles.detailRow}>
                   <View style={styles.detailIconWrap}>
-                    <Ionicons name="layers-outline" size={18} color="#005d90" />
+                    <Ionicons name="layers-outline" size={18} color={SHOP_ACCENT} />
                   </View>
                   <Text style={styles.detailValue}>
                     {nextOrder.items.reduce(
@@ -458,7 +462,7 @@ export default function ShopOrdersScreen() {
                     onPress={() => handleAction("accept", nextOrder.id)}
                   >
                     <LinearGradient
-                      colors={["#005d90", "#0077b6"]}
+                      colors={SHOP_GRAD}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={styles.acceptBtn}
@@ -628,419 +632,128 @@ export default function ShopOrdersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f7f9ff" },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    backgroundColor: "rgba(255,255,255,0.92)",
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+    paddingHorizontal: 24, paddingVertical: 14,
+    backgroundColor: "rgba(255,255,255,0.95)",
   },
   brandRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  brandName: {
-    fontSize: 20,
-    fontWeight: "900",
-    color: "#003a5c",
-    letterSpacing: -0.5,
-  },
-  roleLabel: {
-    fontSize: 8,
-    fontWeight: "700",
-    color: "#006878",
-    letterSpacing: 1.2,
-    marginTop: 2,
-  },
+  brandName: { fontSize: 20, fontWeight: "900", color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  roleLabel: { fontSize: 8, fontWeight: "700", color: SHOP_ACCENT, letterSpacing: 1.2, marginTop: 2 },
   headerRight: { flexDirection: "row", alignItems: "center", gap: 8 },
   iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#f1f4f9",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: thannigoPalette.surface,
+    alignItems: "center", justifyContent: "center", position: "relative",
+    ...Shadow.xs,
   },
   deliveryHeroCard: {
-    borderRadius: 24,
-    padding: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 24,
-    overflow: "hidden",
-    shadowColor: "#004e5b",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    borderRadius: 24, padding: 20, flexDirection: "row", alignItems: "center",
+    marginBottom: 24, overflow: "hidden",
+    shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18, shadowRadius: 20, elevation: 6,
   },
   heroLeft: { flex: 1, flexDirection: "row", alignItems: "center", gap: 16 },
-  heroIconBackground: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: "white",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  heroIconBackground: { width: 52, height: 52, borderRadius: 16, backgroundColor: "white", alignItems: "center", justifyContent: "center" },
   heroTitle: { fontSize: 18, fontWeight: "900", color: "white" },
-  heroSub: { fontSize: 12, color: "rgba(255,255,255,0.8)", marginTop: 2 },
-  heroAction: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  heroSub: { fontSize: 12, color: "rgba(255,255,255,0.85)", marginTop: 2 },
+  heroAction: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" },
   notifDot: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    width: 8,
-    height: 8,
-    backgroundColor: "#ba1a1a",
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: "#f1f4f9",
+    position: "absolute", top: 8, right: 8, width: 8, height: 8,
+    backgroundColor: thannigoPalette.error, borderRadius: 4,
+    borderWidth: 1.5, borderColor: thannigoPalette.surface,
   },
 
-  pageTitle: {
-    fontSize: 32,
-    fontWeight: "900",
-    color: "#181c20",
-    letterSpacing: -0.5,
-    marginTop: 10,
-    marginBottom: 12,
-  },
+  pageTitle: { fontSize: 32, fontWeight: "900", color: thannigoPalette.darkText, letterSpacing: -0.5, marginTop: 10, marginBottom: 12 },
 
   searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "white",
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 24,
-    borderWidth: 1.5,
-    borderColor: "#f1f4f9",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    flexDirection: "row", alignItems: "center", backgroundColor: thannigoPalette.surface,
+    borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 24,
+    borderWidth: 1, borderColor: thannigoPalette.borderSoft,
+    ...Shadow.xs,
   },
   searchIcon: { marginRight: 10 },
-  searchInput: { flex: 1, fontSize: 14, fontWeight: "600", color: "#181c20" },
+  searchInput: { flex: 1, fontSize: 14, fontWeight: "600", color: thannigoPalette.darkText },
 
-  tabsWrap: {
-    flexDirection: "row",
-    backgroundColor: "#ebeef4",
-    borderRadius: 16,
-    padding: 4,
-    marginBottom: 24,
-  },
-  tabBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: "center",
-    borderRadius: 12,
-  },
-  tabBtnActive: {
-    backgroundColor: "white",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  tabText: { fontSize: 13, fontWeight: "600", color: "#707881" },
-  tabTextActive: { color: "#005d90", fontWeight: "800" },
+  tabsWrap: { flexDirection: "row", backgroundColor: "#EBEEF4", borderRadius: 16, padding: 4, marginBottom: 24 },
+  tabBtn: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 12 },
+  tabBtnActive: { backgroundColor: thannigoPalette.surface, ...Shadow.xs },
+  tabText: { fontSize: 13, fontWeight: "600", color: thannigoPalette.neutral },
+  tabTextActive: { color: SHOP_ACCENT, fontWeight: "800" },
 
-  sectionHeader: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#707881",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 12,
-  },
-  opsCard: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 18,
-    gap: 14,
-    marginBottom: 16,
-  },
-  opsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-    alignItems: "center",
-  },
-  opsTitle: { fontSize: 15, fontWeight: "800", color: "#181c20" },
-  opsSub: { color: "#707881", width: 220, lineHeight: 18, fontSize: 12 },
-  dividerLine: { height: 1, backgroundColor: "#f1f4f9" },
-  statePill: {
-    borderRadius: 999,
-    backgroundColor: "#f1f4f9",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-  },
+  sectionHeader: { fontSize: 11, fontWeight: "800", color: thannigoPalette.neutral, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 },
+  opsCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 18, gap: 14, marginBottom: 16, ...Shadow.sm },
+  opsRow: { flexDirection: "row", justifyContent: "space-between", gap: 12, alignItems: "center" },
+  opsTitle: { fontSize: 15, fontWeight: "800", color: thannigoPalette.darkText },
+  opsSub: { color: thannigoPalette.neutral, width: 220, lineHeight: 18, fontSize: 12 },
+  dividerLine: { height: 1, backgroundColor: thannigoPalette.borderSoft },
+  statePill: { borderRadius: 999, backgroundColor: "#F1F4F9", paddingHorizontal: 14, paddingVertical: 10 },
   statePillActive: { backgroundColor: "#E0F7FA" },
   statePillWarn: { backgroundColor: "#FFF3E0" },
-  statePillText: { color: "#707881", fontWeight: "800" },
-  statePillTextActive: { color: "#006878" },
-  statePillWarnText: { color: "#E67E22" },
+  statePillText: { color: thannigoPalette.neutral, fontWeight: "800" },
+  statePillTextActive: { color: SHOP_ACCENT },
+  statePillWarnText: { color: thannigoPalette.warning },
   capacityRow: { flexDirection: "row", gap: 10, marginBottom: 24 },
-  capacityCard: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 14,
-    alignItems: "center",
-  },
-  capacityLabel: {
-    color: "#707881",
-    fontSize: 11,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  capacityValue: {
-    color: "#181c20",
-    fontSize: 22,
-    fontWeight: "900",
-    marginTop: 6,
-  },
+  capacityCard: { flex: 1, backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 14, alignItems: "center", ...Shadow.xs },
+  capacityLabel: { color: thannigoPalette.neutral, fontSize: 11, fontWeight: "700", textAlign: "center" },
+  capacityValue: { color: thannigoPalette.darkText, fontSize: 22, fontWeight: "900", marginTop: 6 },
 
-  orderCard: {
-    backgroundColor: "white",
-    borderRadius: 24,
-    padding: 20,
-    shadowColor: "#003a5c",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 3,
-  },
-  orderTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 16,
-  },
-  orderIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: "#a7edff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  priorityLabel: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#006878",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  customerName: { fontSize: 18, fontWeight: "900", color: "#181c20" },
-  orderIdBadge: {
-    backgroundColor: "#e0f0ff",
-    borderRadius: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  orderIdText: { color: "#005d90", fontWeight: "800", fontSize: 11 },
+  orderCard: { backgroundColor: thannigoPalette.surface, borderRadius: 24, padding: 20, ...Shadow.sm },
+  orderTop: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 },
+  orderIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: "#E0F7FA", alignItems: "center", justifyContent: "center" },
+  priorityLabel: { fontSize: 10, fontWeight: "700", color: SHOP_ACCENT, textTransform: "uppercase", letterSpacing: 1 },
+  customerName: { fontSize: 18, fontWeight: "900", color: thannigoPalette.darkText },
+  orderIdBadge: { backgroundColor: "#E0F7FA", borderRadius: 16, paddingHorizontal: 10, paddingVertical: 4 },
+  orderIdText: { color: SHOP_ACCENT, fontWeight: "800", fontSize: 11 },
 
-  detailRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 12,
-  },
-  detailIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: "#f1f4f9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  detailValue: { fontSize: 16, fontWeight: "900", color: "#181c20" },
-  detailValueSub: { fontSize: 13, fontWeight: "500", color: "#707881" },
-  addressText: { fontSize: 13, color: "#181c20", lineHeight: 18, flex: 1 },
+  detailRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 },
+  detailIconWrap: { width: 32, height: 32, borderRadius: 10, backgroundColor: "#F1F4F9", alignItems: "center", justifyContent: "center" },
+  detailValue: { fontSize: 16, fontWeight: "900", color: thannigoPalette.darkText },
+  detailValueSub: { fontSize: 13, fontWeight: "500", color: thannigoPalette.neutral },
+  addressText: { fontSize: 13, color: thannigoPalette.darkText, lineHeight: 18, flex: 1 },
 
   actionGrid: { flexDirection: "row", gap: 10, marginVertical: 12 },
-  acceptBtn: {
-    borderRadius: 16,
-    paddingVertical: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-  },
-  acceptBtnText: {
-    color: "white",
-    fontSize: 14,
-    fontWeight: "900",
-    letterSpacing: 0.5,
-  },
-  rejectBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: "white",
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: "#ffdad6",
-  },
-  rejectBtnText: { color: "#ba1a1a", fontWeight: "800", fontSize: 13 },
-  deliveredBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: "#006878",
-    borderRadius: 16,
-    paddingVertical: 14,
-  },
+  acceptBtn: { borderRadius: 16, paddingVertical: 14, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  acceptBtnText: { color: "white", fontSize: 14, fontWeight: "900", letterSpacing: 0.5 },
+  rejectBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "white", borderRadius: 16, borderWidth: 1.5, borderColor: thannigoPalette.adminRedLight },
+  rejectBtnText: { color: thannigoPalette.adminRed, fontWeight: "800", fontSize: 13 },
+  deliveredBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: SHOP_ACCENT, borderRadius: 16, paddingVertical: 14 },
   deliveredBtnText: { color: "white", fontWeight: "800", fontSize: 13 },
 
-  statusMsg: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    borderRadius: 12,
-    marginTop: 12,
-  },
-  statusMsgSuccess: { backgroundColor: "#006878" },
-  statusMsgError: { backgroundColor: "#ba1a1a" },
-  statusMsgInfo: { backgroundColor: "#005d90" },
-  statusMsgText: {
-    color: "white",
-    fontWeight: "700",
-    fontSize: 13,
-    marginLeft: 8,
-  },
+  statusMsg: { flexDirection: "row", alignItems: "center", padding: 12, borderRadius: 12, marginTop: 12 },
+  statusMsgSuccess: { backgroundColor: SHOP_ACCENT },
+  statusMsgError: { backgroundColor: thannigoPalette.adminRed },
+  statusMsgInfo: { backgroundColor: thannigoPalette.primary },
+  statusMsgText: { color: "white", fontWeight: "700", fontSize: 13, marginLeft: 8 },
 
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 40,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#181c20",
-    marginTop: 12,
-  },
-  emptySub: {
-    fontSize: 13,
-    color: "#707881",
-    marginTop: 4,
-    textAlign: "center",
-  },
-  completedCard: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  completedId: { color: "#005d90", fontWeight: "800", fontSize: 12 },
-  completedName: {
-    color: "#181c20",
-    fontWeight: "800",
-    fontSize: 16,
-    marginTop: 4,
-  },
-  completedStatus: {
-    color: "#006878",
-    fontWeight: "700",
-    textTransform: "capitalize",
-  },
+  emptyState: { alignItems: "center", justifyContent: "center", paddingVertical: 40 },
+  emptyTitle: { fontSize: 16, fontWeight: "800", color: thannigoPalette.darkText, marginTop: 12 },
+  emptySub: { fontSize: 13, color: thannigoPalette.neutral, marginTop: 4, textAlign: "center" },
+  completedCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 16, marginBottom: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center", ...Shadow.xs },
+  completedId: { color: SHOP_ACCENT, fontWeight: "800", fontSize: 12 },
+  completedName: { color: thannigoPalette.darkText, fontWeight: "800", fontSize: 16, marginTop: 4 },
+  completedStatus: { color: SHOP_ACCENT, fontWeight: "700", textTransform: "capitalize" },
 
   insightsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#e6f7f9",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 14,
-    marginBottom: 24,
-    borderStyle: "dashed",
-    borderWidth: 1,
-    borderColor: "#006878",
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    backgroundColor: "#E0F7FA", paddingHorizontal: 16, paddingVertical: 12,
+    borderRadius: 16, marginBottom: 24, borderStyle: "dashed", borderWidth: 1, borderColor: SHOP_ACCENT,
   },
   insightsLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-  insightsText: { fontSize: 13, fontWeight: "700", color: "#006878" },
+  insightsText: { fontSize: 13, fontWeight: "700", color: SHOP_ACCENT },
 
-  // ── Reject Reason Modal ──────────────────────────────────────────
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,58,92,0.45)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: "white",
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    padding: 24,
-    paddingBottom: 36,
-    alignItems: "center",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-    marginBottom: 4,
-  },
-  modalTitle: { fontSize: 22, fontWeight: "900", color: "#181c20" },
-  modalCloseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#f1f4f9",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  modalSubtitle: {
-    fontSize: 13,
-    color: "#707881",
-    alignSelf: "flex-start",
-    marginBottom: 16,
-    fontWeight: "500",
-  },
-  reasonOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    padding: 14,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: "#f1f4f9",
-    backgroundColor: "#fafafa",
-  },
-  reasonOptionSelected: { borderColor: "#ffdad6", backgroundColor: "#fff5f4" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,40,60,0.45)", justifyContent: "flex-end" },
+  modalContent: { backgroundColor: "white", borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 36, alignItems: "center" },
+  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: 4 },
+  modalTitle: { fontSize: 22, fontWeight: "900", color: thannigoPalette.darkText },
+  modalCloseBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#F1F4F9", alignItems: "center", justifyContent: "center" },
+  modalSubtitle: { fontSize: 13, color: thannigoPalette.neutral, alignSelf: "flex-start", marginBottom: 16, fontWeight: "500" },
+  reasonOption: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 16, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, backgroundColor: "#FAFAFA" },
+  reasonOptionSelected: { borderColor: thannigoPalette.adminRedLight, backgroundColor: "#FFF5F4" },
   reasonText: { fontSize: 14, color: "#404850", fontWeight: "600", flex: 1 },
-  reasonTextSelected: { color: "#ba1a1a", fontWeight: "800" },
-  confirmRejectBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#ba1a1a",
-    borderRadius: 18,
-    paddingVertical: 16,
-    width: "100%",
-  },
+  reasonTextSelected: { color: thannigoPalette.adminRed, fontWeight: "800" },
+  confirmRejectBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: thannigoPalette.adminRed, borderRadius: 18, paddingVertical: 16, width: "100%" },
   confirmRejectText: { color: "white", fontWeight: "800", fontSize: 15 },
 });
 

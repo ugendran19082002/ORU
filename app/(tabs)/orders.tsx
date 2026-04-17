@@ -12,29 +12,33 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
+import { SkeletonCard, SkeletonLine } from '@/components/ui/Skeleton';
 import { useCartStore } from '@/stores/cartStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
+import { useRoleTheme } from '@/hooks/use-role-theme';
+import { Shadow, Typography, thannigoPalette, roleSurface } from '@/constants/theme';
 import { orderApi } from '@/api/orderApi';
 import Toast from 'react-native-toast-message';
 
 
-function OrderCard({ order, onTrack, onReorder, onSupport, onPress }: {
+function OrderCard({ order, onTrack, onReorder, onSupport, onPress, accent }: {
   order: any;
   onTrack: () => void;
   onReorder: () => void;
   onSupport: () => void;
   onPress: () => void;
+  accent: string;
 }) {
   return (
-    <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.orderCard}>
+    <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={[styles.orderCard, Shadow.sm]}>
       {/* Top Row */}
       <View style={styles.orderTop}>
-        <View style={styles.orderIconWrap}>
-          <Ionicons name="water" size={20} color="#005d90" />
+        <View style={[styles.orderIconWrap, { backgroundColor: roleSurface.customer }]}>
+          <Ionicons name="water" size={20} color={accent} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.orderId}>#{order.id}</Text>
+          <Text style={[styles.orderId, { color: accent }]}>#{order.id}</Text>
           <Text style={styles.orderShop}>{order.shop}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: order.statusBg }]}>
@@ -46,7 +50,7 @@ function OrderCard({ order, onTrack, onReorder, onSupport, onPress }: {
       <View style={styles.orderDetails}>
         <Text style={styles.orderItems}>{order.items}</Text>
         <View style={styles.orderMeta}>
-          <Ionicons name="time-outline" size={12} color="#707881" />
+          <Ionicons name="time-outline" size={12} color={thannigoPalette.neutral} />
           <Text style={styles.orderDate}>{order.date}</Text>
           <Text style={styles.orderAmount}>{order.amount}</Text>
         </View>
@@ -55,25 +59,25 @@ function OrderCard({ order, onTrack, onReorder, onSupport, onPress }: {
       {/* Progress bar for active */}
       {order.progress > 0 && order.progress < 1 && (
         <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${order.progress * 100}%` as any }]} />
+          <View style={[styles.progressFill, { width: `${order.progress * 100}%` as any, backgroundColor: accent }]} />
         </View>
       )}
 
       {/* Actions */}
       <View style={styles.orderActions}>
         {order.isActive ? (
-          <TouchableOpacity style={styles.trackBtn} onPress={(e) => { e.stopPropagation(); onTrack(); }}>
-            <Ionicons name="navigate-outline" size={15} color="#005d90" />
-            <Text style={styles.trackBtnText}>Track Order</Text>
+          <TouchableOpacity style={[styles.trackBtn, { backgroundColor: roleSurface.customer }]} onPress={(e) => { e.stopPropagation(); onTrack(); }}>
+            <Ionicons name="navigate-outline" size={15} color={accent} />
+            <Text style={[styles.trackBtnText, { color: accent }]}>Track Order</Text>
           </TouchableOpacity>
         ) : order.status === 'Delivered' ? (
-          <TouchableOpacity style={styles.trackBtn} onPress={(e) => { e.stopPropagation(); onReorder(); }}>
-            <Ionicons name="refresh-outline" size={15} color="#005d90" />
-            <Text style={styles.trackBtnText}>Reorder</Text>
+          <TouchableOpacity style={[styles.trackBtn, { backgroundColor: roleSurface.customer }]} onPress={(e) => { e.stopPropagation(); onReorder(); }}>
+            <Ionicons name="refresh-outline" size={15} color={accent} />
+            <Text style={[styles.trackBtnText, { color: accent }]}>Reorder</Text>
           </TouchableOpacity>
         ) : null}
         <TouchableOpacity style={styles.supportBtn} onPress={(e) => { e.stopPropagation(); onSupport(); }}>
-          <Ionicons name="chatbubble-outline" size={15} color="#707881" />
+          <Ionicons name="chatbubble-outline" size={15} color={thannigoPalette.neutral} />
           <Text style={styles.supportBtnText}>Support</Text>
         </TouchableOpacity>
       </View>
@@ -83,6 +87,7 @@ function OrderCard({ order, onTrack, onReorder, onSupport, onPress }: {
 
 export default function OrdersScreen() {
   const router = useRouter();
+  const { accent } = useRoleTheme();
   const [tab, setTab] = useState<'active' | 'past'>('active');
   const [refreshing, setRefreshing] = useState(false);
   const { orders, setActiveOrder, fetchOrders, isFetching } = useOrderStore();
@@ -147,31 +152,31 @@ export default function OrdersScreen() {
           <Logo size="md" />
           <Text style={styles.brandName}>ThanniGo</Text>
         </View>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications' as any)}>
-          <Ionicons name="notifications-outline" size={22} color="#005d90" />
+        <TouchableOpacity style={[styles.iconBtn, Shadow.xs]} onPress={() => router.push('/notifications' as any)}>
+          <Ionicons name="notifications-outline" size={22} color={accent} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.titleRow}>
-        <Text style={styles.screenTitle}>My Orders</Text>
+        <Text style={[styles.screenTitle, { color: accent }]}>My Orders</Text>
         <Text style={styles.screenSubtitle}>{normalizedOrders.length} total orders</Text>
       </View>
 
       {/* TOGGLE */}
       <View style={styles.toggle}>
         <TouchableOpacity
-          style={[styles.toggleBtn, tab === 'active' && styles.toggleBtnActive]}
+          style={[styles.toggleBtn, tab === 'active' && [styles.toggleBtnActive, Shadow.xs]]}
           onPress={() => setTab('active')}
         >
-          <Text style={[styles.toggleText, tab === 'active' && styles.toggleTextActive]}>
+          <Text style={[styles.toggleText, tab === 'active' && { color: accent, fontWeight: '800' }]}>
             Active
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.toggleBtn, tab === 'past' && styles.toggleBtnActive]}
+          style={[styles.toggleBtn, tab === 'past' && [styles.toggleBtnActive, Shadow.xs]]}
           onPress={() => setTab('past')}
         >
-          <Text style={[styles.toggleText, tab === 'past' && styles.toggleTextActive]}>
+          <Text style={[styles.toggleText, tab === 'past' && { color: accent, fontWeight: '800' }]}>
             Past Orders
           </Text>
         </TouchableOpacity>
@@ -180,11 +185,21 @@ export default function OrdersScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[accent]} tintColor={accent} />}
       >
-        {filtered.length === 0 ? (
+        {isFetching ? (
+          <View style={{ gap: 16, paddingTop: 8 }}>
+            {[1, 2, 3].map((k) => (
+              <View key={k} style={[styles.orderCard, Shadow.sm, { gap: 12 }]}>
+                <SkeletonLine width="50%" height={14} />
+                <SkeletonLine width="80%" height={12} />
+                <SkeletonLine width="60%" height={10} />
+              </View>
+            ))}
+          </View>
+        ) : filtered.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="receipt-outline" size={56} color="#bfc7d1" />
+            <Ionicons name="receipt-outline" size={56} color={thannigoPalette.borderSoft} />
             <Text style={styles.emptyTitle}>No orders here</Text>
             <Text style={styles.emptySubtitle}>Your {tab} orders will appear here</Text>
           </View>
@@ -193,6 +208,7 @@ export default function OrdersScreen() {
             <OrderCard
               key={order.id}
               order={order}
+              accent={accent}
               onPress={() => router.push(`/order/${order.id}` as any)}
               onTrack={() => {
                 setActiveOrder(order.id);
@@ -221,7 +237,7 @@ export default function OrdersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
 
   header: {
     flexDirection: 'row',
@@ -229,85 +245,78 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 14,
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: 'rgba(255,255,255,0.95)',
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
+  brandName: { ...Typography.h4, color: thannigoPalette.darkText, letterSpacing: -0.5 },
   iconBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#f1f4f9',
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: thannigoPalette.surface,
     alignItems: 'center', justifyContent: 'center',
   },
   titleRow: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 8 },
-  screenTitle: { fontSize: 30, fontWeight: '900', color: '#005d90', letterSpacing: -0.5 },
-  screenSubtitle: { fontSize: 13, color: '#707881', marginTop: 3 },
+  screenTitle: { ...Typography.h1, letterSpacing: -0.5 },
+  screenSubtitle: { ...Typography.caption, color: thannigoPalette.neutral, marginTop: 4 },
 
   toggle: {
     flexDirection: 'row',
     marginHorizontal: 24,
     marginBottom: 20,
-    backgroundColor: '#ebeef4',
+    backgroundColor: '#EBEEF4',
     borderRadius: 16,
     padding: 4,
   },
   toggleBtn: {
-    flex: 1, borderRadius: 13,
+    flex: 1, borderRadius: 12,
     paddingVertical: 10,
     alignItems: 'center',
   },
-  toggleBtnActive: { backgroundColor: 'white', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 1 },
-  toggleText: { fontSize: 14, fontWeight: '600', color: '#707881' },
-  toggleTextActive: { color: '#005d90', fontWeight: '800' },
+  toggleBtnActive: { backgroundColor: thannigoPalette.surface },
+  toggleText: { ...Typography.label, color: thannigoPalette.neutral },
 
   // Order Card
   orderCard: {
-    backgroundColor: 'white',
+    backgroundColor: thannigoPalette.surface,
     borderRadius: 24,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#003a5c',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 16,
-    elevation: 3,
   },
   orderTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
   orderIconWrap: {
     width: 44, height: 44, borderRadius: 14,
-    backgroundColor: '#e0f0ff',
     alignItems: 'center', justifyContent: 'center',
   },
-  orderId: { fontSize: 12, fontWeight: '700', color: '#005d90', textTransform: 'uppercase', letterSpacing: 1 },
-  orderShop: { fontSize: 16, fontWeight: '800', color: '#181c20', marginTop: 1 },
+  orderId: { ...Typography.overline, textTransform: 'uppercase' },
+  orderShop: { ...Typography.bodyMedium, color: thannigoPalette.darkText, marginTop: 1 },
   statusBadge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' },
-  statusText: { fontSize: 11, fontWeight: '700' },
+  statusText: { ...Typography.overline },
 
   orderDetails: { marginBottom: 12 },
-  orderItems: { fontSize: 14, color: '#404850', fontWeight: '500', marginBottom: 6 },
+  orderItems: { ...Typography.label, color: '#404850', marginBottom: 6 },
   orderMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  orderDate: { fontSize: 12, color: '#707881', flex: 1 },
-  orderAmount: { fontSize: 15, fontWeight: '900', color: '#181c20' },
+  orderDate: { ...Typography.caption, color: thannigoPalette.neutral, flex: 1 },
+  orderAmount: { ...Typography.bodyMedium, fontWeight: '900', color: thannigoPalette.darkText },
 
   progressTrack: {
-    height: 6, backgroundColor: '#e0e2e8', borderRadius: 3, overflow: 'hidden', marginBottom: 14,
+    height: 6, backgroundColor: thannigoPalette.borderSoft, borderRadius: 3, overflow: 'hidden', marginBottom: 14,
   },
-  progressFill: { height: '100%', backgroundColor: '#006878', borderRadius: 3 },
+  progressFill: { height: '100%', borderRadius: 3 },
 
-  orderActions: { flexDirection: 'row', gap: 10, borderTopWidth: 1, borderTopColor: '#f1f4f9', paddingTop: 14 },
+  orderActions: { flexDirection: 'row', gap: 10, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft, paddingTop: 14 },
   trackBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: '#e0f0ff', borderRadius: 14, paddingVertical: 11,
+    borderRadius: 12, paddingVertical: 11,
   },
-  trackBtnText: { color: '#005d90', fontWeight: '700', fontSize: 13 },
+  trackBtnText: { ...Typography.label },
   supportBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: '#f1f4f9', borderRadius: 14, paddingVertical: 11, paddingHorizontal: 16,
+    backgroundColor: '#F1F4F9', borderRadius: 12, paddingVertical: 11, paddingHorizontal: 16,
   },
-  supportBtnText: { color: '#707881', fontWeight: '600', fontSize: 13 },
+  supportBtnText: { ...Typography.label, color: thannigoPalette.neutral },
 
   emptyState: { alignItems: 'center', paddingTop: 60, gap: 10 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#404850' },
-  emptySubtitle: { fontSize: 13, color: '#707881' },
+  emptyTitle: { ...Typography.h4, color: thannigoPalette.darkText },
+  emptySubtitle: { ...Typography.caption, color: thannigoPalette.neutral },
 });
 
 

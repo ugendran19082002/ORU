@@ -1,8 +1,9 @@
 import React from 'react';
-import { TouchableOpacity, Text, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRoleTheme } from '@/hooks/use-role-theme';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
@@ -11,9 +12,13 @@ interface ButtonProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
   icon?: keyof typeof Ionicons.glyphMap;
+  iconPosition?: 'left' | 'right';
   isLoading?: boolean;
   disabled?: boolean;
-  className?: string;
+  /** Override the accent color for primary/outline variants. Defaults to role accent. */
+  accentColor?: string;
+  style?: ViewStyle;
+  textStyle?: TextStyle;
 }
 
 export function Button({
@@ -22,61 +27,115 @@ export function Button({
   variant = 'primary',
   size = 'md',
   icon,
+  iconPosition = 'left',
   isLoading = false,
   disabled = false,
-  className = '',
+  accentColor,
+  style,
+  textStyle,
 }: ButtonProps) {
-  const baseClasses = "flex-row items-center justify-center rounded-xl";
-  
-  const variantClasses = {
-    primary: "bg-blue-600 active:bg-blue-700",
-    secondary: "bg-gray-200 active:bg-gray-300 dark:bg-gray-800 dark:active:bg-gray-700",
-    outline: "border-2 border-blue-600 active:bg-blue-50 dark:active:bg-gray-900",
-    ghost: "active:bg-gray-100 dark:active:bg-gray-800",
+  const { accent } = useRoleTheme();
+  const resolvedAccent = accentColor ?? accent;
+
+  const sizeStyle = sizeMap[size];
+  const iconSize = size === 'sm' ? 16 : size === 'lg' ? 22 : 18;
+  const isDisabled = disabled || isLoading;
+
+  const containerStyle: ViewStyle = {
+    ...baseContainer,
+    ...sizeStyle.container,
+    opacity: isDisabled ? 0.5 : 1,
+    ...(variant === 'primary' && { backgroundColor: resolvedAccent }),
+    ...(variant === 'secondary' && styles.secondary),
+    ...(variant === 'outline' && { ...styles.outline, borderColor: resolvedAccent }),
+    ...(variant === 'ghost' && styles.ghost),
+    ...(variant === 'danger' && styles.danger),
+    ...style,
   };
 
-  const sizeClasses = {
-    sm: "px-3 py-2",
-    md: "px-5 py-3",
-    lg: "px-8 py-4",
+  const labelColor = (() => {
+    if (variant === 'primary') return '#fff';
+    if (variant === 'danger') return '#fff';
+    if (variant === 'outline') return resolvedAccent;
+    if (variant === 'secondary') return '#1A1A2E';
+    return '#74777C';
+  })();
+
+  const labelStyle: TextStyle = {
+    ...sizeStyle.text,
+    color: labelColor,
+    flex: 1,
+    textAlign: 'center',
+    fontWeight: '700',
+    ...textStyle,
   };
 
-  const textVariantClasses = {
-    primary: "text-white font-semibold flex-1 text-center",
-    secondary: "text-gray-900 dark:text-gray-100 font-semibold flex-1 text-center",
-    outline: "text-blue-600 font-semibold flex-1 text-center",
-    ghost: "text-gray-700 dark:text-gray-300 font-semibold flex-1 text-center",
+  const renderIcon = (position: 'left' | 'right') => {
+    if (!icon || isLoading || iconPosition !== position) return null;
+    return (
+      <Ionicons
+        name={icon}
+        size={iconSize}
+        color={labelColor}
+        style={position === 'left' ? { marginRight: 6 } : { marginLeft: 6 }}
+      />
+    );
   };
-
-  const currentVariantClass = variantClasses[variant];
-  const currentSizeClass = sizeClasses[size];
-  const currentTextClass = textVariantClasses[variant];
-  
-  const opacityClass = disabled || isLoading ? "opacity-50" : "opacity-100";
 
   return (
     <TouchableOpacity
       onPress={onPress}
-      disabled={disabled || isLoading}
-      className={`${baseClasses} ${currentVariantClass} ${currentSizeClass} ${opacityClass} ${className}`}
-      activeOpacity={0.8}
+      disabled={isDisabled}
+      style={containerStyle}
+      activeOpacity={0.82}
     >
-      {icon && !isLoading && (
-        <Ionicons
-          name={icon}
-          size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20}
-          className={variant === 'primary' ? 'text-white' : variant === 'outline' ? 'text-blue-600' : 'text-gray-900 dark:text-gray-100'}
-        />
-      )}
       {isLoading && (
-        <ActivityIndicator 
-          color={variant === 'primary' ? 'white' : '#2563eb'} 
-          className="mr-2"
+        <ActivityIndicator
+          color={variant === 'primary' || variant === 'danger' ? '#fff' : resolvedAccent}
+          style={{ marginRight: 8 }}
         />
       )}
-      <Text className={currentTextClass}>
-        {title}
-      </Text>
+      {renderIcon('left')}
+      <Text style={labelStyle}>{title}</Text>
+      {renderIcon('right')}
     </TouchableOpacity>
   );
 }
+
+const baseContainer: ViewStyle = {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: 16,
+};
+
+const sizeMap: Record<ButtonSize, { container: ViewStyle; text: TextStyle }> = {
+  sm: {
+    container: { paddingHorizontal: 12, paddingVertical: 8 },
+    text: { fontSize: 13 },
+  },
+  md: {
+    container: { paddingHorizontal: 20, paddingVertical: 13 },
+    text: { fontSize: 15 },
+  },
+  lg: {
+    container: { paddingHorizontal: 28, paddingVertical: 16 },
+    text: { fontSize: 16 },
+  },
+};
+
+const styles = StyleSheet.create({
+  secondary: {
+    backgroundColor: '#F1F4F9',
+  },
+  outline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+  },
+  ghost: {
+    backgroundColor: 'transparent',
+  },
+  danger: {
+    backgroundColor: '#C0392B',
+  },
+});

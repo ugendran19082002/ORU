@@ -99,10 +99,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: '#E0EAF5',
-    borderRadius: 12,
+    borderRadius: 16,
     backgroundColor: '#F5F9FF',
     paddingHorizontal: 14,
-    minHeight: 50,
+    minHeight: 52,
   },
   inputRowError: {
     borderColor: '#C0392B',

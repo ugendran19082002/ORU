@@ -1,46 +1,69 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-import { Card } from './Card';
+import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Shadow, Typography, thannigoPalette } from '@/constants/theme';
+
+type IconColorKey = 'primary' | 'secondary' | 'success' | 'warning' | 'error';
 
 interface StatCardProps {
   label: string;
   value: string | number;
   icon: keyof typeof Ionicons.glyphMap;
-  iconColor?: 'primary' | 'secondary' | 'success' | 'warning' | 'error';
-  className?: string;
+  iconColor?: IconColorKey;
+  /** Tint the card background to match the icon color */
+  tinted?: boolean;
+  style?: ViewStyle;
 }
 
-export function StatCard({ 
-  label, 
-  value, 
-  icon, 
-  iconColor = 'primary', 
-  className = '' 
-}: StatCardProps) {
-  const iconColors = {
-    primary: 'text-blue-600 dark:text-blue-400',
-    secondary: 'text-gray-600 dark:text-gray-400',
-    success: 'text-emerald-600 dark:text-emerald-400',
-    warning: 'text-amber-600 dark:text-amber-400',
-    error: 'text-rose-600 dark:text-rose-400',
-  };
+const iconColorMap: Record<IconColorKey, { icon: string; bg: string }> = {
+  primary:   { icon: thannigoPalette.primary,   bg: thannigoPalette.infoSoft },
+  secondary: { icon: thannigoPalette.neutral,   bg: '#F1F3F5' },
+  success:   { icon: thannigoPalette.success,   bg: thannigoPalette.successSoft },
+  warning:   { icon: thannigoPalette.warning,   bg: '#FFF8E1' },
+  error:     { icon: thannigoPalette.error,     bg: thannigoPalette.dangerSoft },
+};
+
+export function StatCard({ label, value, icon, iconColor = 'primary', tinted = false, style }: StatCardProps) {
+  const { icon: iconHex, bg } = iconColorMap[iconColor];
 
   return (
-    <Card className={`p-6 bg-gray-50 dark:bg-gray-900 border-0 ${className}`}>
-      <Ionicons 
-        name={icon} 
-        size={32} 
-        className={iconColors[iconColor]} 
-      />
-      <View className="mt-3">
-        <Text className="text-2xl font-extrabold text-gray-900 dark:text-white">
-          {value}
-        </Text>
-        <Text className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">
-          {label}
-        </Text>
+    <View style={[styles.card, Shadow.sm, tinted && { backgroundColor: bg }, style]}>
+      <View style={[styles.iconWrap, { backgroundColor: bg }]}>
+        <Ionicons name={icon} size={22} color={iconHex} />
       </View>
-    </Card>
+      <View style={styles.textBlock}>
+        <Text style={styles.value}>{value}</Text>
+        <Text style={styles.label}>{label}</Text>
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 16,
+    gap: 10,
+  },
+  iconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textBlock: {
+    gap: 2,
+  },
+  value: {
+    ...Typography.h3,
+    color: thannigoPalette.darkText,
+  },
+  label: {
+    ...Typography.caption,
+    color: thannigoPalette.neutral,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+});

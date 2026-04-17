@@ -31,6 +31,7 @@ export default function ShopLayout() {
       <Stack.Screen name="staff" />
       <Stack.Screen name="reviews" />
       <Stack.Screen name="inventory-cans" />
+      <Stack.Screen name="can-management" />
     </Stack>
   );
 }
