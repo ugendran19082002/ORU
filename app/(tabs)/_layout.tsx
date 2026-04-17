@@ -2,6 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
+import { roleAccent, roleSurface } from "@/constants/theme";
+
+const CUSTOMER_ACCENT = roleAccent.customer;
+const CUSTOMER_SURF = roleSurface.customer;
 
 // Custom tab bar icon with active pill style
 function TabIcon({
@@ -23,17 +27,17 @@ function TabIcon({
         paddingHorizontal: focused ? 20 : 0,
         paddingVertical: 10,
         borderRadius: 22,
-        backgroundColor: focused ? "#e0f0ff" : "transparent",
+        backgroundColor: focused ? CUSTOMER_SURF : "transparent",
         minWidth: 80, // Increased for more prominent pill
         minHeight: 45,
       }}
     >
-      <Ionicons name={name} size={22} color={focused ? "#005d90" : "#94a3b8"} />
+      <Ionicons name={name} size={22} color={focused ? CUSTOMER_ACCENT : "#94a3b8"} />
       <Text
         style={{
           fontSize: 10,
           fontWeight: "700",
-          color: focused ? "#005d90" : "#94a3b8",
+          color: focused ? CUSTOMER_ACCENT : "#94a3b8",
           marginTop: 2,
           textAlign: "center",
         }}
@@ -65,7 +69,7 @@ export default function TabLayout() {
           position: "absolute",
         },
         tabBarShowLabel: false,
-        tabBarActiveTintColor: "#005d90",
+        tabBarActiveTintColor: CUSTOMER_ACCENT,
         tabBarInactiveTintColor: "#94a3b8",
         tabBarItemStyle: {
           flex: 1,

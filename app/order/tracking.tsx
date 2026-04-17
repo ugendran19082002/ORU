@@ -1,30 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Animated,
-  Linking,
-  RefreshControl,
-  Platform,
-  Modal,
-  ActivityIndicator,
+  Animated, Linking, RefreshControl, Modal, ActivityIndicator,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
-
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
-
 import { ExpoMap } from '@/components/maps/ExpoMap';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
 import { connectSocket, disconnectSocket, joinOrderRoom } from '@/utils/socket';
 import { apiService } from '@/api/apiService';
 import { apiClient } from '@/api/client';
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const CUSTOMER_ACCENT = roleAccent.customer;
+const CUSTOMER_SURF = roleSurface.customer;
 
 type StepStatus = 'done' | 'active' | 'pending';
 
@@ -316,11 +313,11 @@ export default function OrderTrackingScreen() {
           </View>
           <Text style={styles.headerSub}>Order #{activeOrder?.id ?? 'TNG-TRACK'}</Text>
         </View>
-        <TouchableOpacity 
-          style={styles.backBtn} 
+        <TouchableOpacity
+          style={styles.backBtn}
           onPress={() => {
             const msg = `Track my water order #${activeOrder?.id} from ${shop?.name ?? 'ThanniGo'}: https://thannigo.app/track/${activeOrder?.id}`;
-            Linking.openURL(`whatsapp://send?text=${msg}`).catch(() => 
+            Linking.openURL(`whatsapp://send?text=${msg}`).catch(() =>
               Toast.show({
                 type: 'info',
                 text1: 'Share',
@@ -329,15 +326,15 @@ export default function OrderTrackingScreen() {
             );
           }}
         >
-          <Ionicons name="share-social-outline" size={20} color="#005d90" />
+          <Ionicons name="share-social-outline" size={20} color={CUSTOMER_ACCENT} />
         </TouchableOpacity>
         <TouchableOpacity style={[styles.backBtn, { marginLeft: 10 }]} onPress={() => router.push('/notifications' as any)}>
-          <Ionicons name="notifications-outline" size={20} color="#005d90" />
+          <Ionicons name="notifications-outline" size={20} color={CUSTOMER_ACCENT} />
         </TouchableOpacity>
       </View>
 
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[CUSTOMER_ACCENT]} tintColor={CUSTOMER_ACCENT} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"
@@ -454,7 +451,7 @@ export default function OrderTrackingScreen() {
         {/* ── TIMELINE ── */}
         <View style={styles.timelineCard}>
           <View style={styles.timelineDecor}>
-            <Ionicons name="water" size={100} color="#005d90" style={{ opacity: 0.04 }} />
+            <Ionicons name="water" size={100} color={CUSTOMER_ACCENT} style={{ opacity: 0.04 }} />
           </View>
           {steps.map((step, index) => (
             <StepNode key={step.title} step={step} isLast={index === steps.length - 1} />
@@ -617,58 +614,42 @@ export default function OrderTrackingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
 
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingHorizontal: 16, paddingVertical: 12,
     backgroundColor: 'rgba(255,255,255,0.92)',
-    borderBottomWidth: 1, borderBottomColor: '#f1f4f9',
+    borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
   },
   backBtn: {
     width: 40, height: 40, borderRadius: 14,
-    backgroundColor: '#ebeef4', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: thannigoPalette.surface, alignItems: 'center', justifyContent: 'center',
+    ...Shadow.xs,
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  brandName: { fontSize: 18, fontWeight: '900', color: '#003a5c', letterSpacing: -0.4 },
-  headerSub: { fontSize: 12, color: '#707881', fontWeight: '500', marginTop: 1 },
+  brandName: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.4 },
+  headerSub: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 1 },
 
   // Map
   mapCard: {
     height: 220, borderRadius: 24, marginTop: 20, marginBottom: 20,
     overflow: 'hidden', position: 'relative',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 16,
-      },
-      android: { elevation: 5 },
-      web: { boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }
-    }),
+    ...Shadow.md,
   },
   mapImage: { width: '100%', height: '100%' },
   mapOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'transparent',
-    // subtle bottom fade for overlay cards
-    backgroundImage: undefined,
   },
   etaChip: {
     position: 'absolute', top: 14, right: 14,
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: 'rgba(255,255,255,0.96)', borderRadius: 20,
     paddingHorizontal: 12, paddingVertical: 7,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 6,
-      },
-      android: { elevation: 3 },
-      web: { boxShadow: '0 2px 6px rgba(0,0,0,0.12)' }
-    }),
+    ...Shadow.sm,
   },
-  etaText: { fontSize: 12, fontWeight: '700', color: '#005d90' },
+  etaText: { fontSize: 12, fontWeight: '700', color: CUSTOMER_ACCENT },
   mapControls: {
     position: 'absolute', top: 60, right: 14,
     zIndex: 10,
@@ -677,32 +658,32 @@ const styles = StyleSheet.create({
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.96)',
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 3,
+    ...Shadow.sm,
   },
   driverCard: {
     position: 'absolute', bottom: 12, left: 12, right: 12,
     flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: 'rgba(255,255,255,0.97)', borderRadius: 18,
     paddingHorizontal: 14, paddingVertical: 10,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
+    ...Shadow.sm,
   },
   driverAvatar: {
     width: 42, height: 42, borderRadius: 21,
-    backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: '#005d90',
+    backgroundColor: CUSTOMER_SURF, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: CUSTOMER_ACCENT,
   },
-  driverLabel: { fontSize: 9, fontWeight: '700', color: '#707881', textTransform: 'uppercase', letterSpacing: 1 },
-  driverName: { fontSize: 15, fontWeight: '800', color: '#181c20' },
+  driverLabel: { fontSize: 9, fontWeight: '700', color: thannigoPalette.neutral, textTransform: 'uppercase', letterSpacing: 1 },
+  driverName: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText },
   callDriverBtn: {
     marginLeft: 'auto', width: 38, height: 38, borderRadius: 19,
-    backgroundColor: '#005d90', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: CUSTOMER_ACCENT, alignItems: 'center', justifyContent: 'center',
   },
 
   // Timeline
   timelineCard: {
-    backgroundColor: 'white', borderRadius: 24, padding: 24, marginBottom: 16,
+    backgroundColor: thannigoPalette.surface, borderRadius: 24, padding: 24, marginBottom: 16,
     position: 'relative', overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3,
+    ...Shadow.sm,
   },
   timelineDecor: { position: 'absolute', right: -10, top: -10 },
   stepRow: { flexDirection: 'row', gap: 16 },
@@ -711,52 +692,52 @@ const styles = StyleSheet.create({
     width: 40, height: 40, borderRadius: 20,
     alignItems: 'center', justifyContent: 'center', zIndex: 1,
   },
-  stepCircleDone: { backgroundColor: '#005d90' },
+  stepCircleDone: { backgroundColor: CUSTOMER_ACCENT },
   stepCircleActive: {
     backgroundColor: '#006878', borderWidth: 3, borderColor: 'white',
     shadowColor: '#006878', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 12, elevation: 6,
   },
-  stepCirclePending: { backgroundColor: '#ebeef4' },
-  stepLine: { width: 4, flex: 1, backgroundColor: '#e0e2e8', marginVertical: 4, borderRadius: 2 },
-  stepLineFilled: { backgroundColor: '#005d90' },
+  stepCirclePending: { backgroundColor: thannigoPalette.surface },
+  stepLine: { width: 4, flex: 1, backgroundColor: thannigoPalette.borderSoft, marginVertical: 4, borderRadius: 2 },
+  stepLineFilled: { backgroundColor: CUSTOMER_ACCENT },
   stepContent: { flex: 1, paddingTop: 8, paddingBottom: 20 },
-  stepTitle: { fontSize: 16, fontWeight: '800', color: '#181c20', marginBottom: 3 },
-  stepTitleActive: { color: '#005d90' },
-  stepSub: { fontSize: 13, color: '#707881', fontWeight: '500' },
+  stepTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 3 },
+  stepTitleActive: { color: CUSTOMER_ACCENT },
+  stepSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '500' },
 
   // Actions
   actionRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   actionCard: {
-    flex: 1, backgroundColor: 'white', borderRadius: 24,
+    flex: 1, backgroundColor: thannigoPalette.surface, borderRadius: 24,
     padding: 20, alignItems: 'center', gap: 10,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
+    ...Shadow.xs,
   },
-  actionCardPrimary: { backgroundColor: '#e0f0ff' },
+  actionCardPrimary: { backgroundColor: CUSTOMER_SURF },
   actionIcon: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   actionLabel: { fontSize: 14, fontWeight: '700', color: '#404850' },
 
   // Summary
   summaryCard: {
-    backgroundColor: 'white', borderRadius: 24, padding: 20, marginBottom: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
+    backgroundColor: thannigoPalette.surface, borderRadius: 24, padding: 20, marginBottom: 16,
+    ...Shadow.xs,
   },
   summaryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  summaryTitle: { fontSize: 17, fontWeight: '800', color: '#181c20' },
-  prepaidBadge: { backgroundColor: '#e0f0ff', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
-  prepaidText: { fontSize: 10, fontWeight: '700', color: '#005d90', letterSpacing: 0.5 },
+  summaryTitle: { fontSize: 17, fontWeight: '800', color: thannigoPalette.darkText },
+  prepaidBadge: { backgroundColor: CUSTOMER_SURF, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  prepaidText: { fontSize: 10, fontWeight: '700', color: CUSTOMER_ACCENT, letterSpacing: 0.5 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  summaryKey: { fontSize: 13, color: '#707881', fontWeight: '500' },
-  summaryVal: { fontSize: 13, color: '#181c20', fontWeight: '700' },
-  summaryDivider: { height: 1, backgroundColor: '#f1f4f9', marginVertical: 10 },
-  summaryTotalKey: { fontSize: 16, fontWeight: '900', color: '#181c20' },
-  summaryTotalVal: { fontSize: 20, fontWeight: '900', color: '#005d90' },
+  summaryKey: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '500' },
+  summaryVal: { fontSize: 13, color: thannigoPalette.darkText, fontWeight: '700' },
+  summaryDivider: { height: 1, backgroundColor: thannigoPalette.borderSoft, marginVertical: 10 },
+  summaryTotalKey: { fontSize: 16, fontWeight: '900', color: thannigoPalette.darkText },
+  summaryTotalVal: { fontSize: 20, fontWeight: '900', color: CUSTOMER_ACCENT },
   rateBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     marginTop: 16, paddingVertical: 12,
-    backgroundColor: '#f1f4f9', borderRadius: 14,
-    borderWidth: 1, borderColor: '#e0e2e8',
+    backgroundColor: thannigoPalette.background, borderRadius: 14,
+    borderWidth: 1, borderColor: thannigoPalette.borderSoft,
   },
-  rateBtnText: { color: '#005d90', fontWeight: '700', fontSize: 14 },
+  rateBtnText: { color: CUSTOMER_ACCENT, fontWeight: '700', fontSize: 14 },
   mapLayerControls: {
     position: 'absolute',
     top: 14,
@@ -767,25 +748,25 @@ const styles = StyleSheet.create({
     width: 32, height: 32, borderRadius: 8,
     backgroundColor: 'rgba(255,255,255,0.9)',
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
+    ...Shadow.xs,
   },
 
   // Shop change offer modal
   shopChangeOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
-  shopChangeSheet: { backgroundColor: 'white', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 28, paddingBottom: 40, alignItems: 'center' },
-  shopChangePill: { width: 40, height: 4, backgroundColor: '#e0e2e8', borderRadius: 2, marginBottom: 24 },
+  shopChangeSheet: { backgroundColor: thannigoPalette.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 28, paddingBottom: 40, alignItems: 'center' },
+  shopChangePill: { width: 40, height: 4, backgroundColor: thannigoPalette.borderSoft, borderRadius: 2, marginBottom: 24 },
   shopChangeIconWrap: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  shopChangeTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a', textAlign: 'center', marginBottom: 8 },
-  shopChangeSub: { fontSize: 14, color: '#64748b', textAlign: 'center', lineHeight: 20, fontWeight: '500', marginBottom: 20 },
-  shopChangePriceRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20, backgroundColor: '#f8fafc', borderRadius: 16, padding: 16, width: '100%', justifyContent: 'center' },
+  shopChangeTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText, textAlign: 'center', marginBottom: 8 },
+  shopChangeSub: { fontSize: 14, color: thannigoPalette.neutral, textAlign: 'center', lineHeight: 20, fontWeight: '500', marginBottom: 20 },
+  shopChangePriceRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20, backgroundColor: thannigoPalette.background, borderRadius: 16, padding: 16, width: '100%', justifyContent: 'center' },
   shopChangePriceBox: { alignItems: 'center', gap: 4 },
-  shopChangePriceLabel: { fontSize: 11, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase' },
+  shopChangePriceLabel: { fontSize: 11, fontWeight: '700', color: thannigoPalette.neutral, textTransform: 'uppercase' },
   shopChangePriceVal: { fontSize: 22, fontWeight: '900' },
-  shopChangeQuestion: { fontSize: 15, fontWeight: '700', color: '#181c20', textAlign: 'center', marginBottom: 20 },
+  shopChangeQuestion: { fontSize: 15, fontWeight: '700', color: thannigoPalette.darkText, textAlign: 'center', marginBottom: 20 },
   shopChangeBtns: { flexDirection: 'row', gap: 12, width: '100%' },
   shopChangeRejectBtn: { flex: 1, paddingVertical: 16, borderRadius: 16, borderWidth: 1.5, borderColor: '#fecaca', alignItems: 'center', backgroundColor: '#fff5f5' },
   shopChangeRejectText: { fontSize: 14, fontWeight: '800', color: '#dc2626' },
-  shopChangeAcceptBtn: { flex: 1, paddingVertical: 16, borderRadius: 16, backgroundColor: '#005d90', alignItems: 'center' },
+  shopChangeAcceptBtn: { flex: 1, paddingVertical: 16, borderRadius: 16, backgroundColor: CUSTOMER_ACCENT, alignItems: 'center' },
   shopChangeAcceptText: { fontSize: 14, fontWeight: '800', color: 'white' },
 
   // Live socket status badge inside driver card

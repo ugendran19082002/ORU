@@ -10,6 +10,9 @@ import { useRouter, Href } from 'expo-router';
 import { adminApi, AdminShop } from '@/api/adminApi';
 import Toast from 'react-native-toast-message';
 import { useAppSession } from '@/providers/AppSessionProvider';
+import { Shadow, thannigoPalette, roleAccent } from '@/constants/theme';
+
+const ADMIN_ACCENT = roleAccent.admin;
 
 type FilterStatus = 'all' | 'pending_review' | 'active' | 'rejected' | 'ready_for_activation' | 'partially_rejected';
 
@@ -26,7 +29,7 @@ export default function AdminShopsScreen() {
   if (status === 'loading') {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#ba1a1a" />
+        <ActivityIndicator size="large" color={ADMIN_ACCENT} />
       </View>
     );
   }
@@ -34,7 +37,7 @@ export default function AdminShopsScreen() {
   if (status === 'authenticated' && (!user || user?.role !== 'admin')) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 40 }]}>
-        <Ionicons name="lock-closed" size={64} color="#ba1a1a" />
+        <Ionicons name="lock-closed" size={64} color={ADMIN_ACCENT} />
         <Text style={{ fontSize: 20, fontWeight: '800', color: '#1e293b', marginTop: 16 }}>Restricted Access</Text>
         <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', marginTop: 8 }}>
           You do not have administrative permissions to view the partner list.
@@ -137,7 +140,7 @@ export default function AdminShopsScreen() {
       </View>
 
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ba1a1a']} tintColor="#ba1a1a" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ADMIN_ACCENT]} tintColor={ADMIN_ACCENT} />}
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: 120, alignItems: 'center' }
@@ -145,7 +148,7 @@ export default function AdminShopsScreen() {
       >
         <View style={{ width: '100%', maxWidth: 1200 }}>
           {loading ? (
-            <ActivityIndicator size="large" color="#ba1a1a" style={{ marginTop: 60 }} />
+            <ActivityIndicator size="large" color={ADMIN_ACCENT} style={{ marginTop: 60 }} />
           ) : filteredShops.length === 0 ? (
             <View style={styles.emptyWrap}>
               <Ionicons name="storefront-outline" size={64} color="#e2e8f0" />
@@ -167,7 +170,7 @@ export default function AdminShopsScreen() {
                   >
                     <View style={styles.cardTop}>
                       <View style={styles.shopIcon}>
-                        <Ionicons name="business" size={24} color="#ba1a1a" />
+                        <Ionicons name="business" size={24} color={ADMIN_ACCENT} />
                       </View>
                       <View style={[styles.statusBadge, { backgroundColor: theme.bg }]}>
                         <Ionicons name={theme.icon} size={12} color={theme.text} />
@@ -202,11 +205,11 @@ export default function AdminShopsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fdfdfd' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   headerSafe: {
-    backgroundColor: 'white',
+    backgroundColor: thannigoPalette.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: thannigoPalette.borderSoft,
     alignItems: 'center',
   },
   headerContent: {
@@ -215,36 +218,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: '#1a1c1e', letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
 
-  filterBar: { paddingVertical: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  searchWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f1f5f9', borderRadius: 16, paddingHorizontal: 16, height: 48 },
-  searchInput: { flex: 1, marginLeft: 10, fontSize: 14, fontWeight: '600', color: '#1e293b' },
+  filterBar: { paddingVertical: 16, backgroundColor: thannigoPalette.surface, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.background, borderRadius: 16, paddingHorizontal: 16, height: 48 },
+  searchInput: { flex: 1, marginLeft: 10, fontSize: 14, fontWeight: '600', color: thannigoPalette.darkText },
 
   tabScroll: { marginTop: 4 },
   tabContent: { gap: 8, paddingRight: 24 },
-  tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: '#f1f5f9' },
-  tabActive: { backgroundColor: '#ba1a1a' },
-  tabText: { fontSize: 11, fontWeight: '800', color: '#64748b' },
+  tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: thannigoPalette.background },
+  tabActive: { backgroundColor: ADMIN_ACCENT },
+  tabText: { fontSize: 11, fontWeight: '800', color: thannigoPalette.neutral },
   tabTextActive: { color: 'white' },
 
   scrollContent: { padding: 24, paddingBottom: 100 },
   grid: { gap: 16 },
-  shopCard: { backgroundColor: 'white', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 10, elevation: 2 },
+  shopCard: { backgroundColor: thannigoPalette.surface, borderRadius: 24, padding: 20, borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.xs },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  shopIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#f0f9ff', alignItems: 'center', justifyContent: 'center' },
+  shopIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
   statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
   statusText: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
 
-  shopName: { fontSize: 18, fontWeight: '900', color: '#1e293b', marginBottom: 4 },
-  ownerName: { fontSize: 13, fontWeight: '600', color: '#64748b', marginBottom: 16 },
+  shopName: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 4 },
+  ownerName: { fontSize: 13, fontWeight: '600', color: thannigoPalette.neutral, marginBottom: 16 },
 
-  cardFooter: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
+  cardFooter: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  metaText: { fontSize: 12, fontWeight: '600', color: '#94a3b8' },
-  divider: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#cbd5e1' },
+  metaText: { fontSize: 12, fontWeight: '600', color: thannigoPalette.neutral },
+  divider: { width: 4, height: 4, borderRadius: 2, backgroundColor: thannigoPalette.borderSoft },
 
   emptyWrap: { alignItems: 'center', marginTop: 100, gap: 16 },
-  emptyText: { fontSize: 15, color: '#94a3b8', fontWeight: '600' },
+  emptyText: { fontSize: 15, color: thannigoPalette.neutral, fontWeight: '600' },
 });

@@ -18,6 +18,10 @@ import { apiClient } from '@/api/client';
 import { resolveApiUrl } from '@/api/client';
 import Toast from 'react-native-toast-message';
 import * as ImagePicker from 'expo-image-picker';
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
 
 
 
@@ -299,7 +303,7 @@ export default function ShopInventoryScreen() {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />} contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 }]} showsVerticalScrollIndicator={false}>
+      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[SHOP_ACCENT]} tintColor={SHOP_ACCENT} />} contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 }]} showsVerticalScrollIndicator={false}>
         <View style={styles.titleRow}>
           <View style={{ flex: 1 }}>
             <Text style={styles.pageTitle}>Shop Inventory</Text>
@@ -312,7 +316,7 @@ export default function ShopInventoryScreen() {
         </View>
 
         {loading ? (
-          <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 60 }} />
+          <ActivityIndicator size="large" color={SHOP_ACCENT} style={{ marginTop: 60 }} />
         ) : (
           <>
             <View style={styles.listContainer}>
@@ -336,7 +340,7 @@ export default function ShopInventoryScreen() {
                           {prod.image_url ? (
                             <Image source={{ uri: resolveApiUrl(prod.image_url) }} style={styles.thumbnail} />
                           ) : (
-                            <Ionicons name="water" size={20} color="#006878" />
+                            <Ionicons name="water" size={20} color={SHOP_ACCENT} />
                           )}
                         </View>
                         <View style={{ flex: 1 }}>
@@ -366,12 +370,12 @@ export default function ShopInventoryScreen() {
                                 p.subcategory_id === prod.subcategory_id ? { ...p, is_available: v } : p
                               ));
                             }}
-                            trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
-                            thumbColor={isAvailable ? '#006878' : '#707881'}
+                            trackColor={{ false: thannigoPalette.borderSoft, true: '#a7edff' }}
+                            thumbColor={isAvailable ? SHOP_ACCENT : thannigoPalette.neutral}
                             style={{ marginHorizontal: 8, transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                           />
                           <TouchableOpacity style={styles.editCardBtn} onPress={() => handleEditProduct(prod)}>
-                            <Ionicons name="pencil-outline" size={16} color="#006878" />
+                            <Ionicons name="pencil-outline" size={16} color={SHOP_ACCENT} />
                           </TouchableOpacity>
                           <TouchableOpacity style={styles.removeBtn} onPress={() => removeProduct(prod.subcategory_id)}>
                             <Ionicons name="trash-outline" size={16} color="#ba1a1a" />
@@ -465,7 +469,7 @@ export default function ShopInventoryScreen() {
                         }}
                       >
                         <View style={[styles.catIconBox, selectedCategoryId === cat.id && { backgroundColor: 'white' }]}>
-                          <Ionicons name={cat.id === 1 ? "water" : "cafe"} size={24} color={selectedCategoryId === cat.id ? "#006878" : "#94a3b8"} />
+                          <Ionicons name={cat.id === 1 ? "water" : "cafe"} size={24} color={selectedCategoryId === cat.id ? SHOP_ACCENT : '#94a3b8'} />
                         </View>
                         <Text style={[styles.catGridLabel, selectedCategoryId === cat.id && { color: 'white' }]}>{cat.name_en}</Text>
                       </TouchableOpacity>
@@ -479,7 +483,7 @@ export default function ShopInventoryScreen() {
                 return (
                   <View>
                     <TouchableOpacity style={styles.backLink} onPress={() => setModalStep(0)}>
-                      <Ionicons name="arrow-back" size={14} color="#006878" />
+                      <Ionicons name="arrow-back" size={14} color={SHOP_ACCENT} />
                       <Text style={styles.backLinkText}>Change Category</Text>
                     </TouchableOpacity>
                     <ScrollView style={styles.masterList} showsVerticalScrollIndicator={false}>
@@ -497,9 +501,9 @@ export default function ShopInventoryScreen() {
                           <Ionicons
                             name={selectedSubchainId === sub.id ? "radio-button-on" : "radio-button-off"}
                             size={20}
-                            color={selectedSubchainId === sub.id ? "#005d90" : "#bfc7d1"}
+                            color={selectedSubchainId === sub.id ? SHOP_ACCENT : '#bfc7d1'}
                           />
-                          <Text style={[styles.masterCatText, selectedSubchainId === sub.id && { color: '#005d90', fontWeight: '800' }]}>
+                          <Text style={[styles.masterCatText, selectedSubchainId === sub.id && { color: SHOP_ACCENT, fontWeight: '800' }]}>
                             {sub.name_en}
                           </Text>
                         </TouchableOpacity>
@@ -513,7 +517,7 @@ export default function ShopInventoryScreen() {
                 return (
                   <ScrollView showsVerticalScrollIndicator={false}>
                     <TouchableOpacity style={styles.backLink} onPress={() => setModalStep(1)}>
-                      <Ionicons name="arrow-back" size={14} color="#006878" />
+                      <Ionicons name="arrow-back" size={14} color={SHOP_ACCENT} />
                       <Text style={styles.backLinkText}>Change Subcategory</Text>
                     </TouchableOpacity>
 
@@ -524,7 +528,7 @@ export default function ShopInventoryScreen() {
                       ) : (
                         <View style={styles.pickerPlaceholder}>
                           {uploadingImage ? (
-                            <ActivityIndicator color="#006878" />
+                            <ActivityIndicator color={SHOP_ACCENT} />
                           ) : (
                             <>
                               <Ionicons name="camera-outline" size={32} color="#94a3b8" />
@@ -614,7 +618,7 @@ export default function ShopInventoryScreen() {
                         value={newIsGst}
                         onValueChange={setNewIsGst}
                         trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
-                        thumbColor={newIsGst ? '#006878' : '#707881'}
+                        thumbColor={newIsGst ? SHOP_ACCENT : thannigoPalette.neutral}
                       />
                     </View>
 
@@ -658,97 +662,98 @@ export default function ShopInventoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 24, paddingVertical: 14, backgroundColor: 'rgba(255,255,255,0.92)'
+    paddingHorizontal: 24, paddingVertical: 14, backgroundColor: thannigoPalette.surface,
+    borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
   },
-  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: '#ebeef4', alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center', ...Shadow.xs },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 20, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
+  brandName: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
 
   scrollContent: { paddingHorizontal: 24, paddingTop: 10 },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, marginBottom: 24 },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
-  pageSub: { fontSize: 13, color: '#707881', marginTop: 4, lineHeight: 18 },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#006878', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 14 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  pageSub: { fontSize: 13, color: thannigoPalette.neutral, marginTop: 4, lineHeight: 18 },
+  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: SHOP_ACCENT, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 14 },
   addBtnText: { color: 'white', fontWeight: '800', fontSize: 13 },
 
   listContainer: { gap: 16, marginBottom: 24 },
-  card: { backgroundColor: 'white', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: '#e0e2e8', shadowColor: '#003a5c', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
+  card: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 16, borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.xs },
 
   cardTop: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  iconWrap: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#e0f7fa', alignItems: 'center', justifyContent: 'center' },
-  catName: { fontSize: 16, fontWeight: '900', color: '#181c20', marginBottom: 2 },
-  catUnit: { fontSize: 13, fontWeight: '600', color: '#707881' },
+  iconWrap: { width: 44, height: 44, borderRadius: 12, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
+  catName: { fontSize: 16, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 2 },
+  catUnit: { fontSize: 13, fontWeight: '600', color: thannigoPalette.neutral },
   removeBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#ffdad6', alignItems: 'center', justifyContent: 'center' },
 
-  dividerInner: { height: 1, backgroundColor: '#f1f4f9', marginVertical: 16 },
+  dividerInner: { height: 1, backgroundColor: thannigoPalette.borderSoft, marginVertical: 16 },
 
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  priceLabel: { fontSize: 14, fontWeight: '700', color: '#707881' },
-  priceInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f1f4f9', borderRadius: 12, paddingHorizontal: 12, width: 120, height: 48 },
-  rupeeIcon: { fontSize: 16, fontWeight: '800', color: '#181c20', marginRight: 6 },
-  priceInput: { flex: 1, fontSize: 18, fontWeight: '900', color: '#006878' },
+  priceLabel: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
+  priceInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.background, borderRadius: 12, paddingHorizontal: 12, width: 120, height: 48 },
+  rupeeIcon: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginRight: 6 },
+  priceInput: { flex: 1, fontSize: 18, fontWeight: '900', color: SHOP_ACCENT },
 
-  saveBtn: { backgroundColor: '#006878', borderRadius: 16, paddingVertical: 16, alignItems: 'center', shadowColor: '#006878', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
+  saveBtn: { backgroundColor: SHOP_ACCENT, borderRadius: 16, paddingVertical: 16, alignItems: 'center', shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
   saveBtnText: { color: 'white', fontSize: 16, fontWeight: '900' },
 
   stockSection: { flexDirection: 'row', gap: 12, marginBottom: 4 },
   stockCol: { flex: 1, gap: 6 },
-  stockLabel: { fontSize: 11, fontWeight: '800', color: '#707881', textTransform: 'uppercase' },
-  stockInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f1f4f9', borderRadius: 10, paddingHorizontal: 12, height: 42 },
-  stockInput: { flex: 1, fontSize: 14, fontWeight: '800', color: '#181c20' },
+  stockLabel: { fontSize: 11, fontWeight: '800', color: thannigoPalette.neutral, textTransform: 'uppercase' },
+  stockInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.background, borderRadius: 10, paddingHorizontal: 12, height: 42 },
+  stockInput: { flex: 1, fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText },
   lowStockBorder: { borderWidth: 1.5, borderColor: '#ba1a1a', backgroundColor: '#fff5f4' },
 
-  depositRowList: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f1f4f9', borderStyle: 'dotted' },
-  depositLabelList: { fontSize: 12, fontWeight: '700', color: '#707881' },
-  depositValueList: { fontSize: 14, fontWeight: '800', color: '#005d90' },
+  depositRowList: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft, borderStyle: 'dotted' },
+  depositLabelList: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
+  depositValueList: { fontSize: 14, fontWeight: '800', color: SHOP_ACCENT },
 
-  emptyCard: { backgroundColor: 'white', borderRadius: 20, padding: 30, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2, borderWidth: 1, borderColor: '#e0e2e8', borderStyle: 'dashed' },
-  emptyText: { textAlign: 'center', color: '#707881', marginTop: 10, lineHeight: 20, fontWeight: '500' },
+  emptyCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 30, alignItems: 'center', ...Shadow.xs, borderWidth: 1, borderColor: thannigoPalette.borderSoft, borderStyle: 'dashed' },
+  emptyText: { textAlign: 'center', color: thannigoPalette.neutral, marginTop: 10, lineHeight: 20, fontWeight: '500' },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: 'white', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40, maxHeight: '80%' },
+  modalContent: { backgroundColor: thannigoPalette.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40, maxHeight: '80%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: '#181c20' },
-  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center' },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
 
-  inputLabel: { fontSize: 13, fontWeight: '800', color: '#707881', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
+  inputLabel: { fontSize: 13, fontWeight: '800', color: thannigoPalette.neutral, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
 
-  masterList: { maxHeight: 200, backgroundColor: '#f7f9ff', borderRadius: 16, padding: 8 },
+  masterList: { maxHeight: 200, backgroundColor: thannigoPalette.background, borderRadius: 16, padding: 8 },
   masterCatRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 10 },
-  masterCatRowActive: { backgroundColor: '#e0f0ff' },
-  masterCatText: { fontSize: 15, fontWeight: '600', color: '#181c20' },
+  masterCatRowActive: { backgroundColor: SHOP_SURF },
+  masterCatText: { fontSize: 15, fontWeight: '600', color: thannigoPalette.darkText },
 
-  modalPriceInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f1f4f9', borderRadius: 14, paddingHorizontal: 16, height: 56 },
-  modalPriceInput: { flex: 1, fontSize: 20, fontWeight: '900', color: '#006878' },
+  modalPriceInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.background, borderRadius: 14, paddingHorizontal: 16, height: 56 },
+  modalPriceInput: { flex: 1, fontSize: 20, fontWeight: '900', color: SHOP_ACCENT },
 
-  submitBtn: { backgroundColor: '#005d90', borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginTop: 30, shadowColor: '#005d90', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
+  submitBtn: { backgroundColor: SHOP_ACCENT, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginTop: 30, shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
   submitBtnText: { color: 'white', fontWeight: '900', fontSize: 15 },
   thumbnail: { width: '100%', height: '100%', borderRadius: 12, resizeMode: 'cover' },
-  modalStepText: { fontSize: 12, fontWeight: '700', color: '#94a3b8', marginTop: 2, textTransform: 'uppercase' },
+  modalStepText: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral, marginTop: 2, textTransform: 'uppercase' },
   gridContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 8 },
-  catGridCard: { width: '30%', aspectRatio: 1, backgroundColor: '#f8fafc', borderRadius: 20, alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: '#e2e8f0' },
-  catGridCardActive: { backgroundColor: '#006878', borderColor: '#006878' },
-  catIconBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
-  catGridLabel: { fontSize: 11, fontWeight: '800', color: '#475569', textAlign: 'center' },
+  catGridCard: { width: '30%', aspectRatio: 1, backgroundColor: thannigoPalette.background, borderRadius: 20, alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  catGridCardActive: { backgroundColor: SHOP_ACCENT, borderColor: SHOP_ACCENT },
+  catIconBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
+  catGridLabel: { fontSize: 11, fontWeight: '800', color: thannigoPalette.neutral, textAlign: 'center' },
   backLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 },
-  backLinkText: { fontSize: 13, fontWeight: '700', color: '#006878' },
-  imagePickerCard: { height: 160, backgroundColor: '#f8fafc', borderRadius: 24, borderWidth: 2, borderColor: '#e2e8f0', borderStyle: 'dashed', overflow: 'hidden', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
+  backLinkText: { fontSize: 13, fontWeight: '700', color: SHOP_ACCENT },
+  imagePickerCard: { height: 160, backgroundColor: thannigoPalette.background, borderRadius: 24, borderWidth: 2, borderColor: thannigoPalette.borderSoft, borderStyle: 'dashed', overflow: 'hidden', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
   pickerPreview: { width: '100%', height: '100%', resizeMode: 'cover' },
   pickerPlaceholder: { alignItems: 'center', gap: 8 },
-  pickerText: { fontSize: 13, fontWeight: '600', color: '#94a3b8' },
+  pickerText: { fontSize: 13, fontWeight: '600', color: thannigoPalette.neutral },
   editBadge: { position: 'absolute', top: 12, right: 12, width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
   formSplit: { flexDirection: 'row', gap: 16 },
   actionRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
-  editCardBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#e0f2f1', alignItems: 'center', justifyContent: 'center' },
-  cardDisabled: { opacity: 0.6, backgroundColor: '#f8fafc', borderColor: '#dae0e6' },
-  disabledBadge: { position: 'absolute', top: -10, left: 16, backgroundColor: '#707881', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, zIndex: 10 },
+  editCardBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
+  cardDisabled: { opacity: 0.6, backgroundColor: thannigoPalette.background, borderColor: thannigoPalette.borderSoft },
+  disabledBadge: { position: 'absolute', top: -10, left: 16, backgroundColor: thannigoPalette.neutral, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, zIndex: 10 },
   disabledBadgeText: { color: 'white', fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
   promoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 },
-  sliderUnitDisplay: { fontSize: 13, fontWeight: '600', color: '#94a3b8', marginLeft: 8 },
-  hintText: { fontSize: 13, color: '#64748b', marginTop: 4 },
+  sliderUnitDisplay: { fontSize: 13, fontWeight: '600', color: thannigoPalette.neutral, marginLeft: 8 },
+  hintText: { fontSize: 13, color: thannigoPalette.neutral, marginTop: 4 },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
 });
 

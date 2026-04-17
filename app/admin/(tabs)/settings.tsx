@@ -6,6 +6,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAppSession } from '@/hooks/use-app-session';
 import { useSecurityStore } from '@/stores/securityStore';
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const ADMIN_ACCENT = roleAccent.admin;
+const ADMIN_SURF = roleSurface.admin;
 
 export default function AdminSettingsScreen() {
   const router = useRouter();
@@ -43,7 +47,7 @@ export default function AdminSettingsScreen() {
         {/* PROFILE PREVIEW */}
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Ionicons name="person" size={32} color="#ba1a1a" />
+            <Ionicons name="person" size={32} color={ADMIN_ACCENT} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.userName}>{user?.name || 'Admin User'}</Text>
@@ -68,7 +72,7 @@ export default function AdminSettingsScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.menuIconBox}>
-                  <Ionicons name={item.icon as any} size={20} color="#ba1a1a" />
+                  <Ionicons name={item.icon as any} size={20} color={ADMIN_ACCENT} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuLabel}>{item.label}</Text>
@@ -101,7 +105,7 @@ export default function AdminSettingsScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.menuIconBox}>
-                  <Ionicons name={item.icon as any} size={20} color="#ba1a1a" />
+                  <Ionicons name={item.icon as any} size={20} color={ADMIN_ACCENT} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.menuLabel}>{item.label}</Text>
@@ -123,11 +127,11 @@ export default function AdminSettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
-  headerSafe: { 
-    backgroundColor: 'white', 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#f1f5f9',
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
+  headerSafe: {
+    backgroundColor: thannigoPalette.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: thannigoPalette.borderSoft,
     alignItems: 'center',
   },
   headerContent: {
@@ -136,56 +140,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: '#1a1c1e', letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
-  
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
+
   scrollContent: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 120, alignItems: 'center' },
-  
-  profileCard: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: 'white', 
-    padding: 20, 
-    borderRadius: 24, 
+
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: thannigoPalette.surface,
+    padding: 20,
+    borderRadius: 24,
     marginBottom: 32,
     borderWidth: 1,
-    borderColor: '#e0e2e8',
+    borderColor: thannigoPalette.borderSoft,
+    ...Shadow.xs,
   },
-  avatar: { 
-    width: 60, 
-    height: 60, 
-    borderRadius: 30, 
-    backgroundColor: '#ffdad6', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    marginRight: 16 
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: ADMIN_SURF,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
   },
-  userName: { fontSize: 18, fontWeight: '800', color: '#1a1c1e' },
-  userRole: { fontSize: 13, color: '#707881', fontWeight: '500', marginTop: 2 },
-  editBtn: { 
-    paddingHorizontal: 16, 
-    paddingVertical: 8, 
-    backgroundColor: '#f1f4f9', 
-    borderRadius: 12 
-  },
-  editBtnText: { color: '#ba1a1a', fontWeight: '700', fontSize: 13 },
+  userName: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
+  userRole: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 2 },
+  editBtn: { paddingHorizontal: 16, paddingVertical: 8, backgroundColor: thannigoPalette.background, borderRadius: 12 },
+  editBtnText: { color: ADMIN_ACCENT, fontWeight: '700', fontSize: 13 },
 
-  sectionHeader: { fontSize: 14, fontWeight: '800', color: '#707881', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12, marginLeft: 4 },
-  menuCard: { backgroundColor: 'white', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#e0e2e8' },
+  sectionHeader: { fontSize: 14, fontWeight: '800', color: thannigoPalette.neutral, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12, marginLeft: 4 },
+  menuCard: { backgroundColor: thannigoPalette.surface, borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.xs },
   menuItem: { flexDirection: 'row', alignItems: 'center', padding: 20, gap: 16 },
-  menuIconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center' },
-  menuLabel: { fontSize: 15, fontWeight: '700', color: '#1a1c1e' },
-  menuSub: { fontSize: 12, color: '#707881', marginTop: 2 },
-  divider: { height: 1, backgroundColor: '#f1f4f9', marginLeft: 76 },
-  
-  activeBadge: { 
-    backgroundColor: '#e0fdf4', 
-    paddingHorizontal: 8, 
-    paddingVertical: 4, 
-    borderRadius: 6, 
-    marginRight: 8 
-  },
+  menuIconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
+  menuLabel: { fontSize: 15, fontWeight: '700', color: thannigoPalette.darkText },
+  menuSub: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 2 },
+  divider: { height: 1, backgroundColor: thannigoPalette.borderSoft, marginLeft: 76 },
+
+  activeBadge: { backgroundColor: '#e0fdf4', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginRight: 8 },
   activeBadgeText: { color: '#10b981', fontSize: 10, fontWeight: '800' },
-  
-  footer: { textAlign: 'center', marginTop: 40, color: '#bfc7d1', fontSize: 12, fontWeight: '600' },
+
+  footer: { textAlign: 'center', marginTop: 40, color: thannigoPalette.borderSoft, fontSize: 12, fontWeight: '600' },
 });

@@ -6,6 +6,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { deliveryApi, type DeliveryTripEntry } from '@/api/deliveryApi';
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const DELIVERY_ACCENT = roleAccent.delivery;
+const DELIVERY_SURF = roleSurface.delivery;
 
 type Period = 'today' | 'week' | 'month' | undefined;
 
@@ -13,7 +17,7 @@ const STATUS_META: Record<string, { label: string; color: string; bg: string }> 
   delivered: { label: 'Delivered', color: '#2e7d32', bg: '#e8f5e9' },
   failed:    { label: 'Failed',    color: '#c62828', bg: '#ffebee' },
   picked_up: { label: 'Picked Up', color: '#b45309', bg: '#fef3c7' },
-  assigned:  { label: 'Assigned',  color: '#005d90', bg: '#e0f0ff' },
+  assigned:  { label: 'Assigned',  color: DELIVERY_ACCENT, bg: DELIVERY_SURF },
 };
 
 function formatDateTime(iso: string | null): string {
@@ -77,7 +81,7 @@ export default function DeliveryHistoryScreen() {
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <View style={styles.cardIdBadge}>
-            <Ionicons name="bicycle" size={14} color="#005d90" />
+            <Ionicons name="bicycle" size={14} color={DELIVERY_ACCENT} />
             <Text style={styles.cardId}>{item.order_number}</Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: meta.bg }]}>
@@ -111,7 +115,7 @@ export default function DeliveryHistoryScreen() {
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={20} color="#005d90" />
+          <Ionicons name="chevron-back" size={20} color={DELIVERY_ACCENT} />
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text style={styles.headerTitle}>Trip History</Text>
@@ -136,7 +140,7 @@ export default function DeliveryHistoryScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 80 }} />
+        <ActivityIndicator size="large" color={DELIVERY_ACCENT} style={{ marginTop: 80 }} />
       ) : (
         <FlatList
           data={trips}
@@ -145,12 +149,12 @@ export default function DeliveryHistoryScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[DELIVERY_ACCENT]} tintColor={DELIVERY_ACCENT} />
           }
           onEndReached={onEndReached}
           onEndReachedThreshold={0.3}
           ListFooterComponent={
-            loadingMore ? <ActivityIndicator size="small" color="#005d90" style={{ marginVertical: 16 }} /> : null
+            loadingMore ? <ActivityIndicator size="small" color={DELIVERY_ACCENT} style={{ marginVertical: 16 }} /> : null
           }
           ListEmptyComponent={
             <View style={styles.emptyCard}>
@@ -165,34 +169,34 @@ export default function DeliveryHistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white',
-    borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+    paddingHorizontal: 20, paddingVertical: 14, backgroundColor: thannigoPalette.surface,
+    borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
   },
-  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#181c20' },
-  headerSubtitle: { fontSize: 12, color: '#64748b', fontWeight: '500' },
+  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center', ...Shadow.xs },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
+  headerSubtitle: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
 
-  filterWrap: { flexDirection: 'row', padding: 14, gap: 8, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  filterBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 12, backgroundColor: '#f1f5f9' },
-  filterBtnActive: { backgroundColor: '#005d90' },
-  filterText: { fontSize: 12, fontWeight: '700', color: '#64748b' },
+  filterWrap: { flexDirection: 'row', padding: 14, gap: 8, backgroundColor: thannigoPalette.surface, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  filterBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 12, backgroundColor: thannigoPalette.background },
+  filterBtnActive: { backgroundColor: DELIVERY_ACCENT },
+  filterText: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
   filterTextActive: { color: 'white' },
 
   listContent: { padding: 16, paddingBottom: 100 },
-  card: { backgroundColor: 'white', borderRadius: 20, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: '#f1f5f9', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  card: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.xs },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  cardIdBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#e0f0ff', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
-  cardId: { fontSize: 13, fontWeight: '800', color: '#005d90' },
-  shopName: { fontSize: 16, fontWeight: '800', color: '#181c20', marginBottom: 4 },
-  dateText: { fontSize: 12, color: '#94a3b8', fontWeight: '500', marginBottom: 14 },
-  cardFooter: { flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 12 },
-  metaBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f8fafc', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  metaText: { fontSize: 12, fontWeight: '700', color: '#475569' },
+  cardIdBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: DELIVERY_SURF, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  cardId: { fontSize: 13, fontWeight: '800', color: DELIVERY_ACCENT },
+  shopName: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 4 },
+  dateText: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500', marginBottom: 14 },
+  cardFooter: { flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft, paddingTop: 12 },
+  metaBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: thannigoPalette.background, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  metaText: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   statusText: { fontSize: 11, fontWeight: '700' },
-  emptyCard: { backgroundColor: 'white', borderRadius: 20, padding: 40, alignItems: 'center', gap: 10, margin: 16 },
-  emptyText: { fontSize: 14, color: '#94a3b8', fontWeight: '600' },
+  emptyCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 40, alignItems: 'center', gap: 10, margin: 16 },
+  emptyText: { fontSize: 14, color: thannigoPalette.neutral, fontWeight: '600' },
 });

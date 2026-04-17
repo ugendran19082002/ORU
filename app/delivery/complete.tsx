@@ -15,6 +15,10 @@ import { deliveryApi } from '@/api/deliveryApi';
 
 import { useDeliveryStore } from '@/stores/deliveryStore';
 import { useOrderStore } from '@/stores/orderStore';
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const DELIVERY_ACCENT = roleAccent.delivery;
+const DELIVERY_SURF = roleSurface.delivery;
 
 type FailReason = 'not_home' | 'wrong_address' | 'refused' | 'cant_carry' | 'other';
 
@@ -210,7 +214,7 @@ export default function DeliveryCompleteScreen() {
                 </View>
               ) : (
                 <TouchableOpacity style={styles.proofBtn} onPress={pickImage}>
-                  <Ionicons name="camera" size={24} color="#005d90" />
+                  <Ionicons name="camera" size={24} color={DELIVERY_ACCENT} />
                   <Text style={styles.proofBtnText}>Take Photo</Text>
                 </TouchableOpacity>
               )}
@@ -300,64 +304,64 @@ export default function DeliveryCompleteScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     paddingHorizontal: 20, paddingVertical: 14,
-    backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+    backgroundColor: thannigoPalette.surface, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
   },
-  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
+  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center', ...Shadow.xs },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
   content: { padding: 20, gap: 14, paddingBottom: 40 },
 
-  orderCard: { backgroundColor: 'white', borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  orderCard: { backgroundColor: thannigoPalette.surface, borderRadius: 18, padding: 16, ...Shadow.xs },
   orderRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
-  orderId: { fontSize: 12, fontWeight: '800', color: '#005d90' },
-  customerName: { fontSize: 16, fontWeight: '800', color: '#181c20' },
-  orderAddress: { fontSize: 12, color: '#707881', fontWeight: '500' },
+  orderId: { fontSize: 12, fontWeight: '800', color: DELIVERY_ACCENT },
+  customerName: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
+  orderAddress: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
 
-  modeRow: { flexDirection: 'row', backgroundColor: '#f1f4f9', borderRadius: 16, padding: 4 },
+  modeRow: { flexDirection: 'row', backgroundColor: thannigoPalette.background, borderRadius: 16, padding: 4 },
   modeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 12 },
   modeBtnSuccess: { backgroundColor: '#e8f5e9' },
   modeBtnFailed: { backgroundColor: '#ffebee' },
-  modeBtnText: { fontSize: 13, fontWeight: '700', color: '#707881' },
+  modeBtnText: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral },
 
-  successCard: { backgroundColor: 'white', borderRadius: 20, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
+  successCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, overflow: 'hidden', ...Shadow.sm },
   successGrad: { padding: 28, alignItems: 'center', gap: 10, overflow: 'hidden' },
   successDecor: { position: 'absolute', right: -20, top: -20 },
   successTitle: { fontSize: 22, fontWeight: '900', color: 'white' },
   successSub: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '600' },
   earningRow: { flexDirection: 'row', paddingVertical: 18, paddingHorizontal: 20 },
   earningItem: { flex: 1, alignItems: 'center' },
-  earningLabel: { fontSize: 11, color: '#707881', fontWeight: '600', marginBottom: 4 },
-  earningValue: { fontSize: 18, fontWeight: '900', color: '#181c20' },
-  earningDivider: { width: 1, backgroundColor: '#f1f4f9' },
+  earningLabel: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '600', marginBottom: 4 },
+  earningValue: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
+  earningDivider: { width: 1, backgroundColor: thannigoPalette.borderSoft },
 
-  proofBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#e0f0ff', padding: 18, borderRadius: 16, marginTop: 10, borderWidth: 2, borderColor: '#bae6fd', borderStyle: 'dashed' },
-  proofBtnText: { color: '#005d90', fontSize: 15, fontWeight: '800' },
+  proofBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: DELIVERY_SURF, padding: 18, borderRadius: 16, marginTop: 10, borderWidth: 2, borderColor: DELIVERY_ACCENT + '40', borderStyle: 'dashed' },
+  proofBtnText: { color: DELIVERY_ACCENT, fontSize: 15, fontWeight: '800' },
   proofImageWrapper: { marginTop: 10, borderRadius: 16, overflow: 'hidden', height: 160 },
   proofImage: { width: '100%', height: '100%' },
   retakeBtn: { position: 'absolute', bottom: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.6)', padding: 10, borderRadius: 12 },
 
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#181c20', letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },
 
-  reasonRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'white', borderRadius: 16, padding: 14, borderWidth: 1.5, borderColor: '#e0e2e8' },
+  reasonRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: thannigoPalette.surface, borderRadius: 16, padding: 14, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft },
   reasonRowActive: { borderColor: '#f87171', backgroundColor: '#fff5f5' },
-  reasonIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center' },
+  reasonIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
   reasonIconActive: { backgroundColor: '#ffebee' },
-  reasonText: { flex: 1, fontSize: 13, fontWeight: '700', color: '#181c20' },
+  reasonText: { flex: 1, fontSize: 13, fontWeight: '700', color: thannigoPalette.darkText },
   reasonTextActive: { color: '#c62828' },
-  radioOuter: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#e0e2e8', alignItems: 'center', justifyContent: 'center' },
+  radioOuter: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
   radioOuterActive: { borderColor: '#c62828' },
   radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#c62828' },
 
   otherInput: {
-    backgroundColor: 'white', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#e0e2e8',
-    fontSize: 14, color: '#181c20', minHeight: 80, textAlignVertical: 'top',
+    backgroundColor: thannigoPalette.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: thannigoPalette.borderSoft,
+    fontSize: 14, color: thannigoPalette.darkText, minHeight: 80, textAlignVertical: 'top',
   },
   rescheduleInput: {
-    backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, borderWidth: 1, borderColor: '#e0e2e8',
-    fontSize: 14, color: '#181c20',
+    backgroundColor: thannigoPalette.surface, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, borderWidth: 1, borderColor: thannigoPalette.borderSoft,
+    fontSize: 14, color: thannigoPalette.darkText,
   },
   failNoteCard: { flexDirection: 'row', gap: 10, backgroundColor: '#fef3c7', borderRadius: 14, padding: 14, alignItems: 'flex-start' },
   failNoteText: { flex: 1, fontSize: 12, color: '#b45309', lineHeight: 17, fontWeight: '600' },
@@ -366,8 +370,8 @@ const styles = StyleSheet.create({
   submitBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
   submitBtnText: { color: 'white', fontSize: 16, fontWeight: '800', letterSpacing: -0.3 },
 
-  dashboardBtn: { paddingVertical: 14, alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: '#e0e2e8', backgroundColor: 'white' },
-  dashboardBtnText: { fontSize: 14, fontWeight: '700', color: '#64748b' },
+  dashboardBtn: { paddingVertical: 14, alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: thannigoPalette.borderSoft, backgroundColor: thannigoPalette.surface },
+  dashboardBtnText: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
 });
 
 

@@ -12,6 +12,11 @@ import * as Location from 'expo-location';
 
 import { useDeliveryStore } from '@/stores/deliveryStore';
 import { apiClient } from '@/api/client';
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const DELIVERY_ACCENT = roleAccent.delivery;
+const DELIVERY_SURF = roleSurface.delivery;
+const DELIVERY_GRAD: [string, string] = [roleGradients.delivery.start, roleGradients.delivery.end];
 
 export default function DeliveryNavigationScreen() {
   const router = useRouter();
@@ -116,7 +121,7 @@ export default function DeliveryNavigationScreen() {
         <View style={styles.customerCard}>
           <View style={styles.customerTop}>
             <View style={styles.avatar}>
-              <Ionicons name="person" size={20} color="#005d90" />
+              <Ionicons name="person" size={20} color={DELIVERY_ACCENT} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.custName}>{task?.customerName ?? 'Customer'}</Text>
@@ -165,7 +170,7 @@ export default function DeliveryNavigationScreen() {
             }}
           >
             <LinearGradient
-              colors={['#005d90', '#0077b6']}
+              colors={DELIVERY_GRAD}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.arriveBtn}
@@ -183,27 +188,27 @@ export default function DeliveryNavigationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f1f4f9', position: 'relative' },
-  mapContainer: { ...StyleSheet.absoluteFillObject, backgroundColor: '#fdfdfd' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background, position: 'relative' },
+  mapContainer: { ...StyleSheet.absoluteFillObject, backgroundColor: thannigoPalette.surface },
   header: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 60, position: 'absolute', top: 0, left: 0, right: 0 },
-  iconBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 4 },
-  sheetContent: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'white', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40, shadowColor: '#000', shadowOffset: { width: 0, height: -6 }, shadowOpacity: 0.1, shadowRadius: 16, elevation: 10 },
-  sheetPill: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#e0e2e8', alignSelf: 'center', marginBottom: 20 },
+  iconBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: thannigoPalette.surface, alignItems: 'center', justifyContent: 'center', ...Shadow.md },
+  sheetContent: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: thannigoPalette.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40, ...Shadow.lg },
+  sheetPill: { width: 40, height: 4, borderRadius: 2, backgroundColor: thannigoPalette.borderSoft, alignSelf: 'center', marginBottom: 20 },
   tripHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
-  tripTime: { fontSize: 28, fontWeight: '900', color: '#2e7d32', letterSpacing: -0.5 },
-  tripDistance: { fontSize: 13, color: '#707881', fontWeight: '600', marginTop: 2 },
-  etaBadge: { backgroundColor: '#e8f5e9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  etaBadgeText: { color: '#2e7d32', fontWeight: '800', fontSize: 11 },
-  customerCard: { backgroundColor: '#f7f9ff', borderRadius: 20, padding: 16, marginBottom: 20 },
+  tripTime: { fontSize: 28, fontWeight: '900', color: DELIVERY_ACCENT, letterSpacing: -0.5 },
+  tripDistance: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
+  etaBadge: { backgroundColor: DELIVERY_SURF, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  etaBadgeText: { color: DELIVERY_ACCENT, fontWeight: '800', fontSize: 11 },
+  customerCard: { backgroundColor: thannigoPalette.background, borderRadius: 20, padding: 16, marginBottom: 20 },
   customerTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  avatar: { width: 40, height: 40, borderRadius: 14, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
-  custName: { fontSize: 16, fontWeight: '900', color: '#181c20' },
-  custOrder: { fontSize: 12, color: '#707881', fontWeight: '500' },
-  callBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#005d90', alignItems: 'center', justifyContent: 'center' },
-  addressRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderTopWidth: 1, borderTopColor: '#e0e2e8', paddingTop: 12 },
-  addressText: { flex: 1, fontSize: 13, color: '#181c20', lineHeight: 18, fontWeight: '500' },
+  avatar: { width: 40, height: 40, borderRadius: 14, backgroundColor: DELIVERY_SURF, alignItems: 'center', justifyContent: 'center' },
+  custName: { fontSize: 16, fontWeight: '900', color: thannigoPalette.darkText },
+  custOrder: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
+  callBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: DELIVERY_ACCENT, alignItems: 'center', justifyContent: 'center' },
+  addressRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft, paddingTop: 12 },
+  addressText: { flex: 1, fontSize: 13, color: thannigoPalette.darkText, lineHeight: 18, fontWeight: '500' },
   actionGrid: { flexDirection: 'row', gap: 12 },
   btnDanger: { width: 56, height: 56, borderRadius: 20, backgroundColor: '#ffdad6', alignItems: 'center', justifyContent: 'center' },
-  arriveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderRadius: 20, height: 56, shadowColor: '#005d90', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 },
+  arriveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderRadius: 20, height: 56, shadowColor: DELIVERY_ACCENT, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 },
   arriveBtnText: { color: 'white', fontWeight: '900', fontSize: 16 },
 });

@@ -7,6 +7,11 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import { deliveryApi, type DeliveryEarnings } from '@/api/deliveryApi';
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const DELIVERY_ACCENT = roleAccent.delivery;
+const DELIVERY_SURF = roleSurface.delivery;
+const DELIVERY_GRAD: [string, string] = [roleGradients.delivery.start, roleGradients.delivery.end];
 
 type Period = 'today' | 'week' | 'month';
 
@@ -55,7 +60,7 @@ export default function DeliveryEarningsScreen() {
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={20} color="#005d90" />
+          <Ionicons name="chevron-back" size={20} color={DELIVERY_ACCENT} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Earnings</Text>
         <View style={{ width: 40 }} />
@@ -77,7 +82,7 @@ export default function DeliveryEarningsScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 80 }} />
+        <ActivityIndicator size="large" color={DELIVERY_ACCENT} style={{ marginTop: 80 }} />
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -86,14 +91,14 @@ export default function DeliveryEarningsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => { setRefreshing(true); load(period); }}
-              colors={['#005d90']}
-              tintColor="#005d90"
+              colors={[DELIVERY_ACCENT]}
+              tintColor={DELIVERY_ACCENT}
             />
           }
         >
           {/* HERO CARD */}
           <LinearGradient
-            colors={['#2e7d32', '#1b5e20']}
+            colors={DELIVERY_GRAD}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.heroCard}
@@ -155,43 +160,43 @@ export default function DeliveryEarningsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white',
-    borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+    paddingHorizontal: 20, paddingVertical: 14, backgroundColor: thannigoPalette.surface,
+    borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
   },
-  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#181c20' },
+  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center', ...Shadow.xs },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
 
-  periodRow: { flexDirection: 'row', padding: 16, gap: 8, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  periodBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 12, backgroundColor: '#f1f5f9' },
-  periodBtnActive: { backgroundColor: '#1b5e20' },
-  periodText: { fontSize: 12, fontWeight: '700', color: '#64748b' },
+  periodRow: { flexDirection: 'row', padding: 16, gap: 8, backgroundColor: thannigoPalette.surface, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  periodBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 12, backgroundColor: thannigoPalette.background },
+  periodBtnActive: { backgroundColor: DELIVERY_ACCENT },
+  periodText: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
   periodTextActive: { color: 'white' },
 
   content: { padding: 20, paddingBottom: 100 },
-  heroCard: { borderRadius: 24, padding: 24, marginBottom: 20, shadowColor: '#2e7d32', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 8 },
+  heroCard: { borderRadius: 24, padding: 24, marginBottom: 20, ...Shadow.md },
   heroLabel: { fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '600', marginBottom: 4 },
   heroBalance: { fontSize: 36, fontWeight: '900', color: 'white', letterSpacing: -1, marginBottom: 20 },
   cashoutBtn: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'white', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
-  cashoutBtnText: { color: '#1b5e20', fontWeight: '800', fontSize: 14 },
+  cashoutBtnText: { color: DELIVERY_ACCENT, fontWeight: '800', fontSize: 14 },
 
-  statsRow: { flexDirection: 'row', backgroundColor: 'white', borderRadius: 20, padding: 20, marginBottom: 24, borderWidth: 1, borderColor: '#f1f5f9' },
+  statsRow: { flexDirection: 'row', backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 20, marginBottom: 24, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
   statBox: { flex: 1, alignItems: 'center' },
-  statValue: { fontSize: 24, fontWeight: '900', color: '#181c20', marginBottom: 4 },
-  statLabel: { fontSize: 12, color: '#707881', fontWeight: '700', marginBottom: 2 },
-  statSub: { fontSize: 11, color: '#94a3b8', fontWeight: '500', textTransform: 'capitalize' },
-  statDivider: { width: 1, backgroundColor: '#f1f5f9' },
+  statValue: { fontSize: 24, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 4 },
+  statLabel: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '700', marginBottom: 2 },
+  statSub: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500', textTransform: 'capitalize' },
+  statDivider: { width: 1, backgroundColor: thannigoPalette.borderSoft },
 
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#181c20', marginBottom: 12 },
-  emptyCard: { backgroundColor: 'white', borderRadius: 20, padding: 32, alignItems: 'center', gap: 10 },
-  emptyText: { fontSize: 14, color: '#94a3b8', fontWeight: '600' },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 12 },
+  emptyCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 32, alignItems: 'center', gap: 10 },
+  emptyText: { fontSize: 14, color: thannigoPalette.neutral, fontWeight: '600' },
 
-  tripCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'white', borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#f1f5f9' },
-  tripIconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#e8f5e9', alignItems: 'center', justifyContent: 'center' },
-  tripId: { fontSize: 15, fontWeight: '800', color: '#181c20', marginBottom: 2 },
-  tripTime: { fontSize: 12, color: '#707881', fontWeight: '500' },
-  tripAmount: { fontSize: 16, fontWeight: '900', color: '#1b5e20' },
+  tripCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: thannigoPalette.surface, borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  tripIconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: DELIVERY_SURF, alignItems: 'center', justifyContent: 'center' },
+  tripId: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
+  tripTime: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
+  tripAmount: { fontSize: 16, fontWeight: '900', color: DELIVERY_ACCENT },
   tripTip: { fontSize: 11, color: '#e65100', fontWeight: '700', marginTop: 2 },
 });

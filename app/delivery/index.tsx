@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Switch, Linking,
@@ -15,8 +15,12 @@ import { useAppSession } from '@/hooks/use-app-session';
 import { connectSocket, disconnectSocket, getSocket } from '@/utils/socket';
 import * as ImagePicker from 'expo-image-picker';
 import * as TaskManager from 'expo-task-manager';
-import { Modal, Image } from 'react-native';
- 
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const DELIVERY_ACCENT = roleAccent.delivery;
+const DELIVERY_SURF = roleSurface.delivery;
+const DELIVERY_GRAD: [string, string] = [roleGradients.delivery.start, roleGradients.delivery.end];
+
 const LOCATION_TASK_NAME = 'background-location-task';
  
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
@@ -44,11 +48,6 @@ export default function DeliveryDashboardScreen() {
   const { user, signOut } = useAppSession();
   const { tasks, online, toggleOnline, assignCurrentTask, updateTaskStatus, removeTask } = useDeliveryStore();
  
-  // POD State
-  const [podModalVisible, setPodModalVisible] = useState(false);
-  const [podTaskId, setPodTaskId] = useState<string | null>(null);
-  const [podImage, setPodImage] = useState<string | null>(null);
-  const [isCapturing, setIsCapturing] = useState(false);
 
   // ── Socket location push ─────────────────────────────────────────────────────
   // When the driver is online and has an active accepted task, broadcast GPS
@@ -155,7 +154,7 @@ export default function DeliveryDashboardScreen() {
 
       {/* HEADER — Gradient */}
       <LinearGradient
-        colors={online ? ['#005d90', '#0077b6'] : ['#475569', '#334155']}
+        colors={online ? DELIVERY_GRAD : ['#475569', '#334155'] as [string,string]}
         style={styles.header}
       >
         <View style={styles.headerContent}>
@@ -295,15 +294,15 @@ export default function DeliveryDashboardScreen() {
             {/* TRIP META */}
             <View style={styles.tripMeta}>
               <View style={styles.metaItem}>
-                <Ionicons name="speedometer-outline" size={13} color="#005d90" />
+                <Ionicons name="speedometer-outline" size={13} color={DELIVERY_ACCENT} />
                 <Text style={styles.metaText}>{trip.distance}</Text>
               </View>
               <View style={styles.metaItem}>
-                <Ionicons name="time-outline" size={13} color="#005d90" />
+                <Ionicons name="time-outline" size={13} color={DELIVERY_ACCENT} />
                 <Text style={styles.metaText}>ETA {trip.eta}</Text>
               </View>
               <View style={styles.metaItem}>
-                <Ionicons name="water-outline" size={13} color="#005d90" />
+                <Ionicons name="water-outline" size={13} color={DELIVERY_ACCENT} />
                 <Text style={styles.metaText}>{trip.cans} can{trip.cans > 1 ? 's' : ''}</Text>
               </View>
               <View style={styles.metaItem}>
@@ -347,7 +346,7 @@ export default function DeliveryDashboardScreen() {
                   }}
                 >
                   <LinearGradient
-                    colors={['#005d90', '#0077b6']}
+                    colors={DELIVERY_GRAD}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.startBtnGrad}
@@ -370,7 +369,7 @@ export default function DeliveryDashboardScreen() {
                   );
                 }}
               >
-                <Ionicons name="call-outline" size={18} color="#005d90" />
+                <Ionicons name="call-outline" size={18} color={DELIVERY_ACCENT} />
               </TouchableOpacity>
             </View>
           </View>
@@ -380,7 +379,7 @@ export default function DeliveryDashboardScreen() {
         {online && (
           <View style={styles.shiftCard}>
             <View style={styles.shiftRow}>
-              <Ionicons name="time-outline" size={20} color="#005d90" />
+              <Ionicons name="time-outline" size={20} color={DELIVERY_ACCENT} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.shiftTitle}>Shift Active</Text>
                 <Text style={styles.shiftSub}>Started at 9:00 AM · 4h 22m elapsed</Text>
@@ -397,7 +396,7 @@ export default function DeliveryDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
 
   header: { paddingTop: 8, paddingBottom: 24, paddingHorizontal: 24 },
   headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
@@ -420,42 +419,39 @@ const styles = StyleSheet.create({
   content: { padding: 20, gap: 16, paddingBottom: 120 },
 
   quickRow: { flexDirection: 'row', gap: 10 },
-  quickBtn: { flex: 1, backgroundColor: 'white', borderRadius: 18, padding: 14, alignItems: 'center', gap: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  quickBtn: { flex: 1, backgroundColor: thannigoPalette.surface, borderRadius: 18, padding: 14, alignItems: 'center', gap: 8, ...Shadow.xs },
   quickIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  quickLabel: { fontSize: 11, fontWeight: '700', color: '#181c20', textAlign: 'center' },
+  quickLabel: { fontSize: 11, fontWeight: '700', color: thannigoPalette.darkText, textAlign: 'center' },
 
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#181c20', letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },
 
-  offlineCard: { backgroundColor: 'white', borderRadius: 20, padding: 32, alignItems: 'center', gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
-  offlineTitle: { fontSize: 18, fontWeight: '800', color: '#181c20' },
-  offlineSub: { fontSize: 13, color: '#707881', textAlign: 'center', lineHeight: 18 },
+  offlineCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 32, alignItems: 'center', gap: 10, ...Shadow.xs },
+  offlineTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
+  offlineSub: { fontSize: 13, color: thannigoPalette.neutral, textAlign: 'center', lineHeight: 18 },
 
-  tripCard: {
-    backgroundColor: 'white', borderRadius: 20, padding: 18,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10, elevation: 3,
-  },
+  tripCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 18, ...Shadow.sm },
   tripTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  tripOrderId: { fontSize: 13, fontWeight: '800', color: '#005d90' },
-  priorityChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  tripOrderId: { fontSize: 13, fontWeight: '800', color: DELIVERY_ACCENT },
+  priorityChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: thannigoPalette.background, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   urgentChip: { backgroundColor: '#ffebee' },
-  priorityText: { fontSize: 11, fontWeight: '700', color: '#64748b' },
+  priorityText: { fontSize: 11, fontWeight: '700', color: thannigoPalette.neutral },
   urgentText: { color: '#c62828' },
-  tripCustomer: { fontSize: 17, fontWeight: '800', color: '#181c20', marginBottom: 5 },
+  tripCustomer: { fontSize: 17, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 5 },
   addressRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 14 },
-  tripAddress: { flex: 1, fontSize: 12, color: '#707881', fontWeight: '500' },
+  tripAddress: { flex: 1, fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
   tripMeta: { flexDirection: 'row', gap: 12, marginBottom: 14, flexWrap: 'wrap' },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { fontSize: 12, color: '#005d90', fontWeight: '700' },
+  metaText: { fontSize: 12, color: DELIVERY_ACCENT, fontWeight: '700' },
   tripActions: { flexDirection: 'row', gap: 10 },
   startBtn: { flex: 1, borderRadius: 14, overflow: 'hidden' },
   startBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 13 },
   startBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
-  callBtn: { width: 48, height: 48, borderRadius: 14, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
+  callBtn: { width: 48, height: 48, borderRadius: 14, backgroundColor: DELIVERY_SURF, alignItems: 'center', justifyContent: 'center' },
 
-  shiftCard: { backgroundColor: 'white', borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  shiftCard: { backgroundColor: thannigoPalette.surface, borderRadius: 18, padding: 16, ...Shadow.xs },
   shiftRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  shiftTitle: { fontSize: 14, fontWeight: '800', color: '#181c20', marginBottom: 2 },
-  shiftSub: { fontSize: 11, color: '#707881', fontWeight: '500' },
+  shiftTitle: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
+  shiftSub: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500' },
   endShiftBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: '#ffebee' },
   endShiftText: { color: '#c62828', fontWeight: '800', fontSize: 12 },
 });

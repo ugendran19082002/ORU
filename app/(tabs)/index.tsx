@@ -18,26 +18,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
-import { Logo } from '@/components/ui/Logo';
 import { useShopStore } from '@/stores/shopStore';
 import { useCartStore } from '@/stores/cartStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { addressApi } from '@/api/addressApi';
 import { apiClient } from '@/api/client';
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
 
-/* ---------- UTILS ---------- */
-// Haversine formula to calculate distance in km
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371; // Earth's radius in km
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a = 
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
+const CUSTOMER_ACCENT = roleAccent.customer;
+const CUSTOMER_SURF = roleSurface.customer;
+const CUSTOMER_GRAD: [string, string] = [roleGradients.customer.start, roleGradients.customer.end];
+
 
 const getShopImage = (hero: string) => {
   switch (hero) {
@@ -55,7 +46,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { setSelectedShop, loadShops, searchShops, fetchPersonalized, shops } = useShopStore();
   const { items: cartItems } = useCartStore();
-  const { orders, fetchOrders } = useOrderStore();
+  const { fetchOrders } = useOrderStore();
   const [search, setSearch] = useState('');
   
   const [loadingLoc, setLoadingLoc] = useState(true);
@@ -86,11 +77,11 @@ export default function HomeScreen() {
 
   const fetchLoyaltyBalance = async () => {
     try {
-      const res = await apiClient.get('/promotion/loyalty/ledger');
+      await apiClient.get('/promotion/loyalty/ledger');
       // Calculate total points from ledger or if balance is in user session use that
       // Assuming user metadata or ledger has balance. For simplicity, we can also fetch /users/me
       const profileRes = await apiClient.get('/users/me');
-      if (profileRes.data.status === 1) {
+      if (profileRes.data?.status === 1) {
         setLoyaltyPoints(profileRes.data.data.loyalty_points || 0);
       }
     } catch (e) {
@@ -115,7 +106,7 @@ export default function HomeScreen() {
     setIsAddressModalVisible(true);
   };
 
-  const confirmConnectionRequest = (addressId: string) => {
+  const confirmConnectionRequest = (_addressId: string) => {
     if (pendingShopId) {
       setRequestedShopIds(prev => [...prev, pendingShopId]);
       setIsAddressModalVisible(false);
@@ -210,9 +201,9 @@ export default function HomeScreen() {
 
   if (loadingLoc) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f7f9ff' }}>
-         <ActivityIndicator size="large" color="#005d90" />
-         <Text style={{ marginTop: 10, color: '#707881', fontWeight: '600' }}>Locating nearby shops...</Text>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: thannigoPalette.background }}>
+         <ActivityIndicator size="large" color={CUSTOMER_ACCENT} />
+         <Text style={{ marginTop: 10, color: thannigoPalette.neutral, fontWeight: '600' }}>Locating nearby shops...</Text>
       </View>
     );
   }
@@ -230,11 +221,10 @@ export default function HomeScreen() {
             onPress={() => router.push('/addresses' as any)}
             activeOpacity={0.7}
           >
-            <Ionicons name="location" size={12} color="#005d90" />
-            <Text style={styles.locationText} numberOfLines={1}>
-              {currentAddress}
-            </Text>
-            <Ionicons name="chevron-down" size={10} color="#005d90" />
+            <Ionicons name="location" size={12} color={CUSTOMER_ACCENT} />
+            <Text style={styles.locationLabel}>{currentAddressTitle}</Text>
+            <Text style={styles.locationText} numberOfLines={1}>· {currentAddress}</Text>
+            <Ionicons name="chevron-down" size={10} color={CUSTOMER_ACCENT} />
           </TouchableOpacity>
         </View>
         <View style={styles.headerRight}>
@@ -243,7 +233,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/rewards' as any)}
             activeOpacity={0.8}
           >
-            <Ionicons name="gift" size={14} color="#005d90" />
+            <Ionicons name="gift" size={14} color={CUSTOMER_ACCENT} />
             <Text style={styles.pointsText}>{loyaltyPoints}</Text>
           </TouchableOpacity>
 
@@ -252,7 +242,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/notifications' as any)}
             activeOpacity={0.8}
           >
-            <Ionicons name="notifications-outline" size={22} color="#005d90" />
+            <Ionicons name="notifications-outline" size={22} color={CUSTOMER_ACCENT} />
             <View style={styles.notifDot} />
           </TouchableOpacity>
 
@@ -261,7 +251,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/order/checkout' as any)}
             activeOpacity={0.8}
           >
-            <Ionicons name="cart-outline" size={22} color="#005d90" />
+            <Ionicons name="cart-outline" size={22} color={CUSTOMER_ACCENT} />
             {cartCount > 0 && (
               <View style={styles.cartBadge}>
                 <Text style={styles.cartBadgeText}>{cartCount}</Text>
@@ -274,13 +264,13 @@ export default function HomeScreen() {
       <ScrollView 
         showsVerticalScrollIndicator={false} 
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[CUSTOMER_ACCENT]} tintColor={CUSTOMER_ACCENT} />}
         keyboardShouldPersistTaps="handled"
       >
         
         {/* HERO BANNER (REORDER OR DISCOVERY) */}
         <LinearGradient
-          colors={['#005d90', '#0077b6']}
+          colors={CUSTOMER_GRAD}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroBanner}
@@ -307,7 +297,7 @@ export default function HomeScreen() {
                 }
               }}
             >
-              <Ionicons name={personalizedShop ? "refresh" : "search"} size={18} color="#005d90" />
+              <Ionicons name={personalizedShop ? "refresh" : "search"} size={18} color={CUSTOMER_ACCENT} />
               <Text style={styles.reorderBtnText}>{personalizedShop ? 'Reorder Now' : 'Find Shops'}</Text>
             </TouchableOpacity>
           </View>
@@ -341,12 +331,12 @@ export default function HomeScreen() {
         {/* FILTER CHIPS API */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, marginBottom: 20, paddingHorizontal: 2 }}>
            {['Rating 4.5+', '< 2km', 'Under Rs.50'].map(f => (
-             <TouchableOpacity 
-               key={f} 
-               style={{ backgroundColor: activeFilter === f ? '#005d90' : '#e0f0ff', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 }}
+             <TouchableOpacity
+               key={f}
+               style={{ backgroundColor: activeFilter === f ? CUSTOMER_ACCENT : CUSTOMER_SURF, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 }}
                onPress={() => setActiveFilter(activeFilter === f ? null : f)}
              >
-                <Text style={{ color: activeFilter === f ? 'white' : '#005d90', fontSize: 13, fontWeight: '700' }}>{f}</Text>
+                <Text style={{ color: activeFilter === f ? 'white' : CUSTOMER_ACCENT, fontSize: 13, fontWeight: '700' }}>{f}</Text>
              </TouchableOpacity>
            ))}
         </ScrollView>
@@ -359,10 +349,10 @@ export default function HomeScreen() {
           </View>
           <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
             <TouchableOpacity onPress={() => setIsMapView(!isMapView)}>
-              <Ionicons name={isMapView ? "list" : "map"} size={22} color="#005d90" />
+              <Ionicons name={isMapView ? "list" : "map"} size={22} color={CUSTOMER_ACCENT} />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push('/(tabs)/search' as any)}>
-              <Ionicons name="options" size={22} color="#005d90" />
+              <Ionicons name="options" size={22} color={CUSTOMER_ACCENT} />
             </TouchableOpacity>
           </View>
         </View>
@@ -435,7 +425,7 @@ export default function HomeScreen() {
                      <Ionicons name={favouriteIds.includes(shop.id) ? "heart" : "heart-outline"} size={20} color={favouriteIds.includes(shop.id) ? "#ef4444" : "white"} />
                    </TouchableOpacity>
                    <View style={styles.distBadge}>
-                     <Ionicons name="navigate" size={12} color="#005d90" />
+                     <Ionicons name="navigate" size={12} color={CUSTOMER_ACCENT} />
                      <Text style={styles.distText}>{shop.distanceKm.toFixed(1)} km</Text>
                    </View>
                  </View>
@@ -534,7 +524,7 @@ export default function HomeScreen() {
                   router.push('/addresses');
                 }}
               >
-                <Ionicons name="add-circle-outline" size={20} color="#005d90" />
+                <Ionicons name="add-circle-outline" size={20} color={CUSTOMER_ACCENT} />
                 <Text style={styles.addAddrText}>Add New Address</Text>
               </TouchableOpacity>
             </View>
@@ -546,39 +536,40 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
 
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 24, paddingVertical: 12, backgroundColor: 'rgba(255,255,255,0.92)',
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 20, fontWeight: '900', color: '#003a5c', letterSpacing: -0.8 },
+  brandName: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.8 },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  locationText: { fontSize: 12, color: '#64748b', fontWeight: '700', maxWidth: 180 },
+  locationLabel: { fontSize: 11, fontWeight: '700', color: CUSTOMER_ACCENT },
+  locationText: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '600', maxWidth: 160 },
   headerRight: { flexDirection: 'row', gap: 10, alignItems: 'center' },
   pointsChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: '#eff6ff', paddingHorizontal: 10, paddingVertical: 6,
-    borderRadius: 20, borderWidth: 1, borderColor: '#dbeafe'
+    backgroundColor: CUSTOMER_SURF, paddingHorizontal: 10, paddingVertical: 6,
+    borderRadius: 20, borderWidth: 1, borderColor: thannigoPalette.borderSoft,
   },
-  pointsText: { fontSize: 13, fontWeight: '800', color: '#005d90' },
+  pointsText: { fontSize: 13, fontWeight: '800', color: CUSTOMER_ACCENT },
   iconBtn: {
     width: 42, height: 42, borderRadius: 12,
-    backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center',
-    position: 'relative',
+    backgroundColor: thannigoPalette.surface, alignItems: 'center', justifyContent: 'center',
+    position: 'relative', ...Shadow.xs,
   },
   notifDot: {
     position: 'absolute', top: 10, right: 10,
     width: 8, height: 8, borderRadius: 4,
     backgroundColor: '#ef4444',
-    borderWidth: 1.5, borderColor: '#f1f4f9',
+    borderWidth: 1.5, borderColor: thannigoPalette.surface,
   },
   cartBadge: {
     position: 'absolute', top: -4, right: -4,
     width: 17, height: 17, borderRadius: 8.5,
     backgroundColor: '#ef4444', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: '#f7f9ff',
+    borderWidth: 2, borderColor: thannigoPalette.background,
   },
   cartBadgeText: { color: 'white', fontSize: 9, fontWeight: '900' },
 
@@ -590,52 +581,52 @@ const styles = StyleSheet.create({
   heroPillText: { color: 'white', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
   heroTitle: { color: 'white', fontSize: 28, fontWeight: '900', marginBottom: 8, letterSpacing: -0.5 },
   heroSubtitle: { color: 'rgba(255,255,255,0.85)', fontSize: 14, lineHeight: 20, marginBottom: 20, maxWidth: 240 },
-  reorderBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'white', alignSelf: 'flex-start', borderRadius: 14, paddingHorizontal: 20, paddingVertical: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 4 },
-  reorderBtnText: { color: '#005d90', fontWeight: '800', fontSize: 15 },
+  reorderBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'white', alignSelf: 'flex-start', borderRadius: 14, paddingHorizontal: 20, paddingVertical: 12, ...Shadow.md },
+  reorderBtnText: { color: CUSTOMER_ACCENT, fontWeight: '800', fontSize: 15 },
   heroDecor: { position: 'absolute', right: -40, bottom: -40, zIndex: 0 },
 
-  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 2, borderWidth: 1, borderColor: '#f1f4f9' },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.surface, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 24, ...Shadow.xs, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
   searchIcon: { marginRight: 10 },
-  searchInput: { flex: 1, fontSize: 15, color: '#181c20', fontWeight: '500' },
+  searchInput: { flex: 1, fontSize: 15, color: thannigoPalette.darkText, fontWeight: '500' },
 
   sectionHeader: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 16 },
-  sectionTitle: { fontSize: 22, fontWeight: '800', color: '#181c20', letterSpacing: -0.3, marginBottom: 4 },
-  sectionSubtitle: { fontSize: 13, color: '#707881' },
+  sectionTitle: { fontSize: 22, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3, marginBottom: 4 },
+  sectionSubtitle: { fontSize: 13, color: thannigoPalette.neutral },
 
-  shopCard: { backgroundColor: 'white', borderRadius: 24, marginBottom: 20, overflow: 'hidden', shadowColor: '#003a5c', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 16, elevation: 3 },
-  shopImageContainer: { height: 160, width: '100%', position: 'relative', backgroundColor: '#e2e8f0' },
+  shopCard: { backgroundColor: thannigoPalette.surface, borderRadius: 24, marginBottom: 20, overflow: 'hidden', ...Shadow.sm },
+  shopImageContainer: { height: 160, width: '100%', position: 'relative', backgroundColor: thannigoPalette.borderSoft },
   shopImage: { width: '100%', height: '100%' },
   favBtn: { position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.3)', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   distBadge: { position: 'absolute', bottom: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
-  distText: { color: '#005d90', fontWeight: '800', fontSize: 12 },
-  
+  distText: { color: CUSTOMER_ACCENT, fontWeight: '800', fontSize: 12 },
+
   shopInfo: { padding: 18 },
   shopInfoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  shopName: { fontSize: 18, fontWeight: '800', color: '#0c2d48', marginBottom: 4 },
+  shopName: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 4 },
   shopMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  shopRating: { fontSize: 13, fontWeight: '700', color: '#181c20' },
-  shopPrice: { fontSize: 22, fontWeight: '900', color: '#005d90' },
-  shopPriceLabel: { fontSize: 9, color: '#707881', fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginTop: 0 },
-  
-  orderBtn: { backgroundColor: '#f1f4f9', alignItems: 'center', borderRadius: 12, paddingVertical: 12, borderWidth: 1, borderColor: '#e0e2e8' },
-  orderBtnText: { color: '#005d90', fontWeight: '800', fontSize: 14 },
+  shopRating: { fontSize: 13, fontWeight: '700', color: thannigoPalette.darkText },
+  shopPrice: { fontSize: 22, fontWeight: '900', color: CUSTOMER_ACCENT },
+  shopPriceLabel: { fontSize: 9, color: thannigoPalette.neutral, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
 
-  emptyCard: { backgroundColor: 'white', borderRadius: 20, padding: 30, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
-  emptyText: { textAlign: 'center', color: '#707881', marginTop: 10, lineHeight: 20, fontWeight: '500' },
+  orderBtn: { backgroundColor: thannigoPalette.background, alignItems: 'center', borderRadius: 12, paddingVertical: 12, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  orderBtnText: { color: CUSTOMER_ACCENT, fontWeight: '800', fontSize: 14 },
+
+  emptyCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 30, alignItems: 'center', ...Shadow.xs },
+  emptyText: { textAlign: 'center', color: thannigoPalette.neutral, marginTop: 10, lineHeight: 20, fontWeight: '500' },
 
   // MODAL STYLES
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,58,92,0.4)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: 'white', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
+  modalContent: { backgroundColor: thannigoPalette.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: '#0f172a', marginBottom: 4 },
-  modalSubtitle: { fontSize: 13, color: '#64748b' },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 4 },
+  modalSubtitle: { fontSize: 13, color: thannigoPalette.neutral },
   addressList: { gap: 12 },
-  addressItem: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, backgroundColor: '#f8fafc', borderRadius: 16, borderWidth: 1, borderColor: '#f1f5f9' },
+  addressItem: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, backgroundColor: thannigoPalette.background, borderRadius: 16, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
   addrIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  addrTitle: { fontSize: 15, fontWeight: '700', color: '#1e293b', marginBottom: 2 },
-  addrText: { fontSize: 12, color: '#64748b' },
+  addrTitle: { fontSize: 15, fontWeight: '700', color: thannigoPalette.darkText, marginBottom: 2 },
+  addrText: { fontSize: 12, color: thannigoPalette.neutral },
   addAddrBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, marginTop: 8 },
-  addAddrText: { fontSize: 14, fontWeight: '700', color: '#005d90' },
+  addAddrText: { fontSize: 14, fontWeight: '700', color: CUSTOMER_ACCENT },
 });
 
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, RefreshControl,
-  TouchableOpacity, Switch, StyleSheet, TextInput,
+  TouchableOpacity, Switch, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -15,6 +15,10 @@ import { PinEntryModal } from '@/components/security/PinEntryModal';
 import { shopApi } from '@/api/shopApi';
 import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
 
 type NavItem = {
   label: string;
@@ -102,11 +106,11 @@ export default function ShopSettingsScreen() {
   } = useSecurityStore();
   
   const [refreshing, setRefreshing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [deliveryActive, setDeliveryActive] = useState(false);
-  const [shopName, setShopName] = useState('');
-  const [shopAddress, setShopAddress] = useState('');
+  const [, setShopName] = useState('');
+  const [, setShopAddress] = useState('');
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinMode, setPinMode] = useState<'set' | 'verify'>('set');
 
@@ -213,13 +217,13 @@ export default function ShopSettingsScreen() {
           style={styles.notifBtn}
           onPress={() => router.push('/notifications' as any)}
         >
-          <Ionicons name="notifications-outline" size={22} color="#005d90" />
+          <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
           <View style={styles.notifDot} />
         </TouchableOpacity>
       </View>
 
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[SHOP_ACCENT]} tintColor={SHOP_ACCENT} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
       >
@@ -397,90 +401,64 @@ export default function ShopSettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 24, paddingVertical: 14, backgroundColor: 'rgba(255,255,255,0.92)',
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
-  roleLabel: { fontSize: 9, fontWeight: '700', color: '#006878', letterSpacing: 1.5, marginTop: 3 },
-  notifBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
+  notifBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: thannigoPalette.surface, alignItems: 'center', justifyContent: 'center', position: 'relative', ...Shadow.xs },
   notifDot: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, backgroundColor: '#ba1a1a', borderRadius: 4 },
-  pageTitle: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, marginTop: 10, marginBottom: 20 },
+  pageTitle: { fontSize: 32, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5, marginTop: 10, marginBottom: 20 },
 
-
-
-  // STATUS CARD
-  statusCard: {
-    backgroundColor: 'white', borderRadius: 20, padding: 18, marginBottom: 22,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
-  },
+  statusCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 18, marginBottom: 22, ...Shadow.xs },
   statusRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
-  statusTitle: { fontSize: 15, fontWeight: '800', color: '#181c20', marginBottom: 2 },
-  statusSub: { fontSize: 12, color: '#707881' },
-  statusDivider: { height: 1, backgroundColor: '#f1f4f9', marginVertical: 14 },
+  statusTitle: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
+  statusSub: { fontSize: 12, color: thannigoPalette.neutral },
+  statusDivider: { height: 1, backgroundColor: thannigoPalette.borderSoft, marginVertical: 14 },
 
-  sectionHeader: { fontSize: 12, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12, marginLeft: 4 },
+  sectionHeader: { fontSize: 12, fontWeight: '800', color: thannigoPalette.neutral, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12, marginLeft: 4 },
 
-  menuCard: {
-    backgroundColor: 'white', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 4, marginBottom: 20,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
-  },
+  menuCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 4, marginBottom: 20, ...Shadow.xs },
   gridContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 },
-  gridCard: {
-    flex: 1, minWidth: '45%', backgroundColor: 'white', borderRadius: 20, padding: 16,
-    alignItems: 'center', gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
-  },
+  gridCard: { flex: 1, minWidth: '45%', backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 16, alignItems: 'center', gap: 10, ...Shadow.xs },
   gridIcon: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  gridLabel: { fontSize: 13, fontWeight: '800', color: '#181c20' },
+  gridLabel: { fontSize: 13, fontWeight: '800', color: thannigoPalette.darkText },
   menuRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
   menuIcon: { width: 38, height: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  menuLabel: { flex: 1, fontSize: 14, fontWeight: '700', color: '#181c20' },
-  menuDivider: { height: 1, backgroundColor: '#f8fafc', marginLeft: 50 },
-  badge: { backgroundColor: '#bfdbf7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, marginRight: 4 },
-  badgeText: { fontSize: 9, fontWeight: '800', color: '#005d90', letterSpacing: 0.5 },
+  menuLabel: { flex: 1, fontSize: 14, fontWeight: '700', color: thannigoPalette.darkText },
+  menuDivider: { height: 1, backgroundColor: thannigoPalette.borderSoft, marginLeft: 50 },
+  badge: { backgroundColor: SHOP_SURF, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, marginRight: 4 },
+  badgeText: { fontSize: 9, fontWeight: '800', color: SHOP_ACCENT, letterSpacing: 0.5 },
 
   profileCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: 'white', borderRadius: 20, padding: 16, marginBottom: 22,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
-    borderWidth: 1.5, borderColor: '#e0f7fa',
+    backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 16, marginBottom: 22,
+    ...Shadow.xs, borderWidth: 1.5, borderColor: SHOP_SURF,
   },
-  profileIconWrap: { width: 52, height: 52, borderRadius: 16, backgroundColor: '#e0f7fa', alignItems: 'center', justifyContent: 'center' },
-  shopName: { fontSize: 15, fontWeight: '800', color: '#181c20', marginBottom: 2 },
-  shopAddress: { fontSize: 12, color: '#707881', lineHeight: 16 },
-  editBtn: { width: 34, height: 34, borderRadius: 10, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center' },
+  profileIconWrap: { width: 52, height: 52, borderRadius: 16, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
+  shopName: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
+  shopAddress: { fontSize: 12, color: thannigoPalette.neutral, lineHeight: 16 },
+  editBtn: { width: 34, height: 34, borderRadius: 10, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
 
   inputGroup: { paddingVertical: 4 },
-  inputLabel: { fontSize: 13, fontWeight: '700', color: '#475569', marginBottom: 8 },
+  inputLabel: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral, marginBottom: 8 },
   settingInput: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#e2e8f0',
-    paddingHorizontal: 16,
-    height: 48,
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1e293b',
+    backgroundColor: thannigoPalette.background,
+    borderRadius: 12, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft,
+    paddingHorizontal: 16, height: 48, fontSize: 15, fontWeight: '700', color: thannigoPalette.darkText,
   },
-  saveBtn: {
-    backgroundColor: '#005d90',
-    borderRadius: 14,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
+  saveBtn: { backgroundColor: SHOP_ACCENT, borderRadius: 14, height: 52, alignItems: 'center', justifyContent: 'center', marginTop: 20 },
   saveBtnText: { color: 'white', fontWeight: '800', fontSize: 16 },
 
   signOutBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: 'white', borderWidth: 2, borderColor: '#ffdad6',
+    backgroundColor: thannigoPalette.surface, borderWidth: 2, borderColor: '#ffdad6',
     borderRadius: 18, paddingVertical: 16, marginBottom: 12,
   },
   signOutText: { color: '#ba1a1a', fontWeight: '800', fontSize: 15 },
-  version: { fontSize: 11, color: '#94a3b8', textAlign: 'center', fontWeight: '500' },
+  version: { fontSize: 11, color: thannigoPalette.neutral, textAlign: 'center', fontWeight: '500' },
 });
 

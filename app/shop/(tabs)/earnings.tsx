@@ -16,6 +16,11 @@ import { useAppNavigation } from '@/hooks/use-app-navigation';
 
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { payoutApi, ShopWallet, PayoutLog } from '@/api/payoutApi';
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
+const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
 
 
 export default function ShopEarningsScreen() {
@@ -191,27 +196,27 @@ export default function ShopEarningsScreen() {
             <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
         </View>
-        <TouchableOpacity 
-          style={styles.settingsBtn} 
+        <TouchableOpacity
+          style={styles.settingsBtn}
           onPress={() => setSettingsModalOpen(true)}
         >
-          <Ionicons name="cog-outline" size={24} color="#006878" />
+          <Ionicons name="cog-outline" size={24} color={SHOP_ACCENT} />
         </TouchableOpacity>
       </View>
 
-      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
+      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[SHOP_ACCENT]} tintColor={SHOP_ACCENT} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
       >
         <Text style={styles.pageTitle}>Earnings</Text>
 
         {loading ? (
-          <ActivityIndicator size="large" color="#006878" style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" color={SHOP_ACCENT} style={{ marginTop: 40 }} />
         ) : (
           <>
             {/* SHOP SALES CARD */}
             <LinearGradient
-              colors={['#006878', '#004e5b']}
+              colors={SHOP_GRAD}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.salesCard}
@@ -224,7 +229,7 @@ export default function ShopEarningsScreen() {
                   <Text style={styles.salesBalance}>Rs. {activeRevenue.toFixed(2)}</Text>
                 </View>
                 <View style={styles.salesIconWrap}>
-                  <Ionicons name="trending-up-outline" size={24} color="#006878" />
+                  <Ionicons name="trending-up-outline" size={24} color={SHOP_ACCENT} />
                 </View>
               </View>
 
@@ -272,15 +277,15 @@ export default function ShopEarningsScreen() {
             <Text style={styles.sectionHeader}>Today&apos;s Overview</Text>
             <View style={styles.statsGrid}>
               <View style={styles.statBox}>
-                <View style={[styles.statIconWrap, { backgroundColor: '#e0f0ff' }]}>
-                  <Ionicons name="receipt-outline" size={20} color="#005d90" />
+                <View style={[styles.statIconWrap, { backgroundColor: SHOP_SURF }]}>
+                  <Ionicons name="receipt-outline" size={20} color={SHOP_ACCENT} />
                 </View>
                 <Text style={styles.statVal}>{orders.length}</Text>
                 <Text style={styles.statLabel}>Orders</Text>
               </View>
               <View style={styles.statBox}>
-                <View style={[styles.statIconWrap, { backgroundColor: '#e0f7fa' }]}>
-                  <Ionicons name="trending-up-outline" size={20} color="#006878" />
+                <View style={[styles.statIconWrap, { backgroundColor: SHOP_SURF }]}>
+                  <Ionicons name="trending-up-outline" size={20} color={SHOP_ACCENT} />
                 </View>
                 <Text style={styles.statVal}>Rs. {deliveredRevenue}</Text>
                 <Text style={styles.statLabel}>Revenue</Text>
@@ -415,19 +420,20 @@ export default function ShopEarningsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 24, paddingVertical: 14, backgroundColor: 'rgba(255,255,255,0.92)',
+    paddingHorizontal: 24, paddingVertical: 14, backgroundColor: thannigoPalette.surface,
+    borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
-  roleLabel: { fontSize: 9, fontWeight: '700', color: '#006878', letterSpacing: 1.5, marginTop: 3 },
-  pageTitle: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, marginTop: 10, marginBottom: 20 },
+  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
+  pageTitle: { fontSize: 32, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5, marginTop: 10, marginBottom: 20 },
 
   salesCard: {
     padding: 24, borderRadius: 24, overflow: 'hidden', position: 'relative',
-    shadowColor: '#006878', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 20, elevation: 8,
+    shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 20, elevation: 8,
     marginBottom: 16,
   },
   salesDecor: { position: 'absolute', bottom: -20, right: -20 },
@@ -445,46 +451,46 @@ const styles = StyleSheet.create({
   pendingAmount: { fontSize: 20, fontWeight: '900', color: '#ffdad6' },
   pendingSub: { fontSize: 10, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
   settleBtn: { backgroundColor: 'white', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
-  settleBtnText: { color: '#006878', fontWeight: '800', fontSize: 12 },
+  settleBtnText: { color: SHOP_ACCENT, fontWeight: '800', fontSize: 12 },
 
   withdrawBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: 'white', borderRadius: 16, paddingVertical: 16,
-    borderWidth: 2, borderColor: '#e0f7fa', marginBottom: 28,
+    backgroundColor: thannigoPalette.surface, borderRadius: 16, paddingVertical: 16,
+    borderWidth: 2, borderColor: SHOP_SURF, marginBottom: 28,
   },
-  withdrawText: { color: '#006878', fontWeight: '800', fontSize: 15 },
+  withdrawText: { color: SHOP_ACCENT, fontWeight: '800', fontSize: 15 },
 
-  sectionHeader: { fontSize: 15, fontWeight: '800', color: '#181c20', letterSpacing: -0.3, marginBottom: 14 },
+  sectionHeader: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3, marginBottom: 14 },
 
   statsGrid: { flexDirection: 'row', gap: 12, marginBottom: 30 },
-  statBox: { flex: 1, backgroundColor: 'white', borderRadius: 18, padding: 16,shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2, alignItems: 'center' },
+  statBox: { flex: 1, backgroundColor: thannigoPalette.surface, borderRadius: 18, padding: 16, ...Shadow.xs, alignItems: 'center' },
   statIconWrap: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  statVal: { fontSize: 20, fontWeight: '900', color: '#181c20', marginBottom: 2 },
-  statLabel: { fontSize: 11, color: '#707881', fontWeight: '500', textAlign: 'center' },
+  statVal: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 2 },
+  statLabel: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500', textAlign: 'center' },
 
-  trxList: { backgroundColor: 'white', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
-  trxItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f1f4f9' },
+  trxList: { backgroundColor: thannigoPalette.surface, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, ...Shadow.xs },
+  trxItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
   trxIconWrap: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  trxTitle: { fontSize: 14, fontWeight: '700', color: '#181c20', marginBottom: 2 },
-  trxTime: { fontSize: 11, color: '#707881', fontWeight: '500' },
+  trxTitle: { fontSize: 14, fontWeight: '700', color: thannigoPalette.darkText, marginBottom: 2 },
+  trxTime: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500' },
   trxAmtPos: { fontSize: 15, fontWeight: '800', color: '#2e7d32' },
   trxAmtNeg: { fontSize: 15, fontWeight: '800', color: '#c62828' },
   trxAmtCommission: { fontSize: 15, fontWeight: '800', color: '#e65100' },
-  trxSub: { fontSize: 11, color: '#707881', fontWeight: '500', marginTop: 1 },
+  trxSub: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 1 },
 
-  settingsBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
+  settingsBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center', ...Shadow.xs },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: 'white', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, maxHeight: '85%' },
+  modalContent: { backgroundColor: thannigoPalette.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, maxHeight: '85%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  modalTitle: { fontSize: 24, fontWeight: '900', color: '#1e293b' },
-  inputLabel: { fontSize: 13, fontWeight: '700', color: '#64748b', marginBottom: 12 },
+  modalTitle: { fontSize: 24, fontWeight: '900', color: thannigoPalette.darkText },
+  inputLabel: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral, marginBottom: 12 },
   modeToggle: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  modeBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: '#e2e8f0' },
-  modeBtnActive: { backgroundColor: '#006878', borderColor: '#006878' },
-  modeText: { fontSize: 14, fontWeight: '700', color: '#64748b' },
+  modeBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  modeBtnActive: { backgroundColor: SHOP_ACCENT, borderColor: SHOP_ACCENT },
+  modeText: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
   modeTextActive: { color: 'white' },
-  fieldLabel: { fontSize: 13, fontWeight: '700', color: '#1e293b', marginBottom: 8, marginTop: 12 },
-  input: { backgroundColor: '#f8fafc', borderRadius: 12, padding: 14, fontSize: 15, color: '#1e293b', borderWidth: 1, borderColor: '#e2e8f0' },
-  saveBtn: { backgroundColor: '#006878', borderRadius: 16, paddingVertical: 18, alignItems: 'center', marginTop: 32, marginBottom: 20 },
+  fieldLabel: { fontSize: 13, fontWeight: '700', color: thannigoPalette.darkText, marginBottom: 8, marginTop: 12 },
+  input: { backgroundColor: thannigoPalette.background, borderRadius: 12, padding: 14, fontSize: 15, color: thannigoPalette.darkText, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  saveBtn: { backgroundColor: SHOP_ACCENT, borderRadius: 16, paddingVertical: 18, alignItems: 'center', marginTop: 32, marginBottom: 20 },
   saveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
 });

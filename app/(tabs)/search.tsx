@@ -16,6 +16,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { apiClient } from "@/api/client";
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from "@/constants/theme";
+
+const CUSTOMER_ACCENT = roleAccent.customer;
+const CUSTOMER_SURF = roleSurface.customer;
+const CUSTOMER_GRAD: [string, string] = [roleGradients.customer.start, roleGradients.customer.end];
 
 interface ApiShop {
   id: number;
@@ -126,7 +131,7 @@ export default function SearchScreen() {
           style={styles.iconBtn}
           onPress={() => router.push("/notifications" as any)}
         >
-          <Ionicons name="notifications-outline" size={22} color="#005d90" />
+          <Ionicons name="notifications-outline" size={22} color={CUSTOMER_ACCENT} />
         </TouchableOpacity>
       </View>
 
@@ -146,7 +151,7 @@ export default function SearchScreen() {
             placeholderTextColor="#94a3b8"
             returnKeyType="search"
           />
-          {searching && <ActivityIndicator size="small" color="#005d90" style={{ marginRight: 8 }} />}
+          {searching && <ActivityIndicator size="small" color={CUSTOMER_ACCENT} style={{ marginRight: 8 }} />}
           {query.length > 0 && !searching && (
             <TouchableOpacity onPress={() => { setQuery(''); setApiResults(null); }}>
               <Ionicons name="close-circle" size={18} color="#94a3b8" />
@@ -179,7 +184,7 @@ export default function SearchScreen() {
               <ExpoMap
                 style={{ width: "100%", height: 300 }}
                 initialRegion={{ latitude: 12.9716, longitude: 80.221, latitudeDelta: 0.1, longitudeDelta: 0.1 }}
-                markers={filtered.map((s) => ({ latitude: s.lat, longitude: s.lng, title: s.name, color: "#005d90" }))}
+                markers={filtered.map((s) => ({ latitude: s.lat, longitude: s.lng, title: s.name, color: CUSTOMER_ACCENT }))}
                 hideControls={true}
               />
               <TouchableOpacity style={styles.mapOverlayBtn} onPress={() => router.push("/search-map" as any)}>
@@ -189,14 +194,14 @@ export default function SearchScreen() {
             </View>
             <TouchableOpacity style={styles.openFullBtn} onPress={() => router.push("/search-map" as any)}>
               <Text style={styles.openFullBtnText}>Browse in Full Screen Map</Text>
-              <Ionicons name="arrow-forward" size={18} color="#005d90" />
+              <Ionicons name="arrow-forward" size={18} color={CUSTOMER_ACCENT} />
             </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.listWrap}>
             {searching && apiResults === null ? (
               <View style={styles.emptyState}>
-                <ActivityIndicator size="large" color="#005d90" />
+                <ActivityIndicator size="large" color={CUSTOMER_ACCENT} />
                 <Text style={styles.emptySubtitle}>Searching shops...</Text>
               </View>
             ) : filtered.length === 0 ? (
@@ -251,7 +256,7 @@ export default function SearchScreen() {
         )}
 
         <TouchableOpacity activeOpacity={0.9} style={styles.heroWrapper}>
-          <LinearGradient colors={["#005d90", "#0077b6"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
+          <LinearGradient colors={CUSTOMER_GRAD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
             <View style={styles.heroLeft}>
               <Text style={styles.heroTitle}>Search smart</Text>
               <Text style={styles.heroCopy}>Use filters for open shops, ratings, & price to find the best water near you.</Text>
@@ -283,49 +288,49 @@ function ToggleButton({ label, active, onPress }: { label: string; active: boole
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f7f9ff" },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 24, paddingVertical: 14, backgroundColor: "white", borderBottomWidth: 1, borderBottomColor: "#f1f4f9" },
-  headerTitle: { fontSize: 24, fontWeight: "900", color: "#181c20", letterSpacing: -1 },
-  iconBtn: { width: 42, height: 42, borderRadius: 14, backgroundColor: "#f1f4f9", alignItems: "center", justifyContent: "center" },
-  heroWrapper: { marginTop: 8, marginBottom: 24, borderRadius: 22, overflow: "hidden", shadowColor: "#005d90", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 16, elevation: 6 },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 24, paddingVertical: 14, backgroundColor: thannigoPalette.surface, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  headerTitle: { fontSize: 24, fontWeight: "900", color: thannigoPalette.darkText, letterSpacing: -1 },
+  iconBtn: { width: 42, height: 42, borderRadius: 14, backgroundColor: thannigoPalette.background, alignItems: "center", justifyContent: "center", ...Shadow.xs },
+  heroWrapper: { marginTop: 8, marginBottom: 24, borderRadius: 22, overflow: "hidden", shadowColor: CUSTOMER_ACCENT, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 16, elevation: 6 },
   hero: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 24, gap: 16 },
   heroLeft: { flex: 1, gap: 4 },
   heroTitle: { fontSize: 20, fontWeight: "900", color: "white", letterSpacing: -0.5 },
   heroCopy: { color: "rgba(255,255,255,0.85)", lineHeight: 18, fontSize: 12, fontWeight: "600" },
   heroCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  searchBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 20, paddingHorizontal: 16, height: 56, gap: 12, borderWidth: 1.5, borderColor: "#e0e2e8", marginTop: 20, marginBottom: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.03, shadowRadius: 15, elevation: 4 },
-  input: { flex: 1, fontSize: 15, fontWeight: "600", color: "#181c20" },
+  searchBox: { flexDirection: "row", alignItems: "center", backgroundColor: thannigoPalette.surface, borderRadius: 20, paddingHorizontal: 16, height: 56, gap: 12, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, marginTop: 20, marginBottom: 20, ...Shadow.xs },
+  input: { flex: 1, fontSize: 15, fontWeight: "600", color: thannigoPalette.darkText },
   filterScroll: { marginHorizontal: -24, marginBottom: 24 },
   filterContent: { paddingHorizontal: 24, gap: 10 },
-  chip: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 14, borderWidth: 1.5, borderColor: "#e0e2e8", backgroundColor: "#fff" },
-  chipActive: { backgroundColor: "#005d90", borderColor: "#005d90" },
-  chipText: { color: "#707881", fontWeight: "700", fontSize: 13 },
+  chip: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 14, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, backgroundColor: thannigoPalette.surface },
+  chipActive: { backgroundColor: CUSTOMER_ACCENT, borderColor: CUSTOMER_ACCENT },
+  chipText: { color: thannigoPalette.neutral, fontWeight: "700", fontSize: 13 },
   chipTextActive: { color: "#fff" },
-  modeRow: { flexDirection: "row", backgroundColor: "#ebeef4", borderRadius: 18, padding: 4, marginBottom: 24 },
+  modeRow: { flexDirection: "row", backgroundColor: thannigoPalette.background, borderRadius: 18, padding: 4, marginBottom: 24 },
   toggle: { flex: 1, paddingVertical: 12, alignItems: "center", borderRadius: 14 },
-  toggleActive: { backgroundColor: "#fff", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3 },
-  toggleText: { fontWeight: "700", color: "#707881", fontSize: 14 },
-  toggleTextActive: { color: "#005d90", fontWeight: "900" },
-  mapStub: { backgroundColor: "#fff", borderRadius: 24, overflow: "hidden", borderWidth: 1, borderColor: "#f1f4f9", shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 4 },
-  mapOverlayBtn: { position: "absolute", bottom: 16, right: 16, backgroundColor: "rgba(0, 93, 144, 0.95)", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 5 },
+  toggleActive: { backgroundColor: thannigoPalette.surface, ...Shadow.xs },
+  toggleText: { fontWeight: "700", color: thannigoPalette.neutral, fontSize: 14 },
+  toggleTextActive: { color: CUSTOMER_ACCENT, fontWeight: "900" },
+  mapStub: { backgroundColor: thannigoPalette.surface, borderRadius: 24, overflow: "hidden", borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.sm },
+  mapOverlayBtn: { position: "absolute", bottom: 16, right: 16, backgroundColor: CUSTOMER_ACCENT, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 8, ...Shadow.sm },
   mapOverlayBtnText: { color: "white", fontWeight: "800", fontSize: 13 },
-  openFullBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, paddingVertical: 18, backgroundColor: "white", borderRadius: 18, marginTop: 8, borderWidth: 1, borderColor: "#f1f4f9" },
-  openFullBtnText: { color: "#005d90", fontWeight: "900", fontSize: 15 },
+  openFullBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, paddingVertical: 18, backgroundColor: thannigoPalette.surface, borderRadius: 18, marginTop: 8, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  openFullBtnText: { color: CUSTOMER_ACCENT, fontWeight: "900", fontSize: 15 },
   listWrap: { gap: 16 },
-  card: { backgroundColor: "#fff", borderRadius: 24, padding: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.04, shadowRadius: 16, elevation: 3, borderWidth: 1, borderColor: "#f1f4f9" },
+  card: { backgroundColor: thannigoPalette.surface, borderRadius: 24, padding: 20, ...Shadow.sm, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
   cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 16 },
-  shopName: { fontSize: 18, fontWeight: "900", color: "#181c20", marginBottom: 4, letterSpacing: -0.3 },
+  shopName: { fontSize: 18, fontWeight: "900", color: thannigoPalette.darkText, marginBottom: 4, letterSpacing: -0.3 },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  ratingText: { fontSize: 12, fontWeight: "900", color: "#181c20" },
+  ratingText: { fontSize: 12, fontWeight: "900", color: thannigoPalette.darkText },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
   badgeText: { fontSize: 10, fontWeight: "900", letterSpacing: 0.8 },
-  metaRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: "#f1f4f9" },
+  metaRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
   metaItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-  metaText: { color: "#707881", fontSize: 13, fontWeight: "700" },
+  metaText: { color: thannigoPalette.neutral, fontSize: 13, fontWeight: "700" },
   priceRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  priceLabel: { fontSize: 13, color: "#94a3b8", fontWeight: "600" },
-  priceText: { fontSize: 20, fontWeight: "900", color: "#005d90", letterSpacing: -0.5 },
+  priceLabel: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: "600" },
+  priceText: { fontSize: 20, fontWeight: "900", color: CUSTOMER_ACCENT, letterSpacing: -0.5 },
   emptyState: { alignItems: "center", justifyContent: "center", paddingVertical: 60, gap: 12 },
-  emptyTitle: { fontSize: 19, fontWeight: "900", color: "#181c20", letterSpacing: -0.5 },
-  emptySubtitle: { fontSize: 14, color: "#707881", textAlign: "center", maxWidth: "80%" },
+  emptyTitle: { fontSize: 19, fontWeight: "900", color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  emptySubtitle: { fontSize: 14, color: thannigoPalette.neutral, textAlign: "center", maxWidth: "80%" },
 });
