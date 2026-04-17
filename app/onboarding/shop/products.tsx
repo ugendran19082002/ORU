@@ -82,7 +82,7 @@ export default function ShopProductsScreen() {
     setProducts(prev => prev.filter(p => p.subcategory_id !== subcatId));
   };
 
-  const updateProductData = (subcatId: number, field: string, val: string) => {
+  const updateProductData = (subcatId: number, field: string, val: any) => {
     setProducts(prev => prev.map(p => 
       p.subcategory_id === subcatId ? { ...p, [field]: val } : p
     ));

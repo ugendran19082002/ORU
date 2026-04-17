@@ -716,6 +716,8 @@ const styles = StyleSheet.create({
   disabledBadgeText: { color: 'white', fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
   promoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 },
   sliderUnitDisplay: { fontSize: 13, fontWeight: '600', color: '#94a3b8', marginLeft: 8 },
+  hintText: { fontSize: 13, color: '#64748b', marginTop: 4 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
 });
 
 
