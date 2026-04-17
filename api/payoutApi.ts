@@ -16,6 +16,7 @@ export type ShopWallet = {
   razorpay_fund_account_id: string | null;
   last_payout_at: string | null;
   upi_id?: string | null;
+  upi_id_verified?: boolean;
   bank_account_no?: string | null;
   bank_ifsc?: string | null;
   account_holder_name?: string | null;

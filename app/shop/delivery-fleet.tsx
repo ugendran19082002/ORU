@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Switch, ActivityIndicator } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -18,14 +18,14 @@ const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_SURF = roleSurface.shop_owner;
 const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
 
-export default function ShopDeliveryFleetScreen() {
+export default function DeliveryFleetScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
-  const { agents: deliveryAgents, addAgent: addDeliveryAgent, removeAgent: removeDeliveryAgent, fetchAgents } = useFleetStore();
+  const { agents: deliveryAgents, addAgent: addDeliveryAgent, setAgentStatus, fetchAgents } = useFleetStore();
 
   useEffect(() => {
     fetchAgents();
-  }, []);
+  }, [fetchAgents]);
 
   useAndroidBackHandler(() => {
     safeBack('/shop/delivery');
@@ -65,26 +65,18 @@ export default function ShopDeliveryFleetScreen() {
     }
   };
 
-  const handleRemoveAgent = (id: string, name: string) => {
-    require('react-native').Alert.alert(
-      'Remove Driver',
-      `Are you sure you want to remove ${name} from your delivery fleet?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Remove', 
-          style: 'destructive', 
-          onPress: async () => {
-            try {
-              await removeDeliveryAgent(id);
-              Toast.show({ type: 'success', text1: 'Removed', text2: `${name} is no longer in fleet` });
-            } catch (err) {
-              Toast.show({ type: 'error', text1: 'Error', text2: 'Could not remove driver' });
-            }
-          } 
-        },
-      ]
-    );
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'offline' : 'active';
+    try {
+      await setAgentStatus(id, newStatus as any);
+      Toast.show({ 
+        type: 'success', 
+        text1: newStatus === 'active' ? 'Driver Enabled' : 'Driver Disabled', 
+        text2: `Fleet permissions updated.` 
+      });
+    } catch (err) {
+      Toast.show({ type: 'error', text1: 'Update Failed', text2: 'Could not change driver status.' });
+    }
   };
 
   return (
@@ -121,23 +113,33 @@ export default function ShopDeliveryFleetScreen() {
                   <Text style={styles.agentName}>{agent.name}</Text>
                   <Text style={styles.agentPhone}>+91 {agent.phone}</Text>
                 </View>
-                <TouchableOpacity
-                  style={styles.deleteBtn}
-                  onPress={() => handleRemoveAgent(agent.id, agent.name)}
-                >
-                  <Ionicons name="trash-outline" size={18} color="#ba1a1a" />
-                </TouchableOpacity>
+                <View style={styles.toggleContainer}>
+                  <Text style={[styles.toggleLabel, { color: agent.status === 'active' ? thannigoPalette.success : thannigoPalette.neutral }]}>
+                    {agent.status === 'active' ? 'ENABLED' : 'DISABLED'}
+                  </Text>
+                  <Switch
+                    value={agent.status === 'active'}
+                    onValueChange={() => handleToggleStatus(agent.id, agent.status)}
+                    trackColor={{ false: thannigoPalette.borderSoft, true: SHOP_ACCENT + '80' }}
+                    thumbColor={agent.status === 'active' ? SHOP_ACCENT : '#f4f3f4'}
+                    ios_backgroundColor={thannigoPalette.borderSoft}
+                  />
+                </View>
               </View>
 
               <View style={styles.cardBottom}>
                 <View style={styles.statusRow}>
-                  <View style={[styles.statusDot, agent.status === 'active' ? { backgroundColor: '#4ade80' } : { backgroundColor: '#94a3b8' }]} />
-                  <Text style={styles.statusText}>{agent.status === 'active' ? 'Active / Assigned' : 'Offline'}</Text>
+                  <View style={[styles.statusDot, agent.status === 'active' ? { backgroundColor: '#4ade80' } : { backgroundColor: thannigoPalette.neutral }]} />
+                  <Text style={[styles.statusText, agent.status !== 'active' && { color: thannigoPalette.neutral }]}>
+                    {agent.status === 'active' ? 'Active / Online' : 'Account Disabled'}
+                  </Text>
                 </View>
-                <View style={styles.statsBadge}>
-                  <Ionicons name="bicycle-outline" size={14} color={SHOP_ACCENT} />
-                  <Text style={styles.statsValue}>{agent.assignedOrders} Assigned</Text>
-                </View>
+                {agent.status === 'active' && (
+                  <View style={styles.statsBadge}>
+                    <Ionicons name="bicycle-outline" size={14} color={SHOP_ACCENT} />
+                    <Text style={styles.statsValue}>{agent.assignedOrders} Assigned</Text>
+                  </View>
+                )}
               </View>
             </View>
           ))}
@@ -207,7 +209,8 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 16, fontWeight: '800' },
   agentName: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
   agentPhone: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '500' },
-  deleteBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff5f5', alignItems: 'center', justifyContent: 'center' },
+  toggleContainer: { alignItems: 'flex-end', gap: 4 },
+  toggleLabel: { fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
 
   cardBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 16, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },

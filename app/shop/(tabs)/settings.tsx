@@ -35,14 +35,7 @@ type NavItem = {
   color?: string;
 };
 
-const QUICK_ACTIONS: NavItem[] = [
-  { label: 'Service Rules & Charges', icon: 'settings-outline', route: '/shop/operational-settings', color: '#0077b6' },
-  { label: 'Inventory', icon: 'cube-outline', route: '/shop/inventory', color: '#005d90' },
-  { label: 'Can Mgmt', icon: 'water-outline', route: '/shop/can-management', color: '#0077b6' },
-  { label: 'Earnings', icon: 'cash-outline', route: '/shop/earnings', color: '#10b981' },
-  { label: 'Slots', icon: 'calendar-outline', route: '/shop/slots', color: '#f59e0b' },
-  { label: 'Hours', icon: 'time-outline', route: '/shop/schedule', color: '#6366f1' },
-];
+
 
 
 
@@ -251,23 +244,7 @@ export default function ShopSettingsScreen() {
           </View>
         </View>
 
-        {/* Quick ops grid */}
-        <Text style={[styles.sectionLabel, { color: muted }]}>MANAGEMENT DASHBOARD</Text>
-        <View style={styles.gridRow}>
-          {QUICK_ACTIONS.map((item) => (
-            <TouchableOpacity
-              key={item.label}
-              style={[styles.gridCard, { backgroundColor: surf, borderColor: border }]}
-              onPress={() => router.navigate(item.route as any)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.gridIcon, { backgroundColor: (item.color ?? SHOP_ACCENT) + '18' }]}>
-                <Ionicons name={item.icon} size={22} color={item.color ?? SHOP_ACCENT} />
-              </View>
-              <Text style={[styles.gridLabel, { color: text }]}>{item.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+
 
       
 
