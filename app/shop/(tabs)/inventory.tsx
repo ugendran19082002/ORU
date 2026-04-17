@@ -41,6 +41,8 @@ export default function ShopInventoryScreen() {
   const [newDeposit, setNewDeposit] = useState('0');
   const [newImageUrl, setNewImageUrl] = useState<string | null>(null);
   const [newIsAvailable, setNewIsAvailable] = useState(true);
+  const [newIsGst, setNewIsGst] = useState(false);
+  const [newTaxPercentage, setNewTaxPercentage] = useState('0');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingSubchainId, setEditingSubchainId] = useState<number | null>(null);
@@ -67,6 +69,8 @@ export default function ShopInventoryScreen() {
           deposit_amount: String(p.deposit_amount || '0'),
           image_url: p.image_url || null,
           is_available: p.is_available !== undefined ? p.is_available : true,
+          is_gst: !!p.is_gst,
+          tax_percentage: String(p.tax_percentage || '0'),
           type: p.type || "water",
           is_water_can: !!p.Subcategory?.is_water_can
         })));
@@ -80,6 +84,8 @@ export default function ShopInventoryScreen() {
             deposit_amount: String(p.deposit_amount || '0'),
             image_url: p.image_url || null,
             is_available: p.is_available !== undefined ? p.is_available : true,
+            is_gst: !!p.is_gst,
+            tax_percentage: String(p.tax_percentage || '0'),
             type: p.type || "water"
           })));
         }
@@ -181,6 +187,8 @@ export default function ShopInventoryScreen() {
     setNewDeposit(String(prod.deposit_amount || '0'));
     setNewImageUrl(prod.image_url || null);
     setNewIsAvailable(prod.is_available !== false);
+    setNewIsGst(!!prod.is_gst);
+    setNewTaxPercentage(String(prod.tax_percentage || '0'));
     setIsEditing(true);
     setModalStep(2); // Jump to details by default
     setModalVisible(true);
@@ -207,6 +215,8 @@ export default function ShopInventoryScreen() {
       deposit_amount: newDeposit,
       image_url: newImageUrl,
       is_available: newIsAvailable,
+      is_gst: newIsGst,
+      tax_percentage: newTaxPercentage,
       type: categories.find(c => c.id === selectedCategoryId)?.Subcategories?.find((s: any) => s.id === selectedSubchainId)?.is_water_can ? 'WATER_CAN' : 'NORMAL',
       is_water_can: !!categories.find(c => c.id === selectedCategoryId)?.Subcategories?.find((s: any) => s.id === selectedSubchainId)?.is_water_can
     };
@@ -248,6 +258,8 @@ export default function ShopInventoryScreen() {
           deposit_amount: parseFloat(p.deposit_amount) || 0,
           image_url: p.image_url || null,
           is_available: p.is_available !== false,
+          is_gst: !!p.is_gst,
+          tax_percentage: parseFloat(p.tax_percentage) || 0,
           type: p.is_water_can ? 'WATER_CAN' : 'NORMAL',
         };
         if (p.id) {
@@ -559,6 +571,40 @@ export default function ShopInventoryScreen() {
                       return null;
                     })()}
 
+                    <View style={styles.dividerInner} />
+                    
+                    <View style={styles.promoRow}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.inputLabel}>GST Applicable</Text>
+                        <Text style={styles.hintText}>Enable if this product includes tax</Text>
+                      </View>
+                      <Switch 
+                        value={newIsGst} 
+                        onValueChange={setNewIsGst}
+                        trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
+                        thumbColor={newIsGst ? '#006878' : '#707881'}
+                      />
+                    </View>
+
+                    {newIsGst && (
+                      <View style={{ marginTop: 20 }}>
+                        <View style={styles.labelRow}>
+                          <Ionicons name="calculator-outline" size={14} color="#64748b" />
+                          <Text style={styles.inputLabel}>Tax Rate (%)</Text>
+                        </View>
+                        <View style={styles.modalPriceInputWrap}>
+                            <TextInput 
+                            style={styles.modalPriceInput}
+                            value={newTaxPercentage}
+                            onChangeText={setNewTaxPercentage}
+                            keyboardType="number-pad"
+                            placeholder="18"
+                            />
+                            <Text style={styles.sliderUnitDisplay}>% GST</Text>
+                        </View>
+                      </View>
+                    )}
+
                     <TouchableOpacity 
                       style={[styles.submitBtn, (!selectedSubchainId || !newPrice) && { backgroundColor: '#e0e2e8', shadowOpacity: 0 }]} 
                       onPress={handleAddProduct}
@@ -668,6 +714,8 @@ const styles = StyleSheet.create({
   cardDisabled: { opacity: 0.6, backgroundColor: '#f8fafc', borderColor: '#dae0e6' },
   disabledBadge: { position: 'absolute', top: -10, left: 16, backgroundColor: '#707881', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, zIndex: 10 },
   disabledBadgeText: { color: 'white', fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
+  promoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 },
+  sliderUnitDisplay: { fontSize: 13, fontWeight: '600', color: '#94a3b8', marginLeft: 8 },
 });
 
 

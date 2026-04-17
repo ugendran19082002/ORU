@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  KeyboardAvoidingView, Platform, ActivityIndicator, TextInput, FlatList
+  KeyboardAvoidingView, Platform, ActivityIndicator, TextInput, FlatList, Switch
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -48,7 +48,9 @@ export default function ShopProductsScreen() {
               ...p,
               price: String(p.price || ''),
               stock_quantity: String(p.stock_quantity || ''),
-              deposit_amount: String(p.deposit_amount || '0')
+              deposit_amount: String(p.deposit_amount || '0'),
+              is_gst: !!p.is_gst,
+              tax_percentage: String(p.tax_percentage || '0')
             })));
           }
         }
@@ -70,7 +72,9 @@ export default function ShopProductsScreen() {
       price: '40',
       stock_quantity: '50',
       deposit_amount: '150',
-      is_water_can: !!subcat.is_water_can
+      is_water_can: !!subcat.is_water_can,
+      is_gst: false,
+      tax_percentage: '0'
     }]);
   };
 
@@ -105,6 +109,8 @@ export default function ShopProductsScreen() {
             price: isFinite(price) ? price : 0,
             stock_quantity: isFinite(stock) ? stock : 0,
             deposit_amount: parseFloat(p.deposit_amount) || 0,
+            is_gst: !!p.is_gst,
+            tax_percentage: parseFloat(p.tax_percentage) || 0,
             type: p.is_water_can ? 'WATER_CAN' : 'NORMAL'
           };
         })
@@ -221,7 +227,41 @@ export default function ShopProductsScreen() {
                                             )}
                                         </View>
                                         
-                                        {parseFloat(prod.deposit_amount) > 0 && (
+                                        <View style={styles.taxSection}>
+                                            <View style={styles.taxRow}>
+                                                <View style={{ flex: 1 }}>
+                                                    <Text style={styles.taxLabel}>GST Applicable</Text>
+                                                    <Text style={styles.taxHint}>Enable if item has GST</Text>
+                                                </View>
+                                                <Switch 
+                                                    value={prod.is_gst} 
+                                                    onValueChange={(v) => updateProductData(prod.subcategory_id, 'is_gst', v)}
+                                                    trackColor={{ false: '#e2e8f0', true: '#a7edff' }}
+                                                    thumbColor={prod.is_gst ? '#006878' : '#94a3b8'}
+                                                />
+                                            </View>
+                                            
+                                            {prod.is_gst && (
+                                                <View style={styles.taxInputGroup}>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                                                        <Ionicons name="calculator-outline" size={12} color="#64748b" />
+                                                        <Text style={styles.prodInputLabel}>Applied Tax Rate (%)</Text>
+                                                    </View>
+                                                    <View style={styles.taxInputWrapMain}>
+                                                        <TextInput 
+                                                            style={styles.prodInput} 
+                                                            keyboardType="number-pad" 
+                                                            value={prod.tax_percentage}
+                                                            onChangeText={(v) => updateProductData(prod.subcategory_id, 'tax_percentage', v)}
+                                                            placeholder="18"
+                                                        />
+                                                        <Text style={styles.taxUnitDisplay}>% GST</Text>
+                                                    </View>
+                                                </View>
+                                            )}
+                                        </View>
+                                        
+                                        {(parseFloat(prod.deposit_amount) > 0) && (
                                             <View style={styles.depositSummary}>
                                                 <Text style={styles.depositSummaryLabel}>Can Price Amount:</Text>
                                                 <Text style={styles.depositSummaryValue}>₹{prod.deposit_amount}</Text>
@@ -338,7 +378,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
   },
-  ctaText: { color: 'white', fontSize: 17, fontWeight: '800' }
+  ctaText: { color: 'white', fontSize: 17, fontWeight: '800' },
+  taxSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
+  taxRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  taxLabel: { fontSize: 14, fontWeight: '800', color: '#1e293b' },
+  taxHint: { fontSize: 11, color: '#94a3b8', fontWeight: '500' },
+  taxInputGroup: { marginTop: 12 },
+  taxInputWrapMain: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderRadius: 14, borderWidth: 1, borderColor: '#e2e8f0', paddingRight: 16 },
+  taxUnitDisplay: { fontSize: 14, fontWeight: '700', color: '#94a3b8' },
 });
 
 

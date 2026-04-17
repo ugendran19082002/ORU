@@ -27,7 +27,7 @@ export default function ShopOperationalSettingsScreen() {
 
   const [minOrderAmount, setMinOrderAmount] = useState('0');
   const [deliveryCharge, setDeliveryCharge] = useState('0');
-  const [taxPercentage, setTaxPercentage] = useState('0');
+  const [invoicePrefix, setInvoicePrefix] = useState('WD');
 
   // Distance-based fields
   const [perKmCharge, setPerKmCharge] = useState(0);
@@ -50,7 +50,7 @@ export default function ShopOperationalSettingsScreen() {
       if (settings) {
         setMinOrderAmount(String(settings.min_order_amount || '0'));
         setDeliveryCharge(String(settings.base_delivery_charge || '0'));
-        setTaxPercentage(String(settings.tax_percentage || '0'));
+        setInvoicePrefix(settings.invoice_prefix || 'WD');
         
         // Load distance & floor fields
         setPerKmCharge(Number(settings.delivery_charge_per_km || 0));
@@ -74,7 +74,7 @@ export default function ShopOperationalSettingsScreen() {
       await shopApi.updateShopSettings({
         min_order_amount: parseFloat(minOrderAmount) || 0,
         base_delivery_charge: parseFloat(deliveryCharge) || 0,
-        tax_percentage: parseFloat(taxPercentage) || 0,
+        invoice_prefix: invoicePrefix,
         // Save distance & floor fields
         delivery_charge_per_km: perKmCharge,
         free_delivery_upto_km: freeKm,
@@ -218,16 +218,17 @@ export default function ShopOperationalSettingsScreen() {
               <View style={styles.inputGroup}>
                 <View style={styles.labelRow}>
                   <Ionicons name="receipt-outline" size={16} color="#64748b" />
-                  <Text style={styles.inputLabel}>Tax / GST Percentage</Text>
+                  <Text style={styles.inputLabel}>Invoice Prefix</Text>
                 </View>
                 <TextInput
                   style={styles.input}
-                  value={taxPercentage}
-                  onChangeText={setTaxPercentage}
-                  keyboardType="numeric"
-                  placeholder="0.00"
+                  value={invoicePrefix}
+                  onChangeText={setInvoicePrefix}
+                  autoCapitalize="characters"
+                  maxLength={10}
+                  placeholder="WD"
                 />
-                <Text style={styles.hintText}>Calculated as a percentage of the subtotal. (%)</Text>
+                <Text style={styles.hintText}>Custom prefix for your order numbers (e.g. TG). Default: WD</Text>
               </View>
 
 

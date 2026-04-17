@@ -142,12 +142,13 @@ export type ShopSettings = {
   delivery_radius_km: number;
   min_order_amount: number;
   base_delivery_charge: number;
-  tax_percentage: number;
   auto_accept_orders: boolean;
   busy_mode: boolean;
   delivery_charge_per_km: number;
   free_delivery_upto_km: number;
   delivery_limit_per_km: number;
+  floor_charge_per_floor: number;
+  invoice_prefix?: string;
 };
 
 export type ShopToggleResult = {
