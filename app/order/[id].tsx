@@ -23,6 +23,16 @@ import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { orderApi } from '@/api/orderApi';
 import { useCartStore } from '@/stores/cartStore';
 import { useShopStore } from '@/stores/shopStore';
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const CUSTOMER_ACCENT = roleAccent.customer;
+const CUSTOMER_SURF = roleSurface.customer;
+const CUSTOMER_GRAD: [string, string] = [roleGradients.customer.start, roleGradients.customer.end];
+
+const WARNING_BG = '#fffbe6';
+const WARNING_BORDER = '#ffe58f';
+const WARNING_TEXT = '#b45309';
+const WARNING_DARK = '#856404';
 
 interface OrderItem {
   id: number;
@@ -99,8 +109,7 @@ export default function OrderDetailScreen() {
 
   const handleReorder = () => {
     if (!order) return;
-    // Implementation of reorder
-    const shopId = (order as any).shop_id; 
+    const shopId = (order as any).shop_id;
     if (!shopId) return;
 
     setSelectedShop(shopId);
@@ -118,7 +127,7 @@ export default function OrderDetailScreen() {
   if (loading && !refreshing) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#005d90" />
+        <ActivityIndicator size="large" color={CUSTOMER_ACCENT} />
       </View>
     );
   }
@@ -126,7 +135,7 @@ export default function OrderDetailScreen() {
   if (!order) {
     return (
       <View style={styles.center}>
-        <Ionicons name="receipt-outline" size={64} color="#bfc7d1" />
+        <Ionicons name="receipt-outline" size={64} color={thannigoPalette.neutral} />
         <Text style={styles.errorText}>Order not found</Text>
         <BackButton fallback="/(tabs)/orders" />
       </View>
@@ -141,34 +150,34 @@ export default function OrderDetailScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <BackButton fallback="/(tabs)/orders" iconColor="#005d90" />
+        <BackButton fallback="/(tabs)/orders" iconColor={CUSTOMER_ACCENT} />
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>Order #{order.id}</Text>
           <Text style={styles.headerSubtitle}>{new Date(order.created_at).toLocaleDateString()}</Text>
         </View>
         <TouchableOpacity style={styles.supportIcon} onPress={() => router.push('/report-issue' as any)}>
-          <Ionicons name="help-buoy-outline" size={22} color="#005d90" />
+          <Ionicons name="help-buoy-outline" size={22} color={CUSTOMER_ACCENT} />
         </TouchableOpacity>
       </View>
 
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[CUSTOMER_ACCENT]} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {/* STATUS CARD */}
-        <LinearGradient colors={['#005d90', '#0077b6']} style={styles.statusCard}>
+        <LinearGradient colors={CUSTOMER_GRAD} style={styles.statusCard}>
           <View style={styles.statusInfo}>
             <Text style={styles.statusLabel}>Current Status</Text>
             <Text style={styles.statusValue}>{order.status.toUpperCase()}</Text>
           </View>
           {isActive && (
-            <TouchableOpacity 
-              style={styles.trackBtn} 
+            <TouchableOpacity
+              style={styles.trackBtn}
               onPress={() => router.push('/order/tracking' as any)}
             >
               <Text style={styles.trackBtnText}>Track Live</Text>
-              <Ionicons name="navigate-outline" size={16} color="#005d90" />
+              <Ionicons name="navigate-outline" size={16} color={CUSTOMER_ACCENT} />
             </TouchableOpacity>
           )}
         </LinearGradient>
@@ -176,7 +185,7 @@ export default function OrderDetailScreen() {
         {/* DELIVERY PIN IF ACTIVE */}
         {isActive && order.delivery_otp && (
           <View style={styles.otpCard}>
-            <Ionicons name="key-outline" size={24} color="#b45309" />
+            <Ionicons name="key-outline" size={24} color={WARNING_TEXT} />
             <View style={{ flex: 1 }}>
               <Text style={styles.otpLabel}>Delivery Verification PIN</Text>
               <Text style={styles.otpValue}>{order.delivery_otp}</Text>
@@ -190,14 +199,14 @@ export default function OrderDetailScreen() {
           <Text style={styles.sectionTitle}>Shop Details</Text>
           <View style={styles.infoRow}>
             <View style={styles.shopIcon}>
-              <Ionicons name="water" size={20} color="#005d90" />
+              <Ionicons name="water" size={20} color={CUSTOMER_ACCENT} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.infoName}>{order.shop_name}</Text>
               <Text style={styles.infoDetail}>Shop Contact: {order.shop_phone}</Text>
             </View>
             <TouchableOpacity style={styles.callBtn} onPress={() => {/* Linking.openURL(`tel:${order.shop_phone}`) */}}>
-              <Ionicons name="call-outline" size={20} color="#005d90" />
+              <Ionicons name="call-outline" size={20} color={CUSTOMER_ACCENT} />
             </TouchableOpacity>
           </View>
         </View>
@@ -207,7 +216,7 @@ export default function OrderDetailScreen() {
           <Text style={styles.sectionTitle}>Delivery Address</Text>
           <View style={styles.infoRow}>
             <View style={styles.addressIcon}>
-              <Ionicons name="location-outline" size={20} color="#ba1a1a" />
+              <Ionicons name="location-outline" size={20} color={thannigoPalette.adminRed} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.infoDetail}>{order.delivery_address}</Text>
@@ -251,8 +260,8 @@ export default function OrderDetailScreen() {
           )}
           {order.discount_amount > 0 && (
             <View style={styles.billRow}>
-              <Text style={[styles.billLabel, { color: '#2e7d32' }]}>Discount</Text>
-              <Text style={[styles.billValue, { color: '#2e7d32' }]}>-Rs. {order.discount_amount}</Text>
+              <Text style={[styles.billLabel, { color: thannigoPalette.success }]}>Discount</Text>
+              <Text style={[styles.billValue, { color: thannigoPalette.success }]}>-Rs. {order.discount_amount}</Text>
             </View>
           )}
           <View style={[styles.billRow, styles.totalRow]}>
@@ -312,24 +321,25 @@ export default function OrderDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
-  errorText: { fontSize: 18, color: '#707881', fontWeight: '600' },
+  errorText: { fontSize: 18, color: thannigoPalette.neutral, fontWeight: '600' },
   scrollContent: { paddingBottom: 60 },
 
   header: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f4f9',
+    backgroundColor: thannigoPalette.surface, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
   },
   headerCenter: { flex: 1, marginLeft: 12 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
-  headerSubtitle: { fontSize: 12, color: '#707881', fontWeight: '500' },
-  supportIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  headerSubtitle: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
+  supportIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
 
   statusCard: {
     margin: 20, borderRadius: 24, padding: 24,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    shadowColor: '#005d90', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 16, elevation: 8,
+    ...Shadow.lg,
+    shadowColor: CUSTOMER_ACCENT,
   },
   statusInfo: { gap: 4 },
   statusLabel: { fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
@@ -338,68 +348,68 @@ const styles = StyleSheet.create({
     backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 10,
     flexDirection: 'row', alignItems: 'center', gap: 6,
   },
-  trackBtnText: { color: '#005d90', fontWeight: '800', fontSize: 13 },
+  trackBtnText: { color: CUSTOMER_ACCENT, fontWeight: '800', fontSize: 13 },
 
   otpCard: {
-    marginHorizontal: 20, marginBottom: 20, backgroundColor: '#fffbe6', borderRadius: 20,
+    marginHorizontal: 20, marginBottom: 20, backgroundColor: WARNING_BG, borderRadius: 20,
     padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14,
-    borderWidth: 1, borderColor: '#ffe58f',
+    borderWidth: 1, borderColor: WARNING_BORDER,
   },
-  otpLabel: { fontSize: 12, color: '#856404', fontWeight: '600' },
-  otpValue: { fontSize: 28, color: '#b45309', fontWeight: '900', letterSpacing: 4 },
-  otpHint: { fontSize: 10, color: '#856404', opacity: 0.7, position: 'absolute', bottom: 8, right: 16 },
+  otpLabel: { fontSize: 12, color: WARNING_DARK, fontWeight: '600' },
+  otpValue: { fontSize: 28, color: WARNING_TEXT, fontWeight: '900', letterSpacing: 4 },
+  otpHint: { fontSize: 10, color: WARNING_DARK, opacity: 0.7, position: 'absolute', bottom: 8, right: 16 },
 
   section: { marginHorizontal: 20, marginBottom: 24 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#181c20', marginBottom: 12, letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 12, letterSpacing: -0.3 },
   infoRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'white',
-    borderRadius: 20, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 6, elevation: 2,
+    flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: thannigoPalette.surface,
+    borderRadius: 20, padding: 16, ...Shadow.xs,
   },
-  shopIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
-  addressIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#ffdad6', alignItems: 'center', justifyContent: 'center' },
-  infoName: { fontSize: 16, fontWeight: '800', color: '#181c20' },
-  infoDetail: { fontSize: 13, color: '#707881', lineHeight: 18, marginTop: 2 },
-  callBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center' },
+  shopIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: CUSTOMER_SURF, alignItems: 'center', justifyContent: 'center' },
+  addressIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: thannigoPalette.adminRedLight, alignItems: 'center', justifyContent: 'center' },
+  infoName: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
+  infoDetail: { fontSize: 13, color: thannigoPalette.neutral, lineHeight: 18, marginTop: 2 },
+  callBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
 
   itemRow: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f4f9',
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
   },
-  itemQty: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  itemQtyText: { fontSize: 12, fontWeight: '800', color: '#005d90' },
-  itemName: { flex: 1, fontSize: 14, fontWeight: '600', color: '#404850' },
-  itemPrice: { fontSize: 14, fontWeight: '800', color: '#181c20' },
+  itemQty: { width: 32, height: 32, borderRadius: 8, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  itemQtyText: { fontSize: 12, fontWeight: '800', color: CUSTOMER_ACCENT },
+  itemName: { flex: 1, fontSize: 14, fontWeight: '600', color: thannigoPalette.neutral },
+  itemPrice: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText },
 
   billingSection: {
-    marginHorizontal: 20, padding: 20, backgroundColor: 'white', borderRadius: 24, gap: 12,
-    marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 3,
+    marginHorizontal: 20, padding: 20, backgroundColor: thannigoPalette.surface, borderRadius: 24, gap: 12,
+    marginBottom: 24, ...Shadow.sm,
   },
   billRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  billLabel: { fontSize: 14, color: '#707881', fontWeight: '500' },
-  billValue: { fontSize: 14, color: '#181c20', fontWeight: '700' },
-  totalRow: { borderTopWidth: 1, borderTopColor: '#f1f4f9', paddingTop: 12, marginTop: 4 },
-  totalLabel: { fontSize: 18, fontWeight: '900', color: '#181c20' },
-  totalValue: { fontSize: 18, fontWeight: '900', color: '#005d90' },
-  paymentBadge: { alignSelf: 'center', backgroundColor: '#f1f4f9', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, marginTop: 8 },
-  paymentText: { fontSize: 11, fontWeight: '700', color: '#707881', textTransform: 'uppercase', letterSpacing: 0.5 },
+  billLabel: { fontSize: 14, color: thannigoPalette.neutral, fontWeight: '500' },
+  billValue: { fontSize: 14, color: thannigoPalette.darkText, fontWeight: '700' },
+  totalRow: { borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft, paddingTop: 12, marginTop: 4 },
+  totalLabel: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
+  totalValue: { fontSize: 18, fontWeight: '900', color: CUSTOMER_ACCENT },
+  paymentBadge: { alignSelf: 'center', backgroundColor: thannigoPalette.borderSoft, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, marginTop: 8 },
+  paymentText: { fontSize: 11, fontWeight: '700', color: thannigoPalette.neutral, textTransform: 'uppercase', letterSpacing: 0.5 },
 
-  timelineCard: { backgroundColor: 'white', borderRadius: 20, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 6, elevation: 2 },
+  timelineCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 16, ...Shadow.xs },
   timelineRow: { flexDirection: 'row', gap: 12, minHeight: 44 },
   timelineDotCol: { alignItems: 'center', width: 16 },
-  timelineDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#c8d0da', marginTop: 4 },
-  timelineDotActive: { backgroundColor: '#005d90', width: 14, height: 14, borderRadius: 7 },
-  timelineLine: { flex: 1, width: 2, backgroundColor: '#e0e2e8', marginVertical: 2 },
+  timelineDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: thannigoPalette.borderSoft, marginTop: 4 },
+  timelineDotActive: { backgroundColor: CUSTOMER_ACCENT, width: 14, height: 14, borderRadius: 7 },
+  timelineLine: { flex: 1, width: 2, backgroundColor: thannigoPalette.borderSoft, marginVertical: 2 },
   timelineContent: { flex: 1, paddingBottom: 12 },
-  timelineStatus: { fontSize: 12, fontWeight: '700', color: '#707881', letterSpacing: 0.3 },
-  timelineStatusActive: { color: '#005d90', fontSize: 13 },
+  timelineStatus: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral, letterSpacing: 0.3 },
+  timelineStatusActive: { color: CUSTOMER_ACCENT, fontSize: 13 },
   timelineDate: { fontSize: 11, color: '#94a3b8', marginTop: 2 },
 
   cancelLink: { alignSelf: 'center', padding: 12 },
-  cancelLinkText: { color: '#ba1a1a', fontSize: 14, fontWeight: '700', textDecorationLine: 'underline' },
+  cancelLinkText: { color: thannigoPalette.adminRed, fontSize: 14, fontWeight: '700', textDecorationLine: 'underline' },
 
   reorderBtn: {
-    marginHorizontal: 20, marginBottom: 40, backgroundColor: '#005d90', borderRadius: 20,
+    marginHorizontal: 20, marginBottom: 40, backgroundColor: CUSTOMER_ACCENT, borderRadius: 20,
     height: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    shadowColor: '#005d90', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 6,
+    ...Shadow.lg, shadowColor: CUSTOMER_ACCENT,
   },
   reorderBtnText: { color: 'white', fontSize: 17, fontWeight: '900' },
 });

@@ -4,7 +4,7 @@ import { useAppNavigation } from "@/hooks/use-app-navigation";
 import { useAndroidBackHandler } from "@/hooks/use-back-handler";
 
 import { authApi } from "@/api/authApi";
-import { roleAccent, roleGradients } from "@/constants/theme";
+import { thannigoPalette, roleAccent, roleGradients } from "@/constants/theme";
 import { useAppSession } from "@/hooks/use-app-session";
 import type { AppRole, AppUser } from "@/types/session";
 import { getOriginalDeviceId } from "@/utils/device";
@@ -165,7 +165,7 @@ export default function OTPScreen() {
       <SafeAreaView style={styles.safe}>
         {/* HEADER */}
         <View style={styles.header}>
-          <BackButton fallback="/auth/login" iconColor="#005d90" />
+          <BackButton fallback="/auth/login" iconColor={roleGradients.customer.start} />
           <View style={styles.brandRow}>
             <Logo size="sm" />
             <Text style={styles.brandName}>ThanniGo</Text>
@@ -196,12 +196,12 @@ export default function OTPScreen() {
                 styles.otpBox,
                 otp[i] && {
                   borderColor: accent,
-                  backgroundColor: "#e0f7fa",
+                  backgroundColor: thannigoPalette.successSoft,
                   elevation: 0,
                 },
                 verified && {
-                  borderColor: "#006878",
-                  backgroundColor: "#e0f7fa",
+                  borderColor: thannigoPalette.shopTeal,
+                  backgroundColor: thannigoPalette.successSoft,
                   elevation: 0,
                 },
               ]}
@@ -224,7 +224,7 @@ export default function OTPScreen() {
               { opacity: successAnim, transform: [{ scale: successAnim }] },
             ]}
           >
-            <Ionicons name="checkmark-circle" size={22} color="#006878" />
+            <Ionicons name="checkmark-circle" size={22} color={thannigoPalette.shopTeal} />
             <Text style={styles.successText}>Verified! Redirecting...</Text>
           </Animated.View>
         )}
@@ -290,7 +290,7 @@ export default function OTPScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f7f9ff" },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   safe: { flex: 1, paddingHorizontal: 24 },
 
   header: {
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 14,
-    backgroundColor: "#ebeef4",
+    backgroundColor: thannigoPalette.borderSoft,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
   brandName: {
     fontSize: 20,
     fontWeight: "900",
-    color: "#003a5c",
+    color: thannigoPalette.darkText,
     letterSpacing: -0.5,
   },
 
@@ -319,11 +319,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: "900",
-    color: "#181c20",
+    color: thannigoPalette.darkText,
     letterSpacing: -0.5,
     marginBottom: 10,
   },
-  subtitle: { fontSize: 15, color: "#707881", lineHeight: 22 },
+  subtitle: { fontSize: 15, color: thannigoPalette.neutral, lineHeight: 22 },
   phoneHighlight: { fontWeight: "800" },
 
   otpRow: {
@@ -337,11 +337,11 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: "#e0e2e8",
-    backgroundColor: "white",
+    borderColor: thannigoPalette.borderSoft,
+    backgroundColor: thannigoPalette.surface,
     fontSize: 24,
     fontWeight: "900",
-    color: "#181c20",
+    color: thannigoPalette.darkText,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
@@ -354,12 +354,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     justifyContent: "center",
-    backgroundColor: "#e0f7fa",
+    backgroundColor: thannigoPalette.successSoft,
     borderRadius: 16,
     padding: 12,
     marginBottom: 20,
   },
-  successText: { color: "#006878", fontWeight: "700", fontSize: 14 },
+  successText: { color: thannigoPalette.shopTeal, fontWeight: "700", fontSize: 14 },
 
   resendRow: {
     flexDirection: "row",
@@ -368,8 +368,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 24,
   },
-  resendLabel: { fontSize: 13, color: "#707881" },
-  resendTimer: { fontSize: 13, color: "#005d90", fontWeight: "700" },
+  resendLabel: { fontSize: 13, color: thannigoPalette.neutral },
+  resendTimer: { fontSize: 13, color: roleGradients.customer.start, fontWeight: "700" },
   resendBtn: {
     fontSize: 13,
     fontWeight: "800",
@@ -383,13 +383,13 @@ const styles = StyleSheet.create({
   referralInputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: thannigoPalette.surface,
     borderRadius: 14,
     paddingHorizontal: 16,
     height: 52,
     width: '100%',
     borderWidth: 1,
-    borderColor: '#e0e2e8',
+    borderColor: thannigoPalette.borderSoft,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.03,
@@ -401,24 +401,24 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '700',
-    color: '#181c20',
+    color: thannigoPalette.darkText,
   },
 
   hintCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#ebeef4",
+    backgroundColor: thannigoPalette.borderSoft,
     borderRadius: 14,
     padding: 12,
   },
-  hintText: { fontSize: 12, color: "#707881", flex: 1 },
+  hintText: { fontSize: 12, color: thannigoPalette.neutral, flex: 1 },
 
   bottomBar: {
     paddingHorizontal: 24,
     paddingBottom: 32,
     paddingTop: 16,
-    backgroundColor: "#f7f9ff",
+    backgroundColor: thannigoPalette.background,
   },
   ctaBtn: {
     borderRadius: 20,
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    shadowColor: "#005d90",
+    shadowColor: roleGradients.customer.start,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.28,
     shadowRadius: 14,

@@ -19,6 +19,10 @@ import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { adminUsersApi, type AdminUser } from '@/api/adminUsersApi';
 import type { AppRole } from '@/types/session';
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const ADMIN_ACCENT = roleAccent.admin;
+const ADMIN_SURF = roleSurface.admin;
 
 // ─── Types & constants ────────────────────────────────────────────────────────
 
@@ -61,14 +65,14 @@ function formatDate(iso?: string | null): string {
 function getRoleBadgeTheme(role: AppRole | string) {
   switch (role) {
     case 'admin':
-      return { bg: '#ffdad6', text: '#ba1a1a' };
+      return { bg: ADMIN_SURF, text: ADMIN_ACCENT };
     case 'shop_owner':
-      return { bg: '#ffdad6', text: '#ba1a1a' };
+      return { bg: ADMIN_SURF, text: ADMIN_ACCENT };
     case 'delivery':
       return { bg: '#fff3e0', text: '#e65100' };
     case 'customer':
     default:
-      return { bg: '#e8f5e9', text: '#2e7d32' };
+      return { bg: thannigoPalette.successSoft, text: thannigoPalette.success };
   }
 }
 
@@ -122,8 +126,8 @@ function UserCard({ user, onPress }: UserCardProps) {
           </View>
           {/* Status badge */}
           <View style={[styles.badge, { backgroundColor: isActive ? '#e8f5e9' : '#f5f5f5', marginTop: 4 }]}>
-            <View style={[styles.statusDot, { backgroundColor: isActive ? '#2e7d32' : '#9e9e9e' }]} />
-            <Text style={[styles.badgeText, { color: isActive ? '#2e7d32' : '#757575' }]}>
+            <View style={[styles.statusDot, { backgroundColor: isActive ? thannigoPalette.success : '#9e9e9e' }]} />
+            <Text style={[styles.badgeText, { color: isActive ? thannigoPalette.success : '#757575' }]}>
               {isActive ? 'Active' : (user?.status || 'inactive').charAt(0).toUpperCase() + (user?.status || 'inactive').slice(1)}
             </Text>
           </View>
@@ -252,7 +256,7 @@ function UserDetailModal({ user, visible, onClose, onUpdated }: UserDetailModalP
               <Text style={styles.modalPhone}>{user.phone}</Text>
             </View>
             <TouchableOpacity style={styles.modalCloseBtn} onPress={onClose}>
-              <Ionicons name="close" size={20} color="#707881" />
+              <Ionicons name="close" size={20} color={thannigoPalette.neutral} />
             </TouchableOpacity>
           </View>
 
@@ -260,12 +264,12 @@ function UserDetailModal({ user, visible, onClose, onUpdated }: UserDetailModalP
           <View style={styles.modalInfo}>
             {user.email ? (
               <View style={styles.modalInfoRow}>
-                <Ionicons name="mail-outline" size={15} color="#707881" />
+                <Ionicons name="mail-outline" size={15} color={thannigoPalette.neutral} />
                 <Text style={styles.modalInfoText}>{user.email}</Text>
               </View>
             ) : null}
             <View style={styles.modalInfoRow}>
-              <Ionicons name="person-outline" size={15} color="#707881" />
+              <Ionicons name="person-outline" size={15} color={thannigoPalette.neutral} />
               <View style={[styles.badge, { backgroundColor: roleBadge.bg }]}>
                 <Text style={[styles.badgeText, { color: roleBadge.text }]}>
                   {getRoleLabel(user.role)}
@@ -273,7 +277,7 @@ function UserDetailModal({ user, visible, onClose, onUpdated }: UserDetailModalP
               </View>
             </View>
             <View style={styles.modalInfoRow}>
-              <Ionicons name="calendar-outline" size={15} color="#707881" />
+              <Ionicons name="calendar-outline" size={15} color={thannigoPalette.neutral} />
               <Text style={styles.modalInfoText}>Joined {formatDate(user.created_at)}</Text>
             </View>
             <View style={styles.modalInfoRow}>
@@ -301,7 +305,7 @@ function UserDetailModal({ user, visible, onClose, onUpdated }: UserDetailModalP
                     {opt.label}
                   </Text>
                   {user.role === opt.key && (
-                    <Ionicons name="checkmark" size={16} color="#ba1a1a" />
+                    <Ionicons name="checkmark" size={16} color={ADMIN_ACCENT} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -318,11 +322,11 @@ function UserDetailModal({ user, visible, onClose, onUpdated }: UserDetailModalP
                 disabled={roleLoading || actionLoading}
               >
                 {roleLoading ? (
-                  <ActivityIndicator size="small" color="#ba1a1a" />
+                  <ActivityIndicator size="small" color={ADMIN_ACCENT} />
                 ) : (
                   <>
-                    <Ionicons name="swap-horizontal-outline" size={16} color="#ba1a1a" />
-                    <Text style={[styles.modalActionBtnText, { color: '#ba1a1a' }]}>Change Role</Text>
+                    <Ionicons name="swap-horizontal-outline" size={16} color={ADMIN_ACCENT} />
+                    <Text style={[styles.modalActionBtnText, { color: ADMIN_ACCENT }]}>Change Role</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -451,7 +455,7 @@ export default function AdminUsersScreen() {
 
   const renderFooter = () => {
     if (!loadingMore) return null;
-    return <ActivityIndicator size="small" color="#ba1a1a" style={{ marginVertical: 20 }} />;
+    return <ActivityIndicator size="small" color={ADMIN_ACCENT} style={{ marginVertical: 20 }} />;
   };
 
   const renderEmpty = () => {
@@ -478,7 +482,7 @@ export default function AdminUsersScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
+              <Ionicons name="chevron-back" size={20} color={ADMIN_ACCENT} />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={styles.pageTitle}>User Management</Text>
@@ -525,7 +529,7 @@ export default function AdminUsersScreen() {
 
       {/* List */}
       {loading ? (
-        <ActivityIndicator size="large" color="#ba1a1a" style={{ marginTop: 80 }} />
+        <ActivityIndicator size="large" color={ADMIN_ACCENT} style={{ marginTop: 80 }} />
       ) : error ? (
         <View style={styles.emptyWrap}>
           <Ionicons name="cloud-offline-outline" size={64} color="#c8d6e0" />
@@ -566,12 +570,12 @@ export default function AdminUsersScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
 
-  headerSafe: { 
-    backgroundColor: 'white', 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#f1f5f9',
+  headerSafe: {
+    backgroundColor: thannigoPalette.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: thannigoPalette.borderSoft,
     alignItems: 'center',
   },
   headerContent: {
@@ -585,19 +589,19 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: ADMIN_SURF,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
 
-  controlBar: { paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', gap: 12 },
+  controlBar: { paddingVertical: 14, backgroundColor: thannigoPalette.surface, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft, gap: 12 },
   searchInputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: thannigoPalette.borderSoft,
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -606,7 +610,7 @@ const styles = StyleSheet.create({
   searchField: {
     flex: 1,
     fontSize: 14,
-    color: '#181c20',
+    color: thannigoPalette.darkText,
     fontWeight: '500',
   },
 
@@ -615,41 +619,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 12,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: thannigoPalette.borderSoft,
   },
-  tabActive: { backgroundColor: '#ba1a1a' },
-  tabText: { fontSize: 12, fontWeight: '800', color: '#64748b' },
+  tabActive: { backgroundColor: ADMIN_ACCENT },
+  tabText: { fontSize: 12, fontWeight: '800', color: thannigoPalette.neutral },
   tabTextActive: { color: 'white' },
 
   listContent: { padding: 20, paddingBottom: 100 },
 
   // User card
   card: {
-    backgroundColor: 'white',
+    backgroundColor: thannigoPalette.surface,
     borderRadius: 20,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    ...Shadow.sm,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: thannigoPalette.borderSoft,
   },
   cardRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   avatarBox: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#ffdad6',
+    backgroundColor: ADMIN_SURF,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: { fontSize: 18, fontWeight: '900', color: '#ba1a1a' },
+  avatarText: { fontSize: 18, fontWeight: '900', color: ADMIN_ACCENT },
   cardInfo: { flex: 1, gap: 2 },
-  cardName: { fontSize: 15, fontWeight: '800', color: '#181c20' },
-  cardPhone: { fontSize: 13, color: '#707881', fontWeight: '500' },
+  cardName: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText },
+  cardPhone: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '500' },
   cardEmail: { fontSize: 12, color: '#94a3b8', fontWeight: '400' },
   cardBadges: { alignItems: 'flex-end' },
   badge: {
@@ -669,13 +669,13 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: thannigoPalette.borderSoft,
   },
   cardFooterText: { fontSize: 11, color: '#94a3b8', fontWeight: '500' },
 
   // Empty / error states
   emptyWrap: { alignItems: 'center', marginTop: 100, gap: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#181c20' },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
   emptySubtitle: {
     fontSize: 14,
     color: '#94a3b8',
@@ -685,7 +685,7 @@ const styles = StyleSheet.create({
   },
   retryBtn: {
     marginTop: 8,
-    backgroundColor: '#ba1a1a',
+    backgroundColor: ADMIN_ACCENT,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 14,
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: 'white',
+    backgroundColor: thannigoPalette.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 24,
@@ -710,7 +710,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#e0e2e8',
+    backgroundColor: thannigoPalette.borderSoft,
     alignSelf: 'center',
     marginBottom: 20,
   },
@@ -719,25 +719,25 @@ const styles = StyleSheet.create({
     width: 54,
     height: 54,
     borderRadius: 27,
-    backgroundColor: '#ffdad6',
+    backgroundColor: ADMIN_SURF,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalAvatarText: { fontSize: 22, fontWeight: '900', color: '#ba1a1a' },
-  modalName: { fontSize: 18, fontWeight: '900', color: '#181c20', letterSpacing: -0.3 },
-  modalPhone: { fontSize: 14, color: '#707881', fontWeight: '500', marginTop: 2 },
+  modalAvatarText: { fontSize: 22, fontWeight: '900', color: ADMIN_ACCENT },
+  modalName: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.3 },
+  modalPhone: { fontSize: 14, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 2 },
   modalCloseBtn: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: thannigoPalette.borderSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalInfo: { gap: 10, marginBottom: 4 },
   modalInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  modalInfoText: { fontSize: 14, color: '#505860', fontWeight: '500' },
-  modalDivider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 20 },
+  modalInfoText: { fontSize: 14, color: thannigoPalette.neutral, fontWeight: '500' },
+  modalDivider: { height: 1, backgroundColor: thannigoPalette.borderSoft, marginVertical: 20 },
   modalActions: { flexDirection: 'row', gap: 12 },
   modalActionBtn: {
     flex: 1,
@@ -751,18 +751,18 @@ const styles = StyleSheet.create({
   modalActionBtnText: { fontSize: 14, fontWeight: '800' },
   modalActionBtnOutline: {
     borderWidth: 1.5,
-    borderColor: '#ffdad6',
+    borderColor: ADMIN_SURF,
     backgroundColor: '#fff8f7',
   },
-  modalActionBtnDanger: { backgroundColor: '#ba1a1a' },
-  modalActionBtnSuccess: { backgroundColor: '#2e7d32' },
+  modalActionBtnDanger: { backgroundColor: ADMIN_ACCENT },
+  modalActionBtnSuccess: { backgroundColor: thannigoPalette.success },
 
   // Role picker
   rolePicker: { gap: 4 },
   rolePickerTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#181c20',
+    color: thannigoPalette.darkText,
     marginBottom: 10,
   },
   roleOption: {
@@ -772,17 +772,17 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: 12,
-    backgroundColor: '#f7f9ff',
+    backgroundColor: thannigoPalette.background,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: thannigoPalette.borderSoft,
     marginBottom: 6,
   },
   roleOptionActive: {
-    backgroundColor: '#ffdad6',
+    backgroundColor: ADMIN_SURF,
     borderColor: '#ffb4ab',
   },
-  roleOptionText: { fontSize: 14, fontWeight: '600', color: '#505860' },
-  roleOptionTextActive: { color: '#ba1a1a', fontWeight: '800' },
+  roleOptionText: { fontSize: 14, fontWeight: '600', color: thannigoPalette.neutral },
+  roleOptionTextActive: { color: ADMIN_ACCENT, fontWeight: '800' },
   rolePickerCancel: {
     alignItems: 'center',
     paddingVertical: 12,

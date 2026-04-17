@@ -19,7 +19,7 @@ import Toast from 'react-native-toast-message';
 
 import { userApi } from "@/api/userApi";
 import { Logo } from "@/components/ui/Logo";
-import { roleAccent } from "@/constants/theme";
+import { roleAccent, roleGradients, roleSurface, thannigoPalette } from "@/constants/theme";
 import { useAppSession } from "@/hooks/use-app-session";
 import type { AppRole } from "@/types/session";
 import { Ionicons } from "@expo/vector-icons";
@@ -33,8 +33,8 @@ const ROLES = [
     subtitle: "Order pure water\ndelivered to your door",
     icon: "person-outline" as const,
     accent: roleAccent.customer,
-    bg: "#e0f0ff",
-    gradient: ["#005d90", "#0077b6"] as [string, string],
+    bg: roleSurface.customer,
+    gradient: [roleGradients.customer.start, roleGradients.customer.end] as [string, string],
     features: [
       "Browse nearby shops",
       "Track live delivery",
@@ -47,8 +47,8 @@ const ROLES = [
     subtitle: "Manage orders &\ngrow your business",
     icon: "storefront-outline" as const,
     accent: roleAccent.shop_owner,
-    bg: "#e0f7fa",
-    gradient: ["#006878", "#005566"] as [string, string],
+    bg: roleSurface.shop_owner,
+    gradient: [roleGradients.shop_owner.start, roleGradients.shop_owner.end] as [string, string],
     features: [
       "Accept/reject orders",
       "Track daily earnings",

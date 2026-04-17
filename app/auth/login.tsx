@@ -22,7 +22,7 @@ import {
 } from "react-native";
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
-import { roleAccent, roleGradients } from '@/constants/theme';
+import { roleAccent, roleGradients, thannigoPalette } from '@/constants/theme';
 import { useAppSession } from '@/hooks/use-app-session';
 import { authApi } from '@/api/authApi';
 import type { AppRole } from '@/types/session';

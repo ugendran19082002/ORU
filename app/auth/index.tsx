@@ -13,13 +13,20 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Logo } from '@/components/ui/Logo';
+import { thannigoPalette, roleGradients } from '@/constants/theme';
 
 const { width, height } = Dimensions.get('window');
+
+const WELCOME_GRAD: [string, string, string] = [
+  '#003a5c',
+  roleGradients.customer.start,
+  roleGradients.customer.end,
+];
+const FEATURE_ICON_COLOR = '#69e5ff';
 
 export default function WelcomeScreen() {
   const router = useRouter();
 
-  // Entrance animations
   const logoAnim = useRef(new Animated.Value(0)).current;
   const textAnim = useRef(new Animated.Value(0)).current;
   const btnAnim = useRef(new Animated.Value(0)).current;
@@ -38,7 +45,7 @@ export default function WelcomeScreen() {
 
       {/* Background gradient */}
       <LinearGradient
-        colors={['#003a5c', '#005d90', '#0077b6']}
+        colors={WELCOME_GRAD}
         start={{ x: 0.2, y: 0 }}
         end={{ x: 0.8, y: 1 }}
         style={StyleSheet.absoluteFillObject}
@@ -81,7 +88,7 @@ export default function WelcomeScreen() {
           ].map((f) => (
             <View key={f.text} style={styles.featureRow}>
               <View style={styles.featureIcon}>
-                <Ionicons name={f.icon as any} size={18} color="#69e5ff" />
+                <Ionicons name={f.icon as any} size={18} color={FEATURE_ICON_COLOR} />
               </View>
               <Text style={styles.featureText}>{f.text}</Text>
             </View>
@@ -96,7 +103,7 @@ export default function WelcomeScreen() {
             onPress={() => router.push('/auth/login')}
           >
             <Text style={styles.getStartedText}>Get Started</Text>
-            <Ionicons name="arrow-forward" size={20} color="#005d90" />
+            <Ionicons name="arrow-forward" size={20} color={roleGradients.customer.start} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -121,7 +128,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   safe: { flex: 1, justifyContent: 'space-between', paddingHorizontal: 28, paddingVertical: 24 },
 
-  // Decorative background circles
   circle1: {
     position: 'absolute', width: 300, height: 300, borderRadius: 150,
     backgroundColor: 'rgba(255,255,255,0.04)', top: -100, right: -80,
@@ -135,7 +141,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)', top: 200, right: 20,
   },
 
-  // Logo
   logoSection: { alignItems: 'center', marginTop: 40 },
   brandName: {
     color: 'white', fontSize: 40, fontWeight: '900',
@@ -146,7 +151,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // Features
   features: {
     gap: 16, paddingVertical: 8,
     backgroundColor: 'rgba(255,255,255,0.07)',
@@ -161,7 +165,6 @@ const styles = StyleSheet.create({
   },
   featureText: { color: 'rgba(255,255,255,0.9)', fontSize: 14, fontWeight: '500', flex: 1 },
 
-  // Buttons
   actions: { gap: 16 },
   getStartedBtn: {
     backgroundColor: 'white',
@@ -169,12 +172,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
     shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8,
   },
-  getStartedText: { color: '#005d90', fontSize: 17, fontWeight: '900' },
+  getStartedText: { color: roleGradients.customer.start, fontSize: 17, fontWeight: '900' },
   loginLink: { alignItems: 'center', paddingVertical: 8 },
   loginLinkText: { color: 'rgba(255,255,255,0.65)', fontSize: 14 },
   loginLinkTextBold: { color: 'white', fontWeight: '800' },
 
   footer: { textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 11 },
 });
-
-
