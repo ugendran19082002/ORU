@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView,
   RefreshControl, TouchableOpacity, StyleSheet, TextInput, Modal, ActivityIndicator, Image, Switch
@@ -140,10 +140,7 @@ export default function ShopInventoryScreen() {
     }));
   };
 
-  const removeProduct = (target: any) => {
-    // If it has a subcat ID and an ID, use both to be safe, otherwise just filter by something unique
-    setProducts(prev => prev.filter(p => (p.id ? p.id !== target.id : p.subcategory_id !== target.subcategory_id)));
-  };
+
 
   const pickImage = async () => {
     try {
@@ -479,9 +476,6 @@ export default function ShopInventoryScreen() {
                         <View style={styles.actionRow}>
                           <TouchableOpacity style={styles.editCardBtn} onPress={() => handleEditProduct(prod)}>
                             <Ionicons name="create-outline" size={18} color={SHOP_ACCENT} />
-                          </TouchableOpacity>
-                          <TouchableOpacity style={styles.removeBtn} onPress={() => removeProduct(prod)}>
-                            <Ionicons name="trash-outline" size={18} color="#ba1a1a" />
                           </TouchableOpacity>
                         </View>
                       </View>

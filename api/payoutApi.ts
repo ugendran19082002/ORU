@@ -104,15 +104,28 @@ export const payoutApi = {
   },
   /**
    * Request bank account verification.
-   * POST /shop-owner/payouts/verify
+   * POST /shop-owner/payouts/verify/bank
    */
   async verifyBank(): Promise<ApiResponse<any>> {
     try {
-      const response = await apiClient.post<ApiResponse<any>>('/shop-owner/payouts/verify');
+      const response = await apiClient.post<ApiResponse<any>>('/shop-owner/payouts/verify/bank');
       return response.data;
     } catch (error) {
       log.error('[payoutApi] verifyBank failed:', error);
       throw ApiError.from(error, 'Failed to request bank verification');
+    }
+  },
+  /**
+   * Request UPI ID verification.
+   * POST /shop-owner/payouts/verify/upi
+   */
+  async verifyUpi(): Promise<ApiResponse<any>> {
+    try {
+      const response = await apiClient.post<ApiResponse<any>>('/shop-owner/payouts/verify/upi');
+      return response.data;
+    } catch (error) {
+      log.error('[payoutApi] verifyUpi failed:', error);
+      throw ApiError.from(error, 'Failed to request UPI verification');
     }
   },
   /**

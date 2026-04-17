@@ -21,6 +21,7 @@ export default function PayoutSettingsScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [bankVerified, setBankVerified] = useState(false);
+  const [upiVerified, setUpiVerified] = useState(false);
   const [payoutMode, setPayoutMode] = useState<'upi' | 'bank'>('bank');
   const [upiId, setUpiId] = useState('');
   const [confirmAccountNumber, setConfirmAccountNumber] = useState('');
@@ -39,6 +40,7 @@ export default function PayoutSettingsScreen() {
         setPayoutMode(w.payout_mode || 'bank');
         setUpiId(w.upi_id || '');
         setBankVerified(!!w.bank_account_verified);
+        setUpiVerified(!!w.upi_id_verified);
         setBankDetails({
           account_number: w.bank_account_no || '',
           ifsc: w.bank_ifsc || '',
@@ -98,6 +100,19 @@ export default function PayoutSettingsScreen() {
       setBankVerified(true);
     } catch {
       Toast.show({ type: 'error', text1: 'Verification Failed', text2: 'Could not verify account. Please check details.' });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleVerifyUpi = async () => {
+    setIsVerifying(true);
+    try {
+      await payoutApi.verifyUpi();
+      Toast.show({ type: 'success', text1: 'UPI Verified', text2: 'Your UPI ID has been verified.' });
+      setUpiVerified(true);
+    } catch {
+      Toast.show({ type: 'error', text1: 'Verification Failed', text2: 'Could not verify UPI ID.' });
     } finally {
       setIsVerifying(false);
     }
@@ -229,17 +244,61 @@ export default function PayoutSettingsScreen() {
                   <TextInput 
                     style={styles.input} 
                     value={upiId} 
-                    onChangeText={setUpiId}
+                    onChangeText={(text) => {
+                       setUpiId(text);
+                       if (upiVerified) setUpiVerified(false);
+                    }}
                     placeholder="e.g. yourname@upi"
                     autoCapitalize="none"
                     placeholderTextColor={thannigoPalette.neutral + '80'}
                   />
+                  {upiId.length > 5 && !upiVerified && (
+                    <TouchableOpacity 
+                      style={[styles.verifyBtn, isVerifying && { opacity: 0.7 }]} 
+                      onPress={handleVerifyUpi}
+                      disabled={isVerifying}
+                    >
+                      {isVerifying ? (
+                        <ActivityIndicator color={SHOP_ACCENT} size="small" />
+                      ) : (
+                        <>
+                          <Ionicons name="shield-checkmark-outline" size={16} color={SHOP_ACCENT} />
+                          <Text style={styles.verifyBtnText}>Verify UPI ID Now</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  )}
+                  {upiVerified && (
+                     <View style={styles.verifiedBadgeRow}>
+                      <Ionicons name="checkmark-circle" size={16} color={thannigoPalette.success} />
+                      <Text style={styles.verifiedBadgeText}>UPI ID IS VERIFIED</Text>
+                    </View>
+                  )}
                 </View>
                 <Text style={styles.hintText}>
                   Instant transfer via PhonePe, GPay, or any UPI app.
                 </Text>
               </View>
             )}
+
+            <View style={styles.trustCard}>
+              <View style={styles.trustHeader}>
+                <Ionicons name="ribbon-outline" size={24} color={SHOP_ACCENT} />
+                <Text style={styles.trustTitle}>Settlement Trust Program</Text>
+              </View>
+              <Text style={styles.trustInfo}>
+                Verified payment destinations are eligible for <Text style={{ fontWeight: '900' }}>Instant Settlements</Text> and higher daily withdrawal limits.
+              </Text>
+              <View style={styles.trustPoint}>
+                 <Ionicons name="flash" size={14} color="#fbc02d" />
+                 <Text style={styles.trustPointText}>Priority queue for daily payouts</Text>
+              </View>
+              <View style={styles.trustPoint}>
+                 <Ionicons name="lock-closed" size={14} color={thannigoPalette.success} />
+                 <Text style={styles.trustPointText}>Bank-grade encrypted storage</Text>
+              </View>
+            </View>
+
 
             <View style={styles.infoBox}>
               <Ionicons name="shield-checkmark" size={18} color={SHOP_ACCENT} />
@@ -333,4 +392,11 @@ const styles = StyleSheet.create({
   
   verifiedBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, backgroundColor: '#e8f5e9', padding: 12, borderRadius: 12 },
   verifiedBadgeText: { fontSize: 11, fontWeight: '900', color: thannigoPalette.success, letterSpacing: 1 },
+
+  trustCard: { backgroundColor: 'white', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.sm },
+  trustHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
+  trustTitle: { fontSize: 16, fontWeight: '900', color: thannigoPalette.darkText },
+  trustInfo: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', lineHeight: 20, marginBottom: 16 },
+  trustPoint: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  trustPointText: { fontSize: 12, fontWeight: '800', color: thannigoPalette.neutral, letterSpacing: 0.3 },
 });

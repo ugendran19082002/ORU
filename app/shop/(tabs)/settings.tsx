@@ -36,6 +36,7 @@ type NavItem = {
 };
 
 const QUICK_ACTIONS: NavItem[] = [
+  { label: 'Service Rules & Charges', icon: 'settings-outline', route: '/shop/operational-settings', color: '#0077b6' },
   { label: 'Inventory', icon: 'cube-outline', route: '/shop/inventory', color: '#005d90' },
   { label: 'Can Mgmt', icon: 'water-outline', route: '/shop/can-management', color: '#0077b6' },
   { label: 'Earnings', icon: 'cash-outline', route: '/shop/earnings', color: '#10b981' },
@@ -43,15 +44,12 @@ const QUICK_ACTIONS: NavItem[] = [
   { label: 'Hours', icon: 'time-outline', route: '/shop/schedule', color: '#6366f1' },
 ];
 
-const OPERATION_RULE_MENU: NavItem[] = [
-  { label: 'Service Rules & Charges', icon: 'settings-outline', route: '/shop/operational-settings' },
-  { label: 'Holiday Master', icon: 'calendar-outline', route: '/shop/holidays' },
-  { label: 'Business Hours', icon: 'time-outline', route: '/shop/schedule' },
-  { label: 'Delivery Slots', icon: 'layers-outline', route: '/shop/slots' },
-];
+
 
 const SHOP_MGMT_MENU: NavItem[] = [
   { label: 'Shop Profile & Address', icon: 'storefront-outline', route: '/shop/profile' },
+  { label: 'Holiday Master', icon: 'calendar-outline', route: '/shop/holidays' },
+
   { label: 'Promotions & Coupons', icon: 'pricetag-outline', route: '/shop/promotions', badge: 'NEW' },
   { label: 'Staff Management', icon: 'people-outline', route: '/shop/staff' },
   { label: 'Customer Reviews', icon: 'star-outline', route: '/shop/reviews' },
@@ -271,27 +269,7 @@ export default function ShopSettingsScreen() {
           ))}
         </View>
 
-        {/* Operation rules management */}
-        <Text style={[styles.sectionLabel, { color: muted }]}>OPERATION RULE MENU</Text>
-        <View style={[styles.card, { backgroundColor: surf, borderColor: border }]}>
-          {OPERATION_RULE_MENU.map((item, i) => (
-            <View key={item.label}>
-              <TouchableOpacity style={styles.menuRow} onPress={() => router.navigate(item.route as any)} activeOpacity={0.7}>
-                <View style={[styles.menuIcon, { backgroundColor: (item.color ?? SHOP_ACCENT) + '18' }]}>
-                  <Ionicons name={item.icon} size={19} color={item.color ?? SHOP_ACCENT} />
-                </View>
-                <Text style={[styles.menuLabel, { color: item.color ?? text, marginLeft: 12 }]}>{item.label}</Text>
-                {item.badge && (
-                  <View style={[styles.badge, { backgroundColor: SHOP_SURF }]}>
-                    <Text style={[styles.badgeText, { color: SHOP_ACCENT }]}>{item.badge}</Text>
-                  </View>
-                )}
-                <Ionicons name="chevron-forward" size={16} color={muted} />
-              </TouchableOpacity>
-              {i < OPERATION_RULE_MENU.length - 1 && <View style={[styles.menuDivider, { backgroundColor: border }]} />}
-            </View>
-          ))}
-        </View>
+      
 
         {/* Shop management */}
         <Text style={[styles.sectionLabel, { color: muted }]}>SHOP MANAGEMENT</Text>
