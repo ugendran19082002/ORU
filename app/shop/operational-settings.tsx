@@ -29,10 +29,11 @@ export default function ShopOperationalSettingsScreen() {
   const [deliveryCharge, setDeliveryCharge] = useState('0');
   const [taxPercentage, setTaxPercentage] = useState('0');
 
-  // NEW: Distance-based fields
+  // Distance-based fields
   const [perKmCharge, setPerKmCharge] = useState(0);
   const [freeKm, setFreeKm] = useState(0);
   const [maxRange, setMaxRange] = useState(5);
+  const [floorCharge, setFloorCharge] = useState(0);
 
   useAndroidBackHandler(() => {
     safeBack('/shop/settings');
@@ -51,10 +52,11 @@ export default function ShopOperationalSettingsScreen() {
         setDeliveryCharge(String(settings.base_delivery_charge || '0'));
         setTaxPercentage(String(settings.tax_percentage || '0'));
         
-        // Load distance fields
+        // Load distance & floor fields
         setPerKmCharge(Number(settings.delivery_charge_per_km || 0));
         setFreeKm(Number(settings.free_delivery_upto_km || 0));
         setMaxRange(Number(settings.delivery_limit_per_km || 5));
+        setFloorCharge(Number(settings.floor_charge_per_floor || 0));
       }
     } catch (error) {
       console.error('[OperationalSettings] Fetch failed:', error);
@@ -73,10 +75,11 @@ export default function ShopOperationalSettingsScreen() {
         min_order_amount: parseFloat(minOrderAmount) || 0,
         base_delivery_charge: parseFloat(deliveryCharge) || 0,
         tax_percentage: parseFloat(taxPercentage) || 0,
-        // Save distance fields
+        // Save distance & floor fields
         delivery_charge_per_km: perKmCharge,
         free_delivery_upto_km: freeKm,
         delivery_limit_per_km: maxRange,
+        floor_charge_per_floor: floorCharge,
       });
       
       Toast.show({ type: 'success', text1: 'Settings Saved', text2: 'Your operational rules have been updated.' });
@@ -197,6 +200,18 @@ export default function ShopOperationalSettingsScreen() {
                 />
                 <Text style={styles.hintText}>The widest radius your shop can fulfill.</Text>
               </View>
+
+
+              <View style={styles.divider} />
+              <Text style={styles.sectionHeader}>Floor Based Charges</Text>
+              
+              <Stepper 
+                label="Floor Charge per Floor" 
+                value={floorCharge} 
+                onUpdate={setFloorCharge} 
+                unit="₹" 
+              />
+              <Text style={styles.hintText}>Additional cost for carrying cans to higher floors (per floor).</Text>
 
 
               <View style={styles.divider} />

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  ActivityIndicator
+  ActivityIndicator, TextInput, Animated, PanResponder,
+  Platform
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,6 +10,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
 import { BackButton } from '@/components/ui/BackButton';
@@ -20,13 +22,32 @@ export default function ShopDeliveryConfigScreen() {
   const [fetchingShop, setFetchingShop] = useState(true);
   const [shopId, setShopId] = useState<number | null>(null);
 
-  // 1. Resolve actual Shop ID
-  React.useEffect(() => {
+  // Advanced Settings State
+  const [baseCharge, setBaseCharge] = useState('0');
+  const [perKmCharge, setPerKmCharge] = useState(0);
+  const [freeKm, setFreeKm] = useState(0);
+  const [maxRange, setMaxRange] = useState(5);
+  const [minOrder, setMinOrder] = useState('0');
+  const [floorCharge, setFloorCharge] = useState(0);
+
+  // 1. Resolve actual Shop ID & existing settings
+  useEffect(() => {
     (async () => {
       try {
         const res = await onboardingApi.getMerchantShop();
         if (res.data) {
           setShopId(res.data.id);
+          // Load from metadata if exists
+          const meta = res.data.metadata || {};
+          if (meta.delivery_setup) {
+              const d = meta.delivery_setup;
+              setBaseCharge(String(d.base_delivery_charge ?? '0'));
+              setPerKmCharge(Number(d.delivery_charge_per_km ?? 0));
+              setFreeKm(Number(d.free_delivery_upto_km ?? 0));
+              setMaxRange(Number(d.delivery_limit_per_km ?? 5));
+              setMinOrder(String(d.min_order_value ?? '0'));
+              setFloorCharge(Number(d.floor_charge_per_floor ?? 0));
+          }
         } else {
           router.replace('/onboarding/shop/basic-details');
         }
@@ -46,7 +67,13 @@ export default function ShopDeliveryConfigScreen() {
     try {
       setLoading(true);
       const res = await onboardingApi.updateDeliverySetup(shopId, { 
-        is_self_delivery: true 
+        is_self_delivery: true,
+        base_delivery_charge: parseFloat(baseCharge) || 0,
+        delivery_charge_per_km: perKmCharge,
+        free_delivery_upto_km: freeKm,
+        delivery_limit_per_km: maxRange,
+        min_order_value: parseFloat(minOrder) || 0,
+        floor_charge_per_floor: floorCharge,
       });
       if (res.status === 1) {
         router.replace('/onboarding/shop');
@@ -68,63 +95,99 @@ export default function ShopDeliveryConfigScreen() {
     <View style={styles.container}>
       <StatusBar style="dark" />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} />
-            <Text style={styles.title}>Delivery Flow</Text>
-            <Text style={styles.subtitle}>Configure how orders reach your customers. Currently, ThanniGo supports shop-managed self-delivery.</Text>
+            <Text style={styles.title}>Delivery Pricing</Text>
+            <Text style={styles.subtitle}>Set your delivery fees and service range. You can update these anytime later from your settings.</Text>
           </View>
 
           {fetchingShop ? (
             <ActivityIndicator size="large" color="#006878" style={{ marginTop: 40 }} />
           ) : (
             <View style={styles.content}>
+               {/* 1. Base Charge & Min Order */}
+               <View style={styles.inputGroup}>
+                <View style={styles.labelRow}>
+                  <Ionicons name="cart-outline" size={16} color="#64748b" />
+                  <Text style={styles.inputLabel}>Minimum Order Amount</Text>
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={minOrder}
+                  onChangeText={setMinOrder}
+                  keyboardType="numeric"
+                  placeholder="0.00"
+                />
+                <Text style={styles.hintText}>Orders below this amount will not be accepted. (₹)</Text>
+              </View>
+
+              <View style={styles.inputGroup}>
+                <View style={styles.labelRow}>
+                  <Ionicons name="bicycle-outline" size={16} color="#64748b" />
+                  <Text style={styles.inputLabel}>Base Delivery Charge</Text>
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={baseCharge}
+                  onChangeText={setBaseCharge}
+                  keyboardType="numeric"
+                  placeholder="0.00"
+                />
+                <Text style={styles.hintText}>Starting delivery fee added to every order. (₹)</Text>
+              </View>
+
+              <View style={styles.divider} />
+
+              {/* 2. Stepper for Per KM */}
+              <Stepper 
+                label="Delivery Charge per KM" 
+                value={perKmCharge} 
+                onUpdate={setPerKmCharge} 
+                unit="₹" 
+              />
+              <Text style={[styles.hintText, { marginTop: 4 }]}>Additional cost for every KM beyond the free limit.</Text>
+
+              <Stepper 
+                label="Floor Charge per Floor" 
+                value={floorCharge} 
+                onUpdate={setFloorCharge} 
+                unit="₹" 
+              />
+              <Text style={[styles.hintText, { marginTop: 4 }]}>Additional cost for carrying cans to higher floors (per floor).</Text>
+
+              {/* 3. Slider for Free Range */}
+              <View style={{ marginTop: 16 }}>
+                <DraggableSlider 
+                  label="Free Delivery threshold" 
+                  value={freeKm} 
+                  onUpdate={setFreeKm} 
+                  min={0} max={10} unit=" KM" step={0.5} 
+                />
+                <Text style={styles.hintText}>Orders within this distance only pay the base charge.</Text>
+              </View>
+
+              {/* 4. Dropdown for Max Range */}
+              <View style={{ marginTop: 16 }}>
+                 <CustomDropdown 
+                  label="Max Support Range" 
+                  value={maxRange} 
+                  onUpdate={setMaxRange} 
+                  options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]} 
+                  unit=" KM" 
+                />
+                <Text style={styles.hintText}>The widest radius your shop can fulfill.</Text>
+              </View>
+
               <View style={styles.featureCard}>
                 <View style={styles.iconCircle}>
-                  <Ionicons name="bicycle" size={32} color="#006878" />
+                  <Ionicons name="bicycle" size={24} color="#006878" />
                 </View>
                 <View style={styles.cardText}>
                   <Text style={styles.cardTitle}>Self-Managed Delivery</Text>
                   <Text style={styles.cardSub}>You or your staff will deliver the orders. You have full control over the delivery experience.</Text>
                 </View>
-                <Ionicons name="checkmark-circle" size={28} color="#10b981" />
-              </View>
-
-              <View style={styles.infoSection}>
-                <Text style={styles.sectionTitle}>How it works</Text>
-                
-                <View style={styles.infoRow}>
-                  <View style={styles.bullet}>
-                    <Text style={styles.bulletText}>1</Text>
-                  </View>
-                  <Text style={styles.infoItem}>Admin/Shop owner delivers by default.</Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <View style={styles.bullet}>
-                    <Text style={styles.bulletText}>2</Text>
-                  </View>
-                  <Text style={styles.infoItem}>Add delivery persons later via your Dashboard.</Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <View style={styles.bullet}>
-                    <Text style={styles.bulletText}>3</Text>
-                  </View>
-                  <Text style={styles.infoItem}>Delivery person uploads live image for proof of delivery.</Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <View style={styles.bullet}>
-                    <Text style={styles.bulletText}>4</Text>
-                  </View>
-                  <Text style={styles.infoItem}>Customers track live location on their map.</Text>
-                </View>
-              </View>
-
-              <View style={styles.alertBox}>
-                  <Ionicons name="information-circle" size={24} color="#0369a1" />
-                  <Text style={styles.alertText}>Platform delivery is currently unavailable in your region.</Text>
+                <Ionicons name="checkmark-circle" size={24} color="#10b981" />
               </View>
             </View>
           )}
@@ -135,7 +198,7 @@ export default function ShopDeliveryConfigScreen() {
             <LinearGradient colors={['#006878', '#134e4a']} style={styles.cta} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               {loading ? <ActivityIndicator color="white" /> : (
                 <>
-                  <Text style={styles.ctaText}>Confirm Self-Delivery</Text>
+                  <Text style={styles.ctaText}>Save and Continue</Text>
                   <Ionicons name="arrow-forward" size={20} color="white" />
                 </>
               )}
@@ -147,45 +210,195 @@ export default function ShopDeliveryConfigScreen() {
   );
 }
 
+// --- SUB COMPONENTS (PORTED FROM OPERATIONAL SETTINGS) ---
+
+const Stepper = ({ label, value, onUpdate, unit = '' }: any) => {
+  const increment = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onUpdate(Number(value) + 1);
+  };
+  const decrement = () => {
+    if (value <= 0) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onUpdate(Math.max(0, Number(value) - 1));
+  };
+
+  return (
+    <View style={styles.hybridRow}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.inputLabel}>{label}</Text>
+      </View>
+      <View style={styles.stepperContainer}>
+        <TouchableOpacity onPress={decrement} style={styles.stepperBtn}>
+          <Ionicons name="remove" size={20} color="#006878" />
+        </TouchableOpacity>
+        <TextInput
+          style={styles.stepperInput}
+          value={String(value)}
+          onChangeText={(v) => onUpdate(parseFloat(v) || 0)}
+          keyboardType="numeric"
+        />
+        <TouchableOpacity onPress={increment} style={styles.stepperBtn}>
+          <Ionicons name="add" size={20} color="#006878" />
+        </TouchableOpacity>
+        <Text style={styles.stepperUnit}>{unit}</Text>
+      </View>
+    </View>
+  );
+};
+
+const DraggableSlider = ({ label, value, onUpdate, min, max, unit = '', step = 1 }: any) => {
+  const [sliderWidth, setSliderWidth] = useState(0);
+  const sliderWidthRef = React.useRef(0);
+  const animProgress = React.useRef(new Animated.Value((value - min) / (max - min))).current;
+
+  useEffect(() => {
+     Animated.spring(animProgress, {
+        toValue: (value - min) / (max - min),
+        useNativeDriver: false,
+        tension: 100,
+        friction: 12
+      }).start();
+  }, [value]);
+
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gestureState) => {
+        const width = sliderWidthRef.current;
+        if (width > 0) {
+          const moveProgress = ((value - min) / (max - min)) + (gestureState.dx / width);
+          const newVal = Math.max(min, Math.min(max, min + moveProgress * (max - min)));
+          const rounded = Math.round(newVal / step) * step;
+          if (rounded !== value) {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onUpdate(rounded);
+          }
+        }
+      },
+    })
+  ).current;
+
+  const fillWidth = animProgress.interpolate({
+    inputRange: [0, 1], outputRange: ['0%', '100%'],
+  });
+
+  return (
+    <View style={styles.sliderGroup}>
+      <View style={styles.sliderHeader}>
+        <Text style={styles.inputLabel}>{label}</Text>
+        <View style={styles.sliderValueBadge}>
+            <Text style={styles.sliderValueText}>{value}{unit}</Text>
+        </View>
+      </View>
+      
+      <View 
+        {...panResponder.panHandlers}
+        onLayout={(e) => { 
+            sliderWidthRef.current = e.nativeEvent.layout.width;
+            setSliderWidth(e.nativeEvent.layout.width);
+        }}
+        style={styles.sliderTrackContainer}
+      >
+        <View style={styles.sliderTrack}>
+          <Animated.View style={[styles.sliderFill, { width: fillWidth }]} />
+          <Animated.View style={[styles.sliderThumb, { left: fillWidth }]}>
+            <View style={styles.sliderThumbInner} />
+          </Animated.View>
+        </View>
+        <View style={styles.rangeLabels}>
+          <Text style={styles.rangeLabelText}>{min}{unit}</Text>
+          <Text style={styles.rangeLabelText}>{max}{unit}</Text>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+const CustomDropdown = ({ label, value, onUpdate, options, unit = '' }: any) => {
+  return (
+    <View style={styles.hybridColumn}>
+      <View style={styles.labelRowHybrid}>
+        <Text style={styles.inputLabel}>{label}</Text>
+        <Text style={styles.sliderValueHighlight}>{value}{unit}</Text>
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
+        {options.map((opt: number) => (
+          <TouchableOpacity 
+            key={opt}
+            onPress={() => { Haptics.selectionAsync(); onUpdate(opt); }}
+            style={[styles.chip, value === opt && styles.activeChip]}
+          >
+            <Text style={[styles.chipText, value === opt && styles.activeChipText]}>{opt}{unit}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1, backgroundColor: '#f8fafc' },
   safe: { flex: 1 },
-  scrollContent: { paddingHorizontal: 32, paddingTop: 40 },
+  scrollContent: { paddingHorizontal: 32, paddingTop: 40, paddingBottom: 40 },
   header: { marginBottom: 32 },
   title: { fontSize: 28, fontWeight: '900', color: '#134e4a', letterSpacing: -0.5 },
   subtitle: { fontSize: 15, color: '#64748b', marginTop: 12, lineHeight: 22 },
   content: { gap: 24, marginBottom: 40 },
+  
+  inputGroup: { gap: 8 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 4 },
+  inputLabel: { fontSize: 13, fontWeight: '800', color: '#475569', textTransform: 'uppercase' },
+  input: {
+    backgroundColor: 'white', borderRadius: 18, height: 60, paddingHorizontal: 16,
+    fontSize: 18, fontWeight: '700', color: '#1e293b',
+    borderWidth: 1.5, borderColor: '#e2e8f0',
+  },
+  hintText: { fontSize: 12, color: '#94a3b8', fontWeight: '500', marginLeft: 4 },
+  divider: { height: 1, backgroundColor: '#e2e8f0', marginVertical: 8 },
+
+  hybridRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  stepperContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 14, borderWidth: 1.5, borderColor: '#e2e8f0', padding: 4 },
+  stepperBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
+  stepperInput: { width: 50, textAlign: 'center', fontSize: 16, fontWeight: '800', color: '#134e4a' },
+  stepperUnit: { fontSize: 12, fontWeight: '700', color: '#64748b', marginRight: 10 },
+
+  sliderGroup: { gap: 12 },
+  sliderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sliderValueBadge: { backgroundColor: '#f0fdfa', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: '#ccfbf1' },
+  sliderValueText: { color: '#006878', fontWeight: '800', fontSize: 13 },
+  sliderTrackContainer: { gap: 12, paddingVertical: 8 },
+  sliderTrack: { height: 8, backgroundColor: '#e2e8f0', borderRadius: 4, position: 'relative' },
+  sliderFill: { height: '100%', backgroundColor: '#006878', borderRadius: 4 },
+  sliderThumb: { 
+    position: 'absolute', top: -11, width: 30, height: 30, borderRadius: 15, 
+    backgroundColor: 'white', justifyContent: 'center', alignItems: 'center',
+    marginLeft: -15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, shadowRadius: 4, elevation: 3, borderWidth: 2, borderColor: '#006878' 
+  },
+  sliderThumbInner: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#006878' },
+  rangeLabels: { flexDirection: 'row', justifyContent: 'space-between' },
+  rangeLabelText: { fontSize: 11, color: '#94a3b8', fontWeight: '700' },
+
+  hybridColumn: { gap: 12 },
+  labelRowHybrid: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sliderValueHighlight: { fontSize: 16, fontWeight: '900', color: '#006878' },
+  chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: 'white', borderWidth: 1.5, borderColor: '#e2e8f0' },
+  activeChip: { backgroundColor: '#006878', borderColor: '#006878' },
+  chipText: { fontSize: 14, fontWeight: '700', color: '#475569' },
+  activeChipText: { color: 'white' },
+
   featureCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f9ff',
-    padding: 20,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: '#006878',
-    gap: 16,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0f9ff', padding: 20,
+    borderRadius: 24, borderWidth: 1.5, borderColor: '#bae6fd', gap: 16, marginTop: 12
   },
-  iconCircle: { width: 56, height: 56, borderRadius: 18, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  iconCircle: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
   cardText: { flex: 1 },
-  cardTitle: { fontSize: 17, fontWeight: '800', color: '#134e4a' },
-  cardSub: { fontSize: 13, color: '#64748b', marginTop: 4, lineHeight: 18 },
-  infoSection: { marginTop: 12, gap: 16 },
-  sectionTitle: { fontSize: 14, fontWeight: '800', color: '#475569', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
-  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  bullet: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
-  bulletText: { fontSize: 14, fontWeight: '800', color: '#64748b' },
-  infoItem: { flex: 1, fontSize: 15, color: '#334155', fontWeight: '600' },
-  alertBox: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#f0f9ff', padding: 16, borderRadius: 18, borderWidth: 1, borderColor: '#bae6fd', marginTop: 20 },
-  alertText: { flex: 1, fontSize: 13, color: '#0369a1', fontWeight: '700' },
-  footer: { padding: 32 },
-  cta: {
-    height: 60,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
+  cardTitle: { fontSize: 16, fontWeight: '800', color: '#134e4a' },
+  cardSub: { fontSize: 12, color: '#64748b', marginTop: 2, lineHeight: 18 },
+
+  footer: { padding: 32, backgroundColor: 'white' },
+  cta: { height: 64, borderRadius: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
   ctaText: { color: 'white', fontSize: 17, fontWeight: '800' }
 });
 

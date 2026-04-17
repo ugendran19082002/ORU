@@ -85,7 +85,15 @@ export const onboardingApi = {
   /**
    * Specifically update delivery setup
    */
-  updateDeliverySetup: async (shopId: number, data: { is_self_delivery: boolean }): Promise<OnboardingResponse<any>> => {
+  updateDeliverySetup: async (shopId: number, data: { 
+    is_self_delivery: boolean;
+    base_delivery_charge?: number;
+    delivery_charge_per_km?: number;
+    free_delivery_upto_km?: number;
+    delivery_limit_per_km?: number;
+    min_order_value?: number;
+    floor_charge_per_floor?: number;
+  }): Promise<OnboardingResponse<any>> => {
     return onboardingApi.completeShopStep('delivery_setup', shopId, data);
   },
 
