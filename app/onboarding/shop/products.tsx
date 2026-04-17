@@ -189,8 +189,16 @@ export default function ShopProductsScreen() {
                                 {products.map(prod => (
                                     <View key={prod.subcategory_id} style={styles.prodCard}>
                                         <View style={styles.prodHeader}>
-                                            <Text style={styles.prodTitle}>{prod.name}</Text>
-                                            <TouchableOpacity onPress={() => removeProduct(prod.subcategory_id)}>
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={[styles.prodInputLabel, { marginBottom: 4 }]}>Product Display Name</Text>
+                                                <TextInput 
+                                                    style={styles.nameInput}
+                                                    value={prod.name}
+                                                    onChangeText={(v) => updateProductData(prod.subcategory_id, 'name', v)}
+                                                    placeholder="Product Name"
+                                                />
+                                            </View>
+                                            <TouchableOpacity onPress={() => removeProduct(prod.subcategory_id)} style={{ alignSelf: 'center', marginTop: 12 }}>
                                                 <Ionicons name="trash-outline" size={20} color="#ef4444" />
                                             </TouchableOpacity>
                                         </View>
@@ -340,9 +348,10 @@ const styles = StyleSheet.create({
     borderWidth: 1, 
     borderColor: '#e2e8f0' 
   },
-  prodHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  prodTitle: { fontSize: 17, fontWeight: '900', color: '#134e4a' },
-  prodInputs: { flexDirection: 'row', gap: 16 },
+  prodHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 12 },
+  prodTitle: { fontSize: 16, fontWeight: '800', color: '#1e293b' },
+  nameInput: { fontSize: 16, fontWeight: '800', color: '#006878', padding: 0 },
+  prodInputs: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   prodInputWrap: { flex: 1, gap: 8 },
   prodInputLabel: { fontSize: 12, fontWeight: '800', color: '#64748b', textTransform: 'uppercase' },
   prodInput: { 

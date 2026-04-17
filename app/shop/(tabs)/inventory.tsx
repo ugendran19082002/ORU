@@ -38,6 +38,7 @@ export default function ShopInventoryScreen() {
   const [selectedSubchainId, setSelectedSubchainId] = useState<number | null>(null);
   const [newPrice, setNewPrice] = useState('');
   const [newStock, setNewStock] = useState('0');
+  const [newName, setNewName] = useState('');
   const [newDeposit, setNewDeposit] = useState('0');
   const [newImageUrl, setNewImageUrl] = useState<string | null>(null);
   const [newIsAvailable, setNewIsAvailable] = useState(true);
@@ -189,6 +190,7 @@ export default function ShopInventoryScreen() {
     setNewIsAvailable(prod.is_available !== false);
     setNewIsGst(!!prod.is_gst);
     setNewTaxPercentage(String(prod.tax_percentage || '0'));
+    setNewName(prod.name || '');
     setIsEditing(true);
     setModalStep(2); // Jump to details by default
     setModalVisible(true);
@@ -209,7 +211,7 @@ export default function ShopInventoryScreen() {
 
     const newProd = {
       subcategory_id: selectedSubchainId,
-      name: foundName,
+      name: newName || foundName,
       price: newPrice,
       stock_quantity: newStock,
       deposit_amount: newDeposit,
@@ -240,6 +242,7 @@ export default function ShopInventoryScreen() {
     setNewDeposit('150'); // Senseful default for cans
     setNewImageUrl(null);
     setNewIsAvailable(true);
+    setNewName('');
   };
  
   const handleSave = async () => {
@@ -470,6 +473,7 @@ export default function ShopInventoryScreen() {
                           style={[styles.masterCatRow, selectedSubchainId === sub.id && styles.masterCatRowActive]}
                           onPress={() => {
                             setSelectedSubchainId(sub.id);
+                            setNewName(sub.name_en);
                             setNewDeposit(sub.is_water_can ? '150' : '0');
                             setModalStep(2);
                           }}
@@ -519,6 +523,18 @@ export default function ShopInventoryScreen() {
                         </View>
                       )}
                     </TouchableOpacity>
+                    
+                    <View style={{ marginBottom: 20 }}>
+                        <Text style={styles.inputLabel}>Product Name</Text>
+                        <View style={styles.modalPriceInputWrap}>
+                            <TextInput 
+                            style={[styles.modalPriceInput, { fontSize: 16 }]}
+                            value={newName}
+                            onChangeText={setNewName}
+                            placeholder="Enter product name"
+                            />
+                        </View>
+                    </View>
 
                     <View style={styles.formSplit}>
                       <View style={{ flex: 1 }}>
