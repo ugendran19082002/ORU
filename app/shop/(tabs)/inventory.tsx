@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView,
-  RefreshControl, TouchableOpacity, StyleSheet, TextInput, Modal, ActivityIndicator, Image, Switch } from 'react-native';
+import {
+  View, Text, ScrollView,
+  RefreshControl, TouchableOpacity, StyleSheet, TextInput, Modal, ActivityIndicator, Image, Switch
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -51,7 +53,7 @@ export default function ShopInventoryScreen() {
   const loadData = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      
+
       const [shopRes, catRes, stepsRes] = await Promise.all([
         onboardingApi.getMerchantShop(),
         onboardingApi.getCategories(),
@@ -109,13 +111,13 @@ export default function ShopInventoryScreen() {
   }, []);
 
   const updatePrice = (subcatId: number, price: string) => {
-    setProducts(prev => prev.map(p => 
+    setProducts(prev => prev.map(p =>
       p.subcategory_id === subcatId ? { ...p, price } : p
     ));
   };
 
   const updateStocks = (subcatId: number, key: 'stock_quantity', val: string) => {
-    setProducts(prev => prev.map(p => 
+    setProducts(prev => prev.map(p =>
       p.subcategory_id === subcatId ? { ...p, [key]: val } : p
     ));
   };
@@ -141,7 +143,7 @@ export default function ShopInventoryScreen() {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
-        
+
         // 5MB Client-side validation
         if (asset.fileSize && asset.fileSize > 5000000) {
           Toast.show({ type: 'error', text1: 'File Too Large', text2: 'Please select an image smaller than 5MB.' });
@@ -198,7 +200,7 @@ export default function ShopInventoryScreen() {
 
   const handleAddProduct = () => {
     if (!selectedSubchainId || !newPrice) return;
-    
+
     // Find subcategory info to get name
     let foundName = 'Water Product';
     for (const cat of categories) {
@@ -224,11 +226,11 @@ export default function ShopInventoryScreen() {
     };
 
     if (isEditing && editingSubchainId) {
-        setProducts(prev => prev.map(p => 
-            p.subcategory_id === editingSubchainId ? newProd : p
-        ));
+      setProducts(prev => prev.map(p =>
+        p.subcategory_id === editingSubchainId ? newProd : p
+      ));
     } else {
-        setProducts(prev => [...prev, newProd]);
+      setProducts(prev => [...prev, newProd]);
     }
 
     setModalVisible(false);
@@ -244,7 +246,7 @@ export default function ShopInventoryScreen() {
     setNewIsAvailable(true);
     setNewName('');
   };
- 
+
   const handleSave = async () => {
     if (!shopId) return;
 
@@ -339,14 +341,28 @@ export default function ShopInventoryScreen() {
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.catName}>{prod.name}</Text>
-                          <Text style={styles.catUnit}>Standard Unit</Text>
+                          {(() => {
+                            let catName = '';
+                            let subName = '';
+                            for (const cat of categories) {
+                              const sub = cat.Subcategories?.find((s: any) => s.id === prod.subcategory_id);
+                              if (sub) {
+                                catName = cat.name_en;
+                                subName = sub.name_en;
+                                break;
+                              }
+                            }
+                            return (
+                              <Text style={styles.catUnit}>{catName} • {subName}</Text>
+                            );
+                          })()}
                         </View>
-                        
+
                         <View style={styles.actionRow}>
-                          <Switch 
+                          <Switch
                             value={isAvailable}
                             onValueChange={(v) => {
-                              setProducts(prev => prev.map(p => 
+                              setProducts(prev => prev.map(p =>
                                 p.subcategory_id === prod.subcategory_id ? { ...p, is_available: v } : p
                               ));
                             }}
@@ -362,10 +378,10 @@ export default function ShopInventoryScreen() {
                           </TouchableOpacity>
                         </View>
                       </View>
-                      
 
 
-                    <View style={styles.stockSection}>
+
+                      <View style={styles.stockSection}>
                         <View style={styles.stockCol}>
                           <Text style={styles.stockLabel}>Stock Level</Text>
                           <View style={[styles.stockInputWrap, parseInt(prod.stock_quantity) < 20 && styles.lowStockBorder]}>
@@ -384,12 +400,12 @@ export default function ShopInventoryScreen() {
                       </View>
 
                       <View style={styles.dividerInner} />
-                      
+
                       <View style={styles.priceRow}>
                         <Text style={styles.priceLabel}>Selling Price:</Text>
                         <View style={styles.priceInputWrap}>
                           <Text style={styles.rupeeIcon}>₹</Text>
-                          <TextInput 
+                          <TextInput
                             style={styles.priceInput}
                             value={prod.price.toString()}
                             onChangeText={(val) => updatePrice(prod.subcategory_id, val)}
@@ -401,7 +417,7 @@ export default function ShopInventoryScreen() {
 
                       {parseFloat(prod.deposit_amount) > 0 && (
                         <View style={styles.depositRowList}>
-                          <Text style={styles.depositLabelList}>Can Price Amount:</Text>
+                          <Text style={styles.depositLabelList}>Container Charge:</Text>
                           <Text style={styles.depositValueList}>₹{prod.deposit_amount}</Text>
                         </View>
                       )}
@@ -440,8 +456,8 @@ export default function ShopInventoryScreen() {
                 return (
                   <View style={styles.gridContainer}>
                     {categories.map(cat => (
-                      <TouchableOpacity 
-                        key={cat.id} 
+                      <TouchableOpacity
+                        key={cat.id}
                         style={[styles.catGridCard, selectedCategoryId === cat.id && styles.catGridCardActive]}
                         onPress={() => {
                           setSelectedCategoryId(cat.id);
@@ -468,8 +484,8 @@ export default function ShopInventoryScreen() {
                     </TouchableOpacity>
                     <ScrollView style={styles.masterList} showsVerticalScrollIndicator={false}>
                       {category?.Subcategories?.map((sub: any) => (
-                        <TouchableOpacity 
-                          key={sub.id} 
+                        <TouchableOpacity
+                          key={sub.id}
                           style={[styles.masterCatRow, selectedSubchainId === sub.id && styles.masterCatRowActive]}
                           onPress={() => {
                             setSelectedSubchainId(sub.id);
@@ -478,10 +494,10 @@ export default function ShopInventoryScreen() {
                             setModalStep(2);
                           }}
                         >
-                          <Ionicons 
-                            name={selectedSubchainId === sub.id ? "radio-button-on" : "radio-button-off"} 
-                            size={20} 
-                            color={selectedSubchainId === sub.id ? "#005d90" : "#bfc7d1"} 
+                          <Ionicons
+                            name={selectedSubchainId === sub.id ? "radio-button-on" : "radio-button-off"}
+                            size={20}
+                            color={selectedSubchainId === sub.id ? "#005d90" : "#bfc7d1"}
                           />
                           <Text style={[styles.masterCatText, selectedSubchainId === sub.id && { color: '#005d90', fontWeight: '800' }]}>
                             {sub.name_en}
@@ -523,43 +539,43 @@ export default function ShopInventoryScreen() {
                         </View>
                       )}
                     </TouchableOpacity>
-                    
+
                     <View style={{ marginBottom: 20 }}>
-                        <Text style={styles.inputLabel}>Product Name</Text>
-                        <View style={styles.modalPriceInputWrap}>
-                            <TextInput 
-                            style={[styles.modalPriceInput, { fontSize: 16 }]}
-                            value={newName}
-                            onChangeText={setNewName}
-                            placeholder="Enter product name"
-                            />
-                        </View>
+                      <Text style={styles.inputLabel}>Product Name</Text>
+                      <View style={styles.modalPriceInputWrap}>
+                        <TextInput
+                          style={[styles.modalPriceInput, { fontSize: 16 }]}
+                          value={newName}
+                          onChangeText={setNewName}
+                          placeholder="Enter product name"
+                        />
+                      </View>
                     </View>
 
                     <View style={styles.formSplit}>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.inputLabel}>Price (₹)</Text>
                         <View style={styles.modalPriceInputWrap}>
-                            <Text style={styles.rupeeIcon}>₹</Text>
-                            <TextInput 
+                          <Text style={styles.rupeeIcon}>₹</Text>
+                          <TextInput
                             style={styles.modalPriceInput}
                             value={newPrice}
                             onChangeText={setNewPrice}
                             keyboardType="number-pad"
                             placeholder="45"
-                            />
+                          />
                         </View>
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.inputLabel}>Initial Stock</Text>
                         <View style={styles.modalPriceInputWrap}>
-                            <TextInput 
+                          <TextInput
                             style={styles.modalPriceInput}
                             value={newStock}
                             onChangeText={setNewStock}
                             keyboardType="number-pad"
                             placeholder="100"
-                            />
+                          />
                         </View>
                       </View>
                     </View>
@@ -570,16 +586,16 @@ export default function ShopInventoryScreen() {
                       if (subcat?.is_water_can) {
                         return (
                           <View style={{ marginTop: 20 }}>
-                            <Text style={styles.inputLabel}>Can Price Amount (₹)</Text>
+                            <Text style={styles.inputLabel}>Container Charge (₹)</Text>
                             <View style={styles.modalPriceInputWrap}>
-                                <Text style={styles.rupeeIcon}>₹</Text>
-                                <TextInput 
-                                  style={styles.modalPriceInput}
-                                  value={newDeposit}
-                                  onChangeText={setNewDeposit}
-                                  keyboardType="number-pad"
-                                  placeholder="150"
-                                />
+                              <Text style={styles.rupeeIcon}>₹</Text>
+                              <TextInput
+                                style={styles.modalPriceInput}
+                                value={newDeposit}
+                                onChangeText={setNewDeposit}
+                                keyboardType="number-pad"
+                                placeholder="150"
+                              />
                             </View>
                           </View>
                         );
@@ -588,14 +604,14 @@ export default function ShopInventoryScreen() {
                     })()}
 
                     <View style={styles.dividerInner} />
-                    
+
                     <View style={styles.promoRow}>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.inputLabel}>GST Applicable</Text>
                         <Text style={styles.hintText}>Enable if this product includes tax</Text>
                       </View>
-                      <Switch 
-                        value={newIsGst} 
+                      <Switch
+                        value={newIsGst}
                         onValueChange={setNewIsGst}
                         trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
                         thumbColor={newIsGst ? '#006878' : '#707881'}
@@ -609,20 +625,20 @@ export default function ShopInventoryScreen() {
                           <Text style={styles.inputLabel}>Tax Rate (%)</Text>
                         </View>
                         <View style={styles.modalPriceInputWrap}>
-                            <TextInput 
+                          <TextInput
                             style={styles.modalPriceInput}
                             value={newTaxPercentage}
                             onChangeText={setNewTaxPercentage}
                             keyboardType="number-pad"
                             placeholder="18"
-                            />
-                            <Text style={styles.sliderUnitDisplay}>% GST</Text>
+                          />
+                          <Text style={styles.sliderUnitDisplay}>% GST</Text>
                         </View>
                       </View>
                     )}
 
-                    <TouchableOpacity 
-                      style={[styles.submitBtn, (!selectedSubchainId || !newPrice) && { backgroundColor: '#e0e2e8', shadowOpacity: 0 }]} 
+                    <TouchableOpacity
+                      style={[styles.submitBtn, (!selectedSubchainId || !newPrice) && { backgroundColor: '#e0e2e8', shadowOpacity: 0 }]}
                       onPress={handleAddProduct}
                       disabled={!selectedSubchainId || !newPrice || uploadingImage}
                     >
@@ -643,7 +659,7 @@ export default function ShopInventoryScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
-  header: { 
+  header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 24, paddingVertical: 14, backgroundColor: 'rgba(255,255,255,0.92)'
   },
@@ -660,7 +676,7 @@ const styles = StyleSheet.create({
 
   listContainer: { gap: 16, marginBottom: 24 },
   card: { backgroundColor: 'white', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: '#e0e2e8', shadowColor: '#003a5c', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
-  
+
   cardTop: { flexDirection: 'row', gap: 12, alignItems: 'center' },
   iconWrap: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#e0f7fa', alignItems: 'center', justifyContent: 'center' },
   catName: { fontSize: 16, fontWeight: '900', color: '#181c20', marginBottom: 2 },
@@ -697,9 +713,9 @@ const styles = StyleSheet.create({
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   modalTitle: { fontSize: 20, fontWeight: '900', color: '#181c20' },
   closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center' },
-  
+
   inputLabel: { fontSize: 13, fontWeight: '800', color: '#707881', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
-  
+
   masterList: { maxHeight: 200, backgroundColor: '#f7f9ff', borderRadius: 16, padding: 8 },
   masterCatRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 10 },
   masterCatRowActive: { backgroundColor: '#e0f0ff' },
