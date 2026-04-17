@@ -13,6 +13,12 @@ import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { apiClient } from '@/api/client';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
+const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
+
 interface StaffRole {
   id: number;
   name: string;
@@ -155,8 +161,8 @@ export default function ShopStaffScreen() {
       {/* STATS */}
       <View style={styles.statsRow}>
         {[
-          { label: 'Total', value: staff.length, color: '#005d90', bg: '#e0f0ff', icon: 'people-outline' },
-          { label: 'Active', value: activeCount, color: '#2e7d32', bg: '#e8f5e9', icon: 'checkmark-circle-outline' },
+          { label: 'Total', value: staff.length, color: SHOP_ACCENT, bg: '#e0f0ff', icon: 'people-outline' },
+          { label: 'Active', value: activeCount, color: thannigoPalette.success, bg: '#e8f5e9', icon: 'checkmark-circle-outline' },
           { label: 'Inactive', value: inactiveCount, color: '#b45309', bg: '#fef3c7', icon: 'pause-circle-outline' },
         ].map((s) => (
           <View key={s.label} style={styles.statBox}>
@@ -174,7 +180,7 @@ export default function ShopStaffScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchAll(); }} />}
       >
-        {loading && <ActivityIndicator color="#005d90" style={{ marginTop: 40 }} />}
+        {loading && <ActivityIndicator color={SHOP_ACCENT} style={{ marginTop: 40 }} />}
 
         {!loading && staff.length === 0 && (
           <View style={styles.emptyState}>
@@ -188,20 +194,20 @@ export default function ShopStaffScreen() {
           <View key={member.id} style={styles.staffCard}>
             <View style={styles.staffCardTop}>
               <View style={styles.avatar}>
-                <Ionicons name="person" size={22} color="#005d90" />
+                <Ionicons name="person" size={22} color={SHOP_ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.staffName}>{member.name}</Text>
                 <Text style={styles.staffPhone}>{member.phone}</Text>
               </View>
               {togglingId === member.id ? (
-                <ActivityIndicator size="small" color="#005d90" />
+                <ActivityIndicator size="small" color={SHOP_ACCENT} />
               ) : (
                 <Switch
                   value={member.status === 'active'}
                   onValueChange={() => handleToggleStatus(member)}
-                  trackColor={{ false: '#e0e2e8', true: '#bbf7d0' }}
-                  thumbColor={member.status === 'active' ? '#2e7d32' : '#94a3b8'}
+                  trackColor={{ false: thannigoPalette.borderSoft, true: '#bbf7d0' }}
+                  thumbColor={member.status === 'active' ? thannigoPalette.success : '#94a3b8'}
                 />
               )}
             </View>
@@ -210,7 +216,7 @@ export default function ShopStaffScreen() {
                 <Ionicons
                   name="briefcase-outline"
                   size={12}
-                  color={member.status === 'active' ? '#005d90' : '#94a3b8'}
+                  color={member.status === 'active' ? SHOP_ACCENT : '#94a3b8'}
                 />
                 <Text style={[styles.roleText, member.status === 'inactive' && styles.roleTextInactive]}>
                   {member.role}
@@ -259,7 +265,7 @@ export default function ShopStaffScreen() {
               <Text style={[styles.rolePickerText, !form.role && { color: '#a0aab4' }]}>
                 {form.role || 'Select a role…'}
               </Text>
-              <Ionicons name={rolePickerOpen ? 'chevron-up' : 'chevron-down'} size={16} color="#707881" />
+              <Ionicons name={rolePickerOpen ? 'chevron-up' : 'chevron-down'} size={16} color={thannigoPalette.neutral} />
             </TouchableOpacity>
             {rolePickerOpen && (
               <View style={styles.roleDropdown}>
@@ -275,7 +281,7 @@ export default function ShopStaffScreen() {
                     <Text style={[styles.roleOptionText, form.role === r.name && styles.roleOptionTextActive]}>
                       {r.name}
                     </Text>
-                    {form.role === r.name && <Ionicons name="checkmark" size={16} color="#005d90" />}
+                    {form.role === r.name && <Ionicons name="checkmark" size={16} color={SHOP_ACCENT} />}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -286,7 +292,7 @@ export default function ShopStaffScreen() {
                 <Text style={styles.cancelModalBtnText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.submitBtn, submitting && { opacity: 0.7 }]} onPress={handleAddStaff} disabled={submitting}>
-                <LinearGradient colors={['#005d90', '#0077b6']} style={styles.submitBtnGrad}>
+                <LinearGradient colors={[SHOP_ACCENT, SHOP_GRAD[1]]} style={styles.submitBtnGrad}>
                   {submitting ? (
                     <ActivityIndicator color="white" size="small" />
                   ) : (
@@ -306,62 +312,62 @@ export default function ShopStaffScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
 
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#181c20' },
-  headerSub: { fontSize: 11, color: '#707881', fontWeight: '500', marginTop: 1 },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#005d90', paddingHorizontal: 16, paddingVertical: 9, borderRadius: 12 },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
+  headerSub: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 1 },
+  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: SHOP_ACCENT, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 12 },
   addBtnText: { color: 'white', fontSize: 13, fontWeight: '800' },
 
-  statsRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingVertical: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  statsRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingVertical: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
   statBox: { flex: 1, alignItems: 'center', gap: 6 },
   statIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   statValue: { fontSize: 20, fontWeight: '900' },
-  statLabel: { fontSize: 10, color: '#707881', fontWeight: '600' },
+  statLabel: { fontSize: 10, color: thannigoPalette.neutral, fontWeight: '600' },
 
   content: { padding: 20, gap: 12, paddingBottom: 40 },
 
   emptyState: { alignItems: 'center', paddingTop: 60, gap: 10 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#64748b' },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.neutral },
   emptySub: { fontSize: 13, color: '#94a3b8', textAlign: 'center' },
 
   staffCard: { backgroundColor: 'white', borderRadius: 20, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   staffCardTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
   avatar: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
-  staffName: { fontSize: 15, fontWeight: '800', color: '#181c20' },
-  staffPhone: { fontSize: 12, color: '#707881', fontWeight: '500', marginTop: 2 },
+  staffName: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText },
+  staffPhone: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 2 },
   staffMeta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   roleBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#e0f0ff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  roleBadgeInactive: { backgroundColor: '#f1f5f9' },
-  roleText: { fontSize: 11, fontWeight: '700', color: '#005d90' },
+  roleBadgeInactive: { backgroundColor: thannigoPalette.borderSoft },
+  roleText: { fontSize: 11, fontWeight: '700', color: SHOP_ACCENT },
   roleTextInactive: { color: '#94a3b8' },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   statusBadgeActive: { backgroundColor: '#e8f5e9' },
-  statusBadgeInactive: { backgroundColor: '#f1f5f9' },
+  statusBadgeInactive: { backgroundColor: thannigoPalette.borderSoft },
   statusBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
-  statusBadgeTextActive: { color: '#2e7d32' },
+  statusBadgeTextActive: { color: thannigoPalette.success },
   statusBadgeTextInactive: { color: '#94a3b8' },
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   modalSheet: { backgroundColor: 'white', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 },
-  modalPill: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#e0e2e8', alignSelf: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: '#181c20', marginBottom: 20 },
-  fieldLabel: { fontSize: 12, fontWeight: '700', color: '#707881', marginBottom: 6, letterSpacing: 0.5 },
-  input: { backgroundColor: '#f7f9ff', borderRadius: 14, padding: 14, fontSize: 15, color: '#181c20', borderWidth: 1, borderColor: '#e0e2e8', marginBottom: 14 },
-  rolePicker: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f7f9ff', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#e0e2e8', marginBottom: 6 },
-  rolePickerText: { fontSize: 15, color: '#181c20', fontWeight: '600' },
-  roleDropdown: { backgroundColor: 'white', borderRadius: 14, borderWidth: 1, borderColor: '#e0e2e8', marginBottom: 14, overflow: 'hidden' },
+  modalPill: { width: 40, height: 4, borderRadius: 2, backgroundColor: thannigoPalette.borderSoft, alignSelf: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 20 },
+  fieldLabel: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral, marginBottom: 6, letterSpacing: 0.5 },
+  input: { backgroundColor: thannigoPalette.background, borderRadius: 14, padding: 14, fontSize: 15, color: thannigoPalette.darkText, borderWidth: 1, borderColor: thannigoPalette.borderSoft, marginBottom: 14 },
+  rolePicker: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: thannigoPalette.background, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: thannigoPalette.borderSoft, marginBottom: 6 },
+  rolePickerText: { fontSize: 15, color: thannigoPalette.darkText, fontWeight: '600' },
+  roleDropdown: { backgroundColor: 'white', borderRadius: 14, borderWidth: 1, borderColor: thannigoPalette.borderSoft, marginBottom: 14, overflow: 'hidden' },
   roleDropdownEmpty: { padding: 14, color: '#94a3b8', textAlign: 'center', fontSize: 13 },
-  roleOption: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  roleOption: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
   roleOptionActive: { backgroundColor: '#f0f7ff' },
-  roleOptionText: { fontSize: 14, fontWeight: '600', color: '#181c20' },
-  roleOptionTextActive: { color: '#005d90', fontWeight: '700' },
+  roleOptionText: { fontSize: 14, fontWeight: '600', color: thannigoPalette.darkText },
+  roleOptionTextActive: { color: SHOP_ACCENT, fontWeight: '700' },
   modalActions: { flexDirection: 'row', gap: 12, marginTop: 6 },
-  cancelModalBtn: { flex: 0.4, paddingVertical: 15, borderRadius: 16, borderWidth: 1, borderColor: '#e0e2e8', alignItems: 'center' },
-  cancelModalBtnText: { fontSize: 14, fontWeight: '700', color: '#64748b' },
+  cancelModalBtn: { flex: 0.4, paddingVertical: 15, borderRadius: 16, borderWidth: 1, borderColor: thannigoPalette.borderSoft, alignItems: 'center' },
+  cancelModalBtnText: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
   submitBtn: { flex: 0.6, borderRadius: 16, overflow: 'hidden' },
   submitBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 15 },
   submitBtnText: { color: 'white', fontSize: 15, fontWeight: '800' },

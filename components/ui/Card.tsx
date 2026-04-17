@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, ViewProps, StyleSheet } from 'react-native';
-import { Shadow } from '@/constants/theme';
+import { Shadow, Radius, thannigoPalette } from '@/constants/theme';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 type ShadowLevel = 'none' | 'xs' | 'sm' | 'md' | 'lg';
 
@@ -18,13 +19,24 @@ export function Card({
   style,
   ...props
 }: CardProps) {
+  const { colors } = useAppTheme();
   const resolvedShadow = shadow ?? (variant === 'elevated' ? 'sm' : 'none');
+
+  const variantStyle = {
+    elevated: { backgroundColor: colors.surface },
+    flat: { backgroundColor: colors.background },
+    outline: {
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+  }[variant];
 
   return (
     <View
       style={[
         styles.base,
-        variantStyles[variant],
+        variantStyle,
         Shadow[resolvedShadow],
         style,
       ]}
@@ -37,21 +49,7 @@ export function Card({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: 24,
+    borderRadius: Radius.xl,
     padding: 16,
-  },
-});
-
-const variantStyles = StyleSheet.create({
-  elevated: {
-    backgroundColor: '#FFFFFF',
-  },
-  flat: {
-    backgroundColor: '#F5F9FF',
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#E0EAF5',
   },
 });

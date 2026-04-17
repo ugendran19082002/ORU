@@ -13,6 +13,11 @@ import { BackButton } from '@/components/ui/BackButton';
 import { apiClient } from '@/api/client';
 import Toast from 'react-native-toast-message';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const ADMIN_ACCENT = roleAccent.admin;
+const ADMIN_SURF = roleSurface.admin;
+
 type Feature = {
   id: number;
   key: string;
@@ -28,8 +33,8 @@ type Feature = {
 };
 
 const PRICING_COLORS: Record<string, { bg: string; text: string }> = {
-  free: { bg: '#e8f5e9', text: '#2e7d32' },
-  plan_only: { bg: '#ffdad6', text: '#ba1a1a' },
+  free: { bg: '#e8f5e9', text: thannigoPalette.success },
+  plan_only: { bg: ADMIN_SURF, text: ADMIN_ACCENT },
   pay_per_use: { bg: '#fef3c7', text: '#b45309' },
 };
 
@@ -177,7 +182,7 @@ export default function AdminFeaturesScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
+              <Ionicons name="chevron-back" size={20} color={ADMIN_ACCENT} />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={styles.pageTitle}>Feature Flags</Text>
@@ -194,7 +199,7 @@ export default function AdminFeaturesScreen() {
                 setShowModal(true);
               }}
             >
-              <Ionicons name="add" size={24} color="#ba1a1a" />
+              <Ionicons name="add" size={24} color={ADMIN_ACCENT} />
             </TouchableOpacity>
           </View>
         </View>
@@ -220,7 +225,7 @@ export default function AdminFeaturesScreen() {
       </View>
 
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchFeatures(); }} colors={['#ba1a1a']} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchFeatures(); }} colors={[ADMIN_ACCENT]} />}
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { alignItems: 'center', paddingBottom: 100 }]}
@@ -228,7 +233,7 @@ export default function AdminFeaturesScreen() {
         <View style={{ width: '100%', maxWidth: 1200 }}>
         {loading ? (
           <View style={styles.centered}>
-            <ActivityIndicator size="large" color="#ba1a1a" />
+            <ActivityIndicator size="large" color={ADMIN_ACCENT} />
           </View>
         ) : filtered.length === 0 ? (
           <View style={styles.centered}>
@@ -258,13 +263,13 @@ export default function AdminFeaturesScreen() {
                     }}
                     style={styles.actionBtn}
                   >
-                    <Ionicons name="shield-checkmark-outline" size={18} color="#ba1a1a" />
+                    <Ionicons name="shield-checkmark-outline" size={18} color={ADMIN_ACCENT} />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => { setEditFeature({ ...feature }); setShowModal(true); }}>
                     <Ionicons name="settings-outline" size={20} color="#64748b" />
                   </TouchableOpacity>
                   {toggling === feature.id ? (
-                    <ActivityIndicator size="small" color="#ba1a1a" />
+                    <ActivityIndicator size="small" color={ADMIN_ACCENT} />
                   ) : (
                     <Switch
                       value={feature.globally_enabled}
@@ -278,7 +283,7 @@ export default function AdminFeaturesScreen() {
                           ]
                         );
                       }}
-                      trackColor={{ false: '#e0e2e8', true: '#bbf7d0' }}
+                      trackColor={{ false: thannigoPalette.borderSoft, true: '#bbf7d0' }}
                       thumbColor={feature.globally_enabled ? '#16a34a' : '#94a3b8'}
                     />
                   )}
@@ -295,16 +300,16 @@ export default function AdminFeaturesScreen() {
                     {feature.pricing_type.replace('_', ' ')}
                   </Text>
                 </View>
-                <View style={[styles.featureTag, { backgroundColor: '#f1f4f9' }]}>
+                <View style={[styles.featureTag, { backgroundColor: thannigoPalette.borderSoft }]}>
                   <Text style={styles.featureTagText}>{feature.role}</Text>
                 </View>
                 {feature.category && (
                   <View style={[styles.featureTag, { backgroundColor: '#f0f7ff' }]}>
-                    <Text style={[styles.featureTagText, { color: '#ba1a1a' }]}>{feature.category}</Text>
+                    <Text style={[styles.featureTagText, { color: ADMIN_ACCENT }]}>{feature.category}</Text>
                   </View>
                 )}
                 <View style={[styles.featureTag, { backgroundColor: feature.globally_enabled ? '#e8f5e9' : '#ffebee' }]}>
-                  <Text style={[styles.featureTagText, { color: feature.globally_enabled ? '#2e7d32' : '#c62828' }]}>
+                  <Text style={[styles.featureTagText, { color: feature.globally_enabled ? thannigoPalette.success : thannigoPalette.adminRed }]}>
                     {feature.globally_enabled ? 'Enabled' : 'Disabled'}
                   </Text>
                 </View>
@@ -375,7 +380,7 @@ export default function AdminFeaturesScreen() {
               onPress={handleSave}
               disabled={saving}
             >
-              <LinearGradient colors={['#ba1a1a', '#e32424']} style={styles.saveBtnGrad}>
+              <LinearGradient colors={[ADMIN_ACCENT, ADMIN_ACCENT]} style={styles.saveBtnGrad}>
                 {saving ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>Save Feature</Text>}
               </LinearGradient>
             </TouchableOpacity>
@@ -421,7 +426,7 @@ export default function AdminFeaturesScreen() {
                 onChangeText={setSearchQuery}
                 placeholderTextColor="#94a3b8"
               />
-              {targetLoading && <ActivityIndicator size="small" color="#ba1a1a" />}
+              {targetLoading && <ActivityIndicator size="small" color={ADMIN_ACCENT} />}
             </View>
 
             <ScrollView style={{ maxHeight: 200 }} showsVerticalScrollIndicator={false}>
@@ -437,7 +442,7 @@ export default function AdminFeaturesScreen() {
                     </Text>
                     <Text style={styles.targetSub}>{t.phone} • {t.email || 'No email'}</Text>
                   </View>
-                  {selectedTarget?.id === t.id && <Ionicons name="checkmark-circle" size={20} color="#ba1a1a" />}
+                  {selectedTarget?.id === t.id && <Ionicons name="checkmark-circle" size={20} color={ADMIN_ACCENT} />}
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -466,7 +471,7 @@ export default function AdminFeaturesScreen() {
               onPress={handleSetOverride}
               disabled={!selectedTarget || saving}
             >
-              <LinearGradient colors={['#ba1a1a', '#e32424']} style={styles.saveBtnGrad}>
+              <LinearGradient colors={[ADMIN_ACCENT, ADMIN_ACCENT]} style={styles.saveBtnGrad}>
                 {saving ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>Grant Access</Text>}
               </LinearGradient>
             </TouchableOpacity>
@@ -478,11 +483,11 @@ export default function AdminFeaturesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   headerSafe: { 
     backgroundColor: 'white', 
     borderBottomWidth: 1, 
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: thannigoPalette.borderSoft,
     alignItems: 'center',
   },
   headerContent: {
@@ -496,24 +501,24 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: thannigoPalette.borderSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '500', marginTop: 2 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 2 },
 
   addBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
   
-  tabBarWrap: { paddingVertical: 10, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  tabBarWrap: { paddingVertical: 10, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
   tabs: { paddingHorizontal: 24, gap: 8 },
-  tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#f1f5f9' },
-  tabActive: { backgroundColor: '#ba1a1a' },
-  tabText: { fontSize: 13, fontWeight: '800', color: '#64748b' },
+  tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: thannigoPalette.borderSoft },
+  tabActive: { backgroundColor: ADMIN_ACCENT },
+  tabText: { fontSize: 13, fontWeight: '800', color: thannigoPalette.neutral },
   tabTextActive: { color: 'white' },
   content: { padding: 16, gap: 12 },
   centered: { paddingTop: 80, alignItems: 'center' },
-  emptyText: { marginTop: 14, color: '#64748b', fontWeight: '600', fontSize: 15 },
+  emptyText: { marginTop: 14, color: thannigoPalette.neutral, fontWeight: '600', fontSize: 15 },
   featureCard: {
     backgroundColor: 'white', borderRadius: 18, padding: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
@@ -521,14 +526,14 @@ const styles = StyleSheet.create({
   featureTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 },
   featureInfo: { flex: 1, marginRight: 12 },
   featureNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 3 },
-  featureName: { fontSize: 15, fontWeight: '800', color: '#181c20' },
+  featureName: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText },
   betaBadge: { backgroundColor: '#fef3c7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   betaText: { fontSize: 9, fontWeight: '800', color: '#b45309', letterSpacing: 0.5 },
   featureKey: { fontSize: 11, color: '#94a3b8', fontFamily: 'monospace', fontWeight: '600' },
-  featureDesc: { fontSize: 13, color: '#64748b', lineHeight: 18, marginBottom: 10 },
+  featureDesc: { fontSize: 13, color: thannigoPalette.neutral, lineHeight: 18, marginBottom: 10 },
   featureTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   featureTag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
-  featureTagText: { fontSize: 11, fontWeight: '700', color: '#707881' },
+  featureTagText: { fontSize: 11, fontWeight: '700', color: thannigoPalette.neutral },
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: {
@@ -536,41 +541,41 @@ const styles = StyleSheet.create({
     padding: 24, maxHeight: '85%',
   },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: '#181c20' },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
   fieldRow: { marginBottom: 14 },
   fieldLabel: { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 6 },
   fieldInput: {
-    borderWidth: 1.5, borderColor: '#e0e2e8', borderRadius: 12,
-    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#181c20',
+    borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: thannigoPalette.darkText,
   },
   switchRow: { 
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', 
-    backgroundColor: '#f8fafc', padding: 12, borderRadius: 12, marginBottom: 10 
+    backgroundColor: thannigoPalette.background, padding: 12, borderRadius: 12, marginBottom: 10 
   },
-  switchLabel: { fontSize: 14, fontWeight: '800', color: '#1e293b' },
-  switchSub: { fontSize: 11, color: '#64748b', fontWeight: '500' },
+  switchLabel: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText },
+  switchSub: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500' },
   saveBtn: { borderRadius: 16, overflow: 'hidden', marginTop: 16 },
   saveBtnGrad: { paddingVertical: 16, alignItems: 'center' },
   saveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
   actionBtn: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#f0f7ff', alignItems: 'center', justifyContent: 'center' },
   typeSelector: { flexDirection: 'row', gap: 10, marginBottom: 16 },
-  typeOption: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#e2e8f0' },
-  typeOptionActive: { backgroundColor: '#ba1a1a', borderColor: '#ba1a1a' },
-  typeOptionText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
+  typeOption: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, backgroundColor: thannigoPalette.borderSoft, borderWidth: 1, borderColor: '#e2e8f0' },
+  typeOptionActive: { backgroundColor: ADMIN_ACCENT, borderColor: ADMIN_ACCENT },
+  typeOptionText: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral },
   typeOptionActiveText: { color: 'white' },
   searchBox: { 
     flexDirection: 'row', alignItems: 'center', gap: 10, 
-    backgroundColor: '#f8fafc', paddingHorizontal: 16, paddingVertical: 12, 
+    backgroundColor: thannigoPalette.background, paddingHorizontal: 16, paddingVertical: 12, 
     borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#e2e8f0' 
   },
-  searchInput: { flex: 1, fontSize: 14, color: '#1e293b' },
+  searchInput: { flex: 1, fontSize: 14, color: thannigoPalette.darkText },
   targetItem: { 
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     padding: 12, borderRadius: 12, marginBottom: 8, backgroundColor: 'white',
-    borderWidth: 1.5, borderColor: '#f1f5f9'
+    borderWidth: 1.5, borderColor: thannigoPalette.borderSoft
   },
-  targetItemActive: { borderColor: '#ba1a1a', backgroundColor: '#fff8f7' },
-  targetName: { fontSize: 14, fontWeight: '800', color: '#1e293b' },
-  targetItemActiveText: { color: '#ba1a1a' },
-  targetSub: { fontSize: 11, color: '#64748b', fontWeight: '500' },
+  targetItemActive: { borderColor: ADMIN_ACCENT, backgroundColor: ADMIN_SURF },
+  targetName: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText },
+  targetItemActiveText: { color: ADMIN_ACCENT },
+  targetSub: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500' },
 });

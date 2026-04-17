@@ -13,6 +13,12 @@ import { BackButton } from '@/components/ui/BackButton';
 import { orderApi } from '@/api/orderApi';
 import moment from 'moment';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const CUSTOMER_ACCENT = roleAccent.customer;
+const CUSTOMER_SURF = roleSurface.customer;
+const CUSTOMER_GRAD: [string, string] = [roleGradients.customer.start, roleGradients.customer.end];
+
 interface Slot {
   id: number;
   start_time: string;
@@ -103,7 +109,7 @@ export default function ScheduleDeliveryScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <LinearGradient colors={['#005d90', '#0077b6']} style={styles.heroCard}>
+        <LinearGradient colors={[CUSTOMER_ACCENT, CUSTOMER_GRAD[1]]} style={styles.heroCard}>
           <Ionicons name="calendar" size={64} color="rgba(255,255,255,0.08)" style={styles.heroDecor} />
           <Ionicons name="time-outline" size={32} color="white" />
           <Text style={styles.heroTitle}>Pick Your Delivery Slot</Text>
@@ -133,7 +139,7 @@ export default function ScheduleDeliveryScreen() {
         
         {loading ? (
           <View style={styles.center}>
-             <ActivityIndicator size="large" color="#005d90" />
+             <ActivityIndicator size="large" color={CUSTOMER_ACCENT} />
              <Text style={styles.loadingText}>Fetching slots...</Text>
           </View>
         ) : status === 'closed' ? (
@@ -155,7 +161,7 @@ export default function ScheduleDeliveryScreen() {
               style={[styles.slotCard, selectedSlotId === slot.id && styles.slotCardActive]}
               onPress={() => setSelectedSlotId(slot.id)}
             >
-              <Ionicons name="time-outline" size={20} color={selectedSlotId === slot.id ? '#005d90' : '#707881'} />
+              <Ionicons name="time-outline" size={20} color={selectedSlotId === slot.id ? CUSTOMER_ACCENT : thannigoPalette.neutral} />
               <View style={{ flex: 1 }}>
                 <Text style={[styles.slotText, selectedSlotId === slot.id && styles.slotTextActive]}>
                   {slot.label}
@@ -184,7 +190,7 @@ export default function ScheduleDeliveryScreen() {
           onPress={handleConfirm}
           disabled={!selectedSlotId || loading}
         >
-          <LinearGradient colors={['#005d90', '#0077b6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.confirmBtnGrad}>
+          <LinearGradient colors={[CUSTOMER_ACCENT, CUSTOMER_GRAD[1]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.confirmBtnGrad}>
             <Ionicons name="calendar-outline" size={20} color="white" />
             <Text style={styles.confirmBtnText}>Confirm {selectedSlotId ? 'Schedule' : 'Selection'}</Text>
           </LinearGradient>
@@ -196,41 +202,41 @@ export default function ScheduleDeliveryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
   content: { padding: 20, gap: 14, paddingBottom: 40 },
-  heroCard: { borderRadius: 24, padding: 24, overflow: 'hidden', alignItems: 'center', gap: 8, shadowColor: '#005d90', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8 },
+  heroCard: { borderRadius: 24, padding: 24, overflow: 'hidden', alignItems: 'center', gap: 8, shadowColor: CUSTOMER_ACCENT, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8 },
   heroDecor: { position: 'absolute', right: -10, top: -10 },
   heroTitle: { fontSize: 20, fontWeight: '900', color: 'white' },
   heroSub: { fontSize: 13, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 18 },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#181c20', letterSpacing: -0.3, marginTop: 10 },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3, marginTop: 10 },
   
   dateList: { gap: 10, paddingRight: 20 },
-  dateCard: { width: 64, height: 80, backgroundColor: 'white', borderRadius: 16, alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: '#e0e2e8' },
-  dateCardActive: { backgroundColor: '#005d90', borderColor: '#005d90' },
-  dateDay: { fontSize: 12, fontWeight: '700', color: '#707881', textTransform: 'uppercase' },
-  dateNum: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
+  dateCard: { width: 64, height: 80, backgroundColor: 'white', borderRadius: 16, alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  dateCardActive: { backgroundColor: CUSTOMER_ACCENT, borderColor: CUSTOMER_ACCENT },
+  dateDay: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral, textTransform: 'uppercase' },
+  dateNum: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
   dateTextActive: { color: 'white' },
 
-  slotCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1.5, borderColor: '#e0e2e8' },
-  slotCardActive: { borderColor: '#005d90', backgroundColor: '#f0f7ff' },
-  slotText: { fontSize: 14, fontWeight: '700', color: '#181c20' },
-  slotTextActive: { color: '#005d90' },
+  slotCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft },
+  slotCardActive: { borderColor: CUSTOMER_ACCENT, backgroundColor: '#f0f7ff' },
+  slotText: { fontSize: 14, fontWeight: '700', color: thannigoPalette.darkText },
+  slotTextActive: { color: CUSTOMER_ACCENT },
   fullBadge: { alignSelf: 'flex-start', backgroundColor: '#fee2e2', color: '#ef4444', fontSize: 10, fontWeight: '900', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginTop: 4 },
   
   center: { padding: 40, alignItems: 'center', justifyContent: 'center', gap: 10 },
-  loadingText: { fontSize: 14, color: '#707881', fontWeight: '600' },
+  loadingText: { fontSize: 14, color: thannigoPalette.neutral, fontWeight: '600' },
   
-  emptyState: { padding: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white', borderRadius: 24, gap: 8, borderStyle: 'dashed', borderWidth: 1.5, borderColor: '#e0e2e8' },
-  emptyTitle: { fontSize: 16, fontWeight: '800', color: '#0f172a' },
-  emptySub: { fontSize: 13, color: '#707881', textAlign: 'center' },
+  emptyState: { padding: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white', borderRadius: 24, gap: 8, borderStyle: 'dashed', borderWidth: 1.5, borderColor: thannigoPalette.borderSoft },
+  emptyTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
+  emptySub: { fontSize: 13, color: thannigoPalette.neutral, textAlign: 'center' },
 
-  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#e0e2e8', alignItems: 'center', justifyContent: 'center' },
-  radioActive: { borderColor: '#005d90' },
-  radioDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#005d90' },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  radioActive: { borderColor: CUSTOMER_ACCENT },
+  radioDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: CUSTOMER_ACCENT },
   
-  noteInput: { backgroundColor: 'white', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#e0e2e8', fontSize: 14, color: '#181c20', minHeight: 80, textAlignVertical: 'top' },
+  noteInput: { backgroundColor: 'white', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: thannigoPalette.borderSoft, fontSize: 14, color: thannigoPalette.darkText, minHeight: 80, textAlignVertical: 'top' },
   confirmBtn: { borderRadius: 18, overflow: 'hidden', marginTop: 4 },
   confirmBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
   confirmBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },

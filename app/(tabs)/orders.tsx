@@ -17,7 +17,11 @@ import { useCartStore } from '@/stores/cartStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
 import { useRoleTheme } from '@/hooks/use-role-theme';
-import { Shadow, Typography, thannigoPalette, roleSurface } from '@/constants/theme';
+import { Shadow, Typography, thannigoPalette, roleSurface, roleAccent, Radius } from '@/constants/theme';
+import { useAppTheme } from '@/providers/ThemeContext';
+
+const CUSTOMER_ACCENT = roleAccent.customer;
+const SHOP_ACCENT = roleAccent.shop_owner;
 import { orderApi } from '@/api/orderApi';
 import Toast from 'react-native-toast-message';
 
@@ -87,6 +91,7 @@ function OrderCard({ order, onTrack, onReorder, onSupport, onPress, accent }: {
 
 export default function OrdersScreen() {
   const router = useRouter();
+  const { colors, isDark } = useAppTheme();
   const { accent } = useRoleTheme();
   const [tab, setTab] = useState<'active' | 'past'>('active');
   const [refreshing, setRefreshing] = useState(false);
@@ -109,17 +114,17 @@ export default function OrdersScreen() {
     const quantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
     const isActive = !['delivered', 'completed', 'cancelled'].includes(order.status);
     const statusMap = {
-      pending: { label: 'Pending', color: '#005D90', bg: '#E3F2FD', progress: 0.1 },
-      assigned: { label: 'Assigned', color: '#0077B6', bg: '#E0F0FF', progress: 0.3 },
-      accepted: { label: 'Accepted', color: '#006878', bg: '#E0F7FA', progress: 0.5 },
-      picked: { label: 'Picked', color: '#005D90', bg: '#E3F2FD', progress: 0.75 },
-      delivered: { label: 'Delivered', color: '#005D90', bg: '#E3F2FD', progress: 0.9 },
-      completed: { label: 'Completed', color: '#2e7d32', bg: '#e8f5e9', progress: 1 },
-      cancelled: { label: 'Cancelled', color: '#ba1a1a', bg: '#ffdad6', progress: 0 },
-      placed: { label: 'Placed', color: '#005D90', bg: '#E3F2FD', progress: 0.1 },
-      preparing: { label: 'Preparing', color: '#0077B6', bg: '#E0F0FF', progress: 0.4 },
-      dispatched: { label: 'Dispatched', color: '#006878', bg: '#E0F7FA', progress: 0.75 },
-      failed: { label: 'Failed', color: '#ba1a1a', bg: '#ffdad6', progress: 0 },
+      pending:    { label: 'Pending',    color: CUSTOMER_ACCENT,          bg: thannigoPalette.infoSoft,            progress: 0.1 },
+      assigned:   { label: 'Assigned',   color: thannigoPalette.primary,   bg: thannigoPalette.infoSoft,            progress: 0.3 },
+      accepted:   { label: 'Accepted',   color: SHOP_ACCENT,               bg: thannigoPalette.deliveryGreenLight,  progress: 0.5 },
+      picked:     { label: 'Picked',     color: CUSTOMER_ACCENT,          bg: thannigoPalette.infoSoft,            progress: 0.75 },
+      delivered:  { label: 'Delivered',  color: CUSTOMER_ACCENT,          bg: thannigoPalette.infoSoft,            progress: 0.9 },
+      completed:  { label: 'Completed',  color: thannigoPalette.success,  bg: thannigoPalette.successSoft,         progress: 1 },
+      cancelled:  { label: 'Cancelled',  color: thannigoPalette.error,    bg: thannigoPalette.dangerSoft,          progress: 0 },
+      placed:     { label: 'Placed',     color: CUSTOMER_ACCENT,          bg: thannigoPalette.infoSoft,            progress: 0.1 },
+      preparing:  { label: 'Preparing',  color: thannigoPalette.primary,  bg: thannigoPalette.infoSoft,            progress: 0.4 },
+      dispatched: { label: 'Dispatched', color: SHOP_ACCENT,               bg: thannigoPalette.deliveryGreenLight,  progress: 0.75 },
+      failed:     { label: 'Failed',     color: thannigoPalette.error,    bg: thannigoPalette.dangerSoft,          progress: 0 },
     } as const;
     const statusInfo = statusMap[order.status];
 
@@ -143,23 +148,23 @@ export default function OrdersScreen() {
     : normalizedOrders.filter((order) => !order.isActive);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <View style={styles.brandRow}>
           <Logo size="md" />
-          <Text style={styles.brandName}>ThanniGo</Text>
+          <Text style={[styles.brandName, { color: colors.text }]}>ThanniGo</Text>
         </View>
-        <TouchableOpacity style={[styles.iconBtn, Shadow.xs]} onPress={() => router.push('/notifications' as any)}>
+        <TouchableOpacity style={[styles.iconBtn, { backgroundColor: colors.background }, Shadow.xs]} onPress={() => router.push('/notifications' as any)}>
           <Ionicons name="notifications-outline" size={22} color={accent} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.titleRow}>
         <Text style={[styles.screenTitle, { color: accent }]}>My Orders</Text>
-        <Text style={styles.screenSubtitle}>{normalizedOrders.length} total orders</Text>
+        <Text style={[styles.screenSubtitle, { color: colors.muted }]}>{normalizedOrders.length} total orders</Text>
       </View>
 
       {/* TOGGLE */}
@@ -262,22 +267,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginHorizontal: 24,
     marginBottom: 20,
-    backgroundColor: '#EBEEF4',
-    borderRadius: 16,
+    backgroundColor: thannigoPalette.borderSoft,
+    borderRadius: Radius.lg,
     padding: 4,
   },
   toggleBtn: {
-    flex: 1, borderRadius: 12,
+    flex: 1, borderRadius: Radius.md,
     paddingVertical: 10,
     alignItems: 'center',
   },
   toggleBtnActive: { backgroundColor: thannigoPalette.surface },
   toggleText: { ...Typography.label, color: thannigoPalette.neutral },
 
-  // Order Card
   orderCard: {
     backgroundColor: thannigoPalette.surface,
-    borderRadius: 24,
+    borderRadius: Radius.xl,
     padding: 20,
     marginBottom: 16,
   },
@@ -292,7 +296,7 @@ const styles = StyleSheet.create({
   statusText: { ...Typography.overline },
 
   orderDetails: { marginBottom: 12 },
-  orderItems: { ...Typography.label, color: '#404850', marginBottom: 6 },
+  orderItems: { ...Typography.label, color: thannigoPalette.neutral, marginBottom: 6 },
   orderMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   orderDate: { ...Typography.caption, color: thannigoPalette.neutral, flex: 1 },
   orderAmount: { ...Typography.bodyMedium, fontWeight: '900', color: thannigoPalette.darkText },
@@ -310,7 +314,7 @@ const styles = StyleSheet.create({
   trackBtnText: { ...Typography.label },
   supportBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: '#F1F4F9', borderRadius: 12, paddingVertical: 11, paddingHorizontal: 16,
+    backgroundColor: thannigoPalette.borderSoft, borderRadius: Radius.md, paddingVertical: 11, paddingHorizontal: 16,
   },
   supportBtnText: { ...Typography.label, color: thannigoPalette.neutral },
 

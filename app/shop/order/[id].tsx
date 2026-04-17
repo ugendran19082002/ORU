@@ -16,6 +16,12 @@ import { useFleetStore } from '@/stores/fleetStore';
 import { orderApi } from '@/api/orderApi';
 import Toast from 'react-native-toast-message';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
+const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
+
 export default function ShopDeliveredOrderScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
@@ -114,11 +120,11 @@ export default function ShopDeliveredOrderScreen() {
         ) : (
           <View style={[styles.successBanner, { backgroundColor: '#e0f0ff' }]}>
             <View style={[styles.successIconWrap, { backgroundColor: 'rgba(0,93,144,0.1)' }]}>
-              <Ionicons name="time" size={32} color="#005d90" />
+              <Ionicons name="time" size={32} color={SHOP_ACCENT} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.successTitle, { color: '#005d90' }]}>Order Status: {order?.status.toUpperCase()}</Text>
-              <Text style={[styles.successSub, { color: '#005d90' }]}>{['assigned', 'accepted', 'picked'].includes(order?.status || '') && order.deliveryAgentName ? `Assigned to ${order.deliveryAgentName}` : 'Awaiting Delivery Agent'}</Text>
+              <Text style={[styles.successTitle, { color: SHOP_ACCENT }]}>Order Status: {order?.status.toUpperCase()}</Text>
+              <Text style={[styles.successSub, { color: SHOP_ACCENT }]}>{['assigned', 'accepted', 'picked'].includes(order?.status || '') && order.deliveryAgentName ? `Assigned to ${order.deliveryAgentName}` : 'Awaiting Delivery Agent'}</Text>
             </View>
           </View>
         )}
@@ -134,11 +140,11 @@ export default function ShopDeliveredOrderScreen() {
         {/* RESCHEDULE & REFUND ACTIONS */}
         <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
            <TouchableOpacity 
-             style={[styles.actionBtn, { backgroundColor: '#f1f5f9' }]} 
+             style={[styles.actionBtn, { backgroundColor: thannigoPalette.borderSoft }]} 
              onPress={() => setRescheduleModalOpen(true)}
            >
               <Ionicons name="calendar-outline" size={18} color="#475569" />
-              <Text style={[styles.actionBtnText, { color: '#475569' }]}>Reschedule</Text>
+              <Text style={[styles.actionBtnText, { color: thannigoPalette.neutral }]}>Reschedule</Text>
            </TouchableOpacity>
            
            {(order?.paymentMethod !== 'cod') && (
@@ -272,7 +278,7 @@ export default function ShopDeliveredOrderScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Assign Agent</Text>
               <TouchableOpacity onPress={() => setAssignModalOpen(false)} style={styles.closeBtn}>
-                <Ionicons name="close" size={20} color="#707881" />
+                <Ionicons name="close" size={20} color={thannigoPalette.neutral} />
               </TouchableOpacity>
             </View>
 
@@ -290,11 +296,11 @@ export default function ShopDeliveredOrderScreen() {
                     <Text style={styles.agentName}>{agent.name}</Text>
                     <Text style={styles.agentStatus}>{agent.status === 'active' ? 'Available' : 'Offline'}</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color="#707881" />
+                  <Ionicons name="chevron-forward" size={20} color={thannigoPalette.neutral} />
                 </TouchableOpacity>
               ))}
               {deliveryAgents.length === 0 && (
-                <Text style={{ textAlign: 'center', padding: 20, color: '#707881' }}>No agents onboarded yet.</Text>
+                <Text style={{ textAlign: 'center', padding: 20, color: thannigoPalette.neutral }}>No agents onboarded yet.</Text>
               )}
             </ScrollView>
           </View>
@@ -308,11 +314,11 @@ export default function ShopDeliveredOrderScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Reschedule Order</Text>
               <TouchableOpacity onPress={() => setRescheduleModalOpen(false)} style={styles.closeBtn}>
-                <Ionicons name="close" size={20} color="#707881" />
+                <Ionicons name="close" size={20} color={thannigoPalette.neutral} />
               </TouchableOpacity>
             </View>
 
-            <Text style={{ fontSize: 13, color: '#64748b', marginBottom: 6, fontWeight: '600' }}>New Delivery Date</Text>
+            <Text style={{ fontSize: 13, color: thannigoPalette.neutral, marginBottom: 6, fontWeight: '600' }}>New Delivery Date</Text>
             <TextInput
               style={styles.modalInput}
               placeholder="YYYY-MM-DD (e.g. 2025-12-31)"
@@ -322,7 +328,7 @@ export default function ShopDeliveredOrderScreen() {
               keyboardType="numeric"
             />
 
-            <Text style={{ fontSize: 13, color: '#64748b', marginBottom: 6, marginTop: 16, fontWeight: '600' }}>Delivery Slot ID</Text>
+            <Text style={{ fontSize: 13, color: thannigoPalette.neutral, marginBottom: 6, marginTop: 16, fontWeight: '600' }}>Delivery Slot ID</Text>
             <TextInput
               style={styles.modalInput}
               placeholder="Slot ID (e.g. 1, 2, 3)"
@@ -342,7 +348,7 @@ export default function ShopDeliveredOrderScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setRescheduleModalOpen(false)}>
-              <Text style={{ color: '#64748b', fontWeight: '700', fontSize: 14 }}>Cancel</Text>
+              <Text style={{ color: thannigoPalette.neutral, fontWeight: '700', fontSize: 14 }}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -355,7 +361,7 @@ export default function ShopDeliveredOrderScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Initiate Refund</Text>
               <TouchableOpacity onPress={() => setRefundModalOpen(false)} style={styles.closeBtn}>
-                <Ionicons name="close" size={20} color="#707881" />
+                <Ionicons name="close" size={20} color={thannigoPalette.neutral} />
               </TouchableOpacity>
             </View>
 
@@ -366,7 +372,7 @@ export default function ShopDeliveredOrderScreen() {
               </Text>
             </View>
 
-            <Text style={{ fontSize: 13, color: '#64748b', marginBottom: 6, fontWeight: '600' }}>Reason for Refund</Text>
+            <Text style={{ fontSize: 13, color: thannigoPalette.neutral, marginBottom: 6, fontWeight: '600' }}>Reason for Refund</Text>
             <TextInput
               style={[styles.modalInput, { height: 80, textAlignVertical: 'top' }]}
               placeholder="Explain why you're issuing a refund..."
@@ -388,7 +394,7 @@ export default function ShopDeliveredOrderScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setRefundModalOpen(false)}>
-              <Text style={{ color: '#64748b', fontWeight: '700', fontSize: 14 }}>Cancel</Text>
+              <Text style={{ color: thannigoPalette.neutral, fontWeight: '700', fontSize: 14 }}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -398,11 +404,11 @@ export default function ShopDeliveredOrderScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f1f5f9' },
+  container: { flex: 1, backgroundColor: thannigoPalette.borderSoft },
   
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white' },
-  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#0f172a' },
+  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
   
   scrollContent: { padding: 24 },
 
@@ -415,16 +421,16 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 11, fontWeight: '800', color: '#94a3b8', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 16 },
   
   customerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  avatarWrap: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
-  customerName: { fontSize: 16, fontWeight: '800', color: '#0f172a' },
-  customerPhone: { fontSize: 13, color: '#64748b', marginTop: 2, fontWeight: '500' },
+  avatarWrap: { width: 48, height: 48, borderRadius: 24, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  customerName: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
+  customerPhone: { fontSize: 13, color: thannigoPalette.neutral, marginTop: 2, fontWeight: '500' },
   callBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#0284c7', alignItems: 'center', justifyContent: 'center' },
   whatsappBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#25d366', alignItems: 'center', justifyContent: 'center' },
 
-  divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 16 },
+  divider: { height: 1, backgroundColor: thannigoPalette.borderSoft, marginVertical: 16 },
   
   addressRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  addressText: { flex: 1, fontSize: 14, color: '#475569', lineHeight: 20, fontWeight: '500' },
+  addressText: { flex: 1, fontSize: 14, color: thannigoPalette.neutral, lineHeight: 20, fontWeight: '500' },
 
   accuracyRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f0f9ff', padding: 12, borderRadius: 12, marginTop: 16 },
   accuracyTag: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -437,43 +443,43 @@ const styles = StyleSheet.create({
   itemRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
   itemQtyWrap: { backgroundColor: '#f0f9ff', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
   itemQty: { color: '#0284c7', fontWeight: '900', fontSize: 14 },
-  itemName: { fontSize: 15, fontWeight: '800', color: '#0f172a' },
-  itemSubName: { fontSize: 12, color: '#64748b', marginTop: 2 },
-  itemTotal: { fontSize: 16, fontWeight: '800', color: '#0f172a' },
+  itemName: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText },
+  itemSubName: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 2 },
+  itemTotal: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
 
-  summaryTotals: { backgroundColor: '#f8fafc', padding: 16, borderRadius: 16 },
+  summaryTotals: { backgroundColor: thannigoPalette.background, padding: 16, borderRadius: 16 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  summaryLabel: { color: '#64748b', fontSize: 14, fontWeight: '500' },
-  summaryVal: { color: '#0f172a', fontSize: 14, fontWeight: '700' },
-  grandTotalLabel: { color: '#0f172a', fontSize: 16, fontWeight: '900' },
+  summaryLabel: { color: thannigoPalette.neutral, fontSize: 14, fontWeight: '500' },
+  summaryVal: { color: thannigoPalette.darkText, fontSize: 14, fontWeight: '700' },
+  grandTotalLabel: { color: thannigoPalette.darkText, fontSize: 16, fontWeight: '900' },
   grandTotalVal: { color: '#0284c7', fontSize: 18, fontWeight: '900' },
 
-  paymentMethod: { fontSize: 15, fontWeight: '700', color: '#0f172a' },
-  collectionBadge: { backgroundColor: '#f1f5f9', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
-  collectionText: { color: '#64748b', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
+  paymentMethod: { fontSize: 15, fontWeight: '700', color: thannigoPalette.darkText },
+  collectionBadge: { backgroundColor: thannigoPalette.borderSoft, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  collectionText: { color: thannigoPalette.neutral, fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
 
   homeBtn: { backgroundColor: '#ffffff', paddingVertical: 18, borderRadius: 16, borderWidth: 2, borderColor: '#e2e8f0', alignItems: 'center', marginTop: 12 },
-  homeBtnText: { color: '#475569', fontSize: 15, fontWeight: '800' },
+  homeBtnText: { color: thannigoPalette.neutral, fontSize: 15, fontWeight: '800' },
 
-  assignBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#005d90', paddingVertical: 14, borderRadius: 16, marginBottom: 16, shadowColor: '#005d90', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
+  assignBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SHOP_ACCENT, paddingVertical: 14, borderRadius: 16, marginBottom: 16, shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4 },
   assignBtnText: { color: 'white', fontWeight: '800', fontSize: 15 },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalContent: { backgroundColor: 'white', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40, maxHeight: '80%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 22, fontWeight: '900', color: '#181c20' },
-  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center' },
-  agentCard: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: '#f7f9ff', borderRadius: 16 },
+  modalTitle: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  agentCard: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: thannigoPalette.background, borderRadius: 16 },
   agentAvatar: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#e8f5e9', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  agentAvatarText: { fontSize: 16, fontWeight: '800', color: '#2e7d32' },
-  agentName: { fontSize: 16, fontWeight: '800', color: '#181c20' },
-  agentStatus: { fontSize: 13, color: '#707881', fontWeight: '500' },
+  agentAvatarText: { fontSize: 16, fontWeight: '800', color: thannigoPalette.success },
+  agentName: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
+  agentStatus: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '500' },
 
   actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 12 },
   actionBtnText: { fontSize: 13, fontWeight: '700' },
 
-  modalInput: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#0f172a', backgroundColor: '#f8fafc' },
-  modalSubmitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#005d90', paddingVertical: 14, borderRadius: 14, marginTop: 20 },
+  modalInput: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: thannigoPalette.darkText, backgroundColor: thannigoPalette.background },
+  modalSubmitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SHOP_ACCENT, paddingVertical: 14, borderRadius: 14, marginTop: 20 },
   modalSubmitText: { color: 'white', fontWeight: '800', fontSize: 15 },
   modalCancelBtn: { alignItems: 'center', paddingVertical: 14, marginTop: 8 },
 });

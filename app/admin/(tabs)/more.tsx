@@ -54,7 +54,7 @@ export default function MoreMenuScreen() {
                 <Ionicons name={item.icon as any} size={24} color={ADMIN_ACCENT} />
               </View>
               <Text style={styles.menuName}>{item.name}</Text>
-              <Ionicons name="chevron-forward" size={12} color="#94a3b8" />
+              <Ionicons name="chevron-forward" size={12} color={thannigoPalette.neutral} />
             </TouchableOpacity>
           ))}
         </View>
@@ -106,14 +106,14 @@ const styles = StyleSheet.create({
   menuName: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText, textAlign: 'center' },
   logoutBtn: {
     marginTop: 24,
-    backgroundColor: '#fff1f1',
+    backgroundColor: thannigoPalette.dangerSoft,
     borderRadius: 20,
     padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: '#fee2e2',
+    borderColor: thannigoPalette.adminRedLight,
   },
   logoutContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   logoutText: { color: ADMIN_ACCENT, fontWeight: '800', fontSize: 16 },

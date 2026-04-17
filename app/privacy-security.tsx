@@ -9,9 +9,14 @@ import { useSecurityStore } from '@/stores/securityStore';
 import { PinEntryModal } from '@/components/security/PinEntryModal';
 import { BackButton } from '@/components/ui/BackButton';
 import * as Haptics from 'expo-haptics';
+import { Shadow, thannigoPalette, roleAccent, Radius } from '@/constants/theme';
+import { useAppTheme } from '@/providers/ThemeContext';
+
+const ACCENT = roleAccent.customer;
 
 export default function PrivacySecurityScreen() {
   const router = useRouter();
+  const { colors, isDark } = useAppTheme();
   const { 
     isPinEnabled, isBiometricsEnabled, togglePin, toggleBiometrics, enablePinRemote, initialize 
   } = useSecurityStore();
@@ -62,11 +67,11 @@ export default function PrivacySecurityScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <BackButton fallback="/(tabs)/profile" />
         <Text style={styles.headerTitle}>Privacy & Security</Text>
         <View style={{ width: 40 }} />
@@ -80,8 +85,8 @@ export default function PrivacySecurityScreen() {
           <Text style={styles.sectionDesc}>Protect your account with additional layers of security.</Text>
 
             <View style={styles.menuRow}>
-              <View style={[styles.menuIcon, { backgroundColor: '#f1f4f9' }]}>
-                <Ionicons name="lock-closed-outline" size={20} color="#005d90" />
+              <View style={[styles.menuIcon, { backgroundColor: colors.background }]}>
+                <Ionicons name="lock-closed-outline" size={20} color={ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.menuLabel}>App PIN Lock</Text>
@@ -90,8 +95,8 @@ export default function PrivacySecurityScreen() {
               <Switch
                 value={isPinEnabled}
                 onValueChange={handleTogglePin}
-                trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
-                thumbColor={isPinEnabled ? '#006878' : '#707881'}
+                trackColor={{ false: thannigoPalette.borderSoft, true: thannigoPalette.deliveryGreenLight }}
+                thumbColor={isPinEnabled ? thannigoPalette.shopTeal : thannigoPalette.neutral}
               />
             </View>
 
@@ -105,11 +110,11 @@ export default function PrivacySecurityScreen() {
                     setShowPinModal(true);
                   }}
                 >
-                  <View style={[styles.menuIcon, { backgroundColor: '#f1f4f9' }]}>
-                    <Ionicons name="key-outline" size={20} color="#005d90" />
+                  <View style={[styles.menuIcon, { backgroundColor: colors.background }]}>
+                    <Ionicons name="key-outline" size={20} color={ACCENT} />
                   </View>
-                  <Text style={styles.menuLabel}>Change App PIN</Text>
-                  <Ionicons name="chevron-forward" size={16} color="#bfc7d1" style={{ marginLeft: 'auto' }} />
+                  <Text style={[styles.menuLabel, { color: colors.text }]}>Change App PIN</Text>
+                  <Ionicons name="chevron-forward" size={16} color={colors.muted} style={{ marginLeft: 'auto' }} />
                 </TouchableOpacity>
               </>
             )}
@@ -117,8 +122,8 @@ export default function PrivacySecurityScreen() {
             <View style={styles.divider} />
 
             <View style={styles.menuRow}>
-              <View style={[styles.menuIcon, { backgroundColor: '#f1f4f9' }]}>
-                <Ionicons name="finger-print-outline" size={20} color="#005d90" />
+              <View style={[styles.menuIcon, { backgroundColor: colors.background }]}>
+                <Ionicons name="finger-print-outline" size={20} color={ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.menuLabel}>Biometric Unlock</Text>
@@ -128,8 +133,8 @@ export default function PrivacySecurityScreen() {
                 value={isBiometricsEnabled}
                 onValueChange={handleToggleBiometrics}
                 disabled={!isPinEnabled}
-                trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
-                thumbColor={isBiometricsEnabled ? '#006878' : '#707881'}
+                trackColor={{ false: thannigoPalette.borderSoft, true: thannigoPalette.deliveryGreenLight }}
+                thumbColor={isBiometricsEnabled ? thannigoPalette.shopTeal : thannigoPalette.neutral}
               />
             </View>
         </View>
@@ -141,26 +146,26 @@ export default function PrivacySecurityScreen() {
           <View style={styles.card}>
             <TouchableOpacity style={styles.actionRow} onPress={() => router.push('/privacy-policy' as any)}>
               <View style={styles.actionIconWrap}>
-                 <Ionicons name="document-text-outline" size={20} color="#005d90" />
+              <Ionicons name="document-text-outline" size={20} color={ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.actionLabel}>Privacy Policy</Text>
                 <Text style={styles.actionSub}>How we handle your data</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              <Ionicons name="chevron-forward" size={18} color={colors.muted} />
             </TouchableOpacity>
 
             <View style={styles.divider} />
 
             <TouchableOpacity style={styles.actionRow} onPress={() => router.push('/terms' as any)}>
               <View style={styles.actionIconWrap}>
-                 <Ionicons name="shield-outline" size={20} color="#005d90" />
+              <Ionicons name="shield-outline" size={20} color={ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.actionLabel}>Terms of Service</Text>
                 <Text style={styles.actionSub}>App usage rules</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+              <Ionicons name="chevron-forward" size={18} color={colors.muted} />
             </TouchableOpacity>
           </View>
         </View>
@@ -210,30 +215,33 @@ export default function PrivacySecurityScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#0f172a' },
-  
+  container: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1 },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
+
   scrollContent: { padding: 24 },
   section: { marginBottom: 32 },
-  sectionTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a', marginBottom: 4 },
-  sectionDesc: { fontSize: 13, color: '#64748b', marginBottom: 16 },
-  
-  card: { backgroundColor: 'white', borderRadius: 24, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 12, elevation: 2 },
-  divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 18 },
-  
+  sectionTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 4 },
+  sectionDesc: { fontSize: 13, color: thannigoPalette.neutral, marginBottom: 16 },
+
+  card: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 20, ...Shadow.xs },
+  divider: { height: 1, backgroundColor: thannigoPalette.borderSoft, marginVertical: 18 },
+
   menuRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 4 },
   menuIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  menuLabel: { fontSize: 15, fontWeight: '800', color: '#0f172a' },
-  menuSub: { fontSize: 12, color: '#64748b', marginTop: 1, fontWeight: '500' },
+  menuLabel: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText },
+  menuSub: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 1, fontWeight: '500' },
 
   actionRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  actionIconWrap: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f0f9ff', alignItems: 'center', justifyContent: 'center' },
-  actionLabel: { fontSize: 15, fontWeight: '800', color: '#0f172a' },
-  actionSub: { fontSize: 12, color: '#64748b', marginTop: 1 },
+  actionIconWrap: { width: 40, height: 40, borderRadius: 12, backgroundColor: thannigoPalette.infoSoft, alignItems: 'center', justifyContent: 'center' },
+  actionLabel: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText },
+  actionSub: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 1 },
 
   deleteBtn: { paddingVertical: 18, alignItems: 'center' },
-  deleteBtnText: { color: '#ba1a1a', fontWeight: '700', fontSize: 14 },
+  deleteBtnText: { color: thannigoPalette.error, fontWeight: '700', fontSize: 14 },
 });
+
+
+
 
 

@@ -12,6 +12,10 @@ import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
 import { shopApi } from '@/api/shopApi';
 import Toast from 'react-native-toast-message';
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
 import * as Haptics from 'expo-haptics';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
@@ -107,7 +111,7 @@ export default function ShopScheduleScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#005d90" />
+        <ActivityIndicator size="large" color={SHOP_ACCENT} />
       </View>
     );
   }
@@ -134,7 +138,7 @@ export default function ShopScheduleScreen() {
           onPress={handleSave}
           disabled={saving}
         >
-          {saving ? <ActivityIndicator size="small" color="#005d90" /> : <Text style={styles.saveHeaderBtnText}>Save</Text>}
+          {saving ? <ActivityIndicator size="small" color={SHOP_ACCENT} /> : <Text style={styles.saveHeaderBtnText}>Save</Text>}
         </TouchableOpacity>
       </View>
 
@@ -145,7 +149,7 @@ export default function ShopScheduleScreen() {
         <Text style={styles.pageTitle}>Business Hours</Text>
 
         <View style={styles.infoCard}>
-          <Ionicons name="information-circle-outline" size={20} color="#005d90" />
+          <Ionicons name="information-circle-outline" size={20} color={SHOP_ACCENT} />
           <Text style={[styles.infoText, isSmallScreen && { fontSize: 12 }]}>
             Set your shop's weekly operating hours. This determines your "Open" or "Closed" status for customers.
           </Text>
@@ -160,8 +164,8 @@ export default function ShopScheduleScreen() {
                 <Switch
                   value={!day.is_closed}
                   onValueChange={(val) => handleToggleClosed(day.day_of_week, !val)}
-                  trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
-                  thumbColor={!day.is_closed ? '#006878' : '#707881'}
+                  trackColor={{ false: thannigoPalette.borderSoft, true: '#a7edff' }}
+                  thumbColor={!day.is_closed ? SHOP_ACCENT : thannigoPalette.neutral}
                 />
               </View>
             </View>
@@ -212,55 +216,51 @@ export default function ShopScheduleScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    paddingHorizontal: 24, 
-    paddingVertical: 14, 
-    backgroundColor: 'rgba(255,255,255,0.92)' 
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    backgroundColor: 'rgba(255,255,255,0.92)',
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
-  roleLabel: { fontSize: 9, fontWeight: '700', color: '#006878', letterSpacing: 1.5, marginTop: 3 },
-  headerActionBtn: { 
-    backgroundColor: '#f1f4f9', 
-    paddingHorizontal: 16, 
-    paddingVertical: 8, 
-    borderRadius: 12 
+  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
+  headerActionBtn: {
+    backgroundColor: SHOP_SURF,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
   },
-  saveHeaderBtnText: { color: '#005d90', fontWeight: '800', fontSize: 13 },
+  saveHeaderBtnText: { color: SHOP_ACCENT, fontWeight: '800', fontSize: 13 },
 
   scrollContent: { paddingVertical: 10, paddingBottom: 120 },
-  pageTitle: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, marginBottom: 18 },
-  
+  pageTitle: { fontSize: 32, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5, marginBottom: 18 },
+
   infoCard: {
     flexDirection: 'row',
-    backgroundColor: '#e0f1ff',
+    backgroundColor: SHOP_SURF,
     padding: 16,
     borderRadius: 16,
     marginBottom: 20,
     alignItems: 'center',
     gap: 12,
   },
-  infoText: { flex: 1, fontSize: 13, color: '#003a5c', lineHeight: 18, fontWeight: '500' },
+  infoText: { flex: 1, fontSize: 13, color: thannigoPalette.darkText, lineHeight: 18, fontWeight: '500' },
 
   dayCard: {
-    backgroundColor: 'white',
+    backgroundColor: thannigoPalette.surface,
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    ...Shadow.sm,
   },
   dayCardClosed: {
     opacity: 0.7,
-    backgroundColor: '#f1f4f9',
+    backgroundColor: thannigoPalette.borderSoft,
   },
   dayHeader: {
     flexDirection: 'row',
@@ -268,9 +268,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
-  dayLabel: { fontWeight: '800', color: '#181c20' },
+  dayLabel: { fontWeight: '800', color: thannigoPalette.darkText },
   toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  closedText: { fontSize: 12, color: '#707881', fontWeight: '700' },
+  closedText: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '700' },
 
   timeRow: {
     flexDirection: 'row',
@@ -278,25 +278,22 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#f1f4f9',
+    borderTopColor: thannigoPalette.borderSoft,
   },
   timePicker: { flex: 1, alignItems: 'center' },
-  timeLabel: { fontSize: 11, color: '#707881', marginBottom: 4, fontWeight: '600' },
-  timeValue: { fontWeight: '800', color: '#006878' },
-  timeDivider: { width: 1, height: 30, backgroundColor: '#e0e2e8' },
+  timeLabel: { fontSize: 11, color: thannigoPalette.neutral, marginBottom: 4, fontWeight: '600' },
+  timeValue: { fontWeight: '800', color: SHOP_ACCENT },
+  timeDivider: { width: 1, height: 30, backgroundColor: thannigoPalette.borderSoft },
 
   fullSaveBtn: {
-    backgroundColor: '#005d90',
+    backgroundColor: SHOP_ACCENT,
     height: 56,
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10,
-    shadowColor: '#005d90',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 4,
+    ...Shadow.md,
+    shadowColor: SHOP_ACCENT,
   },
   fullSaveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
 });

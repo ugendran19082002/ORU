@@ -15,14 +15,16 @@ import { useAppSession } from '@/hooks/use-app-session';
 import { connectSocket, disconnectSocket, getSocket } from '@/utils/socket';
 import * as ImagePicker from 'expo-image-picker';
 import * as TaskManager from 'expo-task-manager';
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients, Radius } from '@/constants/theme';
+import { useAppTheme, ThemePreference } from '@/providers/ThemeContext';
 
 const DELIVERY_ACCENT = roleAccent.delivery;
 const DELIVERY_SURF = roleSurface.delivery;
 const DELIVERY_GRAD: [string, string] = [roleGradients.delivery.start, roleGradients.delivery.end];
+const DELIVERY_OFFLINE: [string, string] = ['#475569', '#334155'];
 
 const LOCATION_TASK_NAME = 'background-location-task';
- 
+
 TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
   if (error) {
     console.error('[LocationTask] Error:', error);
@@ -41,24 +43,18 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
   }
 });
 
-
-
 export default function DeliveryDashboardScreen() {
   const router = useRouter();
   const { user, signOut } = useAppSession();
   const { tasks, online, toggleOnline, assignCurrentTask, updateTaskStatus, removeTask } = useDeliveryStore();
- 
+  const { colors, isDark, themePreference, setThemePreference } = useAppTheme();
 
-  // ── Socket location push ─────────────────────────────────────────────────────
-  // When the driver is online and has an active accepted task, broadcast GPS
-  // position every 5 seconds through the socket connection.
   const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const activeTask = tasks.find((t) => t.status === 'accepted');
 
     if (!online || !activeTask) {
-      // Not on duty — clear any running interval and disconnect socket
       if (locationIntervalRef.current) {
         clearInterval(locationIntervalRef.current);
         locationIntervalRef.current = null;
@@ -71,14 +67,12 @@ export default function DeliveryDashboardScreen() {
     let mounted = true;
 
     const startLocationPush = async () => {
-      // Request foreground location permissions
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         console.warn('[Socket] Location permission denied — skipping push');
         return;
       }
 
-      // Connect socket (no-op if already connected)
       try {
         await connectSocket();
       } catch (err) {
@@ -88,12 +82,11 @@ export default function DeliveryDashboardScreen() {
 
       if (!mounted) return;
 
-      // Start background location updates
       try {
         await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
           accuracy: Location.Accuracy.High,
-          distanceInterval: 10, // Update every 10 meters
-          deferredUpdatesInterval: 5000, // Or every 5 seconds
+          distanceInterval: 10,
+          deferredUpdatesInterval: 5000,
           foregroundService: {
             notificationTitle: 'ThanniGo Delivery',
             notificationBody: 'Your location is being tracked for the customer.',
@@ -115,7 +108,6 @@ export default function DeliveryDashboardScreen() {
       Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME).catch(() => {});
     };
   }, [online, tasks]);
-  // ────────────────────────────────────────────────────────────────────────────
 
   const handleAccept = (id: string) => {
     updateTaskStatus(id, 'accepted');
@@ -124,22 +116,20 @@ export default function DeliveryDashboardScreen() {
   const handleReject = (id: string) => {
     removeTask(id);
   };
- 
+
   const takePodPhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       Toast.show({ type: 'error', text1: 'Permission Denied', text2: 'Camera access is required for POD' });
       return;
     }
- 
+
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.5,
     });
- 
+
     if (!result.canceled) {
-      // podImage = result.assets[0].uri;
-      // router.push('/delivery/complete' as any); // Or show modal
       router.push({ pathname: '/delivery/complete' as any, params: { taskId: tasks.find(t => t.status === 'accepted')?.id, imageUri: result.assets[0].uri } });
     }
   };
@@ -148,20 +138,27 @@ export default function DeliveryDashboardScreen() {
   const completedToday = 6;
   const activeTrips = tasks.length;
 
+  const headerColors: [string, string] = online ? DELIVERY_GRAD : DELIVERY_OFFLINE;
+
+  const QUICK_ACTIONS = [
+    { label: 'Security',    icon: 'shield-checkmark-outline', color: thannigoPalette.primary,        bg: colors.deliverySoft ?? colors.background, path: '/privacy-security' },
+    { label: 'My Earnings', icon: 'cash-outline',             color: thannigoPalette.deliveryGreen,  bg: colors.deliverySoft ?? colors.background, path: '/delivery/earnings' },
+    { label: 'Trip History',icon: 'time-outline',             color: '#b45309',                      bg: isDark ? '#1a1000' : '#fef3c7',            path: '/delivery/history' },
+    { label: 'Emergency',   icon: 'warning-outline',          color: thannigoPalette.error,          bg: isDark ? '#2D0A0A' : thannigoPalette.dangerSoft, path: '/emergency-help' },
+    { label: isDark ? 'Light' : 'Dark', icon: isDark ? 'sunny-outline' : 'moon-outline', color: DELIVERY_ACCENT, bg: colors.surface, path: null as any },
+  ];
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar style="light" />
 
       {/* HEADER — Gradient */}
-      <LinearGradient
-        colors={online ? DELIVERY_GRAD : ['#475569', '#334155'] as [string,string]}
-        style={styles.header}
-      >
+      <LinearGradient colors={headerColors} style={styles.header}>
         <View style={styles.headerContent}>
           <View>
             <Text style={styles.greeting}>Good morning, {user?.name ?? 'Agent'} 👋</Text>
             <View style={styles.onlineRow}>
-              <View style={[styles.onlineDot, { backgroundColor: online ? '#4ade80' : '#f87171' }]} />
+              <View style={[styles.onlineDot, { backgroundColor: online ? thannigoPalette.success : thannigoPalette.error }]} />
               <Text style={styles.onlineStatus}>{online ? 'Online — ready for trips' : 'Offline'}</Text>
             </View>
           </View>
@@ -208,20 +205,19 @@ export default function DeliveryDashboardScreen() {
 
         {/* TODAY'S STATS */}
         <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>₹{totalEarnings}</Text>
-            <Text style={styles.statLabel}>Today's Earnings</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{completedToday}</Text>
-            <Text style={styles.statLabel}>Completed</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{activeTrips}</Text>
-            <Text style={styles.statLabel}>In Queue</Text>
-          </View>
+          {[
+            { value: `₹${totalEarnings}`, label: "Today's Earnings" },
+            { value: completedToday, label: 'Completed' },
+            { value: activeTrips, label: 'In Queue' },
+          ].map((s, i) => (
+            <React.Fragment key={s.label}>
+              {i > 0 && <View style={styles.statDivider} />}
+              <View style={styles.statBox}>
+                <Text style={styles.statValue}>{s.value}</Text>
+                <Text style={styles.statLabel}>{s.label}</Text>
+              </View>
+            </React.Fragment>
+          ))}
         </View>
       </LinearGradient>
 
@@ -229,106 +225,103 @@ export default function DeliveryDashboardScreen() {
 
         {/* QUICK ACTIONS */}
         <View style={styles.quickRow}>
-          {[
-            { label: 'Security', icon: 'shield-checkmark-outline', color: '#005d90', bg: '#f0f9ff', path: '/privacy-security' },
-            { label: 'My Earnings', icon: 'cash-outline', color: '#2e7d32', bg: '#e8f5e9', path: '/delivery/earnings' },
-            { label: 'Trip History', icon: 'time-outline', color: '#b45309', bg: '#fef3c7', path: '/delivery/history' },
-            { label: 'Emergency', icon: 'warning-outline', color: '#c62828', bg: '#ffebee', path: '/emergency-help' },
-          ].map((q) => (
-            <TouchableOpacity 
-              key={q.label} 
-              style={styles.quickBtn}
+          {QUICK_ACTIONS.map((q) => (
+            <TouchableOpacity
+              key={q.label}
+              style={[styles.quickBtn, { backgroundColor: colors.surface }, Shadow.xs]}
               onPress={() => {
-                if (q.path) {
+                if (q.label === (isDark ? 'Light' : 'Dark')) {
+                  setThemePreference(isDark ? 'light' : 'dark');
+                } else if (q.path) {
                   router.push(q.path as any);
-                } else {
-                  Toast.show({
-                    type: 'info',
-                    text1: 'Coming Soon',
-                    text2: `${q.label} feature is currently being finalized.`
-                  });
                 }
               }}
             >
               <View style={[styles.quickIcon, { backgroundColor: q.bg }]}>
                 <Ionicons name={q.icon as any} size={20} color={q.color} />
               </View>
-              <Text style={styles.quickLabel}>{q.label}</Text>
+              <Text style={[styles.quickLabel, { color: colors.text }]}>{q.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* ACTIVE TRIPS */}
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>
           {online ? `Assigned Trips (${tasks.length})` : 'Go online to receive trips'}
         </Text>
 
         {!online && (
-          <View style={styles.offlineCard}>
-            <Ionicons name="moon-outline" size={40} color="#94a3b8" />
-            <Text style={styles.offlineTitle}>You are offline</Text>
-            <Text style={styles.offlineSub}>Toggle the switch above to start receiving delivery assignments.</Text>
+          <View style={[styles.offlineCard, { backgroundColor: colors.surface }, Shadow.xs]}>
+            <Ionicons name="moon-outline" size={40} color={colors.muted} />
+            <Text style={[styles.offlineTitle, { color: colors.text }]}>You are offline</Text>
+            <Text style={[styles.offlineSub, { color: colors.muted }]}>
+              Toggle the switch above to start receiving delivery assignments.
+            </Text>
           </View>
         )}
 
         {online && tasks.map((trip) => (
-          <View key={trip.id} style={styles.tripCard}>
+          <View key={trip.id} style={[styles.tripCard, { backgroundColor: colors.surface }, Shadow.sm]}>
             {/* TRIP TOP */}
             <View style={styles.tripTop}>
-              <Text style={styles.tripOrderId}>{trip.orderId}</Text>
-              <View style={[styles.priorityChip, trip.priority === 'Urgent' && styles.urgentChip]}>
-                {trip.priority === 'Urgent' && <Ionicons name="flash" size={11} color="#c62828" />}
-                <Text style={[styles.priorityText, trip.priority === 'Urgent' && styles.urgentText]}>
+              <Text style={[styles.tripOrderId, { color: DELIVERY_ACCENT }]}>{trip.orderId}</Text>
+              <View style={[
+                styles.priorityChip,
+                { backgroundColor: colors.background },
+                trip.priority === 'Urgent' && { backgroundColor: thannigoPalette.dangerSoft },
+              ]}>
+                {trip.priority === 'Urgent' && <Ionicons name="flash" size={11} color={thannigoPalette.error} />}
+                <Text style={[
+                  styles.priorityText,
+                  { color: colors.muted },
+                  trip.priority === 'Urgent' && { color: thannigoPalette.error },
+                ]}>
                   {trip.priority}
                 </Text>
               </View>
             </View>
 
-            {/* CUSTOMER & ADDRESS */}
-            <Text style={styles.tripCustomer}>{trip.customerName}</Text>
+            <Text style={[styles.tripCustomer, { color: colors.text }]}>{trip.customerName}</Text>
             <View style={styles.addressRow}>
-              <Ionicons name="location-outline" size={14} color="#707881" />
-              <Text style={styles.tripAddress} numberOfLines={1}>{trip.address}</Text>
+              <Ionicons name="location-outline" size={14} color={colors.muted} />
+              <Text style={[styles.tripAddress, { color: colors.muted }]} numberOfLines={1}>{trip.address}</Text>
             </View>
 
-            {/* TRIP META */}
             <View style={styles.tripMeta}>
-              <View style={styles.metaItem}>
-                <Ionicons name="speedometer-outline" size={13} color={DELIVERY_ACCENT} />
-                <Text style={styles.metaText}>{trip.distance}</Text>
-              </View>
-              <View style={styles.metaItem}>
-                <Ionicons name="time-outline" size={13} color={DELIVERY_ACCENT} />
-                <Text style={styles.metaText}>ETA {trip.eta}</Text>
-              </View>
-              <View style={styles.metaItem}>
-                <Ionicons name="water-outline" size={13} color={DELIVERY_ACCENT} />
-                <Text style={styles.metaText}>{trip.cans} can{trip.cans > 1 ? 's' : ''}</Text>
-              </View>
-              <View style={styles.metaItem}>
-                <Ionicons name="cash-outline" size={13} color="#2e7d32" />
-                <Text style={[styles.metaText, { color: '#2e7d32' }]}>{trip.amount}</Text>
-              </View>
+              {[
+                { icon: 'speedometer-outline', text: trip.distance, color: DELIVERY_ACCENT },
+                { icon: 'time-outline',        text: `ETA ${trip.eta}`, color: DELIVERY_ACCENT },
+                { icon: 'water-outline',       text: `${trip.cans} can${trip.cans > 1 ? 's' : ''}`, color: DELIVERY_ACCENT },
+                { icon: 'cash-outline',        text: trip.amount, color: thannigoPalette.deliveryGreen },
+              ].map((m) => (
+                <View key={m.text} style={styles.metaItem}>
+                  <Ionicons name={m.icon as any} size={13} color={m.color} />
+                  <Text style={[styles.metaText, { color: m.color }]}>{m.text}</Text>
+                </View>
+              ))}
             </View>
 
             {/* ACTIONS */}
-              <View style={styles.tripActions}>
+            <View style={styles.tripActions}>
               {trip.status === 'assigned' ? (
                 <View style={{ flexDirection: 'row', flex: 1, gap: 10 }}>
-                  <TouchableOpacity style={[styles.startBtn, { backgroundColor: '#f1f4f9', flex: 1 }]} onPress={() => handleReject(trip.id)}>
-                    <Text style={[styles.startBtnText, { color: '#ba1a1a' }]}>Reject</Text>
+                  <TouchableOpacity
+                    style={[styles.startBtn, { backgroundColor: colors.background, flex: 1 }]}
+                    onPress={() => handleReject(trip.id)}
+                  >
+                    <Text style={[styles.startBtnText, { color: thannigoPalette.error }]}>Reject</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.startBtn, { backgroundColor: '#005d90', flex: 1 }]} onPress={() => handleAccept(trip.id)}>
+                  <TouchableOpacity
+                    style={[styles.startBtn, { backgroundColor: DELIVERY_ACCENT, flex: 1 }]}
+                    onPress={() => handleAccept(trip.id)}
+                  >
                     <Text style={styles.startBtnText}>Accept</Text>
                   </TouchableOpacity>
                 </View>
               ) : trip.status === 'picked' ? (
-                <TouchableOpacity
-                  style={styles.startBtn}
-                  onPress={takePodPhoto}
-                >
+                <TouchableOpacity style={styles.startBtn} onPress={takePodPhoto}>
                   <LinearGradient
-                    colors={['#2e7d32', '#388e3c']}
+                    colors={DELIVERY_GRAD}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={styles.startBtnGrad}
@@ -357,15 +350,11 @@ export default function DeliveryDashboardScreen() {
                 </TouchableOpacity>
               )}
               <TouchableOpacity
-                style={styles.callBtn}
+                style={[styles.callBtn, { backgroundColor: DELIVERY_SURF }]}
                 onPress={() => {
                   const phone = trip.customerPhone ?? '+919876543210';
                   Linking.openURL(`tel:${phone}`).catch(() =>
-                    Toast.show({
-                      type: 'info',
-                      text1: 'Call Customer',
-                      text2: `Dial ${phone} manually.`
-                    })
+                    Toast.show({ type: 'info', text1: 'Call Customer', text2: `Dial ${phone} manually.` })
                   );
                 }}
               >
@@ -377,15 +366,15 @@ export default function DeliveryDashboardScreen() {
 
         {/* SHIFT SUMMARY */}
         {online && (
-          <View style={styles.shiftCard}>
+          <View style={[styles.shiftCard, { backgroundColor: colors.surface }, Shadow.xs]}>
             <View style={styles.shiftRow}>
               <Ionicons name="time-outline" size={20} color={DELIVERY_ACCENT} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.shiftTitle}>Shift Active</Text>
-                <Text style={styles.shiftSub}>Started at 9:00 AM · 4h 22m elapsed</Text>
+                <Text style={[styles.shiftTitle, { color: colors.text }]}>Shift Active</Text>
+                <Text style={[styles.shiftSub, { color: colors.muted }]}>Started at 9:00 AM · 4h 22m elapsed</Text>
               </View>
-              <TouchableOpacity style={styles.endShiftBtn}>
-                <Text style={styles.endShiftText}>End Shift</Text>
+              <TouchableOpacity style={[styles.endShiftBtn, { backgroundColor: thannigoPalette.dangerSoft }]}>
+                <Text style={[styles.endShiftText, { color: thannigoPalette.error }]}>End Shift</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -396,7 +385,7 @@ export default function DeliveryDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+  container: { flex: 1 },
 
   header: { paddingTop: 8, paddingBottom: 24, paddingHorizontal: 24 },
   headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
@@ -405,7 +394,7 @@ const styles = StyleSheet.create({
   onlineDot: { width: 8, height: 8, borderRadius: 4 },
   onlineStatus: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: '600' },
   headerRight: { alignItems: 'flex-end', gap: 12 },
-  shopBackBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
+  shopBackBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radius.md },
   shopBackBtnText: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.85)' },
   toggleWrap: { alignItems: 'center', gap: 4 },
   toggleLabel: { fontSize: 10, color: 'rgba(255,255,255,0.7)', fontWeight: '800', letterSpacing: 0.5, textAlign: 'center' },
@@ -419,41 +408,37 @@ const styles = StyleSheet.create({
   content: { padding: 20, gap: 16, paddingBottom: 120 },
 
   quickRow: { flexDirection: 'row', gap: 10 },
-  quickBtn: { flex: 1, backgroundColor: thannigoPalette.surface, borderRadius: 18, padding: 14, alignItems: 'center', gap: 8, ...Shadow.xs },
+  quickBtn: { flex: 1, borderRadius: Radius.xl, padding: 14, alignItems: 'center', gap: 8 },
   quickIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  quickLabel: { fontSize: 11, fontWeight: '700', color: thannigoPalette.darkText, textAlign: 'center' },
+  quickLabel: { fontSize: 11, fontWeight: '700', textAlign: 'center' },
 
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', letterSpacing: -0.3 },
 
-  offlineCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 32, alignItems: 'center', gap: 10, ...Shadow.xs },
-  offlineTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
-  offlineSub: { fontSize: 13, color: thannigoPalette.neutral, textAlign: 'center', lineHeight: 18 },
+  offlineCard: { borderRadius: Radius.xl, padding: 32, alignItems: 'center', gap: 10 },
+  offlineTitle: { fontSize: 18, fontWeight: '800' },
+  offlineSub: { fontSize: 13, textAlign: 'center', lineHeight: 18 },
 
-  tripCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 18, ...Shadow.sm },
+  tripCard: { borderRadius: Radius.xl, padding: 18 },
   tripTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  tripOrderId: { fontSize: 13, fontWeight: '800', color: DELIVERY_ACCENT },
-  priorityChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: thannigoPalette.background, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  urgentChip: { backgroundColor: '#ffebee' },
-  priorityText: { fontSize: 11, fontWeight: '700', color: thannigoPalette.neutral },
-  urgentText: { color: '#c62828' },
-  tripCustomer: { fontSize: 17, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 5 },
+  tripOrderId: { fontSize: 13, fontWeight: '800' },
+  priorityChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  priorityText: { fontSize: 11, fontWeight: '700' },
+  tripCustomer: { fontSize: 17, fontWeight: '800', marginBottom: 5 },
   addressRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 14 },
-  tripAddress: { flex: 1, fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
+  tripAddress: { flex: 1, fontSize: 12, fontWeight: '500' },
   tripMeta: { flexDirection: 'row', gap: 12, marginBottom: 14, flexWrap: 'wrap' },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { fontSize: 12, color: DELIVERY_ACCENT, fontWeight: '700' },
+  metaText: { fontSize: 12, fontWeight: '700' },
   tripActions: { flexDirection: 'row', gap: 10 },
-  startBtn: { flex: 1, borderRadius: 14, overflow: 'hidden' },
+  startBtn: { flex: 1, borderRadius: Radius.md, overflow: 'hidden' },
   startBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 13 },
   startBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
-  callBtn: { width: 48, height: 48, borderRadius: 14, backgroundColor: DELIVERY_SURF, alignItems: 'center', justifyContent: 'center' },
+  callBtn: { width: 48, height: 48, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
 
-  shiftCard: { backgroundColor: thannigoPalette.surface, borderRadius: 18, padding: 16, ...Shadow.xs },
+  shiftCard: { borderRadius: Radius.lg, padding: 16 },
   shiftRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  shiftTitle: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
-  shiftSub: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500' },
-  endShiftBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, backgroundColor: '#ffebee' },
-  endShiftText: { color: '#c62828', fontWeight: '800', fontSize: 12 },
+  shiftTitle: { fontSize: 14, fontWeight: '800', marginBottom: 2 },
+  shiftSub: { fontSize: 11, fontWeight: '500' },
+  endShiftBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: Radius.sm },
+  endShiftText: { fontWeight: '800', fontSize: 12 },
 });
-
-

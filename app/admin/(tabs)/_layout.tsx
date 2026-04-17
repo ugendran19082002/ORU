@@ -4,13 +4,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { Platform, StyleSheet } from 'react-native';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const ADMIN_ACCENT = roleAccent.admin;
+const ADMIN_SURF = roleSurface.admin;
+const TAB_INACTIVE = thannigoPalette.neutral;
+
 export default function AdminTabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#ba1a1a',
-        tabBarInactiveTintColor: '#94a3b8',
+        tabBarActiveTintColor: ADMIN_ACCENT,
+        tabBarInactiveTintColor: TAB_INACTIVE,
         tabBarStyle: {
           position: 'absolute',
           borderTopWidth: 0,
@@ -18,7 +24,7 @@ export default function AdminTabsLayout() {
           height: Platform.OS === 'ios' ? 88 : 68,
           paddingBottom: Platform.OS === 'ios' ? 28 : 12,
           paddingTop: 8,
-          backgroundColor: Platform.OS === 'ios' ? 'transparent' : 'white',
+          backgroundColor: Platform.OS === 'ios' ? 'transparent' : thannigoPalette.surface,
         },
         tabBarBackground: () => 
           Platform.OS === 'ios' ? (

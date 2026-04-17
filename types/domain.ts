@@ -58,6 +58,7 @@ export type Order = {
   shopId: string;
   shopName?: string;
   customerName: string;
+  customer_name?: string;
   customerPhone: string;
   items: Array<{ productId: string; quantity: number }>;
   address: string;
@@ -65,8 +66,12 @@ export type Order = {
   status: OrderStatus;
   eta: string;
   createdAtLabel: string;
+  created_at?: string;
+  createdAt?: string;
   deliveryOtp: string;
   total: number;
+  totalAmount?: number;
+  total_amount?: number;
   notes?: string;
   deliveryAgentName?: string;
 };

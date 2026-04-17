@@ -1,18 +1,19 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, View, StyleSheet, ViewStyle } from 'react-native';
-
-const SHIMMER_START = '#E8EDF2';
-const SHIMMER_END = '#F5F8FC';
-const DURATION = 1000;
+import { useAppTheme } from '@/providers/ThemeContext';
 
 function useShimmer() {
+  const { isDark } = useAppTheme();
   const anim = useRef(new Animated.Value(0)).current;
+
+  const shimmerStart = isDark ? '#1F2937' : '#E8EDF2';
+  const shimmerEnd   = isDark ? '#2D3748' : '#F5F8FC';
 
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(anim, { toValue: 1, duration: DURATION, useNativeDriver: false }),
-        Animated.timing(anim, { toValue: 0, duration: DURATION, useNativeDriver: false }),
+        Animated.timing(anim, { toValue: 1, duration: 1000, useNativeDriver: false }),
+        Animated.timing(anim, { toValue: 0, duration: 1000, useNativeDriver: false }),
       ])
     );
     loop.start();
@@ -21,10 +22,10 @@ function useShimmer() {
 
   const backgroundColor = anim.interpolate({
     inputRange: [0, 1],
-    outputRange: [SHIMMER_START, SHIMMER_END],
+    outputRange: [shimmerStart, shimmerEnd],
   });
 
-  return backgroundColor;
+  return { backgroundColor, shimmerStart };
 }
 
 // ── SkeletonLine ────────────────────────────────────────────────────────────
@@ -36,7 +37,7 @@ interface SkeletonLineProps {
 }
 
 export function SkeletonLine({ width = '100%', height = 14, style }: SkeletonLineProps) {
-  const backgroundColor = useShimmer();
+  const { backgroundColor } = useShimmer();
   return (
     <Animated.View
       style={[
@@ -56,7 +57,7 @@ interface SkeletonCircleProps {
 }
 
 export function SkeletonCircle({ size = 48, style }: SkeletonCircleProps) {
-  const backgroundColor = useShimmer();
+  const { backgroundColor } = useShimmer();
   return (
     <Animated.View
       style={[{ width: size, height: size, borderRadius: size / 2, backgroundColor }, style]}
@@ -72,9 +73,9 @@ interface SkeletonCardProps {
 }
 
 export function SkeletonCard({ height = 120, style }: SkeletonCardProps) {
-  const backgroundColor = useShimmer();
+  const { backgroundColor, shimmerStart } = useShimmer();
   return (
-    <View style={[styles.card, { height }, style]}>
+    <View style={[styles.card, { height, backgroundColor: shimmerStart }, style]}>
       <Animated.View style={[StyleSheet.absoluteFill, styles.cardInner, { backgroundColor }]} />
     </View>
   );
@@ -94,6 +95,33 @@ export function SkeletonRow() {
   );
 }
 
+// ── SkeletonShopCard — matches the shop card layout ────────────────────────
+
+export function SkeletonShopCard() {
+  return (
+    <View style={styles.shopCard}>
+      <SkeletonCard height={160} style={{ borderRadius: 0, marginBottom: 0 }} />
+      <View style={{ padding: 16, gap: 10 }}>
+        <SkeletonLine width="70%" height={18} />
+        <SkeletonLine width="45%" height={13} />
+        <SkeletonLine width="100%" height={40} style={{ borderRadius: 12, marginTop: 4 }} />
+      </View>
+    </View>
+  );
+}
+
+// ── SkeletonStatRow — 4-stat grid row ────────────────────────────────────
+
+export function SkeletonStatRow() {
+  return (
+    <View style={styles.statGrid}>
+      {[1, 2, 3, 4].map((k) => (
+        <SkeletonCard key={k} height={96} style={{ width: '48%', flexGrow: 1, borderRadius: 20 }} />
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   line: {
     borderRadius: 8,
@@ -101,7 +129,6 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 24,
     overflow: 'hidden',
-    backgroundColor: SHIMMER_START,
   },
   cardInner: {
     borderRadius: 24,
@@ -113,5 +140,17 @@ const styles = StyleSheet.create({
   },
   rowLines: {
     flex: 1,
+  },
+  shopCard: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: '#E8EDF2',
+    marginBottom: 20,
+  },
+  statGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 24,
   },
 });

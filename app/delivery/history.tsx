@@ -14,9 +14,9 @@ const DELIVERY_SURF = roleSurface.delivery;
 type Period = 'today' | 'week' | 'month' | undefined;
 
 const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
-  delivered: { label: 'Delivered', color: '#2e7d32', bg: '#e8f5e9' },
-  failed:    { label: 'Failed',    color: '#c62828', bg: '#ffebee' },
-  picked_up: { label: 'Picked Up', color: '#b45309', bg: '#fef3c7' },
+  delivered: { label: 'Delivered', color: thannigoPalette.deliveryGreen, bg: thannigoPalette.deliveryGreenLight },
+  failed:    { label: 'Failed',    color: thannigoPalette.error, bg: thannigoPalette.dangerSoft },
+  picked_up: { label: 'Picked Up', color: thannigoPalette.warning, bg: '#FFF8E1' },
   assigned:  { label: 'Assigned',  color: DELIVERY_ACCENT, bg: DELIVERY_SURF },
 };
 
@@ -94,12 +94,12 @@ export default function DeliveryHistoryScreen() {
 
         <View style={styles.cardFooter}>
           <View style={styles.metaBadge}>
-            <Ionicons name="cash" size={14} color="#2e7d32" />
-            <Text style={[styles.metaText, { color: '#2e7d32' }]}>₹{item.earnings.toFixed(2)}</Text>
+            <Ionicons name="cash" size={14} color={thannigoPalette.deliveryGreen} />
+            <Text style={[styles.metaText, { color: thannigoPalette.deliveryGreen }]}>₹{item.earnings.toFixed(2)}</Text>
           </View>
           {item.delivery_time_min != null && (
             <View style={styles.metaBadge}>
-              <Ionicons name="time-outline" size={14} color="#64748b" />
+              <Ionicons name="time-outline" size={14} color={thannigoPalette.neutral} />
               <Text style={styles.metaText}>{item.delivery_time_min} min</Text>
             </View>
           )}
@@ -158,7 +158,7 @@ export default function DeliveryHistoryScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyCard}>
-              <Ionicons name="bicycle-outline" size={40} color="#c8d6e0" />
+              <Ionicons name="bicycle-outline" size={40} color={thannigoPalette.borderSoft} />
               <Text style={styles.emptyText}>No trips found for this period</Text>
             </View>
           }

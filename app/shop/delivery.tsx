@@ -14,14 +14,20 @@ import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { apiClient } from '@/api/client';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
+const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
+
 const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
-  pending: { bg: '#f1f5f9', color: '#64748b', label: 'Pending' },
+  pending: { bg: thannigoPalette.borderSoft, color: thannigoPalette.neutral, label: 'Pending' },
   assigned: { bg: '#fef3c7', color: '#b45309', label: 'Assigned' },
   accepted: { bg: '#fef3c7', color: '#b45309', label: 'Accepted' },
-  picked: { bg: '#e0f0ff', color: '#005d90', label: 'Picked up' },
-  delivered: { bg: '#e8f5e9', color: '#2e7d32', label: 'Delivered' },
-  completed: { bg: '#e8f5e9', color: '#2e7d32', label: 'Completed' },
-  cancelled: { bg: '#ffebee', color: '#c62828', label: 'Cancelled' },
+  picked: { bg: '#e0f0ff', color: SHOP_ACCENT, label: 'Picked up' },
+  delivered: { bg: '#e8f5e9', color: thannigoPalette.success, label: 'Delivered' },
+  completed: { bg: '#e8f5e9', color: thannigoPalette.success, label: 'Completed' },
+  cancelled: { bg: '#ffebee', color: thannigoPalette.adminRed, label: 'Cancelled' },
 };
 
 const FILTERS = ['All', 'Active', 'Delivered', 'Failed'];
@@ -103,7 +109,7 @@ export default function ShopDeliveryManagementScreen() {
             text2: 'Call the dispatch team for urgent redirects.'
           })}
         >
-          <Ionicons name="radio-outline" size={16} color="#005d90" />
+          <Ionicons name="radio-outline" size={16} color={SHOP_ACCENT} />
           <Text style={styles.dispatchBtnText}>Dispatch</Text>
         </TouchableOpacity>
       </View>
@@ -124,9 +130,9 @@ export default function ShopDeliveryManagementScreen() {
         {/* STATS */}
         <View style={styles.statsRow}>
           {[
-            { label: 'Active', value: activeCount, color: '#005d90', bg: '#e0f0ff', icon: 'bicycle-outline' },
-            { label: 'Delivered', value: deliveredToday, color: '#2e7d32', bg: '#e8f5e9', icon: 'checkmark-circle-outline' },
-            { label: 'Cancelled', value: cancelledCount, color: '#c62828', bg: '#ffebee', icon: 'close-circle-outline' },
+            { label: 'Active', value: activeCount, color: SHOP_ACCENT, bg: '#e0f0ff', icon: 'bicycle-outline' },
+            { label: 'Delivered', value: deliveredToday, color: thannigoPalette.success, bg: '#e8f5e9', icon: 'checkmark-circle-outline' },
+            { label: 'Cancelled', value: cancelledCount, color: thannigoPalette.adminRed, bg: '#ffebee', icon: 'close-circle-outline' },
           ].map((s) => (
             <View key={s.label} style={styles.statBox}>
               <View style={[styles.statIcon, { backgroundColor: s.bg }]}>
@@ -153,7 +159,7 @@ export default function ShopDeliveryManagementScreen() {
 
         {/* TRIP LIST */}
         <Text style={styles.sectionTitle}>{loading ? '…' : `${filtered.length} trips`}</Text>
-        {loading && <ActivityIndicator color="#005d90" style={{ marginVertical: 32 }} />}
+        {loading && <ActivityIndicator color={SHOP_ACCENT} style={{ marginVertical: 32 }} />}
         {!loading && filtered.map((trip) => {
           const status = STATUS_COLORS[trip.status] || STATUS_COLORS.pending;
           return (
@@ -167,22 +173,22 @@ export default function ShopDeliveryManagementScreen() {
 
               <Text style={styles.customerName}>{trip.customerName}</Text>
               <View style={styles.addressRow}>
-                <Ionicons name="location-outline" size={13} color="#707881" />
+                <Ionicons name="location-outline" size={13} color={thannigoPalette.neutral} />
                 <Text style={styles.address} numberOfLines={1}>{trip.address}</Text>
               </View>
 
               <View style={styles.metaRow}>
                 <View style={styles.metaItem}>
-                  <Ionicons name="person-outline" size={12} color="#005d90" />
+                  <Ionicons name="person-outline" size={12} color={SHOP_ACCENT} />
                   <Text style={styles.metaText}>{trip.deliveryAgentName || 'Unassigned'}</Text>
                 </View>
                 <View style={styles.metaItem}>
-                  <Ionicons name="time-outline" size={12} color="#005d90" />
+                  <Ionicons name="time-outline" size={12} color={SHOP_ACCENT} />
                   <Text style={styles.metaText}>{trip.eta}</Text>
                 </View>
                 <View style={styles.metaItem}>
                   <Ionicons name="cash-outline" size={12} color="#2e7d32" />
-                  <Text style={[styles.metaText, { color: '#2e7d32' }]}>₹{trip.total} · {trip.paymentMethod.toUpperCase()}</Text>
+                  <Text style={[styles.metaText, { color: thannigoPalette.success }]}>₹{trip.total} · {trip.paymentMethod.toUpperCase()}</Text>
                 </View>
               </View>
 
@@ -191,7 +197,7 @@ export default function ShopDeliveryManagementScreen() {
                   style={styles.trackBtn}
                   onPress={() => router.push('/order/tracking' as any)}
                 >
-                  <Ionicons name="navigate-outline" size={14} color="#005d90" />
+                  <Ionicons name="navigate-outline" size={14} color={SHOP_ACCENT} />
                   <Text style={styles.trackBtnText}>Track Live</Text>
                 </TouchableOpacity>
               )}
@@ -219,45 +225,45 @@ export default function ShopDeliveryManagementScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 14, backgroundColor: 'rgba(255,255,255,0.92)' },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
-  roleLabel: { fontSize: 9, fontWeight: '700', color: '#006878', letterSpacing: 1.5, marginTop: 3 },
-  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
+  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
+  backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
   dispatchBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#e0f0ff', paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12 },
-  dispatchBtnText: { fontSize: 13, fontWeight: '700', color: '#005d90' },
+  dispatchBtnText: { fontSize: 13, fontWeight: '700', color: SHOP_ACCENT },
   content: { paddingHorizontal: 24, paddingBottom: 120 },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, marginBottom: 18 },
-  pageTitle: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, flex: 1 },
-  manageBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#005d90', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14 },
+  pageTitle: { fontSize: 32, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5, flex: 1 },
+  manageBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: SHOP_ACCENT, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14 },
   manageBtnText: { color: 'white', fontSize: 13, fontWeight: '800' },
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   statBox: { flex: 1, backgroundColor: 'white', borderRadius: 18, padding: 14, alignItems: 'center', gap: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
   statIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   statValue: { fontSize: 22, fontWeight: '900' },
-  statLabel: { fontSize: 10, color: '#707881', fontWeight: '600' },
+  statLabel: { fontSize: 10, color: thannigoPalette.neutral, fontWeight: '600' },
   filterRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  filterPill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: 'white', borderWidth: 1, borderColor: '#e0e2e8' },
-  filterPillActive: { backgroundColor: '#005d90', borderColor: '#005d90' },
-  filterText: { fontSize: 13, fontWeight: '700', color: '#707881' },
+  filterPill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: 'white', borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  filterPillActive: { backgroundColor: SHOP_ACCENT, borderColor: SHOP_ACCENT },
+  filterText: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral },
   filterTextActive: { color: 'white' },
   sectionTitle: { fontSize: 13, fontWeight: '700', color: '#94a3b8', marginBottom: 12, letterSpacing: 0.5 },
   tripCard: { backgroundColor: 'white', borderRadius: 20, padding: 18, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   tripTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  tripId: { fontSize: 12, fontWeight: '800', color: '#005d90' },
+  tripId: { fontSize: 12, fontWeight: '800', color: SHOP_ACCENT },
   statusChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   statusText: { fontSize: 11, fontWeight: '700' },
-  customerName: { fontSize: 16, fontWeight: '800', color: '#181c20', marginBottom: 5 },
+  customerName: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 5 },
   addressRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 12 },
-  address: { fontSize: 12, color: '#707881', fontWeight: '500', flex: 1 },
+  address: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500', flex: 1 },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 12 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { fontSize: 12, color: '#005d90', fontWeight: '700' },
+  metaText: { fontSize: 12, color: SHOP_ACCENT, fontWeight: '700' },
   trackBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: '#bfdbf7', backgroundColor: '#f0f7ff' },
-  trackBtnText: { fontSize: 13, fontWeight: '700', color: '#005d90' },
+  trackBtnText: { fontSize: 13, fontWeight: '700', color: SHOP_ACCENT },
   rescheduleBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: '#fecaca', backgroundColor: '#fff5f5' },
-  rescheduleBtnText: { fontSize: 13, fontWeight: '700', color: '#c62828' },
+  rescheduleBtnText: { fontSize: 13, fontWeight: '700', color: thannigoPalette.adminRed },
 });
 
 

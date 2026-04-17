@@ -1,9 +1,9 @@
 import '../global.css';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { ThemeProvider as ThanniGoThemeProvider, useAppTheme } from '@/providers/ThemeContext';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { AppSessionProvider } from '@/providers/AppSessionProvider';
 import { NoInternetBanner } from '@/components/ui/NoInternetBanner';
@@ -18,14 +18,11 @@ LogBox.ignoreLogs([
   'Style property \'width\' is not supported by native animated module', 
 ]);
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function RootNavigation() {
+  const { isDark } = useAppTheme();
   return (
-    <SafeAreaProvider>
-      <ErrorBoundary>
-        <AppSessionProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-              <Stack screenOptions={{ headerShown: false }}>
+    <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+      <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="auth" options={{ headerShown: false, animation: 'fade' }} />
                 <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
                 <Stack.Screen name="enable-notifications" options={{ headerShown: false, animation: 'fade' }} />
@@ -63,7 +60,18 @@ export default function RootLayout() {
               <NoInternetBanner />
               <Toast config={toastConfig} />
               <StatusBar style="auto" />
-          </ThemeProvider>
+    </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <SafeAreaProvider>
+      <ErrorBoundary>
+        <AppSessionProvider>
+          <ThanniGoThemeProvider>
+            <RootNavigation />
+          </ThanniGoThemeProvider>
         </AppSessionProvider>
       </ErrorBoundary>
     </SafeAreaProvider>

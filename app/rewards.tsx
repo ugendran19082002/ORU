@@ -13,10 +13,16 @@ import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppSession } from '@/hooks/use-app-session';
 import { apiClient } from '@/api/client';
+import { Shadow, thannigoPalette, roleAccent, Radius } from '@/constants/theme';
+import { useAppTheme } from '@/providers/ThemeContext';
+
+const ACCENT = roleAccent.customer;
+const GRAD: [string, string] = [ACCENT, '#0077b6'];
 
 export default function RewardsScreen() {
   const router = useRouter();
   const { user } = useAppSession();
+  const { colors, isDark } = useAppTheme();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   
@@ -85,16 +91,16 @@ export default function RewardsScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#005d90" />
+        <ActivityIndicator size="large" color={ACCENT} />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <BackButton fallback="/(tabs)/profile" />
         <Text style={styles.headerTitle}>Rewards & Referrals</Text>
       </View>
@@ -106,7 +112,7 @@ export default function RewardsScreen() {
       >
         {/* HERO LOYALTY CARD */}
         <LinearGradient
-          colors={['#005d90', '#0077b6']}
+          colors={GRAD}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroCard}
@@ -161,7 +167,7 @@ export default function RewardsScreen() {
         <View style={styles.referralCard}>
           <View style={styles.referralTop}>
             <View style={styles.referralIconWrap}>
-              <Ionicons name="people" size={24} color="#005d90" />
+              <Ionicons name="people" size={24} color={ACCENT} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.referralTitle}>Invite & Earn Points</Text>
@@ -187,11 +193,11 @@ export default function RewardsScreen() {
                     Toast.show({ type: 'success', text1: 'Copied!', text2: `${referralCode} copied to clipboard.` });
                   }}
                 >
-                  <Ionicons name="copy-outline" size={16} color="#005d90" />
+                  <Ionicons name="copy-outline" size={16} color={ACCENT} />
                   <Text style={styles.copyBtnText}>Copy</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-                  <LinearGradient colors={['#005d90', '#0077b6']} style={styles.shareBtnGrad}>
+                  <LinearGradient colors={GRAD} style={styles.shareBtnGrad}>
                     <Ionicons name="share-social-outline" size={16} color="white" />
                     <Text style={styles.shareBtnText}>Share Invite</Text>
                   </LinearGradient>
@@ -205,10 +211,10 @@ export default function RewardsScreen() {
               disabled={generatingCode}
             >
               {generatingCode ? (
-                <ActivityIndicator color="#005d90" size="small" />
+                <ActivityIndicator color={ACCENT} size="small" />
               ) : (
                 <>
-                  <Ionicons name="add-circle-outline" size={18} color="#005d90" />
+                  <Ionicons name="add-circle-outline" size={18} color={ACCENT} />
                   <Text style={styles.generateBtnText}>Generate My Referral Code</Text>
                 </>
               )}
@@ -240,17 +246,17 @@ export default function RewardsScreen() {
         <View style={styles.tiersList}>
           {(tiers || []).map((tier) => (
             <View key={tier.id} style={[styles.tierRow, tier.id === currentTier.id && styles.tierRowActive]}>
-              <View style={[styles.tierIcon, { backgroundColor: '#eff6ff' }]}>
-                <Ionicons name="medal-outline" size={18} color="#005d90" />
+              <View style={[styles.tierIcon, { backgroundColor: thannigoPalette.infoSoft }]}>
+                <Ionicons name="medal-outline" size={18} color={ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.tierName, { color: '#1a1c1e' }]}>{tier.name}</Text>
+                <Text style={[styles.tierName, { color: thannigoPalette.darkText }]}>{tier.name}</Text>
                 <Text style={styles.tierRange}>{tier.min_points}+ lifetime points</Text>
               </View>
-              <Text style={[styles.tierDiscount, { color: '#005d90' }]}>{tier.discount_percent}% off</Text>
+              <Text style={[styles.tierDiscount, { color: ACCENT }]}>{tier.discount_percent}% off</Text>
               {tier.id === currentTier.id && (
-                <View style={[styles.currentChip, { backgroundColor: '#005d9018' }]}>
-                  <Text style={[styles.currentChipText, { color: '#005d90' }]}>CURRENT</Text>
+                <View style={[styles.currentChip, { backgroundColor: ACCENT + '18' }]}>
+                  <Text style={[styles.currentChipText, { color: ACCENT }]}>CURRENT</Text>
                 </View>
               )}
             </View>
@@ -261,18 +267,18 @@ export default function RewardsScreen() {
         <Text style={styles.sectionTitle}>Points History</Text>
         <View style={styles.historyCard}>
           {(history || []).length === 0 && (
-            <Text style={{ textAlign: 'center', color: '#94a3b8', padding: 20 }}>No transactions yet</Text>
+            <Text style={{ textAlign: 'center', color: colors.muted, padding: 20 }}>No transactions yet</Text>
           )}
           {(history || []).map((h, i) => (
             <View key={h.id} style={[styles.historyRow, i < history.length - 1 && styles.historyDivider]}>
-              <View style={[styles.historyIcon, { backgroundColor: h.points > 0 ? '#e8f5e9' : '#ffebee' }]}>
-                <Ionicons name={h.points > 0 ? 'arrow-up' : 'arrow-down'} size={14} color={h.points > 0 ? '#2e7d32' : '#c62828'} />
+              <View style={[styles.historyIcon, { backgroundColor: h.points > 0 ? thannigoPalette.successSoft : thannigoPalette.dangerSoft }]}>
+                <Ionicons name={h.points > 0 ? 'arrow-up' : 'arrow-down'} size={14} color={h.points > 0 ? thannigoPalette.success : thannigoPalette.error} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.historyEvent}>{h.description || h.source}</Text>
                 <Text style={styles.historyDate}>{new Date(h.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</Text>
               </View>
-              <Text style={[styles.historyPoints, { color: h.points > 0 ? '#2e7d32' : '#c62828' }]}>
+              <Text style={[styles.historyPoints, { color: h.points > 0 ? thannigoPalette.success : thannigoPalette.error }]}>
                 {h.points > 0 ? '+' : ''}{h.points}
               </Text>
             </View>
@@ -285,19 +291,19 @@ export default function RewardsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fcfdff' },
+  container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     paddingHorizontal: 20, paddingVertical: 14,
-    backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+    borderBottomWidth: 1,
   },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
   content: { padding: 20, gap: 16, paddingBottom: 120 },
 
   heroCard: {
-    borderRadius: 24, padding: 24, overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8,
+    borderRadius: Radius.xl, padding: 24, overflow: 'hidden',
+    ...Shadow.lg,
   },
   heroDecor: { position: 'absolute', bottom: -20, right: -20 },
   heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
@@ -321,66 +327,69 @@ const styles = StyleSheet.create({
   heroStatDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
 
   referralCard: {
-    backgroundColor: 'white', borderRadius: 20, padding: 18,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
-    borderWidth: 1, borderColor: '#f1f4f9'
+    backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 18,
+    borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.xs,
   },
   referralTop: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 16 },
-  referralIconWrap: { width: 48, height: 48, borderRadius: 14, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
-  referralTitle: { fontSize: 16, fontWeight: '800', color: '#181c20' },
-  referralSub: { fontSize: 12, color: '#707881', marginTop: 2, lineHeight: 16 },
-  codeBox: { backgroundColor: '#f1f4f9', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: '#e0e2e8', borderStyle: 'dashed', marginBottom: 14 },
-  codeLabel: { fontSize: 10, color: '#707881', fontWeight: '700', letterSpacing: 1, marginBottom: 4 },
-  codeValue: { fontSize: 18, fontWeight: '900', color: '#005d90', letterSpacing: 1 },
+  referralIconWrap: { width: 48, height: 48, borderRadius: 14, backgroundColor: thannigoPalette.infoSoft, alignItems: 'center', justifyContent: 'center' },
+  referralTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
+  referralSub: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 2, lineHeight: 16 },
+  codeBox: { backgroundColor: thannigoPalette.borderSoft, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: thannigoPalette.borderSoft, borderStyle: 'dashed', marginBottom: 14 },
+  codeLabel: { fontSize: 10, color: thannigoPalette.neutral, fontWeight: '700', letterSpacing: 1, marginBottom: 4 },
+  codeValue: { fontSize: 18, fontWeight: '900', color: ACCENT, letterSpacing: 1 },
   referralActions: { flexDirection: 'row', gap: 10 },
-  copyBtn: { flex: 0.4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 14, borderWidth: 1.5, borderColor: '#bfdbf7' },
-  copyBtnText: { color: '#005d90', fontWeight: '700', fontSize: 13 },
+  copyBtn: { flex: 0.4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 14, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft },
+  copyBtnText: { color: ACCENT, fontWeight: '700', fontSize: 13 },
   shareBtn: { flex: 0.6, borderRadius: 14, overflow: 'hidden' },
   shareBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 },
   shareBtnText: { color: 'white', fontWeight: '800', fontSize: 13 },
-  referralStats: { fontSize: 11, color: '#707881', fontWeight: '600', marginTop: 4 },
-  generateBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, borderWidth: 1.5, borderColor: '#bfdbf7', backgroundColor: '#f0f7ff' },
-  generateBtnText: { color: '#005d90', fontWeight: '700', fontSize: 14 },
+  referralStats: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 4 },
+  generateBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, backgroundColor: thannigoPalette.infoSoft },
+  generateBtnText: { color: ACCENT, fontWeight: '700', fontSize: 14 },
 
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#181c20', letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },
 
   voucherCard: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'white', borderRadius: 18, padding: 16,
-    borderLeftWidth: 4, borderLeftColor: '#005d90',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
+    backgroundColor: thannigoPalette.surface, borderRadius: Radius.lg, padding: 16,
+    borderLeftWidth: 4, borderLeftColor: ACCENT,
+    ...Shadow.xs,
   },
   voucherLeft: { flex: 1 },
-  voucherValue: { fontSize: 18, fontWeight: '900', color: '#005d90', marginBottom: 3 },
-  voucherMeta: { fontSize: 11, color: '#707881', fontWeight: '600' },
+  voucherValue: { fontSize: 18, fontWeight: '900', color: ACCENT, marginBottom: 3 },
+  voucherMeta: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '600' },
   voucherCode: { alignItems: 'flex-end' },
-  voucherCodeText: { fontSize: 13, fontWeight: '800', color: '#181c20', marginBottom: 2 },
-  voucherApply: { fontSize: 11, color: '#005d90', fontWeight: '700' },
+  voucherCodeText: { fontSize: 13, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
+  voucherApply: { fontSize: 11, color: ACCENT, fontWeight: '700' },
 
   tiersList: {
-    backgroundColor: 'white', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
+    backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, paddingHorizontal: 16, paddingVertical: 8,
+    ...Shadow.xs,
   },
-  tierRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  tierRowActive: { backgroundColor: '#f8fafc', borderRadius: 14, paddingHorizontal: 8, marginHorizontal: -8 },
+  tierRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  tierRowActive: { backgroundColor: thannigoPalette.background, borderRadius: 14, paddingHorizontal: 8, marginHorizontal: -8 },
   tierIcon: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   tierName: { fontSize: 15, fontWeight: '800', marginBottom: 2 },
-  tierRange: { fontSize: 11, color: '#707881', fontWeight: '600' },
+  tierRange: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '600' },
   tierDiscount: { fontSize: 14, fontWeight: '900' },
   currentChip: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, marginLeft: 10 },
   currentChipText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
 
   historyCard: {
-    backgroundColor: 'white', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, marginBottom: 40,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
+    backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, paddingHorizontal: 16, paddingVertical: 8, marginBottom: 40,
+    ...Shadow.xs,
   },
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
-  historyDivider: { borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  historyDivider: { borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
   historyIcon: { width: 32, height: 32, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  historyEvent: { fontSize: 13, fontWeight: '700', color: '#181c20', marginBottom: 2 },
-  historyDate: { fontSize: 11, color: '#707881', fontWeight: '500' },
+  historyEvent: { fontSize: 13, fontWeight: '700', color: thannigoPalette.darkText, marginBottom: 2 },
+  historyDate: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500' },
   historyPoints: { fontSize: 15, fontWeight: '800' },
 });
+
+
+
+
 
 
 

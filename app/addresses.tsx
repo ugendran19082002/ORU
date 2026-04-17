@@ -24,6 +24,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ExpoMap, ExpoMarker } from "@/components/maps/ExpoMap";
 import { safeNavigate } from "@/utils/safeNavigation";
 import { addressApi } from "@/api/addressApi";
+import { Shadow, thannigoPalette, roleAccent, Radius } from "@/constants/theme";
+import { useAppTheme } from "@/providers/ThemeContext";
+
+const ACCENT = roleAccent.customer;
+const SHOP_TEAL = thannigoPalette.shopTeal;
 
 /**
  * PRODUCTION DEBUG HELPER: Validate coordinates before use
@@ -66,6 +71,7 @@ type Address = {
 
 export default function AddressesScreen() {
   const router = useRouter();
+  const { colors, isDark } = useAppTheme();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -485,14 +491,14 @@ export default function AddressesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <View style={styles.brandRow}>
           <BackButton fallback="/(tabs)/profile" style={{ marginRight: 12 }} />
-          <Ionicons name="location" size={24} color="#008db9" />
+          <Ionicons name="location" size={24} color={SHOP_TEAL} />
 
           <Text style={styles.brandName}>ThanniGo</Text>
         </View>
@@ -521,7 +527,7 @@ export default function AddressesScreen() {
             <TextInput
               style={styles.searchInput}
               placeholder="Search area, landmark..."
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={colors.muted}
               value={searchQuery}
               onChangeText={(t) => {
                 setSearchQuery(t);
@@ -529,7 +535,7 @@ export default function AddressesScreen() {
                 searchTimeout.current = setTimeout(() => performSearch(t), 500) as any;
               }}
             />
-            {isSearching && <ActivityIndicator size="small" color="#008db9" style={{ marginRight: 8 }} />}
+            {isSearching && <ActivityIndicator size="small" color={SHOP_TEAL} style={{ marginRight: 8 }} />}
           </View>
 
           {/* SUGGESTIONS LIST */}
@@ -541,7 +547,7 @@ export default function AddressesScreen() {
                   style={styles.suggestionItem}
                   onPress={() => handleSelectSuggestion(item)}
                 >
-                  <Ionicons name="location-outline" size={18} color="#64748b" />
+                  <Ionicons name="location-outline" size={18} color={colors.muted} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.suggestionTitle}>{item.title}</Text>
                     <Text style={styles.suggestionSub} numberOfLines={1}>{item.subtitle}</Text>
@@ -580,7 +586,7 @@ export default function AddressesScreen() {
               <View style={styles.accuracyOverlay}>
                 <View style={styles.accuracyTag}>
                   <View style={[styles.accuracyDot, {
-                    backgroundColor: accuracy < 15 ? '#10b981' : '#f59e0b'
+                  backgroundColor: accuracy < 15 ? thannigoPalette.success : thannigoPalette.warning
                   }]} />
                   <Text style={styles.accuracyLabel}>
                     {accuracy < 15 ? `High Precision` : `GPS: ±${Math.round(accuracy)}m`}
@@ -598,9 +604,9 @@ export default function AddressesScreen() {
                 setMapType(types[nextIdx]);
               }} style={styles.mapActionBtnMini}>
                 <Ionicons 
-                  name={mapType === 'satellite' ? 'images' : mapType === 'terrain' ? 'earth' : 'map'} 
-                  size={18} 
-                  color="#005d90" 
+                  name={mapType === 'satellite' ? 'images' : mapType === 'terrain' ? 'earth' : 'map'}
+                  size={18}
+                  color={ACCENT} 
                 />
               </TouchableOpacity>
             </View>
@@ -617,7 +623,7 @@ export default function AddressesScreen() {
                   });
                 }}
               >
-                <Ionicons name="expand-outline" size={20} color="#005d90" />
+                <Ionicons name="expand-outline" size={20} color={ACCENT} />
               </TouchableOpacity>
             </View>
           </View>
@@ -630,15 +636,15 @@ export default function AddressesScreen() {
               disabled={isFetchingLocation}
             >
               {isFetchingLocation ? (
-                <ActivityIndicator size="small" color="#005d90" />
+                <ActivityIndicator size="small" color={ACCENT} />
               ) : (
-                <Ionicons name="location-sharp" size={18} color="#005d90" />
+                <Ionicons name="location-sharp" size={18} color={ACCENT} />
               )}
               <Text style={styles.utilityBtnText}>Locate Me</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.utilityBtn} onPress={shareAddress as any}>
-              <Ionicons name="share-social-outline" size={18} color="#005d90" />
+              <Ionicons name="share-social-outline" size={18} color={ACCENT} />
               <Text style={styles.utilityBtnText}>Share</Text>
             </TouchableOpacity>
           </View>
@@ -711,7 +717,7 @@ export default function AddressesScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.formInputLabel}>Latitude</Text>
                   <TextInput
-                    style={[styles.detailInput, { backgroundColor: '#f1f5f9', color: '#64748b' }]}
+            style={[styles.detailInput, { backgroundColor: colors.background, color: colors.muted }]}
                     value={currentLat.toFixed(6)}
                     editable={false}
                   />
@@ -719,7 +725,7 @@ export default function AddressesScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.formInputLabel}>Longitude</Text>
                   <TextInput
-                    style={[styles.detailInput, { backgroundColor: '#f1f5f9', color: '#64748b' }]}
+            style={[styles.detailInput, { backgroundColor: colors.background, color: colors.muted }]}
                     value={currentLng.toFixed(6)}
                     editable={false}
                   />
@@ -767,7 +773,7 @@ export default function AddressesScreen() {
                 <Ionicons
                   name={item.is_default ? "radio-button-on" : "radio-button-off"}
                   size={24}
-                  color={item.is_default ? "#005d90" : "#cbd5e1"}
+                  color={item.is_default ? ACCENT : colors.muted}
                 />
               </TouchableOpacity>
               
@@ -798,10 +804,10 @@ export default function AddressesScreen() {
                     title: item.label 
                   });
                 }}>
-                  <Ionicons name="map-outline" size={20} color="#008db9" />
+                  <Ionicons name="map-outline" size={20} color={SHOP_TEAL} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => shareAddress(item)}>
-                  <Ionicons name="share-social-outline" size={20} color="#6366f1" />
+                  <Ionicons name="share-social-outline" size={20} color={thannigoPalette.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
@@ -816,10 +822,10 @@ export default function AddressesScreen() {
                     setIsAdding(true);
                   }}
                 >
-                  <Ionicons name="pencil" size={20} color="#94a3b8" />
+                  <Ionicons name="pencil" size={20} color={colors.muted} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => removeAddress(item.id)}>
-                  <Ionicons name="trash" size={20} color="#f87171" />
+                  <Ionicons name="trash" size={20} color={thannigoPalette.error} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -828,7 +834,7 @@ export default function AddressesScreen() {
 
         {/* INFO BOX */}
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle" size={24} color="#008db9" />
+          <Ionicons name="information-circle" size={24} color={SHOP_TEAL} />
           <View style={{ flex: 1 }}>
             <Text style={styles.infoTitle}>Precision Delivery</Text>
             <Text style={styles.infoText}>
@@ -847,7 +853,7 @@ export default function AddressesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8fafc" },
+  container: { flex: 1 },
 
   header: {
     flexDirection: "row",
@@ -855,404 +861,131 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: "#ffffff",
     borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
   },
   brandRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  brandName: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#005d90",
-    letterSpacing: -0.3,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: "#e2e8f0",
-  },
+  brandName: { fontSize: 20, fontWeight: "800", color: ACCENT, letterSpacing: -0.3 },
+  avatar: { width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: thannigoPalette.borderSoft },
 
   scrollContent: { padding: 20 },
 
   card: {
-    backgroundColor: "#ffffff",
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 3,
+    backgroundColor: thannigoPalette.surface,
+    borderRadius: Radius.xl, padding: 20, marginBottom: 20, ...Shadow.sm,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#0f172a",
-    marginBottom: 16,
-  },
+  cardTitle: { fontSize: 18, fontWeight: "800", color: thannigoPalette.darkText, marginBottom: 16 },
   searchBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: "#f1f5f9",
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    height: 56,
-    marginBottom: 16,
+    flexDirection: "row", alignItems: "center", gap: 10,
+    backgroundColor: thannigoPalette.borderSoft,
+    borderRadius: Radius.lg, paddingHorizontal: 16, height: 56, marginBottom: 16,
   },
-  searchInput: { flex: 1, fontSize: 15, color: "#0f172a", fontWeight: "500" },
+  searchInput: { flex: 1, fontSize: 15, color: thannigoPalette.darkText, fontWeight: "500" },
   gpsBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#00647a",
-    borderRadius: 16,
-    height: 56,
-    shadowColor: "#00647a",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
+    backgroundColor: SHOP_TEAL, borderRadius: Radius.lg, height: 56,
+    ...Shadow.sm,
   },
   gpsBtnText: { color: "#ffffff", fontSize: 15, fontWeight: "700" },
 
-  addFormWrapper: {
-    marginTop: 24,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#f1f5f9",
-  },
-  formInputLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#475569",
-    marginBottom: 6,
-    marginLeft: 2,
-  },
+  addFormWrapper: { marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft },
+  formInputLabel: { fontSize: 12, fontWeight: "700", color: thannigoPalette.neutral, marginBottom: 6, marginLeft: 2 },
   detailInput: {
-    backgroundColor: "#f8fafc",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: "#0f172a",
-    marginBottom: 16,
+    backgroundColor: thannigoPalette.background, borderWidth: 1, borderColor: thannigoPalette.borderSoft,
+    borderRadius: Radius.md, paddingHorizontal: 16, paddingVertical: 12,
+    fontSize: 15, color: thannigoPalette.darkText, marginBottom: 16,
   },
 
-  formLabel: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#64748b",
-    marginBottom: 10,
-    marginTop: 4,
-  },
+  formLabel: { fontSize: 13, fontWeight: "700", color: thannigoPalette.neutral, marginBottom: 10, marginTop: 4 },
   typeRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
-  typePill: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: "#f1f5f9",
-    borderWidth: 1,
-    borderColor: "transparent",
-  },
-  typePillActive: { backgroundColor: "#e0f2fe", borderColor: "#bae6fd" },
-  typePillText: { fontSize: 14, fontWeight: "600", color: "#64748b" },
-  typePillTextActive: { color: "#0284c7" },
-  saveActionBtn: {
-    backgroundColor: "#0d9488",
-    paddingVertical: 14,
-    borderRadius: 16,
-    alignItems: "center",
-    marginTop: 10,
-  },
+  typePill: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, backgroundColor: thannigoPalette.borderSoft, borderWidth: 1, borderColor: "transparent" },
+  typePillActive: { backgroundColor: thannigoPalette.infoSoft, borderColor: ACCENT },
+  typePillText: { fontSize: 14, fontWeight: "600", color: thannigoPalette.neutral },
+  typePillTextActive: { color: ACCENT },
+  saveActionBtn: { backgroundColor: SHOP_TEAL, paddingVertical: 14, borderRadius: Radius.lg, alignItems: "center", marginTop: 10 },
   saveActionText: { color: "white", fontSize: 15, fontWeight: "700" },
   cancelActionBtn: { paddingVertical: 14, alignItems: "center", marginTop: 4 },
-  cancelActionText: { color: "#64748b", fontSize: 14, fontWeight: "600" },
+  cancelActionText: { color: thannigoPalette.neutral, fontSize: 14, fontWeight: "600" },
 
   mapContainer: {
-    height: 240,
-    borderRadius: 24,
-    overflow: "hidden",
-    position: "relative",
-    marginBottom: 28,
-    backgroundColor: "#1e293b",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
+    height: 240, borderRadius: Radius.xl, overflow: "hidden", position: "relative",
+    marginBottom: 28, backgroundColor: "#1e293b", borderWidth: 1, borderColor: thannigoPalette.borderSoft,
   },
   mapView: { flex: 1 },
-  accuracyOverlay: {
-    position: "absolute",
-    top: 12,
-    left: 12,
-  },
-  typeSelectorOverlay: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-  },
-  mapOverlayActions: {
-    position: "absolute",
-    bottom: 12,
-    right: 12,
-    gap: 8,
-  },
+  accuracyOverlay: { position: "absolute", top: 12, left: 12 },
+  typeSelectorOverlay: { position: "absolute", top: 12, right: 12 },
+  mapOverlayActions: { position: "absolute", bottom: 12, right: 12, gap: 8 },
   mapActionBtn: {
-    backgroundColor: "white",
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-    elevation: 4,
+    backgroundColor: "white", width: 44, height: 44, borderRadius: 22,
+    alignItems: "center", justifyContent: "center", ...Shadow.sm,
   },
   mapActionBtnMini: {
-    backgroundColor: "rgba(255,255,255,0.95)",
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: "#f1f5f9",
+    backgroundColor: "rgba(255,255,255,0.95)", width: 36, height: 36, borderRadius: 18,
+    alignItems: "center", justifyContent: "center", ...Shadow.xs,
+    borderWidth: 1, borderColor: thannigoPalette.borderSoft,
   },
   accuracyTag: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.95)",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-    gap: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.95)",
+    paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10, gap: 6, ...Shadow.xs,
   },
-  accuracyDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  accuracyLabel: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: "#475569",
-    letterSpacing: 0.5,
-  },
-  mapPinContainer: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  deliverHerePill: {
-    backgroundColor: "#00647a",
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 12,
-    marginBottom: 60, // Lift above the marker center a bit
-  },
+  accuracyDot: { width: 6, height: 6, borderRadius: 3 },
+  accuracyLabel: { fontSize: 10, fontWeight: "800", color: thannigoPalette.neutral, letterSpacing: 0.5 },
+  mapPinContainer: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
+  deliverHerePill: { backgroundColor: SHOP_TEAL, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 12, marginBottom: 60 },
   deliverHereText: { color: "white", fontSize: 12, fontWeight: "800" },
-  liveMapText: {
-    position: "absolute",
-    bottom: 16,
-    left: 16,
-    color: "#475569",
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 1,
-  },
-  miniTypeSelector: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    zIndex: 10,
-  },
+  liveMapText: { position: "absolute", bottom: 16, left: 16, color: thannigoPalette.neutral, fontSize: 10, fontWeight: "700", letterSpacing: 1 },
+  miniTypeSelector: { position: 'absolute', top: 12, left: 12, zIndex: 10 },
   miniTypeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
-    borderWidth: 1, borderColor: '#f1f5f9',
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.92)', paddingHorizontal: 10, paddingVertical: 6,
+    borderRadius: 10, ...Shadow.xs, borderWidth: 1, borderColor: thannigoPalette.borderSoft,
   },
-  miniTypeText: {
-    fontSize: 9,
-    fontWeight: '900',
-    color: '#005d90',
-    letterSpacing: 0.5,
-  },
+  miniTypeText: { fontSize: 9, fontWeight: '900', color: ACCENT, letterSpacing: 0.5 },
 
-  listHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-    paddingHorizontal: 4,
-  },
-  listSectionTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#334155",
-    letterSpacing: 1,
-  },
-  manageText: { fontSize: 13, fontWeight: "700", color: "#00647a" },
+  listHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingHorizontal: 4 },
+  listSectionTitle: { fontSize: 13, fontWeight: "700", color: thannigoPalette.neutral, letterSpacing: 1 },
+  manageText: { fontSize: 13, fontWeight: "700", color: SHOP_TEAL },
 
   listItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 12,
-    gap: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 8,
-    elevation: 1,
+    flexDirection: "row", alignItems: "center", backgroundColor: thannigoPalette.surface,
+    borderRadius: Radius.xl, padding: 16, marginBottom: 12, gap: 16, ...Shadow.xs,
   },
-  iconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  iconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   listContent: { flex: 1 },
-  listTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 4,
-  },
-  listTitle: { fontSize: 16, fontWeight: "800", color: "#0f172a" },
-  favBadge: {
-    backgroundColor: "#4ade80",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
+  listTitleRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
+  listTitle: { fontSize: 16, fontWeight: "800", color: thannigoPalette.darkText },
+  favBadge: { backgroundColor: thannigoPalette.success, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   favBadgeText: { color: "white", fontSize: 9, fontWeight: "800" },
-  defaultBadge: {
-    backgroundColor: "#0ea5e9",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
+  defaultBadge: { backgroundColor: ACCENT, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   defaultBadgeText: { color: "white", fontSize: 9, fontWeight: "800" },
-  selectionIndicator: {
-    paddingRight: 4,
-  },
-  listItemDefault: {
-    borderColor: "#0ea5e9",
-    borderWidth: 1,
-    backgroundColor: "#f0f9ff",
-  },
-  listSub: { fontSize: 13, color: "#64748b", fontWeight: "500" },
+  selectionIndicator: { paddingRight: 4 },
+  listItemDefault: { borderColor: ACCENT, borderWidth: 1, backgroundColor: thannigoPalette.infoSoft },
+  listSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: "500" },
 
   infoBox: {
-    flexDirection: "row",
-    gap: 12,
-    backgroundColor: "#f0fdfa",
-    borderRadius: 20,
-    padding: 18,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: "#ccfbf1",
+    flexDirection: "row", gap: 12, backgroundColor: thannigoPalette.successSoft,
+    borderRadius: Radius.xl, padding: 18, marginTop: 12,
+    borderWidth: 1, borderColor: thannigoPalette.success + '30',
   },
-  infoTitle: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#115e59",
-    marginBottom: 4,
-  },
-  infoText: {
-    fontSize: 13,
-    color: "#0f766e",
-    lineHeight: 20,
-    fontWeight: "500",
-  },
-  mapUtilityRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-  },
+  infoTitle: { fontSize: 14, fontWeight: "800", color: thannigoPalette.shopTeal, marginBottom: 4 },
+  infoText: { fontSize: 13, color: thannigoPalette.shopTeal, lineHeight: 20, fontWeight: "500" },
+  mapUtilityRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   utilityBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: 'white',
-    paddingVertical: 14,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#f1f5f9',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    backgroundColor: thannigoPalette.surface, paddingVertical: 14, borderRadius: Radius.lg,
+    borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, ...Shadow.xs,
   },
-  utilityBtnText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#005d90',
-  },
+  utilityBtnText: { fontSize: 14, fontWeight: '800', color: ACCENT },
 
-  // SUGGESTIONS STYLES
   suggestionsContainer: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    marginTop: 8,
-    marginBottom: 16,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
+    backgroundColor: thannigoPalette.surface, borderRadius: Radius.lg, marginTop: 8, marginBottom: 16,
+    padding: 4, borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.sm,
   },
   suggestionItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
-    gap: 12,
+    flexDirection: "row", alignItems: "center", padding: 14,
+    borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft, gap: 12,
   },
-  suggestionTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#0f172a",
-  },
-  suggestionSub: {
-    fontSize: 12,
-    color: "#64748b",
-    marginTop: 2,
-    fontWeight: "500",
-  },
+  suggestionTitle: { fontSize: 14, fontWeight: "700", color: thannigoPalette.darkText },
+  suggestionSub: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 2, fontWeight: "500" },
 });
 
 

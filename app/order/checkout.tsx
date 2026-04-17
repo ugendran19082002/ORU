@@ -23,7 +23,7 @@ import { useCartStore } from "@/stores/cartStore";
 import { useOrderStore } from "@/stores/orderStore";
 import { useShopStore } from "@/stores/shopStore";
 import { useAppSession } from "@/hooks/use-app-session";
-import { Shadow, thannigoPalette, roleAccent, roleGradients } from "@/constants/theme";
+import { Shadow, thannigoPalette, roleAccent, roleGradients, roleSurface, Radius } from "@/constants/theme";
 
 const CUSTOMER_ACCENT = roleAccent.customer;
 const CUSTOMER_GRAD: [string, string] = [roleGradients.customer.start, roleGradients.customer.end];
@@ -93,7 +93,7 @@ function CouponBlock({ subtotal, onApply }: { subtotal: number; onApply?: (disco
               paddingVertical: 12,
               paddingRight: 40,
               borderWidth: 1.5,
-              borderColor: discount > 0 ? "#22c55e" : couponError ? "#ba1a1a" : "#e0e2e8",
+              borderColor: discount > 0 ? thannigoPalette.success : couponError ? thannigoPalette.error : thannigoPalette.borderSoft,
               fontSize: 15,
               fontWeight: "700",
               color: "#181c20",
@@ -101,7 +101,7 @@ function CouponBlock({ subtotal, onApply }: { subtotal: number; onApply?: (disco
           />
           {discount > 0 && (
             <View style={{ position: 'absolute', right: 12, top: 14 }}>
-              <Ionicons name="checkmark-circle" size={18} color="#22c55e" />
+              <Ionicons name="checkmark-circle" size={18} color={thannigoPalette.success} />
             </View>
           )}
         </View>
@@ -109,7 +109,7 @@ function CouponBlock({ subtotal, onApply }: { subtotal: number; onApply?: (disco
           onPress={applyCoupon}
           disabled={!coupon.trim() || isValidating}
           style={{
-            backgroundColor: "#005d90",
+            backgroundColor: thannigoPalette.primary,
             borderRadius: 14,
             paddingHorizontal: 20,
             justifyContent: "center",
@@ -124,12 +124,12 @@ function CouponBlock({ subtotal, onApply }: { subtotal: number; onApply?: (disco
         </TouchableOpacity>
       </View>
       {couponError ? (
-        <Text style={{ color: "#ba1a1a", fontSize: 12, marginTop: 8, fontWeight: "600", marginLeft: 4 }}>
+        <Text style={{ color: thannigoPalette.error, fontSize: 12, marginTop: 8, fontWeight: "600", marginLeft: 4 }}>
           {couponError}
         </Text>
       ) : null}
       {discount > 0 ? (
-        <Text style={{ color: "#22c55e", fontSize: 13, marginTop: 8, fontWeight: "800", marginLeft: 4 }}>
+        <Text style={{ color: thannigoPalette.success, fontSize: 13, marginTop: 8, fontWeight: "800", marginLeft: 4 }}>
           Extra ₹{discount} off applied!
         </Text>
       ) : null}
@@ -142,10 +142,10 @@ function LoyaltyBlock({ points, onToggle, isEnabled }: { points: number; onToggl
     <View style={styles.loyaltyCard}>
       <View style={{ flex: 1, gap: 4 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Ionicons name="gift" size={18} color="#005d90" />
-          <Text style={{ fontSize: 13, fontWeight: '800', color: '#1e293b' }}>Thanni Points</Text>
+          <Ionicons name="gift" size={18} color={CUSTOMER_ACCENT} />
+          <Text style={{ fontSize: 13, fontWeight: '800', color: thannigoPalette.darkText }}>Thanni Points</Text>
         </View>
-        <Text style={{ fontSize: 11, color: '#64748b', fontWeight: '500' }}>
+        <Text style={{ fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500' }}>
           You have {points} points available. Use them to get a discount on this order.
         </Text>
       </View>
@@ -349,7 +349,7 @@ export default function OrderCheckoutScreen() {
               <Ionicons
                 name="phone-portrait-outline"
                 size={20}
-                color={payment === "upi" ? "#005d90" : "#707881"}
+                color={payment === "upi" ? thannigoPalette.primary : thannigoPalette.neutral}
               />
             </View>
             <Text
@@ -382,7 +382,7 @@ export default function OrderCheckoutScreen() {
               <Ionicons
                 name="cash-outline"
                 size={20}
-                color={payment === "cod" ? "#005d90" : "#707881"}
+                color={payment === "cod" ? thannigoPalette.primary : thannigoPalette.neutral}
               />
             </View>
             <Text
@@ -406,7 +406,7 @@ export default function OrderCheckoutScreen() {
             style={[styles.toggleBtn, deliveryType === 'instant' && styles.toggleBtnActive]}
             onPress={() => setDeliveryType('instant')}
           >
-            <Ionicons name="flash" size={18} color={deliveryType === 'instant' ? 'white' : '#707881'} />
+            <Ionicons name="flash" size={18} color={deliveryType === 'instant' ? 'white' : thannigoPalette.neutral} />
             <Text style={[styles.toggleText, deliveryType === 'instant' && styles.toggleTextActive]}>Instant</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -419,7 +419,7 @@ export default function OrderCheckoutScreen() {
               }
             }}
           >
-            <Ionicons name="calendar" size={18} color={deliveryType === 'scheduled' ? 'white' : '#707881'} />
+            <Ionicons name="calendar" size={18} color={deliveryType === 'scheduled' ? 'white' : thannigoPalette.neutral} />
             <Text style={[styles.toggleText, deliveryType === 'scheduled' && styles.toggleTextActive]}>Scheduled</Text>
           </TouchableOpacity>
         </View>
@@ -434,7 +434,7 @@ export default function OrderCheckoutScreen() {
               <Text style={styles.slotValue}>{slotLabel || 'Select a time slot'}</Text>
               {date && <Text style={styles.slotDate}>{moment(date).format('dddd, MMM Do')}</Text>}
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#005d90" />
+            <Ionicons name="chevron-forward" size={20} color={CUSTOMER_ACCENT} />
           </TouchableOpacity>
         )}
 
@@ -457,7 +457,7 @@ export default function OrderCheckoutScreen() {
                     : "location"
               }
               size={22}
-              color="#006878"
+              color={roleSurface.shop_owner}
             />
           </View>
           <View style={{ flex: 1 }}>
@@ -465,7 +465,7 @@ export default function OrderCheckoutScreen() {
               {selectedAddress?.label?.toUpperCase() || 'SELECT ADDRESS'}
             </Text>
             {loadingAddresses ? (
-              <ActivityIndicator size="small" color="#006878" style={{ alignSelf: 'flex-start' }} />
+              <ActivityIndicator size="small" color={thannigoPalette.shopTeal} style={{ alignSelf: 'flex-start' }} />
             ) : (
               <Text style={styles.addressText} numberOfLines={2}>
                 {selectedAddress ? `${selectedAddress.address_line1}, ${selectedAddress.city}` : 'No address selected'}
@@ -530,7 +530,7 @@ export default function OrderCheckoutScreen() {
           {couponDiscount > 0 && (
             <View style={styles.summaryRow}>
               <Text style={styles.summaryKey}>Coupon Discount</Text>
-              <Text style={[styles.summaryVal, { color: '#22c55e' }]}>-₹{couponDiscount}</Text>
+              <Text style={[styles.summaryVal, { color: thannigoPalette.success }]}>-₹{couponDiscount}</Text>
             </View>
           )}
           {subDiscountAmt > 0 && (
@@ -621,7 +621,7 @@ export default function OrderCheckoutScreen() {
                     contact: user?.phone || '',
                     name: user?.name || ''
                   },
-                  theme: { color: '#005d90' }
+                  theme: { color: CUSTOMER_ACCENT }
                 };
 
                 RazorpayCheckout.open(options).then((data: any) => {
@@ -650,7 +650,7 @@ export default function OrderCheckoutScreen() {
           }}
         >
           <LinearGradient
-            colors={["#005d90", "#0077b6"]}
+              colors={[thannigoPalette.primary, "#0077b6"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={[styles.ctaBtn, { opacity: isSubmitting ? 0.7 : 1 }]}
@@ -680,7 +680,7 @@ export default function OrderCheckoutScreen() {
                 onPress={() => setShowAddressModal(false)}
                 style={styles.modalClose}
               >
-                <Ionicons name="close" size={24} color="#64748b" />
+            <Ionicons name="close" size={24} color={thannigoPalette.neutral} />
               </TouchableOpacity>
             </View>
             <ScrollView
@@ -689,7 +689,7 @@ export default function OrderCheckoutScreen() {
               refreshControl={<RefreshControl refreshing={loadingAddresses} onRefresh={fetchAddresses} />}
             >
               {addresses.length === 0 && !loadingAddresses ? (
-                <Text style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>No saved addresses found.</Text>
+                <Text style={{ textAlign: 'center', padding: 20, color: thannigoPalette.neutral }}>No saved addresses found.</Text>
               ) : null}
               {addresses.map((addr) => (
                 <TouchableOpacity
@@ -714,15 +714,13 @@ export default function OrderCheckoutScreen() {
                           : "location"
                     }
                     size={20}
-                    color={
-                      selectedAddress?.id === addr.id ? "#005d90" : "#64748b"
-                    }
+                    color={selectedAddress?.id === addr.id ? thannigoPalette.primary : thannigoPalette.neutral}
                   />
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text
                       style={[
                         styles.modalAddrTitle,
-                        selectedAddress?.id === addr.id && { color: "#005d90" },
+                        selectedAddress?.id === addr.id && { color: thannigoPalette.primary },
                       ]}
                     >
                       {addr.label}
@@ -735,7 +733,7 @@ export default function OrderCheckoutScreen() {
                     <Ionicons
                       name="checkmark-circle"
                       size={22}
-                      color="#005d90"
+                      color={CUSTOMER_ACCENT}
                     />
                   )}
                 </TouchableOpacity>
@@ -748,7 +746,7 @@ export default function OrderCheckoutScreen() {
                 router.push("/addresses" as any);
               }}
             >
-              <Ionicons name="add" size={20} color="#005d90" />
+              <Ionicons name="add" size={20} color={CUSTOMER_ACCENT} />
               <Text style={styles.addNewAddrText}>Add New Address</Text>
             </TouchableOpacity>
           </View>
@@ -764,7 +762,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 16, paddingVertical: 12, backgroundColor: "rgba(255,255,255,0.95)",
   },
-  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: "#EBEEF4", alignItems: "center", justifyContent: "center" },
+  backBtn: { width: 40, height: 40, borderRadius: Radius.md, backgroundColor: thannigoPalette.borderSoft, alignItems: "center", justifyContent: "center" },
   headerTitle: { fontSize: 18, fontWeight: "900", color: thannigoPalette.darkText },
 
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12, marginTop: 10 },
@@ -778,14 +776,13 @@ const styles = StyleSheet.create({
     ...Shadow.xs,
   },
   paymentOptionActive: { borderColor: CUSTOMER_ACCENT, backgroundColor: thannigoPalette.infoSoft },
-  paymentIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: "#F1F4F9", alignItems: "center", justifyContent: "center" },
+  paymentIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: thannigoPalette.borderSoft, alignItems: "center", justifyContent: "center" },
   paymentIconActive: { backgroundColor: thannigoPalette.infoSoft },
   paymentOptionLabel: { fontSize: 12, fontWeight: "800", color: thannigoPalette.neutral },
   paymentOptionLabelActive: { color: CUSTOMER_ACCENT },
-  paymentNote: { fontSize: 10, color: "#94A3B8", fontWeight: "600" },
-  notesInput: { backgroundColor: thannigoPalette.surface, borderRadius: 16, padding: 14, fontSize: 14, color: thannigoPalette.darkText, borderWidth: 1, borderColor: thannigoPalette.borderSoft, minHeight: 72, marginTop: 10 },
-
-  addressCard: { flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: "#E0F7FA", borderRadius: 20, padding: 16, marginBottom: 28 },
+  paymentNote: { fontSize: 10, color: thannigoPalette.neutral, fontWeight: "600" },
+  notesInput: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.lg, padding: 14, fontSize: 14, color: thannigoPalette.darkText, borderWidth: 1, borderColor: thannigoPalette.borderSoft, minHeight: 72, marginTop: 10 },
+  addressCard: { flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: thannigoPalette.deliveryGreenLight, borderRadius: Radius.xl, padding: 16, marginBottom: 28 },
   addressIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: "white", alignItems: "center", justifyContent: "center" },
   addressLabel: { fontSize: 10, fontWeight: "800", color: thannigoPalette.shopTeal, letterSpacing: 1, marginBottom: 3 },
   addressText: { fontSize: 13, color: thannigoPalette.darkText, fontWeight: "500", lineHeight: 18 },

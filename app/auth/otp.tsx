@@ -4,8 +4,17 @@ import { useAppNavigation } from "@/hooks/use-app-navigation";
 import { useAndroidBackHandler } from "@/hooks/use-back-handler";
 
 import { authApi } from "@/api/authApi";
-import { thannigoPalette, roleAccent, roleGradients } from "@/constants/theme";
+import {
+  thannigoPalette,
+  roleAccent,
+  roleGradients,
+  Radius,
+  Shadow,
+  Typography,
+  Spacing,
+} from "@/constants/theme";
 import { useAppSession } from "@/hooks/use-app-session";
+import { useAppTheme } from "@/providers/ThemeContext";
 import type { AppRole, AppUser } from "@/types/session";
 import { getOriginalDeviceId } from "@/utils/device";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,6 +41,7 @@ export default function OTPScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   const { signIn, setPreferredRole } = useAppSession();
+  const { colors, isDark } = useAppTheme();
 
   useAndroidBackHandler(() => {
     safeBack("/auth/login");
@@ -56,6 +66,19 @@ export default function OTPScreen() {
   const inputRefs = useRef<(TextInput | null)[]>([]);
   const successAnim = useRef(new Animated.Value(0)).current;
 
+  // Screen fade-in
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 350,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  // Per-digit scale animations
+  const digitAnims = useRef(Array.from({ length: OTP_LENGTH }, () => new Animated.Value(1))).current;
+
   // Countdown resend timer
   useEffect(() => {
     const interval = setInterval(() => {
@@ -69,8 +92,27 @@ export default function OTPScreen() {
     const next = [...otp];
     next[index] = digit;
     setOtp(next);
-    if (digit && index < OTP_LENGTH - 1) {
-      inputRefs.current[index + 1]?.focus();
+
+    if (digit) {
+      // Spring animation on digit fill
+      Animated.sequence([
+        Animated.spring(digitAnims[index], {
+          toValue: 1.08,
+          useNativeDriver: true,
+          speed: 50,
+          bounciness: 8,
+        }),
+        Animated.spring(digitAnims[index], {
+          toValue: 1,
+          useNativeDriver: true,
+          speed: 30,
+          bounciness: 4,
+        }),
+      ]).start();
+
+      if (index < OTP_LENGTH - 1) {
+        inputRefs.current[index + 1]?.focus();
+      }
     }
   };
 
@@ -92,7 +134,6 @@ export default function OTPScreen() {
       if (response.status === 1) {
         setVerified(true);
 
-        // 1. Persist tokens and user into global session
         await signIn({
           user: response.data.user as AppUser,
           access_token: response.data.access_token,
@@ -106,15 +147,10 @@ export default function OTPScreen() {
           tension: 60,
         }).start();
 
-        // 2. Navigate — single path via next_step or role root.
-        // RouteGuard handles stack correction after hydration; we do one explicit
-        // push here so the user doesn't stay on the OTP screen while waiting.
         const { user, next_step, is_new_user } = response.data;
         const destination = (() => {
-          // Professional roles bypass onboarding entirely to prevent navigation race conditions
           if (user.role === 'admin') return '/admin';
           if (user.role === 'delivery') return '/delivery';
-
           if (is_new_user || !user.onboarding_completed) {
             return (next_step?.screen_route || '/auth/role') as string;
           }
@@ -129,7 +165,7 @@ export default function OTPScreen() {
       Toast.show({
         type: 'error',
         text1: 'Verification Failed',
-        text2: err?.response?.data?.message || err?.message || "Please check your OTP and try again."
+        text2: err?.response?.data?.message || err?.message || "Please check your OTP and try again.",
       });
     } finally {
       setLoading(false);
@@ -151,7 +187,7 @@ export default function OTPScreen() {
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: err?.message || "Could not resend OTP. Try again."
+        text2: err?.message || "Could not resend OTP. Try again.",
       });
     }
   };
@@ -160,138 +196,144 @@ export default function OTPScreen() {
   const isComplete = otp.every((d) => d !== "");
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
-      <SafeAreaView style={styles.safe}>
-        {/* HEADER */}
-        <View style={styles.header}>
-          <BackButton fallback="/auth/login" iconColor={roleGradients.customer.start} />
-          <View style={styles.brandRow}>
-            <Logo size="sm" />
-            <Text style={styles.brandName}>ThanniGo</Text>
+    <Animated.View style={[{ flex: 1 }, { opacity: fadeAnim }]}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <StatusBar style={isDark ? "light" : "dark"} />
+        <SafeAreaView style={styles.safe}>
+          {/* HEADER */}
+          <View style={styles.header}>
+            <BackButton fallback="/auth/login" iconColor={accent} />
+            <View style={styles.brandRow}>
+              <Logo size="sm" />
+              <Text style={[styles.brandName, { color: colors.text }]}>ThanniGo</Text>
+            </View>
+            <View style={{ width: 40 }} />
           </View>
-          <View style={{ width: 40 }} />
-        </View>
 
-        {/* TITLE */}
-        <View style={styles.titleBlock}>
-          <Text style={styles.title}>Verify OTP</Text>
-          <Text style={styles.subtitle}>
-            Enter the 6-digit code sent to{"\n"}
-            <Text style={[styles.phoneHighlight, { color: accent }]}>
-              {maskedPhone}
-            </Text>
-          </Text>
-        </View>
-
-        {/* OTP BOXES */}
-        <View style={styles.otpRow}>
-          {Array.from({ length: OTP_LENGTH }).map((_, i) => (
-            <TextInput
-              key={i}
-              ref={(ref) => {
-                inputRefs.current[i] = ref;
-              }}
-              style={[
-                styles.otpBox,
-                otp[i] && {
-                  borderColor: accent,
-                  backgroundColor: thannigoPalette.successSoft,
-                  elevation: 0,
-                },
-                verified && {
-                  borderColor: thannigoPalette.shopTeal,
-                  backgroundColor: thannigoPalette.successSoft,
-                  elevation: 0,
-                },
-              ]}
-              value={otp[i]}
-              onChangeText={(v) => handleOtpChange(v, i)}
-              onKeyPress={(e) => handleKeyPress(e, i)}
-              keyboardType="number-pad"
-              maxLength={1}
-              textAlign="center"
-              selectTextOnFocus
-            />
-          ))}
-        </View>
-
-        {/* SUCCESS ANIMATION */}
-        {verified && (
-          <Animated.View
-            style={[
-              styles.successBadge,
-              { opacity: successAnim, transform: [{ scale: successAnim }] },
-            ]}
-          >
-            <Ionicons name="checkmark-circle" size={22} color={thannigoPalette.shopTeal} />
-            <Text style={styles.successText}>Verified! Redirecting...</Text>
-          </Animated.View>
-        )}
-
-        {/* RESEND */}
-        <View style={styles.resendRow}>
-          <Text style={styles.resendLabel}>Didn&apos;t receive the code?</Text>
-          {resendTimer > 0 ? (
-            <Text style={styles.resendTimer}>Resend in {resendTimer}s</Text>
-          ) : (
-            <TouchableOpacity onPress={handleResendOtp}>
-              <Text style={[styles.resendBtn, { color: accent }]}>
-                Resend OTP
+          {/* TITLE */}
+          <View style={styles.titleBlock}>
+            <Text style={[styles.title, { color: colors.text }]}>Verify OTP</Text>
+            <Text style={[styles.subtitle, { color: colors.muted }]}>
+              Enter the 6-digit code sent to{"\n"}
+              <Text style={[styles.phoneHighlight, { color: accent }]}>
+                {maskedPhone}
               </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {__DEV__ && (
-          <View style={styles.hintCard}>
-            <Ionicons name="warning-outline" size={16} color="#e07b00" />
-            <Text style={[styles.hintText, { color: "#e07b00" }]}>
-              DEV MODE — any 6 digits accepted. Firebase auth required in
-              production.
             </Text>
           </View>
-        )}
-      </SafeAreaView>
 
-      {/* VERIFY BUTTON */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity
-          activeOpacity={isComplete ? 0.9 : 1}
-          onPress={handleVerify}
-          style={[!isComplete && { opacity: 0.4 }]}
-        >
-          <LinearGradient
-            colors={[theme.start, theme.end]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[
-              styles.ctaBtn,
-              !isComplete && { elevation: 0, shadowOpacity: 0 },
-            ]}
-          >
-            {loading ? (
-              <Text style={styles.ctaText}>Verifying...</Text>
-            ) : (
-              <>
-                <Ionicons
-                  name="shield-checkmark-outline"
-                  size={20}
-                  color="white"
+          {/* OTP BOXES */}
+          <View style={styles.otpRow}>
+            {Array.from({ length: OTP_LENGTH }).map((_, i) => (
+              <Animated.View
+                key={i}
+                style={[{ transform: [{ scale: digitAnims[i] }] }]}
+              >
+                <TextInput
+                  ref={(ref) => {
+                    inputRefs.current[i] = ref;
+                  }}
+                  style={[
+                    styles.otpBox,
+                    {
+                      borderColor: otp[i]
+                        ? accent
+                        : colors.border,
+                      backgroundColor: otp[i]
+                        ? `${accent}12`
+                        : colors.surface,
+                      color: colors.text,
+                    },
+                    verified && {
+                      borderColor: thannigoPalette.success,
+                      backgroundColor: thannigoPalette.successSoft,
+                    },
+                  ]}
+                  value={otp[i]}
+                  onChangeText={(v) => handleOtpChange(v, i)}
+                  onKeyPress={(e) => handleKeyPress(e, i)}
+                  keyboardType="number-pad"
+                  maxLength={1}
+                  textAlign="center"
+                  selectTextOnFocus
                 />
-                <Text style={styles.ctaText}>Verify & Continue</Text>
-              </>
+              </Animated.View>
+            ))}
+          </View>
+
+          {/* SUCCESS ANIMATION */}
+          {verified && (
+            <Animated.View
+              style={[
+                styles.successBadge,
+                { backgroundColor: thannigoPalette.successSoft },
+                { opacity: successAnim, transform: [{ scale: successAnim }] },
+              ]}
+            >
+              <Ionicons name="checkmark-circle" size={22} color={thannigoPalette.success} />
+              <Text style={[styles.successText, { color: thannigoPalette.success }]}>
+                Verified! Redirecting...
+              </Text>
+            </Animated.View>
+          )}
+
+          {/* RESEND */}
+          <View style={styles.resendRow}>
+            <Text style={[styles.resendLabel, { color: colors.muted }]}>
+              Didn&apos;t receive the code?
+            </Text>
+            {resendTimer > 0 ? (
+              <Text style={[styles.resendTimer, { color: accent }]}>
+                Resend in {resendTimer}s
+              </Text>
+            ) : (
+              <TouchableOpacity onPress={handleResendOtp}>
+                <Text style={[styles.resendBtn, { color: accent }]}>Resend OTP</Text>
+              </TouchableOpacity>
             )}
-          </LinearGradient>
-        </TouchableOpacity>
+          </View>
+
+          {__DEV__ && (
+            <View style={[styles.hintCard, { backgroundColor: colors.border }]}>
+              <Ionicons name="warning-outline" size={16} color={thannigoPalette.warning} />
+              <Text style={[styles.hintText, { color: thannigoPalette.warning }]}>
+                DEV MODE — any 6 digits accepted. Firebase auth required in production.
+              </Text>
+            </View>
+          )}
+        </SafeAreaView>
+
+        {/* VERIFY BUTTON */}
+        <View style={[styles.bottomBar, { backgroundColor: colors.background }]}>
+          <TouchableOpacity
+            activeOpacity={isComplete ? 0.9 : 1}
+            onPress={handleVerify}
+            style={[!isComplete && { opacity: 0.4 }]}
+          >
+            <LinearGradient
+              colors={[theme.start, theme.end]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.ctaBtn, { shadowColor: theme.start }]}
+            >
+              {loading ? (
+                <Text style={styles.ctaText}>Verifying...</Text>
+              ) : (
+                <>
+                  <Ionicons name="shield-checkmark-outline" size={20} color="white" />
+                  <Text style={styles.ctaText}>Verify &amp; Continue</Text>
+                </>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
-  safe: { flex: 1, paddingHorizontal: 24 },
+  container: { flex: 1 },
+  safe: { flex: 1, paddingHorizontal: Spacing.xl },
 
   header: {
     flexDirection: "row",
@@ -299,19 +341,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 14,
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: thannigoPalette.borderSoft,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   brandRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   brandName: {
-    fontSize: 20,
-    fontWeight: "900",
-    color: thannigoPalette.darkText,
+    ...Typography.h4,
     letterSpacing: -0.5,
   },
 
@@ -319,11 +351,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: "900",
-    color: thannigoPalette.darkText,
     letterSpacing: -0.5,
     marginBottom: 10,
   },
-  subtitle: { fontSize: 15, color: thannigoPalette.neutral, lineHeight: 22 },
+  subtitle: { fontSize: 15, lineHeight: 22 },
   phoneHighlight: { fontWeight: "800" },
 
   otpRow: {
@@ -335,18 +366,11 @@ const styles = StyleSheet.create({
   otpBox: {
     width: 48,
     height: 60,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     borderWidth: 2,
-    borderColor: thannigoPalette.borderSoft,
-    backgroundColor: thannigoPalette.surface,
     fontSize: 24,
     fontWeight: "900",
-    color: thannigoPalette.darkText,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    ...Shadow.xs,
   },
 
   successBadge: {
@@ -354,80 +378,44 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     justifyContent: "center",
-    backgroundColor: thannigoPalette.successSoft,
-    borderRadius: 16,
+    borderRadius: Radius.lg,
     padding: 12,
-    marginBottom: 20,
+    marginBottom: Spacing.lg,
   },
-  successText: { color: thannigoPalette.shopTeal, fontWeight: "700", fontSize: 14 },
+  successText: { fontWeight: "700", fontSize: 14 },
 
   resendRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     justifyContent: "center",
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
   },
-  resendLabel: { fontSize: 13, color: thannigoPalette.neutral },
-  resendTimer: { fontSize: 13, color: roleGradients.customer.start, fontWeight: "700" },
-  resendBtn: {
-    fontSize: 13,
-    fontWeight: "800",
-    textDecorationLine: "underline",
-  },
-
-  referralSection: {
-    marginBottom: 24,
-    alignItems: 'center',
-  },
-  referralInputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: thannigoPalette.surface,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    height: 52,
-    width: '100%',
-    borderWidth: 1,
-    borderColor: thannigoPalette.borderSoft,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  referralIcon: { marginRight: 12 },
-  referralInput: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '700',
-    color: thannigoPalette.darkText,
-  },
+  resendLabel: { fontSize: 13 },
+  resendTimer: { fontSize: 13, fontWeight: "700" },
+  resendBtn: { fontSize: 13, fontWeight: "800", textDecorationLine: "underline" },
 
   hintCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: thannigoPalette.borderSoft,
-    borderRadius: 14,
+    borderRadius: Radius.md,
     padding: 12,
   },
-  hintText: { fontSize: 12, color: thannigoPalette.neutral, flex: 1 },
+  hintText: { fontSize: 12, flex: 1 },
 
   bottomBar: {
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xl,
     paddingBottom: 32,
-    paddingTop: 16,
-    backgroundColor: thannigoPalette.background,
+    paddingTop: Spacing.md,
   },
   ctaBtn: {
-    borderRadius: 20,
+    borderRadius: Radius.xl,
     paddingVertical: 18,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    shadowColor: roleGradients.customer.start,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.28,
     shadowRadius: 14,
@@ -435,5 +423,3 @@ const styles = StyleSheet.create({
   },
   ctaText: { color: "white", fontSize: 17, fontWeight: "900" },
 });
-
-

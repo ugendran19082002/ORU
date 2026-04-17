@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useRef } from 'react';
 import {
   TextInput,
   TextInputProps,
@@ -6,8 +6,11 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { thannigoPalette, Radius } from '@/constants/theme';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 export type AppTextInputProps = TextInputProps & {
   label?: string;
@@ -18,6 +21,8 @@ export type AppTextInputProps = TextInputProps & {
   /** Icon name from Ionicons shown on the right (e.g. eye toggle) */
   rightIcon?: keyof typeof Ionicons.glyphMap;
   onRightIconPress?: () => void;
+  /** Optional role accent color used for focus ring */
+  accentColor?: string;
 };
 
 export const AppTextInput = forwardRef<TextInput, AppTextInputProps>(
@@ -29,36 +34,81 @@ export const AppTextInput = forwardRef<TextInput, AppTextInputProps>(
       leftIcon,
       rightIcon,
       onRightIconPress,
+      accentColor,
       style,
+      onFocus,
+      onBlur,
       ...rest
     },
     ref,
   ) => {
+    const { colors, isDark } = useAppTheme();
     const hasError = Boolean(error);
+    const borderAnim = useRef(new Animated.Value(0)).current;
+
+    const focusColor = accentColor ?? thannigoPalette.primary;
+
+    const handleFocus = (e: any) => {
+      Animated.timing(borderAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+      onFocus?.(e);
+    };
+
+    const handleBlur = (e: any) => {
+      Animated.timing(borderAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+      onBlur?.(e);
+    };
+
+    const borderColor = hasError
+      ? thannigoPalette.error
+      : borderAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [colors.border, focusColor],
+        });
+
+    const inputBg = hasError
+      ? thannigoPalette.dangerSoft
+      : isDark
+      ? colors.surface
+      : colors.background;
 
     return (
       <View style={styles.wrapper}>
-        {label ? <Text style={styles.label}>{label}</Text> : null}
+        {label ? (
+          <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+        ) : null}
 
-        <View
+        <Animated.View
           style={[
             styles.inputRow,
-            hasError && styles.inputRowError,
+            {
+              borderColor,
+              backgroundColor: inputBg,
+            },
           ]}
         >
           {leftIcon ? (
             <Ionicons
               name={leftIcon}
               size={18}
-              color={hasError ? '#C0392B' : '#74777C'}
+              color={hasError ? thannigoPalette.error : colors.muted}
               style={styles.leftIcon}
             />
           ) : null}
 
           <TextInput
             ref={ref}
-            style={[styles.input, style]}
-            placeholderTextColor="#94A3B8"
+            style={[styles.input, { color: colors.text }, style]}
+            placeholderTextColor={colors.muted}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             {...rest}
           />
 
@@ -67,16 +117,16 @@ export const AppTextInput = forwardRef<TextInput, AppTextInputProps>(
               <Ionicons
                 name={rightIcon}
                 size={18}
-                color={hasError ? '#C0392B' : '#74777C'}
+                color={hasError ? thannigoPalette.error : colors.muted}
               />
             </TouchableOpacity>
           ) : null}
-        </View>
+        </Animated.View>
 
         {hasError ? (
           <Text style={styles.errorText}>{error}</Text>
         ) : hint ? (
-          <Text style={styles.hintText}>{hint}</Text>
+          <Text style={[styles.hintText, { color: colors.muted }]}>{hint}</Text>
         ) : null}
       </View>
     );
@@ -92,21 +142,14 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1A1A2E',
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#E0EAF5',
-    borderRadius: 16,
-    backgroundColor: '#F5F9FF',
+    borderRadius: Radius.xl,
     paddingHorizontal: 14,
     minHeight: 52,
-  },
-  inputRowError: {
-    borderColor: '#C0392B',
-    backgroundColor: '#FFEBEE',
   },
   leftIcon: {
     marginRight: 10,
@@ -118,16 +161,14 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 15,
-    color: '#1A1A2E',
     paddingVertical: 12,
   },
   errorText: {
     fontSize: 12,
-    color: '#C0392B',
+    color: thannigoPalette.error,
     fontWeight: '500',
   },
   hintText: {
     fontSize: 12,
-    color: '#74777C',
   },
 });

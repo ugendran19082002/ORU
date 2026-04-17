@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Shadow, Typography, thannigoPalette } from '@/constants/theme';
+import { Shadow, Typography, Radius, thannigoPalette } from '@/constants/theme';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 type IconColorKey = 'primary' | 'secondary' | 'success' | 'warning' | 'error';
 
@@ -16,24 +17,32 @@ interface StatCardProps {
 }
 
 const iconColorMap: Record<IconColorKey, { icon: string; bg: string }> = {
-  primary:   { icon: thannigoPalette.primary,   bg: thannigoPalette.infoSoft },
-  secondary: { icon: thannigoPalette.neutral,   bg: '#F1F3F5' },
-  success:   { icon: thannigoPalette.success,   bg: thannigoPalette.successSoft },
-  warning:   { icon: thannigoPalette.warning,   bg: '#FFF8E1' },
-  error:     { icon: thannigoPalette.error,     bg: thannigoPalette.dangerSoft },
+  primary:   { icon: thannigoPalette.primary,        bg: thannigoPalette.infoSoft },
+  secondary: { icon: thannigoPalette.neutral,        bg: thannigoPalette.borderSoft },
+  success:   { icon: thannigoPalette.success,        bg: thannigoPalette.successSoft },
+  warning:   { icon: thannigoPalette.warning,        bg: '#FFF8E1' },
+  error:     { icon: thannigoPalette.error,          bg: thannigoPalette.dangerSoft },
 };
 
 export function StatCard({ label, value, icon, iconColor = 'primary', tinted = false, style }: StatCardProps) {
+  const { colors } = useAppTheme();
   const { icon: iconHex, bg } = iconColorMap[iconColor];
 
   return (
-    <View style={[styles.card, Shadow.sm, tinted && { backgroundColor: bg }, style]}>
+    <View
+      style={[
+        styles.card,
+        Shadow.sm,
+        { backgroundColor: tinted ? bg : colors.surface },
+        style,
+      ]}
+    >
       <View style={[styles.iconWrap, { backgroundColor: bg }]}>
         <Ionicons name={icon} size={22} color={iconHex} />
       </View>
       <View style={styles.textBlock}>
-        <Text style={styles.value}>{value}</Text>
-        <Text style={styles.label}>{label}</Text>
+        <Text style={[styles.value, { color: colors.text }]}>{value}</Text>
+        <Text style={[styles.label, { color: colors.muted }]}>{label}</Text>
       </View>
     </View>
   );
@@ -41,8 +50,7 @@ export function StatCard({ label, value, icon, iconColor = 'primary', tinted = f
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    borderRadius: Radius.xl,
     padding: 16,
     gap: 10,
   },
@@ -58,11 +66,9 @@ const styles = StyleSheet.create({
   },
   value: {
     ...Typography.h3,
-    color: thannigoPalette.darkText,
   },
   label: {
     ...Typography.caption,
-    color: thannigoPalette.neutral,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
   },

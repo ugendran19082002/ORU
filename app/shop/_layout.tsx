@@ -32,6 +32,7 @@ export default function ShopLayout() {
       <Stack.Screen name="reviews" />
       <Stack.Screen name="inventory-cans" />
       <Stack.Screen name="can-management" />
+      <Stack.Screen name="payout-settings" />
     </Stack>
   );
 }

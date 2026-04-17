@@ -38,8 +38,8 @@ export default function AdminShopsScreen() {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 40 }]}>
         <Ionicons name="lock-closed" size={64} color={ADMIN_ACCENT} />
-        <Text style={{ fontSize: 20, fontWeight: '800', color: '#1e293b', marginTop: 16 }}>Restricted Access</Text>
-        <Text style={{ fontSize: 14, color: '#64748b', textAlign: 'center', marginTop: 8 }}>
+        <Text style={{ fontSize: 20, fontWeight: '800', color: thannigoPalette.darkText, marginTop: 16 }}>Restricted Access</Text>
+        <Text style={{ fontSize: 14, color: thannigoPalette.neutral, textAlign: 'center', marginTop: 8 }}>
           You do not have administrative permissions to view the partner list.
         </Text>
       </View>
@@ -83,21 +83,21 @@ export default function AdminShopsScreen() {
 
   const getShopUI = (shop: AdminShop) => {
     if (shop.status === 'active') {
-      return { label: 'ACTIVE', bg: '#ecfdf5', text: '#059669', icon: 'checkmark-circle' as const };
+      return { label: 'ACTIVE', bg: thannigoPalette.successSoft, text: thannigoPalette.success, icon: 'checkmark-circle' as const };
     }
     if (shop.onboarding_status === 'ready_for_activation') {
-      return { label: 'READY', bg: '#ecfdf5', text: '#059669', icon: 'checkmark-circle' as const };
+      return { label: 'READY', bg: thannigoPalette.successSoft, text: thannigoPalette.success, icon: 'checkmark-circle' as const };
     }
     if (shop.onboarding_status === 'partially_rejected') {
-      return { label: 'FIX REQ', bg: '#fff7ed', text: '#d97706', icon: 'alert-circle' as const };
+      return { label: 'FIX REQ', bg: '#FFF8E1', text: thannigoPalette.warning, icon: 'alert-circle' as const };
     }
     if (shop.status === 'pending_review') {
-      return { label: 'PENDING', bg: '#fff7ed', text: '#d97706', icon: 'time' as const };
+      return { label: 'PENDING', bg: '#FFF8E1', text: thannigoPalette.warning, icon: 'time' as const };
     }
     if (shop.status === 'rejected') {
-      return { label: 'REJECTED', bg: '#fef2f2', text: '#dc2626', icon: 'close-circle' as const };
+      return { label: 'REJECTED', bg: thannigoPalette.dangerSoft, text: thannigoPalette.error, icon: 'close-circle' as const };
     }
-    return { label: shop.status.toUpperCase(), bg: '#f1f5f9', text: '#64748b', icon: 'help-circle' as const };
+    return { label: shop.status.toUpperCase(), bg: thannigoPalette.borderSoft, text: thannigoPalette.neutral, icon: 'help-circle' as const };
   };
 
   return (
@@ -113,13 +113,13 @@ export default function AdminShopsScreen() {
           <View style={[styles.filterBar, isDesktop && { alignItems: 'center' }]}>
         <View style={{ width: '100%', maxWidth: 1200, paddingHorizontal: isDesktop ? 24 : 0, gap: 16 }}>
           <View style={styles.searchWrap}>
-            <Ionicons name="search" size={18} color="#94a3b8" />
+            <Ionicons name="search" size={18} color={thannigoPalette.neutral} />
             <TextInput
               placeholder="Search by shop or owner name..."
               style={styles.searchInput}
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={thannigoPalette.neutral}
             />
           </View>
 
@@ -151,7 +151,7 @@ export default function AdminShopsScreen() {
             <ActivityIndicator size="large" color={ADMIN_ACCENT} style={{ marginTop: 60 }} />
           ) : filteredShops.length === 0 ? (
             <View style={styles.emptyWrap}>
-              <Ionicons name="storefront-outline" size={64} color="#e2e8f0" />
+              <Ionicons name="storefront-outline" size={64} color={thannigoPalette.borderSoft} />
               <Text style={styles.emptyText}>No shops found matching your criteria.</Text>
             </View>
           ) : (
@@ -183,15 +183,15 @@ export default function AdminShopsScreen() {
 
                     <View style={styles.cardFooter}>
                       <View style={styles.metaItem}>
-                        <Ionicons name="location-outline" size={14} color="#94a3b8" />
+                        <Ionicons name="location-outline" size={14} color={thannigoPalette.neutral} />
                         <Text style={styles.metaText}>{shop?.shop_type || 'Retailer'}</Text>
                       </View>
                       <View style={styles.divider} />
                       <View style={styles.metaItem}>
-                        <Ionicons name="calendar-outline" size={14} color="#94a3b8" />
+                        <Ionicons name="calendar-outline" size={14} color={thannigoPalette.neutral} />
                         <Text style={styles.metaText}>{shop?.created_at ? new Date(shop.created_at).toLocaleDateString() : '—'}</Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={18} color="#cbd5e1" style={{ marginLeft: 'auto' }} />
+                      <Ionicons name="chevron-forward" size={18} color={thannigoPalette.neutral} style={{ marginLeft: 'auto' }} />
                     </View>
                   </TouchableOpacity>
                 );

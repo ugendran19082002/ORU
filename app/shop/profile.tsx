@@ -1,7 +1,6 @@
 import { ExpoMap, ExpoMarker } from "@/components/maps/ExpoMap";
 import { BackButton } from "@/components/ui/BackButton";
 import { Logo } from "@/components/ui/Logo";
-
 import { useAppNavigation } from "@/hooks/use-app-navigation";
 import { useAndroidBackHandler } from "@/hooks/use-back-handler";
 import {
@@ -11,16 +10,16 @@ import {
 import { safeNavigate } from "@/utils/safeNavigation";
 import { shopApi } from "@/api/shopApi";
 import { Ionicons } from "@expo/vector-icons";
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from "@/constants/theme";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   TouchableOpacity,
   View,
   Text,
   ActivityIndicator,
-  Image,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -28,27 +27,19 @@ import {
   Share,
   Platform,
   KeyboardAvoidingView,
-  StatusBar as RNStatusBar,
+  Animated,
+  LayoutAnimation,
+  UIManager,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Toast from 'react-native-toast-message';
+import Toast from "react-native-toast-message";
 
-/**
- * PRODUCTION DEBUG HELPER: Validate coordinates before use
- */
-const isValidCoordinate = (lat: number, lng: number): boolean => {
-  const valid =
-    lat !== undefined &&
-    lat !== null &&
-    !isNaN(lat) &&
-    !isNaN(lng) &&
-    lat >= -90 &&
-    lat <= 90 &&
-    lng >= -180 &&
-    lng <= 180;
-  console.log("📍 [SHOP COORD VALIDATION]:", { lat, lng, valid });
-  return valid;
-};
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
 
 type Region = {
   latitude: number;
@@ -57,20 +48,151 @@ type Region = {
   longitudeDelta: number;
 };
 
+type Suggestion = {
+  title: string;
+  subtitle: string;
+  address: string;
+  lat: number;
+  lng: number;
+};
+
+// ─── Collapsible Section ────────────────────────────────────────────────────
+function Section({
+  title,
+  icon,
+  children,
+  defaultOpen = true,
+}: {
+  title: string;
+  icon: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  const toggle = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setOpen((v) => !v);
+  };
+
+  return (
+    <View style={styles.sectionWrap}>
+      <TouchableOpacity style={styles.sectionHeader} onPress={toggle} activeOpacity={0.7}>
+        <View style={styles.sectionHeaderLeft}>
+          <View style={styles.sectionIconWrap}>
+            <Ionicons name={icon as any} size={18} color={SHOP_ACCENT} />
+          </View>
+          <Text style={styles.sectionTitle}>{title}</Text>
+        </View>
+        <Ionicons
+          name={open ? "chevron-up" : "chevron-down"}
+          size={18}
+          color={thannigoPalette.neutral}
+        />
+      </TouchableOpacity>
+      {open && <View style={styles.card}>{children}</View>}
+    </View>
+  );
+}
+
+// ─── Input Field ─────────────────────────────────────────────────────────────
+function Field({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType,
+  autoCapitalize,
+  multiline,
+  editable = true,
+  suffix,
+  flex,
+}: {
+  label: string;
+  value: string;
+  onChangeText?: (t: string) => void;
+  placeholder?: string;
+  keyboardType?: any;
+  autoCapitalize?: any;
+  multiline?: boolean;
+  editable?: boolean;
+  suffix?: React.ReactNode;
+  flex?: number;
+}) {
+  return (
+    <View style={[styles.fieldWrap, flex !== undefined && { flex }]}>
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.inputRow}>
+        <TextInput
+          style={[
+            styles.input,
+            !editable && styles.inputDisabled,
+            multiline && { minHeight: 56, textAlignVertical: "top" },
+            suffix ? { flex: 1, marginBottom: 0 } : {},
+          ]}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={thannigoPalette.neutral}
+          keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
+          multiline={multiline}
+          editable={editable}
+        />
+        {suffix}
+      </View>
+    </View>
+  );
+}
+
+// ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function ShopProfileScreen() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const { safeBack } = useAppNavigation();
+  useAndroidBackHandler(() => safeBack("/shop/settings"));
+
+  const [isFetching, setIsFetching] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const { safeBack } = useAppNavigation();
+  // Business
+  const [shopName, setShopName] = useState("");
+  const [fssai, setFssai] = useState("");
 
-  useAndroidBackHandler(() => {
-    safeBack("/shop/settings");
+  // Location
+  const [shopNo, setShopNo] = useState("");
+  const [addressArea, setAddressArea] = useState("");
+  const [landmark, setLandmark] = useState("");
+  const [currentLat, setCurrentLat] = useState(12.9716);
+  const [currentLng, setCurrentLng] = useState(80.221);
+  const [region, setRegion] = useState<Region>({
+    latitude: 12.9716,
+    longitude: 80.221,
+    latitudeDelta: 0.005,
+    longitudeDelta: 0.005,
   });
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+
+  // Search
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Owner
+  const [ownerName, setOwnerName] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [secondaryMobile, setSecondaryMobile] = useState("");
+  const [email, setEmail] = useState("");
+
+  // Verification
+  const [gstNo, setGstNo] = useState("");
+  const [panNo, setPanNo] = useState("");
+  const [aadharNo, setAadharNo] = useState("");
+
 
   const fetchProfile = async () => {
     try {
-      setIsLoading(true);
+      setIsFetching(true);
       const data = await shopApi.getMyShop();
       if (data) {
         setShopName(data.name || "");
@@ -84,28 +206,18 @@ export default function ShopProfileScreen() {
         setAadharNo(data.aadhar_no || "");
         setSecondaryMobile(data.alternate_phone || "");
         setEmail(data.email || "");
-        setBankName(data.bank_name || "");
-        setBankBranch(data.bank_branch || "");
-        setIfscCode(data.bank_ifsc || "");
-        setHolderName(data.account_holder_name || "");
-        setUpiId(data.upi_id || "");
-        
         if (data.latitude && data.longitude) {
           const lat = parseFloat(data.latitude);
           const lng = parseFloat(data.longitude);
           setCurrentLat(lat);
           setCurrentLng(lng);
-          setRegion(prev => ({ ...prev, latitude: lat, longitude: lng }));
+          setRegion((r) => ({ ...r, latitude: lat, longitude: lng }));
         }
       }
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Fetch Failed',
-        text2: 'Could not load profile details.'
-      });
+    } catch {
+      Toast.show({ type: "error", text1: "Load failed", text2: "Could not load profile." });
     } finally {
-      setIsLoading(false);
+      setIsFetching(false);
     }
   };
 
@@ -118,30 +230,14 @@ export default function ShopProfileScreen() {
     fetchProfile().finally(() => setRefreshing(false));
   }, []);
 
-  const [shopName, setShopName] = useState("Blue Spring Aquatics");
-  const [ownerName, setOwnerName] = useState("Rajesh Kumar");
-  const [mobile, setMobile] = useState("+91 98765 43210");
-  const [fssai, setFssai] = useState("11223344556677");
-
-  // Multi-Field Address (Reference: addresses.tsx)
-  const [shopNo, setShopNo] = useState("Plot 42");
-  const [addressArea, setAddressArea] = useState(
-    "Industrial Area, Koramangala, Bangalore",
-  );
-  const [landmark, setLandmark] = useState("Near BDA Complex");
-
-  // Payment Details
-  const [bankName, setBankName] = useState("State Bank of India");
-  const [bankBranch, setBankBranch] = useState("Koramangala Main");
-  const [ifscCode, setIfscCode] = useState("SBIN0001234");
-  const [holderName, setHolderName] = useState("Rajesh Kumar");
-  const [upiId, setUpiId] = useState("");
-  const [bankAccountNo, setBankAccountNo] = useState("");
-
   const handleSave = async () => {
+    if (!shopName.trim()) {
+      Toast.show({ type: "error", text1: "Required", text2: "Shop name cannot be empty." });
+      return;
+    }
     try {
-      setIsLoading(true);
-      const payload = {
+      setIsSaving(true);
+      await shopApi.updateMyShop({
         name: shopName,
         owner_name: ownerName,
         phone: mobile,
@@ -152,93 +248,47 @@ export default function ShopProfileScreen() {
         pan_no: panNo,
         aadhar_no: aadharNo,
         alternate_phone: secondaryMobile,
-        email: email,
-        bank_name: bankName,
-        bank_branch: bankBranch,
-        bank_ifsc: ifscCode,
-        account_holder_name: holderName,
-        bank_account_no: bankAccountNo,
-        upi_id: upiId,
+        email,
         latitude: currentLat,
         longitude: currentLng,
-      };
-
-      await shopApi.updateMyShop(payload);
-      Toast.show({
-        type: 'success',
-        text1: 'Saved',
-        text2: 'Your profile changes have been saved.'
       });
-    } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: 'Update Failed',
-        text2: 'Could not save profile changes.'
-      });
+      Toast.show({ type: "success", text1: "Saved", text2: "Profile updated successfully." });
+    } catch {
+      Toast.show({ type: "error", text1: "Save failed", text2: "Could not update profile." });
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
-  // Company & Contact Details
-  const [gstNo, setGstNo] = useState("29ABCDE1234F1Z5");
-  const [panNo, setPanNo] = useState("ABCDE1234F");
-  const [aadharNo, setAadharNo] = useState("1234 5678 9012");
-  const [secondaryMobile, setSecondaryMobile] = useState("");
-  const [email, setEmail] = useState("rajesh.kumar@example.com");
-
-  // Location Details
-  const [currentLat, setCurrentLat] = useState<number>(12.9716);
-  const [currentLng, setCurrentLng] = useState<number>(80.221);
-  const [region, setRegion] = useState<Region>({
-    latitude: 12.9716,
-    longitude: 80.221,
-    latitudeDelta: 0.005,
-    longitudeDelta: 0.005,
-  });
-  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-
-  const performSearch = async (query: string) => {
-    console.log("=== [SHOP WAY 1: SEARCH START] ===");
-    console.log("Query:", query);
+  // ── Location search with debounce ─────────────────────────────────────────
+  const runSearch = async (query: string) => {
     if (query.length < 3) {
       setSuggestions([]);
       return;
     }
-
     setIsSearching(true);
     try {
       const photonRes = await fetch(
         `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`,
       );
       const photonData = await photonRes.json();
-      console.log("Photon results:", photonData.features?.length || 0);
-      let results: any[] = [];
-      if (photonData.features && photonData.features.length > 0) {
+      let results: Suggestion[] = [];
+      if (photonData.features?.length > 0) {
         results = photonData.features.map((f: any) => ({
           title: f.properties.name || f.properties.street || "Location",
-          subtitle: [f.properties.city, f.properties.state]
-            .filter(Boolean)
-            .join(", "),
-          address: f.properties.name
-            ? f.properties.name + ", " + (f.properties.city || "")
-            : f.properties.street,
+          subtitle: [f.properties.city, f.properties.state].filter(Boolean).join(", "),
+          address: [f.properties.name, f.properties.city].filter(Boolean).join(", "),
           lat: f.geometry.coordinates[1],
           lng: f.geometry.coordinates[0],
         }));
       }
-
       if (results.length < 2) {
         const nomRes = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=3`,
-          {
-            headers: { "User-Agent": "ThanniGoApp/1.0" },
-          },
+          { headers: { "User-Agent": "ThanniGoApp/1.0" } },
         );
         const nomData = await nomRes.json();
-        const nomResults = nomData.map((item: any) => ({
+        const nomResults: Suggestion[] = nomData.map((item: any) => ({
           title: item.display_name.split(",")[0],
           subtitle: item.display_name.split(",").slice(1, 3).join(",").trim(),
           address: item.display_name,
@@ -248,41 +298,67 @@ export default function ShopProfileScreen() {
         results = [...results, ...nomResults];
       }
       setSuggestions(results);
-    } catch (error) {
-      console.log("Search error:", error);
+    } catch {
+      /* silent */
     } finally {
       setIsSearching(false);
     }
   };
 
-  const handleSelectSuggestion = (item: any) => {
-    console.log("=== [SHOP WAY 1: SUGGESTION SELECTED] ===");
-    console.log("Item:", item.title);
+  const handleSearchChange = (text: string) => {
+    setSearchQuery(text);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => runSearch(text), 400);
+  };
+
+  const handleSelectSuggestion = (item: Suggestion) => {
+    setSearchQuery("");
+    setSuggestions([]);
     setAddressArea(item.address || item.title);
     setCurrentLat(item.lat);
     setCurrentLng(item.lng);
-    setRegion({
-      ...region,
-      latitude: item.lat,
-      longitude: item.lng,
-    });
-    setSuggestions([]);
+    setRegion({ latitude: item.lat, longitude: item.lng, latitudeDelta: 0.005, longitudeDelta: 0.005 });
   };
 
+  // ── Reverse geocode helper ────────────────────────────────────────────────
+  const reverseGeocode = async (latitude: number, longitude: number) => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=18&addressdetails=1`,
+        { headers: { "User-Agent": "ThanniGoApp/1.0" } },
+      );
+      const data = await res.json();
+      if (data?.address) {
+        const a = data.address;
+        const parts = [
+          a.road || a.pedestrian || a.neighbourhood,
+          a.suburb || a.quarter,
+          a.city || a.town || a.village || a.county,
+          a.state,
+        ].filter(Boolean);
+        setAddressArea(parts.join(", ") || data.display_name || "");
+        return;
+      }
+      if (data?.display_name) setAddressArea(data.display_name);
+    } catch {
+      try {
+        const geocode = await Location.reverseGeocodeAsync({ latitude, longitude });
+        if (geocode.length > 0) {
+          const g = geocode[0];
+          const parts = [g.street, g.district || g.subregion, g.city].filter(Boolean);
+          setAddressArea(parts.join(", "));
+        }
+      } catch { /* silent */ }
+    }
+  };
+
+  // ── GPS locate ────────────────────────────────────────────────────────────
   const handleUseCurrentLocation = async () => {
-    console.log("=== [SHOP WAY 3: PIN MAP - GPS START] ===");
     setIsFetchingLocation(true);
     try {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      console.log("Permission status:", status);
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        console.warn("⛔ [SHOP GPS] Permission denied");
-        Toast.show({
-          type: 'error',
-          text1: 'Permission denied',
-          text2: 'Allow location access to pin your shop.'
-        });
-        setIsFetchingLocation(false);
+        Toast.show({ type: "error", text1: "Permission denied", text2: "Allow location access to pin your shop." });
         return;
       }
 
@@ -290,37 +366,29 @@ export default function ShopProfileScreen() {
       let count = 0;
 
       const watcher = await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.BestForNavigation,
-          timeInterval: 500,
-          distanceInterval: 0,
-        },
+        { accuracy: Location.Accuracy.BestForNavigation, timeInterval: 500, distanceInterval: 0 },
         (loc) => {
           count++;
-          const currentAcc = loc.coords.accuracy || 100;
-          if (!best || currentAcc < (best.coords.accuracy || 100)) {
+          const acc = loc.coords.accuracy || 100;
+          if (!best || acc < (best.coords.accuracy || 100)) {
             best = loc;
-            const newRegion = {
-              latitude: loc.coords.latitude,
-              longitude: loc.coords.longitude,
-              latitudeDelta: 0.005,
-              longitudeDelta: 0.005,
-            };
-            setRegion(newRegion);
+            setRegion({ latitude: loc.coords.latitude, longitude: loc.coords.longitude, latitudeDelta: 0.005, longitudeDelta: 0.005 });
             setCurrentLat(loc.coords.latitude);
             setCurrentLng(loc.coords.longitude);
           }
-
-          if (count > 8 || currentAcc < 15) {
+          if (count > 8 || acc < 15) {
             watcher.remove();
-            finalizeLocation(best!);
+            if (best) reverseGeocode(best.coords.latitude, best.coords.longitude);
+            setIsFetchingLocation(false);
           }
         },
       );
 
       setTimeout(() => {
         watcher.remove();
-        if (best) finalizeLocation(best);
+        if (best) {
+          reverseGeocode((best as Location.LocationObject).coords.latitude, (best as Location.LocationObject).coords.longitude);
+        }
         setIsFetchingLocation(false);
       }, 5000);
     } catch {
@@ -328,104 +396,17 @@ export default function ShopProfileScreen() {
     }
   };
 
-  const finalizeLocation = async (loc: Location.LocationObject) => {
-    const { latitude, longitude } = loc.coords;
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=18&addressdetails=1`,
-        { headers: { "User-Agent": "ThanniGoApp/1.0" } },
-      );
-      const data = await res.json();
-      if (data?.address) {
-        const a = data.address;
-        const parts = [
-          a.road || a.pedestrian || a.neighbourhood,
-          a.suburb || a.quarter,
-          a.city || a.town || a.village || a.county,
-          a.state,
-        ].filter(Boolean);
-        setAddressArea(parts.join(", ") || data.display_name || "");
-        console.log("✅ [SHOP GPS] Nominatim reverse:", parts.join(", "));
-      } else if (data?.display_name) {
-        setAddressArea(data.display_name);
-      }
-    } catch {
-      console.warn("[SHOP GPS] Nominatim failed, fallback");
-      try {
-        const geocode = await Location.reverseGeocodeAsync({
-          latitude,
-          longitude,
-        });
-        if (geocode.length > 0) {
-          const g = geocode[0];
-          const parts = [g.street, g.district || g.subregion, g.city].filter(
-            Boolean,
-          );
-          setAddressArea(parts.join(", "));
-        }
-      } catch {}
-    }
-    setIsFetchingLocation(false);
+  // ── Map drag / tap ────────────────────────────────────────────────────────
+  const handleMarkerDragEnd = async (coords: { latitude: number; longitude: number }) => {
+    setCurrentLat(coords.latitude);
+    setCurrentLng(coords.longitude);
+    await reverseGeocode(coords.latitude, coords.longitude);
   };
 
-  /**
-   * Unified drag handler — called by LeafletMap via postMessage bridge.
-   * Uses Nominatim reverse geocode (free, more accurate for Indian addresses).
-   */
-  const handleMarkerDragEnd = async (coords: {
-    latitude: number;
-    longitude: number;
-  }) => {
-    console.log("=== [SHOP WAY 3: PIN MAP - DRAG/TAP] ===");
-    const { latitude, longitude } = coords;
-    console.log("Pinned Coords:", { latitude, longitude });
-    setCurrentLat(latitude);
-    setCurrentLng(longitude);
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=18&addressdetails=1`,
-        { headers: { "User-Agent": "ThanniGoApp/1.0" } },
-      );
-      const data = await res.json();
-      if (data?.address) {
-        const a = data.address;
-        const parts = [
-          a.road || a.pedestrian || a.neighbourhood,
-          a.suburb || a.quarter,
-          a.city || a.town || a.village || a.county,
-          a.state,
-        ].filter(Boolean);
-        setAddressArea(parts.join(", ") || data.display_name || "");
-        console.log("✅ [SHOP] Nominatim reverse:", parts.join(", "));
-      } else if (data?.display_name) {
-        setAddressArea(data.display_name);
-      }
-    } catch (fetchErr) {
-      console.warn("[SHOP DRAG] Nominatim failed, fallback:", fetchErr);
-      try {
-        const geocode = await Location.reverseGeocodeAsync({
-          latitude,
-          longitude,
-        });
-        if (geocode.length > 0) {
-          const g = geocode[0];
-          const parts = [g.street, g.district || g.subregion, g.city].filter(
-            Boolean,
-          );
-          setAddressArea(parts.join(", "));
-        }
-      } catch {}
-    }
-  };
-
-  /** Shim: native ExpoMarker sends e.nativeEvent.coordinate */
-  const handleNativeMarkerDragEnd = (e: any) => {
-    handleMarkerDragEnd(e.nativeEvent.coordinate);
-  };
+  const handleNativeMarkerDragEnd = (e: any) => handleMarkerDragEnd(e.nativeEvent.coordinate);
 
   useEffect(() => {
     setGlobalLocationListener((coords) => {
-      console.log("=== [GLOBAL LISTENER] Map Preview Selected ===", coords);
       handleMarkerDragEnd({ latitude: coords.lat, longitude: coords.lng });
     });
     return () => clearGlobalLocationListener();
@@ -435,20 +416,31 @@ export default function ShopProfileScreen() {
     try {
       const mapUrl = `https://www.google.com/maps/search/?api=1&query=${currentLat},${currentLng}`;
       await Share.share({
-        message: `📍 Visit ${shopName} at:\n${shopNo}, ${addressArea}\n\nLocation Link: ${mapUrl}`,
+        message: `📍 Visit ${shopName} at:\n${shopNo}, ${addressArea}\n\nLocation: ${mapUrl}`,
         title: `ThanniGo - ${shopName}`,
       });
-    } catch {}
+    } catch { /* silent */ }
   };
+
+  if (isFetching) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+        <ActivityIndicator size="large" color={SHOP_ACCENT} />
+        <Text style={{ marginTop: 12, color: thannigoPalette.neutral, fontWeight: "600" }}>
+          Loading profile…
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
       <StatusBar style="dark" />
 
+      {/* Header */}
       <View style={styles.header}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
           <BackButton fallback="/shop/settings" />
-
           <View>
             <View style={styles.brandRow}>
               <Logo size="md" />
@@ -457,15 +449,11 @@ export default function ShopProfileScreen() {
             <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.editBtn}
-          onPress={handleSave}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color="#005d90" />
+        <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSave} disabled={isSaving}>
+          {isSaving ? (
+            <ActivityIndicator size="small" color={SHOP_ACCENT} />
           ) : (
-            <Text style={styles.editBtnText}>Save</Text>
+            <Text style={styles.saveHeaderBtnText}>Save</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -477,54 +465,82 @@ export default function ShopProfileScreen() {
       >
         <ScrollView
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={["#005d90"]}
-              tintColor="#005d90"
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[SHOP_ACCENT]} tintColor={SHOP_ACCENT} />
           }
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
         >
           <Text style={styles.pageTitle}>Shop Profile</Text>
 
-
-          {/* SHOP INFO */}
-          <Text style={styles.sectionTitle}>Business Details</Text>
-          <View style={styles.card}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Shop Name</Text>
-              <TextInput
-                style={styles.input}
-                value={shopName}
-                onChangeText={setShopName}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>FSSAI License Number</Text>
-              <View style={styles.fssaiRow}>
-                <TextInput
-                  style={[styles.input, { flex: 1, marginBottom: 0 }]}
-                  value={fssai}
-                  onChangeText={setFssai}
-                />
+          {/* ── Business Details ── */}
+          <Section title="Business Details" icon="storefront-outline">
+            <Field label="Shop Name *" value={shopName} onChangeText={setShopName} placeholder="Enter shop name" />
+            <Field
+              label="FSSAI License Number"
+              value={fssai}
+              onChangeText={setFssai}
+              placeholder="14-digit FSSAI number"
+              keyboardType="numeric"
+              suffix={
                 <View style={styles.verifiedBadge}>
                   <Ionicons name="checkmark-circle" size={14} color="white" />
                   <Text style={styles.verifiedText}>Verified</Text>
                 </View>
-              </View>
-            </View>
-          </View>
+              }
+            />
+          </Section>
 
-          {/* LOCATION SECTION */}
-          <Text style={styles.sectionTitle}>Store Location</Text>
-          <View style={styles.card}>
-            <Text style={[styles.label, { marginBottom: 6 }]}>
-              Pin Location on Map
-            </Text>
-            <View style={[styles.mapContainer, { marginBottom: 16 }]}>
+          {/* ── Store Location ── */}
+          <Section title="Store Location" icon="location-outline">
+            {/* Step 1: Search */}
+            <View style={styles.locationStepRow}>
+              <View style={styles.locationStepBadge}><Text style={styles.locationStepNum}>1</Text></View>
+              <Text style={styles.locationStepLabel}>Search your area or locality</Text>
+            </View>
+            <View style={styles.searchInputWrap}>
+              <Ionicons name="search-outline" size={18} color={thannigoPalette.neutral} style={{ marginLeft: 14 }} />
+              <TextInput
+                style={styles.searchInput}
+                value={searchQuery}
+                onChangeText={handleSearchChange}
+                placeholder="Search street, area, landmark…"
+                placeholderTextColor={thannigoPalette.neutral}
+                returnKeyType="search"
+              />
+              {isSearching && <ActivityIndicator size="small" color={SHOP_ACCENT} style={{ marginRight: 14 }} />}
+              {searchQuery.length > 0 && !isSearching && (
+                <TouchableOpacity onPress={() => { setSearchQuery(""); setSuggestions([]); }} style={{ marginRight: 14 }}>
+                  <Ionicons name="close-circle" size={18} color={thannigoPalette.neutral} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Suggestions dropdown */}
+            {suggestions.length > 0 && (
+              <View style={styles.suggestionsContainer}>
+                {suggestions.map((item, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    style={[styles.suggestionItem, i === suggestions.length - 1 && { borderBottomWidth: 0 }]}
+                    onPress={() => handleSelectSuggestion(item)}
+                  >
+                    <Ionicons name="location-outline" size={18} color={SHOP_ACCENT} style={{ marginTop: 2 }} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.suggestionTitle} numberOfLines={1}>{item.title}</Text>
+                      <Text style={styles.suggestionSubtitle} numberOfLines={1}>{item.subtitle}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {/* Step 2: Pin on map */}
+            <View style={[styles.locationStepRow, { marginTop: 16 }]}>
+              <View style={styles.locationStepBadge}><Text style={styles.locationStepNum}>2</Text></View>
+              <Text style={styles.locationStepLabel}>Drag the pin to your exact shop location</Text>
+            </View>
+            <View style={styles.mapContainer}>
               <ExpoMap
                 style={styles.map}
                 region={region}
@@ -533,7 +549,7 @@ export default function ShopProfileScreen() {
                 draggable
                 markerTitle={shopName}
                 onMarkerDragEnd={handleMarkerDragEnd}
-                hideControls={true}
+                hideControls
               >
                 <ExpoMarker
                   coordinate={{ latitude: currentLat, longitude: currentLng }}
@@ -542,314 +558,103 @@ export default function ShopProfileScreen() {
                   title={shopName}
                 />
               </ExpoMap>
-              <View style={styles.mapOverlayTopRight}>
-                <TouchableOpacity
-                  style={styles.mapActionBtn}
-                  onPress={() => {
-                    if (isValidCoordinate(currentLat, currentLng)) {
-                      safeNavigate("/map-preview", {
-                        lat: currentLat.toString(),
-                        lng: currentLng.toString(),
-                        title: shopName,
-                        target: "select",
-                      });
-                    } else {
-                      Toast.show({
-                        type: 'error',
-                        text1: 'Error',
-                        text2: 'Invalid shop coordinates. Please pin on map again.'
-                      });
-                    }
-                  }}
-                >
-                  <Ionicons name="expand-outline" size={20} color="#005d90" />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* QUICK ACTIONS ROW */}
-            <View style={styles.mapUtilityRow}>
               <TouchableOpacity
-                style={styles.utilityBtn}
-                onPress={handleUseCurrentLocation}
-                disabled={isFetchingLocation}
+                style={styles.expandMapBtn}
+                onPress={() =>
+                  safeNavigate("/map-preview", {
+                    lat: currentLat.toString(),
+                    lng: currentLng.toString(),
+                    title: shopName,
+                    target: "select",
+                  })
+                }
               >
+                <Ionicons name="expand-outline" size={20} color={SHOP_ACCENT} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Quick Actions */}
+            <View style={styles.mapActionsRow}>
+              <TouchableOpacity style={styles.mapActionBtn} onPress={handleUseCurrentLocation} disabled={isFetchingLocation}>
                 {isFetchingLocation ? (
-                  <ActivityIndicator size="small" color="#005d90" />
+                  <ActivityIndicator size="small" color={SHOP_ACCENT} />
                 ) : (
-                  <Ionicons name="location-sharp" size={18} color="#005d90" />
+                  <Ionicons name="locate-outline" size={18} color={SHOP_ACCENT} />
                 )}
-                <Text style={styles.utilityBtnText}>Locate Me</Text>
+                <Text style={styles.mapActionText}>Use My Location</Text>
               </TouchableOpacity>
-
-              <TouchableOpacity style={styles.utilityBtn} onPress={shareShopLocation}>
-                <Ionicons name="share-social-outline" size={18} color="#005d90" />
-                <Text style={styles.utilityBtnText}>Share</Text>
+              <TouchableOpacity style={styles.mapActionBtn} onPress={shareShopLocation}>
+                <Ionicons name="share-social-outline" size={18} color={SHOP_ACCENT} />
+                <Text style={styles.mapActionText}>Share Location</Text>
               </TouchableOpacity>
             </View>
 
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Shop / Building / Floor No.</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. Plot 42, 2nd Floor"
-                value={shopNo}
-                onChangeText={setShopNo}
-              />
+            {/* Step 3: Confirm address */}
+            <View style={[styles.locationStepRow, { marginTop: 4 }]}>
+              <View style={styles.locationStepBadge}><Text style={styles.locationStepNum}>3</Text></View>
+              <Text style={styles.locationStepLabel}>Confirm your address details</Text>
             </View>
 
-            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Latitude</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: '#f1f5f9', color: '#64748b' }]}
-                  value={currentLat.toFixed(6)}
-                  editable={false}
-                />
+            {addressArea.length > 0 && (
+              <View style={styles.addressPreviewCard}>
+                <Ionicons name="checkmark-circle" size={18} color={thannigoPalette.success} />
+                <Text style={styles.addressPreviewText} numberOfLines={2}>{addressArea}</Text>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>Longitude</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: '#f1f5f9', color: '#64748b' }]}
-                  value={currentLng.toFixed(6)}
-                  editable={false}
-                />
-              </View>
-            </View>
-            <View style={styles.inputGroup}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 6,
-                }}
-              >
-                <Text style={[styles.label, { marginBottom: 0 }]}>
-                  Search Street / Area / Road
-                </Text>
-                {isSearching && (
-                  <ActivityIndicator size="small" color="#005d90" />
-                )}
-              </View>
-              <TextInput
-                style={[
-                  styles.input,
-                  { minHeight: 60, textAlignVertical: "top" },
-                ]}
-                value={addressArea}
-                onChangeText={(text) => {
-                  setAddressArea(text);
-                  performSearch(text);
-                }}
-                multiline
-                placeholder="Search or enter area..."
-              />
+            )}
 
-              {suggestions.length > 0 && (
-                <View style={styles.suggestionsContainer}>
-                  {suggestions.map((item, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={[
-                        styles.suggestionItem,
-                        index === suggestions.length - 1 && {
-                          borderBottomWidth: 0,
-                        },
-                      ]}
-                      onPress={() => handleSelectSuggestion(item)}
-                    >
-                      <Ionicons
-                        name="location-outline"
-                        size={18}
-                        color="#005d90"
-                        style={{ marginTop: 2 }}
-                      />
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.suggestionTitle} numberOfLines={1}>
-                          {item.title}
-                        </Text>
-                        <Text
-                          style={styles.suggestionSubtitle}
-                          numberOfLines={1}
-                        >
-                          {item.subtitle}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </View>
-          </View>
+            <Field
+              label="Shop / Building / Floor No."
+              value={shopNo}
+              onChangeText={setShopNo}
+              placeholder="e.g. Plot 42, 2nd Floor"
+            />
+            <Field
+              label="Street / Area / Locality"
+              value={addressArea}
+              onChangeText={setAddressArea}
+              placeholder="Auto-filled from map pin"
+              multiline
+            />
+            <Field
+              label="Landmark (Optional)"
+              value={landmark}
+              onChangeText={setLandmark}
+              placeholder="e.g. Near BDA Complex"
+            />
+          </Section>
 
-          {/* OWNER INFO */}
-          <Text style={styles.sectionTitle}>Owner Information</Text>
-          <View style={styles.card}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Full Name</Text>
-              <TextInput
-                style={styles.input}
-                value={ownerName}
-                onChangeText={setOwnerName}
-              />
+          {/* ── Owner Information ── */}
+          <Section title="Owner Information" icon="person-outline">
+            <Field label="Full Name" value={ownerName} onChangeText={setOwnerName} placeholder="Owner full name" />
+            <View style={styles.row}>
+              <Field label="Registered Mobile" value={mobile} onChangeText={setMobile} keyboardType="phone-pad" flex={1} />
+              <Field label="Secondary Mobile" value={secondaryMobile} onChangeText={setSecondaryMobile} keyboardType="phone-pad" placeholder="Optional" flex={1} />
             </View>
+            <Field label="Email Address" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholder="Enter email" />
+          </Section>
 
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              <View style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={styles.label}>Registered Mobile</Text>
-                <TextInput
-                  style={styles.input}
-                  value={mobile}
-                  onChangeText={setMobile}
-                  keyboardType="phone-pad"
-                />
-              </View>
-              <View style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={styles.label}>Secondary Mobile</Text>
-                <TextInput
-                  style={styles.input}
-                  value={secondaryMobile}
-                  onChangeText={setSecondaryMobile}
-                  keyboardType="phone-pad"
-                  placeholder="Optional"
-                />
-              </View>
+          {/* ── Company Verification ── */}
+          <Section title="Company Verification" icon="shield-checkmark-outline" defaultOpen={false}>
+            <Field label="GST Number" value={gstNo} onChangeText={setGstNo} autoCapitalize="characters" placeholder="15-digit GSTIN" />
+            <View style={styles.row}>
+              <Field label="PAN Card" value={panNo} onChangeText={setPanNo} autoCapitalize="characters" placeholder="10-digit PAN" flex={1} />
+              <Field label="Aadhar Number" value={aadharNo} onChangeText={setAadharNo} keyboardType="numeric" placeholder="12-digit" flex={1} />
             </View>
+          </Section>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email Address</Text>
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                placeholder="Enter email"
-              />
-            </View>
-          </View>
-
-          {/* COMPANY VERIFICATION */}
-          <Text style={styles.sectionTitle}>Company Verification</Text>
-          <View style={styles.card}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>GST Number</Text>
-              <TextInput
-                style={[styles.input, { textTransform: "uppercase" }]}
-                value={gstNo}
-                onChangeText={setGstNo}
-                autoCapitalize="characters"
-                placeholder="15-digit GSTIN"
-              />
-            </View>
-
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              <View style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={styles.label}>PAN Card Number</Text>
-                <TextInput
-                  style={[styles.input, { textTransform: "uppercase" }]}
-                  value={panNo}
-                  onChangeText={setPanNo}
-                  autoCapitalize="characters"
-                  placeholder="10-digit PAN"
-                />
-              </View>
-              <View style={[styles.inputGroup, { flex: 1.2 }]}>
-                <Text style={styles.label}>Aadhar Number</Text>
-                <TextInput
-                  style={styles.input}
-                  value={aadharNo}
-                  onChangeText={setAadharNo}
-                  keyboardType="numeric"
-                  placeholder="12-digit Aadhar"
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* PAYMENT DETAILS */}
-          <Text style={styles.sectionTitle}>Payment Details</Text>
-          <View style={styles.card}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Account Holder Name</Text>
-              <TextInput
-                style={styles.input}
-                value={holderName}
-                onChangeText={setHolderName}
-                placeholder="As per bank records"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Bank Name</Text>
-              <TextInput
-                style={styles.input}
-                value={bankName}
-                onChangeText={setBankName}
-                placeholder="Enter bank name"
-              />
-            </View>
-
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              <View style={[styles.inputGroup, { flex: 1.2 }]}>
-                <Text style={styles.label}>Bank Branch</Text>
-                <TextInput
-                  style={styles.input}
-                  value={bankBranch}
-                  onChangeText={setBankBranch}
-                  placeholder="Branch"
-                />
-              </View>
-              <View style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={styles.label}>IFSC Code</Text>
-                <TextInput
-                  style={[styles.input, { textTransform: "uppercase" }]}
-                  value={ifscCode}
-                  onChangeText={setIfscCode}
-                  placeholder="IFSC"
-                  autoCapitalize="characters"
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Bank Account Number</Text>
-              <TextInput
-                style={styles.input}
-                value={bankAccountNo}
-                onChangeText={setBankAccountNo}
-                placeholder="Enter account number"
-                keyboardType="numeric"
-              />
-            </View>
-
-            <View style={[styles.inputGroup, { marginBottom: 0 }]}>
-              <Text style={styles.label}>UPI ID (Optional)</Text>
-              <TextInput
-                style={styles.input}
-                value={upiId}
-                onChangeText={setUpiId}
-                placeholder="e.g. name@upi"
-                autoCapitalize="none"
-              />
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={styles.saveBtn}
-            onPress={() =>
-              Toast.show({
-                type: 'success',
-                text1: 'Profile Saved',
-                text2: 'Shop profile details have been updated.'
-              })
-            }
-          >
-            <Text style={styles.saveBtnText}>Save Profile Changes</Text>
+          {/* Save Button */}
+          <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={isSaving}>
+            {isSaving ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <Ionicons name="checkmark-circle-outline" size={20} color="white" />
+                <Text style={styles.saveBtnText}>Save Profile Changes</Text>
+              </>
+            )}
           </TouchableOpacity>
-          <View style={{ height: 100 }} />
+
+          <View style={{ height: 40 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -857,267 +662,217 @@ export default function ShopProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f7f9ff" },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
+
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 14,
-    backgroundColor: "rgba(255,255,255,0.92)",
+    backgroundColor: "rgba(255,255,255,0.95)",
+    borderBottomWidth: 1,
+    borderBottomColor: thannigoPalette.borderSoft,
   },
   brandRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  brandName: {
-    fontSize: 22,
-    fontWeight: "900",
-    color: "#003a5c",
-    letterSpacing: -0.5,
-  },
-  roleLabel: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: "#006878",
-    letterSpacing: 1.5,
-    marginTop: 3,
-  },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#f8fafc",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  editBtn: {
-    backgroundColor: "#e0f0ff",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-  },
-  editBtnText: { color: "#005d90", fontWeight: "800", fontSize: 13 },
+  brandName: { fontSize: 22, fontWeight: "900", color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  roleLabel: { fontSize: 9, fontWeight: "700", color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
 
-  scrollContent: { paddingHorizontal: 20, paddingTop: 10 },
+  saveHeaderBtn: {
+    backgroundColor: SHOP_SURF,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 12,
+    minWidth: 64,
+    alignItems: "center",
+  },
+  saveHeaderBtnText: { color: SHOP_ACCENT, fontWeight: "800", fontSize: 14 },
+
+  scrollContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40 },
   pageTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "900",
-    color: "#181c20",
+    color: thannigoPalette.darkText,
     letterSpacing: -0.5,
     marginTop: 10,
     marginBottom: 20,
-  },
-
-  bannerContainer: {
-    width: "100%",
-    height: 160,
-    borderRadius: 24,
-    marginBottom: 40,
-    position: "relative",
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  bannerImg: { width: "100%", height: "100%" },
-  bannerOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,30,50,0.2)",
-  },
-  avatarWrap: {
-    position: "absolute",
-    bottom: -20,
-    left: 20,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "white",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 4,
-    borderColor: "#f7f9ff",
-  },
-  uploadBtn: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#181c20",
-    marginBottom: 12,
     marginLeft: 4,
   },
+
+  // Section
+  sectionWrap: { marginBottom: 16 },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 4,
+    paddingVertical: 8,
+    marginBottom: 4,
+  },
+  sectionHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
+  sectionIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: SHOP_SURF,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionTitle: { fontSize: 16, fontWeight: "800", color: thannigoPalette.darkText },
   card: {
-    backgroundColor: "white",
+    backgroundColor: thannigoPalette.surface,
     borderRadius: 20,
-    padding: 20,
-    marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
+    padding: 18,
+    ...Shadow.sm,
   },
 
-  inputGroup: { marginBottom: 16 },
-  label: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#707881",
-    marginBottom: 6,
-    marginLeft: 4,
-  },
+  // Field
+  fieldWrap: { marginBottom: 14 },
+  label: { fontSize: 12, fontWeight: "700", color: thannigoPalette.neutral, marginBottom: 6, marginLeft: 2 },
+  inputRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   input: {
-    backgroundColor: "#f1f4f9",
+    flex: 1,
+    backgroundColor: thannigoPalette.borderSoft,
     borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    fontSize: 15,
     fontWeight: "600",
-    color: "#181c20",
+    color: thannigoPalette.darkText,
     borderWidth: 1,
-    borderColor: "#e0e2e8",
+    borderColor: thannigoPalette.borderSoft,
   },
+  inputDisabled: { color: thannigoPalette.neutral },
+  row: { flexDirection: "row", gap: 12 },
 
-  fssaiRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   verifiedBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#2e7d32",
+    backgroundColor: thannigoPalette.success,
     paddingHorizontal: 12,
-    height: 50,
+    height: 48,
     borderRadius: 12,
   },
   verifiedText: { color: "white", fontWeight: "800", fontSize: 12 },
 
-  gpsBtn: {
-    backgroundColor: "#005d90",
+  // Location steps
+  locationStepRow: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
+  locationStepBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: SHOP_ACCENT,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  locationStepNum: { color: "white", fontSize: 12, fontWeight: "800" },
+  locationStepLabel: { fontSize: 13, fontWeight: "600", color: thannigoPalette.darkText, flex: 1 },
+
+  // Search
+  searchInputWrap: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    padding: 14,
+    backgroundColor: thannigoPalette.borderSoft,
     borderRadius: 14,
-    gap: 10,
-    marginBottom: 20,
-    shadowColor: "#005d90",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  gpsBtnText: { color: "#ffffff", fontWeight: "800", fontSize: 15 },
-
-  saveBtn: {
-    backgroundColor: "#005d90",
-    borderRadius: 16,
-    paddingVertical: 16,
-    alignItems: "center",
-    marginTop: 10,
-    shadowColor: "#005d90",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  saveBtnText: { color: "white", fontSize: 16, fontWeight: "800" },
-
-  // MAP STYLES
-  mapContainer: {
-    borderRadius: 16,
-    overflow: "hidden",
-    height: 180,
-    backgroundColor: "#f1f4f9",
     borderWidth: 1,
-    borderColor: "#e0e2e8",
-    marginTop: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 3,
+    borderColor: thannigoPalette.borderSoft,
+    marginBottom: 4,
   },
-  map: { width: "100%", height: "100%" },
-  mapOverlayTopRight: { position: "absolute", top: 12, right: 12 },
-  mapActionBtn: {
-    backgroundColor: "white",
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-    elevation: 4,
-  },
-  mapUtilityRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-    marginTop: 8,
-  },
-  utilityBtn: {
+  searchInput: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: 'white',
-    paddingVertical: 14,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#f1f5f9',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  utilityBtnText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#005d90',
+    paddingHorizontal: 10,
+    paddingVertical: 13,
+    fontSize: 15,
+    fontWeight: "600",
+    color: thannigoPalette.darkText,
   },
 
-  // SUGGESTIONS STYLES
   suggestionsContainer: {
-    backgroundColor: "white",
-    borderRadius: 12,
-    marginTop: 8,
+    backgroundColor: thannigoPalette.surface,
+    borderRadius: 14,
+    marginTop: 4,
+    marginBottom: 8,
     borderWidth: 1,
-    borderColor: "#e0e2e8",
+    borderColor: thannigoPalette.borderSoft,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    ...Shadow.md,
     zIndex: 1000,
   },
   suggestionItem: {
     flexDirection: "row",
     gap: 12,
-    padding: 12,
+    padding: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#f1f4f9",
+    borderBottomColor: thannigoPalette.borderSoft,
+    alignItems: "flex-start",
   },
-  suggestionTitle: { fontSize: 14, fontWeight: "700", color: "#181c20" },
-  suggestionSubtitle: { fontSize: 12, color: "#707881", marginTop: 2 },
+  suggestionTitle: { fontSize: 14, fontWeight: "700", color: thannigoPalette.darkText },
+  suggestionSubtitle: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 2 },
+
+  // Map
+  mapContainer: {
+    borderRadius: 18,
+    overflow: "hidden",
+    height: 240,
+    backgroundColor: thannigoPalette.borderSoft,
+    marginBottom: 12,
+    ...Shadow.sm,
+  },
+  map: { width: "100%", height: "100%" },
+  expandMapBtn: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    backgroundColor: thannigoPalette.surface,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    ...Shadow.sm,
+  },
+
+  mapActionsRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
+  mapActionBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: SHOP_SURF,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: thannigoPalette.borderSoft,
+  },
+  mapActionText: { fontSize: 13, fontWeight: "700", color: SHOP_ACCENT },
+
+  addressPreviewCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    backgroundColor: "#f0fdf4",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#bbf7d0",
+  },
+  addressPreviewText: { flex: 1, fontSize: 13, fontWeight: "600", color: thannigoPalette.darkText },
+
+  // Save button
+  saveBtn: {
+    backgroundColor: SHOP_ACCENT,
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 8,
+    ...Shadow.md,
+    shadowColor: SHOP_ACCENT,
+  },
+  saveBtnText: { color: "white", fontSize: 16, fontWeight: "800" },
 });
-
-

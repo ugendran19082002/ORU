@@ -13,6 +13,12 @@ import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { apiClient } from '@/api/client';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
+const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
+
 interface Review {
   id: number;
   reviewer_name: string;
@@ -138,7 +144,7 @@ export default function ShopReviewsScreen() {
       </View>
 
       {/* SUMMARY BAR */}
-      <LinearGradient colors={['#005d90', '#0077b6']} style={styles.summaryBar}>
+      <LinearGradient colors={[SHOP_ACCENT, SHOP_GRAD[1]]} style={styles.summaryBar}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryVal}>{avgRating.toFixed(1)}</Text>
           <StarRow rating={avgRating} size={12} />
@@ -161,7 +167,7 @@ export default function ShopReviewsScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchReviews(); }} />}
       >
-        {loading && <ActivityIndicator color="#005d90" style={{ marginTop: 40 }} />}
+        {loading && <ActivityIndicator color={SHOP_ACCENT} style={{ marginTop: 40 }} />}
 
         {!loading && reviews.length === 0 && (
           <View style={styles.emptyState}>
@@ -175,7 +181,7 @@ export default function ShopReviewsScreen() {
           <View key={review.id} style={styles.reviewCard}>
             <View style={styles.reviewTop}>
               <View style={styles.avatar}>
-                <Ionicons name="person" size={18} color="#005d90" />
+                <Ionicons name="person" size={18} color={SHOP_ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.reviewerName}>{review.reviewer_name ?? 'Customer'}</Text>
@@ -218,7 +224,7 @@ export default function ShopReviewsScreen() {
             {review.shop_response ? (
               <View style={styles.responseBox}>
                 <View style={styles.responseHeader}>
-                  <Ionicons name="chatbubble-ellipses" size={14} color="#005d90" />
+                  <Ionicons name="chatbubble-ellipses" size={14} color={SHOP_ACCENT} />
                   <Text style={styles.responseLabel}>Your Response</Text>
                   <TouchableOpacity onPress={() => openReply(review)}>
                     <Text style={styles.editResponseText}>Edit</Text>
@@ -228,7 +234,7 @@ export default function ShopReviewsScreen() {
               </View>
             ) : (
               <TouchableOpacity style={styles.replyBtn} onPress={() => openReply(review)}>
-                <Ionicons name="chatbubble-outline" size={15} color="#005d90" />
+                <Ionicons name="chatbubble-outline" size={15} color={SHOP_ACCENT} />
                 <Text style={styles.replyBtnText}>Write a Response</Text>
               </TouchableOpacity>
             )}
@@ -266,7 +272,7 @@ export default function ShopReviewsScreen() {
                 <Text style={styles.cancelModalBtnText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.submitBtn, submitting && { opacity: 0.7 }]} onPress={submitReply} disabled={submitting}>
-                <LinearGradient colors={['#005d90', '#0077b6']} style={styles.submitBtnGrad}>
+                <LinearGradient colors={[SHOP_ACCENT, SHOP_GRAD[1]]} style={styles.submitBtnGrad}>
                   {submitting ? (
                     <ActivityIndicator color="white" size="small" />
                   ) : (
@@ -286,12 +292,12 @@ export default function ShopReviewsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
 
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#181c20' },
-  headerSub: { fontSize: 11, color: '#707881', fontWeight: '500', marginTop: 1 },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
+  headerSub: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 1 },
 
   summaryBar: { flexDirection: 'row', paddingVertical: 16, paddingHorizontal: 20 },
   summaryItem: { flex: 1, alignItems: 'center', gap: 4 },
@@ -302,42 +308,42 @@ const styles = StyleSheet.create({
   content: { padding: 20, gap: 12, paddingBottom: 40 },
 
   emptyState: { alignItems: 'center', paddingTop: 60, gap: 10 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#64748b' },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.neutral },
   emptySub: { fontSize: 13, color: '#94a3b8', textAlign: 'center' },
 
   reviewCard: { backgroundColor: 'white', borderRadius: 20, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   reviewTop: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
   avatar: { width: 38, height: 38, borderRadius: 12, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
-  reviewerName: { fontSize: 14, fontWeight: '800', color: '#181c20' },
-  reviewDate: { fontSize: 11, color: '#707881', marginTop: 1 },
+  reviewerName: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText },
+  reviewDate: { fontSize: 11, color: thannigoPalette.neutral, marginTop: 1 },
   pendingBadge: { backgroundColor: '#fef3c7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   pendingBadgeText: { fontSize: 9, fontWeight: '800', color: '#b45309', letterSpacing: 0.5 },
 
   ratingsRow: { flexDirection: 'row', gap: 16, marginBottom: 10 },
   ratingItem: { alignItems: 'flex-start', gap: 3 },
-  ratingLabel: { fontSize: 10, color: '#707881', fontWeight: '700', letterSpacing: 0.3 },
+  ratingLabel: { fontSize: 10, color: thannigoPalette.neutral, fontWeight: '700', letterSpacing: 0.3 },
 
   reviewText: { fontSize: 13, color: '#404850', lineHeight: 19, marginBottom: 12, fontStyle: 'italic' },
 
-  responseBox: { backgroundColor: '#f0f7ff', borderRadius: 12, padding: 12, borderLeftWidth: 3, borderLeftColor: '#005d90' },
+  responseBox: { backgroundColor: '#f0f7ff', borderRadius: 12, padding: 12, borderLeftWidth: 3, borderLeftColor: SHOP_ACCENT },
   responseHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
-  responseLabel: { flex: 1, fontSize: 11, fontWeight: '700', color: '#005d90', letterSpacing: 0.3 },
-  editResponseText: { fontSize: 11, color: '#005d90', fontWeight: '700', textDecorationLine: 'underline' },
+  responseLabel: { flex: 1, fontSize: 11, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 0.3 },
+  editResponseText: { fontSize: 11, color: SHOP_ACCENT, fontWeight: '700', textDecorationLine: 'underline' },
   responseText: { fontSize: 12, color: '#334155', lineHeight: 17 },
 
   replyBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: '#bfdbf7', backgroundColor: '#f0f7ff' },
-  replyBtnText: { fontSize: 13, fontWeight: '700', color: '#005d90' },
+  replyBtnText: { fontSize: 13, fontWeight: '700', color: SHOP_ACCENT },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   modalSheet: { backgroundColor: 'white', borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 },
-  modalPill: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#e0e2e8', alignSelf: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: '#181c20', marginBottom: 4 },
-  modalSub: { fontSize: 13, color: '#707881', marginBottom: 16 },
-  replyInput: { backgroundColor: '#f7f9ff', borderRadius: 14, padding: 14, fontSize: 14, color: '#181c20', borderWidth: 1, borderColor: '#e0e2e8', minHeight: 110, marginBottom: 4 },
+  modalPill: { width: 40, height: 4, borderRadius: 2, backgroundColor: thannigoPalette.borderSoft, alignSelf: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 4 },
+  modalSub: { fontSize: 13, color: thannigoPalette.neutral, marginBottom: 16 },
+  replyInput: { backgroundColor: thannigoPalette.background, borderRadius: 14, padding: 14, fontSize: 14, color: thannigoPalette.darkText, borderWidth: 1, borderColor: thannigoPalette.borderSoft, minHeight: 110, marginBottom: 4 },
   charCount: { fontSize: 11, color: '#94a3b8', textAlign: 'right', marginBottom: 16 },
   modalActions: { flexDirection: 'row', gap: 12 },
-  cancelModalBtn: { flex: 0.4, paddingVertical: 15, borderRadius: 16, borderWidth: 1, borderColor: '#e0e2e8', alignItems: 'center' },
-  cancelModalBtnText: { fontSize: 14, fontWeight: '700', color: '#64748b' },
+  cancelModalBtn: { flex: 0.4, paddingVertical: 15, borderRadius: 16, borderWidth: 1, borderColor: thannigoPalette.borderSoft, alignItems: 'center' },
+  cancelModalBtnText: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
   submitBtn: { flex: 0.6, borderRadius: 16, overflow: 'hidden' },
   submitBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 15 },
   submitBtnText: { color: 'white', fontSize: 15, fontWeight: '800' },

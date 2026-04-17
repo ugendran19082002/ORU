@@ -13,6 +13,12 @@ import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
+const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
+
 
 
 // 2-step vendor registration
@@ -98,7 +104,7 @@ export default function VendorRegisterScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         {/* HERO */}
-        <LinearGradient colors={['#005d90', '#006878']} style={styles.heroCard}>
+        <LinearGradient colors={[SHOP_ACCENT, SHOP_ACCENT]} style={styles.heroCard}>
           <Ionicons name="storefront" size={72} color="rgba(255,255,255,0.07)" style={styles.heroDecor} />
           <Text style={styles.heroTitle}>Register Your Shop</Text>
           <Text style={styles.heroSub}>Join ThanniGo as a verified water supplier and grow your business.</Text>
@@ -199,7 +205,7 @@ export default function VendorRegisterScreen() {
             </TouchableOpacity>
 
             <View style={styles.infoCard}>
-              <Ionicons name="information-circle-outline" size={18} color="#005d90" />
+              <Ionicons name="information-circle-outline" size={18} color={SHOP_ACCENT} />
               <Text style={styles.infoText}>
                 After submitting, our verification team will review your documents and activate your shop within 24–48 hours.
               </Text>
@@ -210,7 +216,7 @@ export default function VendorRegisterScreen() {
         {/* CTA */}
         <TouchableOpacity style={styles.nextBtn} onPress={handleNext}>
           <LinearGradient
-            colors={['#005d90', '#0077b6']}
+            colors={[SHOP_ACCENT, SHOP_GRAD[1]]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.nextBtnGrad}
@@ -226,13 +232,13 @@ export default function VendorRegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoText: { fontSize: 20, fontWeight: '900', color: '#003a5c' },
+  logoText: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
   content: { padding: 20, gap: 16, paddingBottom: 40 },
-  heroCard: { borderRadius: 24, padding: 24, overflow: 'hidden', shadowColor: '#005d90', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8 },
+  heroCard: { borderRadius: 24, padding: 24, overflow: 'hidden', shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8 },
   heroDecor: { position: 'absolute', right: -16, bottom: -16 },
   heroTitle: { fontSize: 24, fontWeight: '900', color: 'white', marginBottom: 6 },
   heroSub: { fontSize: 13, color: 'rgba(255,255,255,0.75)', lineHeight: 18, marginBottom: 20 },
@@ -241,21 +247,21 @@ const styles = StyleSheet.create({
   stepCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   stepCircleActive: { backgroundColor: 'white' },
   stepNum: { fontSize: 14, fontWeight: '800', color: 'rgba(255,255,255,0.7)' },
-  stepNumActive: { color: '#005d90' },
+  stepNumActive: { color: SHOP_ACCENT },
   stepLabel: { fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: '600', textAlign: 'center' },
   stepLabelActive: { color: 'white' },
   stepConnector: { position: 'absolute', top: 16, left: '25%', right: '25%', height: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#181c20', letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },
   inputGroup: { gap: 6 },
-  inputLabel: { fontSize: 12, fontWeight: '700', color: '#707881' },
-  input: { backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, fontWeight: '600', color: '#181c20', borderWidth: 1, borderColor: '#e0e2e8' },
+  inputLabel: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
+  input: { backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, fontWeight: '600', color: thannigoPalette.darkText, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
   termsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  checkbox: { width: 22, height: 22, borderRadius: 7, borderWidth: 2, borderColor: '#e0e2e8', alignItems: 'center', justifyContent: 'center', marginTop: 1 },
-  checkboxActive: { backgroundColor: '#005d90', borderColor: '#005d90' },
-  termsText: { flex: 1, fontSize: 13, color: '#64748b', lineHeight: 19 },
-  termsLink: { color: '#005d90', fontWeight: '700' },
+  checkbox: { width: 22, height: 22, borderRadius: 7, borderWidth: 2, borderColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  checkboxActive: { backgroundColor: SHOP_ACCENT, borderColor: SHOP_ACCENT },
+  termsText: { flex: 1, fontSize: 13, color: thannigoPalette.neutral, lineHeight: 19 },
+  termsLink: { color: SHOP_ACCENT, fontWeight: '700' },
   infoCard: { flexDirection: 'row', gap: 10, backgroundColor: '#e0f0ff', borderRadius: 14, padding: 14, alignItems: 'flex-start' },
-  infoText: { flex: 1, fontSize: 12, color: '#005d90', lineHeight: 17, fontWeight: '600' },
+  infoText: { flex: 1, fontSize: 12, color: SHOP_ACCENT, lineHeight: 17, fontWeight: '600' },
   nextBtn: { borderRadius: 18, overflow: 'hidden', marginTop: 4 },
   nextBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
   nextBtnText: { color: 'white', fontSize: 16, fontWeight: '800', letterSpacing: -0.3 },

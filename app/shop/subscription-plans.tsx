@@ -14,19 +14,25 @@ import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { subscriptionApi, SubscriptionData } from '@/api/subscriptionApi';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
+const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
+
 type SubStatus = 'INACTIVE' | 'PENDING_PAYMENT' | 'ACTIVE' | 'PAYMENT_FAILED' | 'EXPIRED' | 'CANCELLED';
 
 const PLAN_FEATURES = [
-  { icon: 'checkmark-circle', text: 'Priority listing in search results', color: '#2e7d32' },
-  { icon: 'checkmark-circle', text: 'Advanced analytics dashboard', color: '#2e7d32' },
-  { icon: 'checkmark-circle', text: 'Lower platform commission', color: '#2e7d32' },
-  { icon: 'checkmark-circle', text: 'Instant delivery support', color: '#2e7d32' },
-  { icon: 'checkmark-circle', text: 'Cancel anytime', color: '#2e7d32' },
+  { icon: 'checkmark-circle', text: 'Priority listing in search results', color: thannigoPalette.success },
+  { icon: 'checkmark-circle', text: 'Advanced analytics dashboard', color: thannigoPalette.success },
+  { icon: 'checkmark-circle', text: 'Lower platform commission', color: thannigoPalette.success },
+  { icon: 'checkmark-circle', text: 'Instant delivery support', color: thannigoPalette.success },
+  { icon: 'checkmark-circle', text: 'Cancel anytime', color: thannigoPalette.success },
 ];
 
 const STATUS_COLOR: Record<string, string> = {
-  ACTIVE: '#2e7d32',
-  INACTIVE: '#707881',
+  ACTIVE: thannigoPalette.success,
+  INACTIVE: thannigoPalette.neutral,
   PENDING_PAYMENT: '#b45309',
   PAYMENT_FAILED: '#dc2626',
   EXPIRED: '#94a3b8',
@@ -125,7 +131,7 @@ export default function ShopSubscriptionPlansScreen() {
     );
   };
 
-  const heroGradient: [string, string] = isActive ? ['#2e7d32', '#1b5e20'] : ['#006878', '#004e5b'];
+  const heroGradient: [string, string] = isActive ? [thannigoPalette.success, '#1b5e20'] : [SHOP_ACCENT, SHOP_ACCENT];
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -138,7 +144,7 @@ export default function ShopSubscriptionPlansScreen() {
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#005d90" />
+          <ActivityIndicator size="large" color={SHOP_ACCENT} />
         </View>
       ) : error ? (
         <View style={styles.center}>
@@ -181,7 +187,7 @@ export default function ShopSubscriptionPlansScreen() {
                   const enabled = subscription.features[f.key as keyof typeof subscription.features];
                   return (
                     <View key={f.key} style={[styles.featureChip, !enabled && styles.featureChipOff]}>
-                      <Ionicons name={f.icon as any} size={16} color={enabled ? '#2e7d32' : '#94a3b8'} />
+                      <Ionicons name={f.icon as any} size={16} color={enabled ? thannigoPalette.success : '#94a3b8'} />
                       <Text style={[styles.featureChipText, !enabled && styles.featureChipTextOff]}>{f.label}</Text>
                     </View>
                   );
@@ -211,8 +217,8 @@ export default function ShopSubscriptionPlansScreen() {
               <Switch
                 value={autoRenew}
                 onValueChange={setAutoRenew}
-                trackColor={{ false: '#e0e2e8', true: '#bfdbf7' }}
-                thumbColor={autoRenew ? '#005d90' : '#94a3b8'}
+                trackColor={{ false: thannigoPalette.borderSoft, true: '#bfdbf7' }}
+                thumbColor={autoRenew ? SHOP_ACCENT : '#94a3b8'}
               />
             </View>
           )}
@@ -231,7 +237,7 @@ export default function ShopSubscriptionPlansScreen() {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={styles.subscribeBtn} onPress={handleActivate} disabled={actionLoading}>
-              <LinearGradient colors={['#006878', '#004e5b']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.subscribeBtnGrad}>
+              <LinearGradient colors={[SHOP_ACCENT, SHOP_ACCENT]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.subscribeBtnGrad}>
                 {actionLoading
                   ? <ActivityIndicator color="white" />
                   : <Text style={styles.subscribeBtnText}>Activate Free Plan</Text>
@@ -247,33 +253,33 @@ export default function ShopSubscriptionPlansScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: '#0f172a' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
-  errorText: { fontSize: 14, color: '#64748b', textAlign: 'center', fontWeight: '500' },
-  retryBtn: { paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#005d90', borderRadius: 12 },
+  errorText: { fontSize: 14, color: thannigoPalette.neutral, textAlign: 'center', fontWeight: '500' },
+  retryBtn: { paddingHorizontal: 20, paddingVertical: 10, backgroundColor: SHOP_ACCENT, borderRadius: 12 },
   retryText: { color: 'white', fontWeight: '700', fontSize: 14 },
   content: { padding: 20, gap: 14, paddingBottom: 40 },
-  heroCard: { borderRadius: 24, padding: 24, overflow: 'hidden', shadowColor: '#005d90', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8 },
+  heroCard: { borderRadius: 24, padding: 24, overflow: 'hidden', shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8 },
   heroDecor: { position: 'absolute', right: -16, bottom: -16 },
   heroLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.7)', letterSpacing: 1, marginBottom: 8 },
   heroStatusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
   statusDot: { width: 10, height: 10, borderRadius: 5 },
   heroStatus: { fontSize: 28, fontWeight: '900', color: 'white' },
   heroSub: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 4, fontWeight: '500' },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#181c20', letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },
   featureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   featureChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#e8f5e9', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
-  featureChipOff: { backgroundColor: '#f1f5f9' },
-  featureChipText: { fontSize: 12, fontWeight: '700', color: '#2e7d32' },
+  featureChipOff: { backgroundColor: thannigoPalette.borderSoft },
+  featureChipText: { fontSize: 12, fontWeight: '700', color: thannigoPalette.success },
   featureChipTextOff: { color: '#94a3b8' },
   benefitsList: { backgroundColor: 'white', borderRadius: 18, padding: 18, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
   benefitRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  benefitText: { fontSize: 13, color: '#181c20', fontWeight: '600' },
+  benefitText: { fontSize: 13, color: thannigoPalette.darkText, fontWeight: '600' },
   autoRenewCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'white', borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
-  autoRenewTitle: { fontSize: 14, fontWeight: '800', color: '#181c20', marginBottom: 2 },
-  autoRenewSub: { fontSize: 12, color: '#707881', fontWeight: '500' },
+  autoRenewTitle: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
+  autoRenewSub: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
   subscribeBtn: { borderRadius: 18, overflow: 'hidden' },
   subscribeBtnGrad: { paddingVertical: 17, alignItems: 'center' },
   subscribeBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },

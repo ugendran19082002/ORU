@@ -110,7 +110,7 @@ export default function DeliveryEarningsScreen() {
 
             <TouchableOpacity style={styles.cashoutBtn} onPress={handleCashout}>
               <Text style={styles.cashoutBtnText}>Cash Out Now</Text>
-              <Ionicons name="arrow-forward" size={16} color="#1b5e20" />
+              <Ionicons name="arrow-forward" size={16} color={thannigoPalette.deliveryGreen} />
             </TouchableOpacity>
           </LinearGradient>
 
@@ -133,14 +133,14 @@ export default function DeliveryEarningsScreen() {
 
           {(data?.recent ?? []).length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="bicycle-outline" size={40} color="#c8d6e0" />
+              <Ionicons name="bicycle-outline" size={40} color={thannigoPalette.borderSoft} />
               <Text style={styles.emptyText}>No deliveries in this period</Text>
             </View>
           ) : (
             (data?.recent ?? []).map((trip) => (
               <View key={trip.id} style={styles.tripCard}>
                 <View style={styles.tripIconBox}>
-                  <Ionicons name="bicycle" size={20} color="#2e7d32" />
+                  <Ionicons name="bicycle" size={20} color={thannigoPalette.deliveryGreen} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.tripId}>{trip.order_number}</Text>
@@ -198,5 +198,5 @@ const styles = StyleSheet.create({
   tripId: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
   tripTime: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
   tripAmount: { fontSize: 16, fontWeight: '900', color: DELIVERY_ACCENT },
-  tripTip: { fontSize: 11, color: '#e65100', fontWeight: '700', marginTop: 2 },
+  tripTip: { fontSize: 11, color: thannigoPalette.staffOrange, fontWeight: '700', marginTop: 2 },
 });

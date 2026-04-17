@@ -13,6 +13,11 @@ import { BackButton } from '@/components/ui/BackButton';
 import { adminApi } from '@/api/adminApi';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const ADMIN_ACCENT = roleAccent.admin;
+const ADMIN_SURF = roleSurface.admin;
+
 export default function AdminCouponsScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -78,7 +83,7 @@ export default function AdminCouponsScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#ba1a1a" />
+        <ActivityIndicator size="large" color={ADMIN_ACCENT} />
       </View>
     );
   }
@@ -90,7 +95,7 @@ export default function AdminCouponsScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
+              <Ionicons name="chevron-back" size={20} color={ADMIN_ACCENT} />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={styles.pageTitle}>Platform Coupons</Text>
@@ -110,7 +115,7 @@ export default function AdminCouponsScreen() {
       >
         <View style={{ width: '100%', maxWidth: 1200 }}>
         <View style={styles.infoBox}>
-           <Ionicons name="megaphone-outline" size={20} color="#ba1a1a" />
+           <Ionicons name="megaphone-outline" size={20} color={ADMIN_ACCENT} />
            <Text style={styles.infoText}>
              Platform coupons are valid across ALL shops. The discount is funded by ThanniGo and will NOT impact merchant payouts.
            </Text>
@@ -162,7 +167,7 @@ export default function AdminCouponsScreen() {
              <Text style={styles.label}>EXPIRY DATE</Text>
              <TouchableOpacity style={styles.datePicker} onPress={() => setShowDatePicker(true)}>
                 <Text style={styles.dateText}>{expiryDate.toLocaleDateString()}</Text>
-                <Ionicons name="calendar-outline" size={18} color="#ba1a1a" />
+                <Ionicons name="calendar-outline" size={18} color={ADMIN_ACCENT} />
              </TouchableOpacity>
 
              {showDatePicker && (
@@ -222,12 +227,12 @@ export default function AdminCouponsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   headerSafe: { 
     backgroundColor: 'white', 
     borderBottomWidth: 1, 
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: thannigoPalette.borderSoft,
     alignItems: 'center',
   },
   headerContent: {
@@ -241,43 +246,43 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: thannigoPalette.borderSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: '#1a1c1e', letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
 
-  createBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#ba1a1a', alignItems: 'center', justifyContent: 'center' },
+  createBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: ADMIN_ACCENT, alignItems: 'center', justifyContent: 'center' },
   scrollContent: { padding: 20 },
-  infoBox: { flexDirection: 'row', gap: 10, backgroundColor: '#fff8f7', borderRadius: 15, padding: 15, marginBottom: 25, borderWidth: 1, borderColor: '#ffdad6' },
-  infoText: { flex: 1, fontSize: 12, color: '#ba1a1a', lineHeight: 18, fontWeight: '600' },
-  createCard: { backgroundColor: 'white', borderRadius: 20, padding: 20, marginBottom: 25, borderWidth: 1, borderColor: '#ebeef4', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
-  createTitle: { fontSize: 16, fontWeight: '800', color: '#1a1c1e', marginBottom: 16 },
-  label: { fontSize: 11, fontWeight: '700', color: '#707881', marginBottom: 6 },
-  input: { backgroundColor: '#f1f4f9', borderRadius: 12, padding: 12, fontSize: 15, fontWeight: '600', color: '#1a1c1e', marginBottom: 12 },
+  infoBox: { flexDirection: 'row', gap: 10, backgroundColor: ADMIN_SURF, borderRadius: 15, padding: 15, marginBottom: 25, borderWidth: 1, borderColor: ADMIN_SURF },
+  infoText: { flex: 1, fontSize: 12, color: ADMIN_ACCENT, lineHeight: 18, fontWeight: '600' },
+  createCard: { backgroundColor: 'white', borderRadius: 20, padding: 20, marginBottom: 25, borderWidth: 1, borderColor: thannigoPalette.borderSoft, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
+  createTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 16 },
+  label: { fontSize: 11, fontWeight: '700', color: thannigoPalette.neutral, marginBottom: 6 },
+  input: { backgroundColor: thannigoPalette.borderSoft, borderRadius: 12, padding: 12, fontSize: 15, fontWeight: '600', color: thannigoPalette.darkText, marginBottom: 12 },
   row: { flexDirection: 'row', alignItems: 'center' },
-  typeBtn: { flex: 1, height: 44, borderRadius: 10, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center' },
-  typeBtnActive: { backgroundColor: '#ba1a1a' },
-  typeBtnText: { fontWeight: '700', color: '#707881' },
+  typeBtn: { flex: 1, height: 44, borderRadius: 10, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  typeBtnActive: { backgroundColor: ADMIN_ACCENT },
+  typeBtnText: { fontWeight: '700', color: thannigoPalette.neutral },
   typeBtnTextActive: { color: 'white' },
-  datePicker: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f1f4f9', borderRadius: 12, padding: 12, marginBottom: 12 },
-  dateText: { fontSize: 15, fontWeight: '600', color: '#1a1c1e' },
-  saveBtn: { flex: 2, height: 50, borderRadius: 15, backgroundColor: '#ba1a1a', alignItems: 'center', justifyContent: 'center' },
+  datePicker: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: thannigoPalette.borderSoft, borderRadius: 12, padding: 12, marginBottom: 12 },
+  dateText: { fontSize: 15, fontWeight: '600', color: thannigoPalette.darkText },
+  saveBtn: { flex: 2, height: 50, borderRadius: 15, backgroundColor: ADMIN_ACCENT, alignItems: 'center', justifyContent: 'center' },
   saveBtnText: { color: 'white', fontWeight: '800', fontSize: 15 },
-  cancelBtn: { flex: 1, height: 50, borderRadius: 15, marginLeft: 12, backgroundColor: '#ebeef4', alignItems: 'center', justifyContent: 'center' },
-  cancelBtnText: { color: '#707881', fontWeight: '700' },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#1a1c1e', marginBottom: 12 },
-  couponCard: { backgroundColor: 'white', borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#ebeef4' },
+  cancelBtn: { flex: 1, height: 50, borderRadius: 15, marginLeft: 12, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  cancelBtnText: { color: thannigoPalette.neutral, fontWeight: '700' },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 12 },
+  couponCard: { backgroundColor: 'white', borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
   couponTop: { flexDirection: 'row', alignItems: 'center' },
-  codeWrap: { paddingHorizontal: 10, paddingVertical: 5, backgroundColor: '#f1f4f9', borderRadius: 6 },
-  code: { fontSize: 14, fontWeight: '900', color: '#1a1c1e', letterSpacing: 0.5 },
-  value: { fontSize: 15, fontWeight: '800', color: '#ba1a1a' },
+  codeWrap: { paddingHorizontal: 10, paddingVertical: 5, backgroundColor: thannigoPalette.borderSoft, borderRadius: 6 },
+  code: { fontSize: 14, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: 0.5 },
+  value: { fontSize: 15, fontWeight: '800', color: ADMIN_ACCENT },
   expiry: { fontSize: 11, color: '#94a3b8', fontWeight: '500' },
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 },
-  track: { flex: 1, height: 4, backgroundColor: '#f1f4f9', borderRadius: 2 },
-  fill: { height: '100%', backgroundColor: '#ba1a1a', borderRadius: 2 },
-  counter: { fontSize: 11, color: '#707881', fontWeight: '700' },
+  track: { flex: 1, height: 4, backgroundColor: thannigoPalette.borderSoft, borderRadius: 2 },
+  fill: { height: '100%', backgroundColor: ADMIN_ACCENT, borderRadius: 2 },
+  counter: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '700' },
   empty: { padding: 40, alignItems: 'center' },
   emptyText: { marginTop: 12, color: '#94a3b8', fontWeight: '600' },
 });

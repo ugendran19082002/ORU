@@ -11,6 +11,10 @@ import { BackButton } from '@/components/ui/BackButton';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { apiClient } from '@/api/client';
+import { Shadow, thannigoPalette, roleAccent, Radius } from '@/constants/theme';
+import { useAppTheme } from '@/providers/ThemeContext';
+
+const ACCENT = roleAccent.customer;
 
 interface Payment {
   id: number;
@@ -28,10 +32,10 @@ interface Payment {
 }
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  paid:     { bg: '#e8f5e9', color: '#2e7d32' },
-  pending:  { bg: '#fff3e0', color: '#e65100' },
-  failed:   { bg: '#ffebee', color: '#c62828' },
-  refunded: { bg: '#e0f0ff', color: '#005d90' },
+  paid:     { bg: thannigoPalette.successSoft,       color: thannigoPalette.success },
+  pending:  { bg: '#fff3e0',                         color: thannigoPalette.warning },
+  failed:   { bg: thannigoPalette.dangerSoft,        color: thannigoPalette.error },
+  refunded: { bg: thannigoPalette.infoSoft,          color: ACCENT },
 };
 
 const METHOD_ICON: Record<string, string> = {
@@ -44,6 +48,7 @@ const METHOD_ICON: Record<string, string> = {
 
 export default function CustomerPaymentHistoryScreen() {
   const { safeBack } = useAppNavigation();
+  const { colors, isDark } = useAppTheme();
 
   useAndroidBackHandler(() => {
     safeBack('/(tabs)/profile');
@@ -99,10 +104,10 @@ export default function CustomerPaymentHistoryScreen() {
     .reduce((s, p) => s + p.amount, 0);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <BackButton fallback="/(tabs)/profile" />
         <Text style={styles.headerTitle}>Payment History</Text>
       </View>
@@ -111,17 +116,17 @@ export default function CustomerPaymentHistoryScreen() {
       <View style={styles.summaryRow}>
         <View style={styles.summaryBox}>
           <Text style={styles.summaryLabel}>Total Paid</Text>
-          <Text style={[styles.summaryValue, { color: '#2e7d32' }]}>₹{totalPaid.toFixed(0)}</Text>
+          <Text style={[styles.summaryValue, { color: thannigoPalette.success }]}>₹{totalPaid.toFixed(0)}</Text>
         </View>
         <View style={styles.summaryDivider} />
         <View style={styles.summaryBox}>
           <Text style={styles.summaryLabel}>Transactions</Text>
-          <Text style={[styles.summaryValue, { color: '#005d90' }]}>{payments.length}</Text>
+          <Text style={[styles.summaryValue, { color: ACCENT }]}>{payments.length}</Text>
         </View>
         <View style={styles.summaryDivider} />
         <View style={styles.summaryBox}>
           <Text style={styles.summaryLabel}>Refunded</Text>
-          <Text style={[styles.summaryValue, { color: '#b45309' }]}>₹{totalRefunded.toFixed(0)}</Text>
+          <Text style={[styles.summaryValue, { color: thannigoPalette.warning }]}>₹{totalRefunded.toFixed(0)}</Text>
         </View>
       </View>
 
@@ -134,11 +139,11 @@ export default function CustomerPaymentHistoryScreen() {
           if (layoutMeasurement.height + contentOffset.y >= contentSize.height - 80) loadMore();
         }}
       >
-        {loading && <ActivityIndicator color="#005d90" style={{ marginTop: 40 }} />}
+        {loading && <ActivityIndicator color={ACCENT} style={{ marginTop: 40 }} />}
 
         {!loading && payments.length === 0 && (
           <View style={styles.emptyState}>
-            <Ionicons name="receipt-outline" size={48} color="#c8d0da" />
+            <Ionicons name="receipt-outline" size={48} color={colors.muted} />
             <Text style={styles.emptyTitle}>No Payments Yet</Text>
             <Text style={styles.emptySub}>Your payment records will appear here.</Text>
           </View>
@@ -153,7 +158,7 @@ export default function CustomerPaymentHistoryScreen() {
             <View key={payment.id} style={styles.paymentCard}>
               <View style={styles.paymentTop}>
                 <View style={styles.paymentIconWrap}>
-                  <Ionicons name={iconName as any} size={22} color="#005d90" />
+                  <Ionicons name={iconName as any} size={22} color={ACCENT} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.paymentMethod}>{payment.method.toUpperCase()}</Text>
@@ -171,13 +176,13 @@ export default function CustomerPaymentHistoryScreen() {
 
               {payment.order?.shop_name && (
                 <View style={styles.shopRow}>
-                  <Ionicons name="storefront-outline" size={13} color="#707881" />
+                  <Ionicons name="storefront-outline" size={13} color={thannigoPalette.neutral} />
                   <Text style={styles.shopName}>{payment.order.shop_name}</Text>
                 </View>
               )}
 
               <View style={styles.dateRow}>
-                <Ionicons name="time-outline" size={12} color="#94a3b8" />
+                <Ionicons name="time-outline" size={12} color={colors.muted} />
                 <Text style={styles.dateText}>
                   {new Date(date).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </Text>
@@ -186,7 +191,7 @@ export default function CustomerPaymentHistoryScreen() {
           );
         })}
 
-        {loadingMore && <ActivityIndicator color="#005d90" style={{ marginVertical: 16 }} />}
+        {loadingMore && <ActivityIndicator color={ACCENT} style={{ marginVertical: 16 }} />}
         {!loadingMore && !hasMore && payments.length > 0 && (
           <Text style={styles.endText}>All transactions loaded</Text>
         )}
@@ -196,35 +201,35 @@ export default function CustomerPaymentHistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
+  container: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1 },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
 
-  summaryRow: { flexDirection: 'row', backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingVertical: 16 },
+  summaryRow: { flexDirection: 'row', backgroundColor: thannigoPalette.surface, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft, paddingVertical: 16 },
   summaryBox: { flex: 1, alignItems: 'center', gap: 4 },
-  summaryDivider: { width: 1, backgroundColor: '#e0e2e8' },
-  summaryLabel: { fontSize: 11, color: '#707881', fontWeight: '600' },
+  summaryDivider: { width: 1, backgroundColor: thannigoPalette.borderSoft },
+  summaryLabel: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '600' },
   summaryValue: { fontSize: 20, fontWeight: '900' },
 
   content: { padding: 20, gap: 12, paddingBottom: 40 },
 
   emptyState: { alignItems: 'center', paddingTop: 60, gap: 10 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#64748b' },
-  emptySub: { fontSize: 13, color: '#94a3b8', textAlign: 'center' },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.neutral },
+  emptySub: { fontSize: 13, color: thannigoPalette.neutral, textAlign: 'center' },
 
-  paymentCard: { backgroundColor: 'white', borderRadius: 20, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  paymentCard: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 16, ...Shadow.xs },
   paymentTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
-  paymentIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
-  paymentMethod: { fontSize: 14, fontWeight: '900', color: '#181c20' },
-  paymentOrderId: { fontSize: 11, color: '#707881', marginTop: 1 },
-  paymentAmount: { fontSize: 18, fontWeight: '900', color: '#181c20', textAlign: 'right', marginBottom: 4 },
+  paymentIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: thannigoPalette.infoSoft, alignItems: 'center', justifyContent: 'center' },
+  paymentMethod: { fontSize: 14, fontWeight: '900', color: thannigoPalette.darkText },
+  paymentOrderId: { fontSize: 11, color: thannigoPalette.neutral, marginTop: 1 },
+  paymentAmount: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText, textAlign: 'right', marginBottom: 4 },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, alignSelf: 'flex-end' },
   statusBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
 
   shopRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 },
-  shopName: { fontSize: 12, color: '#707881', fontWeight: '500' },
+  shopName: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  dateText: { fontSize: 11, color: '#94a3b8' },
+  dateText: { fontSize: 11, color: thannigoPalette.neutral },
 
-  endText: { textAlign: 'center', color: '#94a3b8', fontSize: 12, marginVertical: 12 },
+  endText: { textAlign: 'center', color: thannigoPalette.neutral, fontSize: 12, marginVertical: 12 },
 });

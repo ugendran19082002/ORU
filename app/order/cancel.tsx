@@ -14,6 +14,12 @@ import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { useOrderStore } from '@/stores/orderStore';
 import { apiClient } from '@/api/client';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const CUSTOMER_ACCENT = roleAccent.customer;
+const CUSTOMER_SURF = roleSurface.customer;
+const CUSTOMER_GRAD: [string, string] = [roleGradients.customer.start, roleGradients.customer.end];
+
 const REASONS = [
   { id: 'ordered_by_mistake', label: 'Ordered by mistake', icon: 'hand-left-outline' },
   { id: 'wrong_item_quantity', label: 'Wrong item / quantity', icon: 'swap-horizontal-outline' },
@@ -131,7 +137,7 @@ export default function CancelOrderScreen() {
             onPress={() => setSelected(r.id)}
           >
             <View style={[styles.reasonIcon, selected === r.id && styles.reasonIconActive]}>
-              <Ionicons name={r.icon as any} size={18} color={selected === r.id ? '#c62828' : '#707881'} />
+              <Ionicons name={r.icon as any} size={18} color={selected === r.id ? thannigoPalette.adminRed : thannigoPalette.neutral} />
             </View>
             <Text style={[styles.reasonText, selected === r.id && styles.reasonTextActive]}>{r.label}</Text>
             <View style={[styles.radio, selected === r.id && styles.radioActive]}>
@@ -150,7 +156,7 @@ export default function CancelOrderScreen() {
 
         {/* CANCEL BUTTON */}
         <TouchableOpacity style={[styles.cancelBtn, cancelling && { opacity: 0.7 }]} onPress={handleCancel} disabled={cancelling}>
-          <LinearGradient colors={['#c62828', '#ef4444']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.cancelBtnGrad}>
+          <LinearGradient colors={[thannigoPalette.adminRed, '#ef4444']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.cancelBtnGrad}>
             {cancelling ? (
               <ActivityIndicator color="white" />
             ) : (
@@ -171,34 +177,34 @@ export default function CancelOrderScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
   content: { padding: 20, gap: 14, paddingBottom: 40 },
   orderCard: { backgroundColor: 'white', borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
   orderRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   orderIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#ffebee', alignItems: 'center', justifyContent: 'center' },
-  orderTitle: { fontSize: 16, fontWeight: '800', color: '#181c20' },
-  orderMeta: { fontSize: 12, color: '#707881', fontWeight: '500', marginTop: 2 },
-  orderTotal: { fontSize: 18, fontWeight: '900', color: '#181c20' },
+  orderTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
+  orderMeta: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 2 },
+  orderTotal: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
   refundCard: { flexDirection: 'row', gap: 12, backgroundColor: '#f0fdf4', borderRadius: 16, padding: 16, alignItems: 'flex-start', borderWidth: 1, borderColor: '#bbf7d0' },
-  refundTitle: { fontSize: 14, fontWeight: '800', color: '#2e7d32', marginBottom: 3 },
-  refundText: { fontSize: 12, color: '#166534', lineHeight: 17, fontWeight: '500' },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#181c20', letterSpacing: -0.3 },
-  reasonCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'white', borderRadius: 16, padding: 14, borderWidth: 1.5, borderColor: '#e0e2e8' },
+  refundTitle: { fontSize: 14, fontWeight: '800', color: thannigoPalette.success, marginBottom: 3 },
+  refundText: { fontSize: 12, color: thannigoPalette.success, lineHeight: 17, fontWeight: '500' },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },
+  reasonCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'white', borderRadius: 16, padding: 14, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft },
   reasonCardActive: { borderColor: '#f87171', backgroundColor: '#fff5f5' },
-  reasonIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#f1f4f9', alignItems: 'center', justifyContent: 'center' },
+  reasonIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
   reasonIconActive: { backgroundColor: '#ffebee' },
-  reasonText: { flex: 1, fontSize: 14, fontWeight: '700', color: '#181c20' },
-  reasonTextActive: { color: '#c62828' },
-  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#e0e2e8', alignItems: 'center', justifyContent: 'center' },
-  radioActive: { borderColor: '#c62828' },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#c62828' },
+  reasonText: { flex: 1, fontSize: 14, fontWeight: '700', color: thannigoPalette.darkText },
+  reasonTextActive: { color: thannigoPalette.adminRed },
+  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  radioActive: { borderColor: thannigoPalette.adminRed },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: thannigoPalette.adminRed },
   warningCard: { flexDirection: 'row', gap: 10, backgroundColor: '#fef3c7', borderRadius: 14, padding: 14, alignItems: 'flex-start' },
   warningText: { flex: 1, fontSize: 12, color: '#b45309', lineHeight: 17, fontWeight: '600' },
   cancelBtn: { borderRadius: 18, overflow: 'hidden' },
   cancelBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
   cancelBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
-  keepBtn: { paddingVertical: 14, alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: '#e0e2e8', backgroundColor: 'white' },
-  keepBtnText: { fontSize: 14, fontWeight: '700', color: '#64748b' },
+  keepBtn: { paddingVertical: 14, alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: thannigoPalette.borderSoft, backgroundColor: 'white' },
+  keepBtnText: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
 });

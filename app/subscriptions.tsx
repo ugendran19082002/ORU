@@ -13,6 +13,11 @@ import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { platformSubscriptionApi, PlatformPlan, PlatformSubscription } from '@/api/platformSubscriptionApi';
+import { Shadow, thannigoPalette, roleAccent, Radius } from '@/constants/theme';
+import { useAppTheme } from '@/providers/ThemeContext';
+
+const ACCENT = roleAccent.customer;
+const GRAD: [string, string] = [ACCENT, '#0077b6'];
 
 
 type PlanId = 'basic' | 'standard' | 'premium';
@@ -79,6 +84,7 @@ interface ActiveSub {
 export default function SubscriptionsScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
+  const { colors, isDark } = useAppTheme();
 
   useAndroidBackHandler(() => { safeBack('/(tabs)/profile'); });
 
@@ -230,10 +236,10 @@ export default function SubscriptionsScreen() {
 
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <BackButton fallback="/(tabs)/profile" />
 
         <View style={{ flex: 1, marginLeft: 12 }}>
@@ -550,7 +556,7 @@ export default function SubscriptionsScreen() {
         {/* SUBSCRIBE BUTTON */}
         <TouchableOpacity style={styles.subscribeBtn} onPress={handleSubscribe}>
           <LinearGradient
-            colors={['#005d90', '#0077b6']}
+            colors={GRAD}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.subscribeBtnGrad}
@@ -571,21 +577,21 @@ export default function SubscriptionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 20, paddingVertical: 14,
-    backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9',
+    borderBottomWidth: 1,
   },
-  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
-  headerSub: { fontSize: 12, color: '#64748b', fontWeight: '500', marginTop: 1 },
+  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
+  headerSub: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 1 },
   content: { padding: 20, gap: 16, paddingBottom: 120 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#181c20', letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },
 
   activeCard: {
-    borderRadius: 24, padding: 22, overflow: 'hidden',
-    shadowColor: '#005d90', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.22, shadowRadius: 20, elevation: 8,
+    borderRadius: Radius.xl, padding: 22, overflow: 'hidden',
+    ...Shadow.lg,
   },
   activeDecor: { position: 'absolute', right: -20, bottom: -20 },
   activeTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 },
@@ -604,47 +610,40 @@ const styles = StyleSheet.create({
   progressFill: { height: '100%', backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 2 },
   activeActions: { flexDirection: 'row', gap: 10 },
   pauseBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'white', borderRadius: 14, paddingVertical: 12 },
-  pauseBtnText: { color: '#005d90', fontWeight: '800', fontSize: 13 },
+  pauseBtnText: { color: ACCENT, fontWeight: '800', fontSize: 13 },
   rescheduleBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, paddingVertical: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
   rescheduleBtnText: { color: 'rgba(255,255,255,0.9)', fontWeight: '700', fontSize: 13 },
 
   planCard: {
-    backgroundColor: 'white', borderRadius: 20, padding: 18,
-    borderWidth: 1.5, borderColor: '#e0e2e8',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
+    backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 18,
+    borderWidth: 1.5, borderColor: thannigoPalette.borderSoft,
+    ...Shadow.xs,
   },
-  planCardActive: { borderColor: '#005d90', backgroundColor: '#f0f7ff' },
+  planCardActive: { borderColor: ACCENT, backgroundColor: thannigoPalette.infoSoft },
   popularBadge: { backgroundColor: '#fef3c7', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start', marginBottom: 10 },
-  popularText: { fontSize: 10, fontWeight: '800', color: '#b45309', letterSpacing: 0.5 },
+  popularText: { fontSize: 10, fontWeight: '800', color: thannigoPalette.warning, letterSpacing: 0.5 },
   planTop: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   planIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  planName: { fontSize: 17, fontWeight: '900', color: '#181c20' },
-  planCadence: { fontSize: 12, color: '#707881', fontWeight: '600', marginTop: 2 },
+  planName: { fontSize: 17, fontWeight: '900', color: thannigoPalette.darkText },
+  planCadence: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
   planPrice: { fontSize: 22, fontWeight: '900' },
-  planSavings: { fontSize: 11, color: '#2e7d32', fontWeight: '700' },
-  radioOuter: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#e0e2e8', alignItems: 'center', justifyContent: 'center', marginLeft: 10 },
+  planSavings: { fontSize: 11, color: thannigoPalette.success, fontWeight: '700' },
+  radioOuter: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center', marginLeft: 10 },
   radioInner: { width: 10, height: 10, borderRadius: 5 },
-  featureList: { marginTop: 14, gap: 8, borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 14 },
+  featureList: { marginTop: 14, gap: 8, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft, paddingTop: 14 },
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  featureText: { fontSize: 13, color: '#181c20', fontWeight: '600' },
+  featureText: { fontSize: 13, color: thannigoPalette.darkText, fontWeight: '600' },
 
   subscribeBtn: { borderRadius: 18, overflow: 'hidden' },
   subscribeBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
   subscribeBtnText: { color: 'white', fontSize: 16, fontWeight: '800', letterSpacing: -0.3 },
-  disclaimer: { fontSize: 11, color: '#94a3b8', textAlign: 'center', lineHeight: 16 },
-  cancelSubBtn: {
-    marginTop: 12, paddingVertical: 10, alignItems: 'center',
-  },
-  cancelSubText: {
-    fontSize: 12, color: 'rgba(255,255,255,0.55)', fontWeight: '700',
-    textDecorationLine: 'underline',
-  },
+  disclaimer: { fontSize: 11, color: thannigoPalette.neutral, textAlign: 'center', lineHeight: 16 },
+  cancelSubBtn: { marginTop: 12, paddingVertical: 10, alignItems: 'center' },
+  cancelSubText: { fontSize: 12, color: 'rgba(255,255,255,0.55)', fontWeight: '700', textDecorationLine: 'underline' },
 
-  // Plus Membership styles
   plusCard: {
-    backgroundColor: 'white', borderRadius: 24, padding: 20, overflow: 'hidden',
-    shadowColor: '#7c3aed', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.18, shadowRadius: 16, elevation: 6,
-    borderWidth: 1, borderColor: '#ede9fe',
+    backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 20, overflow: 'hidden',
+    ...Shadow.md, borderWidth: 1, borderColor: '#ede9fe',
   },
   plusDecor: { position: 'absolute', right: -10, bottom: -10 },
   plusTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
@@ -659,14 +658,17 @@ const styles = StyleSheet.create({
   plusCancelText: { color: 'rgba(255,255,255,0.55)', fontSize: 12, fontWeight: '700', textDecorationLine: 'underline' },
   plusPromoTop: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 14 },
   plusPromoIcon: { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  plusPromoTitle: { fontSize: 17, fontWeight: '900', color: '#181c20' },
-  plusPromoSub: { fontSize: 12, color: '#707881', marginTop: 2, lineHeight: 16 },
+  plusPromoTitle: { fontSize: 17, fontWeight: '900', color: thannigoPalette.darkText },
+  plusPromoSub: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 2, lineHeight: 16 },
   plusPromoPrice: { fontSize: 20, fontWeight: '900', color: '#7c3aed' },
   plusSubscribeBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14 },
   plusSubscribeBtnText: { color: 'white', fontSize: 15, fontWeight: '800' },
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: '#e0e2e8' },
-  dividerText: { fontSize: 10, fontWeight: '800', color: '#94a3b8', letterSpacing: 1 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: thannigoPalette.borderSoft },
+  dividerText: { fontSize: 10, fontWeight: '800', color: thannigoPalette.neutral, letterSpacing: 1 },
 });
+
+
+
 
 

@@ -10,11 +10,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { analyticsApi, CustomerAnalytics } from '@/api/analyticsApi';
 import { log } from '@/utils/logger';
 import { ActivityIndicator } from 'react-native';
+import { Shadow, thannigoPalette, roleAccent, Radius } from '@/constants/theme';
+import { useAppTheme } from '@/providers/ThemeContext';
+
+const ACCENT = roleAccent.customer;
 
 const { width } = Dimensions.get('window');
 
 export default function CustomerAnalyticsScreen() {
   const { safeBack } = useAppNavigation();
+  const { colors, isDark } = useAppTheme();
   const [activeTab, setActiveTab] = useState<'spending' | 'usage'>('spending');
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<CustomerAnalytics | null>(null);
@@ -41,9 +46,9 @@ export default function CustomerAnalyticsScreen() {
   const maxVal = Math.max(...currentData.map(m => activeTab === 'spending' ? m.spending : m.usage), 1);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <BackButton fallback="/(tabs)/profile" />
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>My Analytics</Text>
@@ -54,8 +59,8 @@ export default function CustomerAnalyticsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {loading ? (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 100 }}>
-            <ActivityIndicator size="large" color="#005d90" />
-            <Text style={{ marginTop: 12, color: '#64748b', fontWeight: '600' }}>Loading your stats...</Text>
+            <ActivityIndicator size="large" color={ACCENT} />
+            <Text style={{ marginTop: 12, color: colors.muted, fontWeight: '600' }}>Loading your stats...</Text>
           </View>
         ) : (
           <>
@@ -109,7 +114,7 @@ export default function CustomerAnalyticsScreen() {
 
               <View style={styles.barChart}>
                 {currentData.length === 0 ? (
-                  <Text style={{ width: '100%', textAlign: 'center', color: '#94a3b8' }}>Insufficient data for chart</Text>
+                  <Text style={{ width: '100%', textAlign: 'center', color: colors.muted }}>Insufficient data for chart</Text>
                 ) : currentData.map((item, i) => {
                   const val = activeTab === 'spending' ? item.spending : item.usage;
                   const heightPct = (val / maxVal) * 100;
@@ -117,7 +122,7 @@ export default function CustomerAnalyticsScreen() {
                     <View key={i} style={styles.barCol}>
                       <Text style={styles.barValText}>{activeTab === 'spending' ? `₹${val}` : val}</Text>
                       <View style={styles.barTrack}>
-                        <View style={[styles.barFill, { height: `${heightPct}%`, backgroundColor: activeTab === 'spending' ? '#005d90' : '#0ea5e9' }]} />
+                        <View style={[styles.barFill, { height: `${heightPct}%`, backgroundColor: activeTab === 'spending' ? ACCENT : thannigoPalette.primary }]} />
                       </View>
                       <Text style={styles.barLabel}>{item.month}</Text>
                     </View>
@@ -150,44 +155,47 @@ export default function CustomerAnalyticsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
-  headerSub: { fontSize: 12, color: '#64748b', fontWeight: '500' },
+  container: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1 },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
+  headerSub: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
   content: { padding: 20, gap: 16, paddingBottom: 60 },
-  
-  statsRow: { flexDirection: 'row', gap: 12 },
-  statCard: { flex: 1, backgroundColor: 'white', borderRadius: 20, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
-  statIconWrap: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  statValue: { fontSize: 22, fontWeight: '900', color: '#181c20' },
-  statLabel: { fontSize: 12, color: '#707881', fontWeight: '600', marginTop: 4 },
 
-  savingsCard: { borderRadius: 20, padding: 20 },
+  statsRow: { flexDirection: 'row', gap: 12 },
+  statCard: { flex: 1, backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 16, ...Shadow.xs },
+  statIconWrap: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  statValue: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText },
+  statLabel: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 4 },
+
+  savingsCard: { borderRadius: Radius.xl, padding: 20 },
   savingsTop: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   savingsTitle: { color: 'white', fontWeight: '700', fontSize: 15 },
   savingsBigText: { color: 'white', fontSize: 32, fontWeight: '900' },
   savingsSub: { color: 'rgba(255,255,255,0.8)', fontSize: 13, marginTop: 4 },
 
-  chartContainer: { backgroundColor: 'white', borderRadius: 20, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  chartContainer: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 20, ...Shadow.xs },
   chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  chartTitle: { fontSize: 16, fontWeight: '800', color: '#181c20' },
-  chartToggle: { flexDirection: 'row', backgroundColor: '#f1f4f9', borderRadius: 10, padding: 4 },
+  chartTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
+  chartToggle: { flexDirection: 'row', backgroundColor: thannigoPalette.borderSoft, borderRadius: 10, padding: 4 },
   toggleBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  toggleBtnActive: { backgroundColor: 'white', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
-  toggleText: { fontSize: 12, fontWeight: '700', color: '#707881' },
-  toggleTextActive: { color: '#005d90' },
+  toggleBtnActive: { backgroundColor: thannigoPalette.surface, ...Shadow.xs },
+  toggleText: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
+  toggleTextActive: { color: ACCENT },
 
   barChart: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', height: 180, paddingTop: 20 },
   barCol: { alignItems: 'center', width: (width - 80) / 6 },
-  barValText: { fontSize: 10, fontWeight: '700', color: '#707881', marginBottom: 6 },
-  barTrack: { width: 14, height: 120, backgroundColor: '#f1f4f9', borderRadius: 7, justifyContent: 'flex-end', overflow: 'hidden' },
+  barValText: { fontSize: 10, fontWeight: '700', color: thannigoPalette.neutral, marginBottom: 6 },
+  barTrack: { width: 14, height: 120, backgroundColor: thannigoPalette.borderSoft, borderRadius: 7, justifyContent: 'flex-end', overflow: 'hidden' },
   barFill: { width: '100%', borderRadius: 7 },
-  barLabel: { fontSize: 11, fontWeight: '600', color: '#707881', marginTop: 8 },
+  barLabel: { fontSize: 11, fontWeight: '600', color: thannigoPalette.neutral, marginTop: 8 },
 
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#181c20', marginTop: 8 },
-  insightCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'white', borderRadius: 16, padding: 16 },
-  insightTitle: { fontSize: 14, fontWeight: '800', color: '#181c20', marginBottom: 2 },
-  insightDesc: { fontSize: 12, color: '#707881', lineHeight: 18 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginTop: 8 },
+  insightCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: thannigoPalette.surface, borderRadius: Radius.lg, padding: 16 },
+  insightTitle: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
+  insightDesc: { fontSize: 12, color: thannigoPalette.neutral, lineHeight: 18 },
 });
+
+
+
 
 

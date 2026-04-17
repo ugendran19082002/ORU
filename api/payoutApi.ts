@@ -103,6 +103,19 @@ export const payoutApi = {
     }
   },
   /**
+   * Request bank account verification.
+   * POST /shop-owner/payouts/verify
+   */
+  async verifyBank(): Promise<ApiResponse<any>> {
+    try {
+      const response = await apiClient.post<ApiResponse<any>>('/shop-owner/payouts/verify');
+      return response.data;
+    } catch (error) {
+      log.error('[payoutApi] verifyBank failed:', error);
+      throw ApiError.from(error, 'Failed to request bank verification');
+    }
+  },
+  /**
    * Update payout settings (mode, cycle, UPI ID).
    * PATCH /shop-owner/payouts/settings
    */

@@ -18,7 +18,7 @@ import { apiClient } from '@/api/client';
 import { resolveApiUrl } from '@/api/client';
 import Toast from 'react-native-toast-message';
 import * as ImagePicker from 'expo-image-picker';
-import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+import { Shadow, thannigoPalette, roleAccent, roleSurface, Radius, Spacing } from '@/constants/theme';
 
 const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_SURF = roleSurface.shop_owner;
@@ -52,7 +52,10 @@ export default function ShopInventoryScreen() {
   const [newTaxPercentage, setNewTaxPercentage] = useState('0');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editingSubchainId, setEditingSubchainId] = useState<number | null>(null);
+  const [editingProdId, setEditingProdId] = useState<string | number | null>(null);
+  const [selectedSubchainIds, setSelectedSubchainIds] = useState<number[]>([]);
+  const [syncStatus, setSyncStatus] = useState<Record<string, 'pending' | 'success' | 'error'>>({});
+  const [lastAddedId, setLastAddedId] = useState<number | null>(null);
 
   const loadData = async (silent = false) => {
     try {
@@ -68,24 +71,12 @@ export default function ShopInventoryScreen() {
       if (catRes.data) setCategories(catRes.data);
 
       if (shopRes.data?.Products && shopRes.data.Products.length > 0) {
-        setProducts(shopRes.data.Products.map((p: any) => ({
-          subcategory_id: p.subcategory_id,
-          name: p.name,
-          price: String(p.price || ''),
-          stock_quantity: String(p.stock_quantity || ''),
-          deposit_amount: String(p.deposit_amount || '0'),
-          image_url: p.image_url || null,
-          is_available: p.is_available !== undefined ? p.is_available : true,
-          is_gst: !!p.is_gst,
-          tax_percentage: String(p.tax_percentage || '0'),
-          type: p.type || "water",
-          is_water_can: !!p.Subcategory?.is_water_can
-        })));
-      } else if (stepsRes.data?.steps) {
-        const catStep = stepsRes.data.steps.find((s: any) => s.step_key === 'product_catalog');
-        if (catStep?.metadata?.products) {
-          setProducts(catStep.metadata.products.map((p: any) => ({
-            ...p,
+        const uniqueItemsMap = new Map();
+        shopRes.data.Products.forEach((p: any) => {
+          uniqueItemsMap.set(p.subcategory_id, {
+            id: p.id,
+            subcategory_id: p.subcategory_id,
+            name: p.name,
             price: String(p.price || ''),
             stock_quantity: String(p.stock_quantity || ''),
             deposit_amount: String(p.deposit_amount || '0'),
@@ -93,8 +84,29 @@ export default function ShopInventoryScreen() {
             is_available: p.is_available !== undefined ? p.is_available : true,
             is_gst: !!p.is_gst,
             tax_percentage: String(p.tax_percentage || '0'),
-            type: p.type || "water"
-          })));
+            type: p.type || "water",
+            is_water_can: !!p.Subcategory?.is_water_can
+          });
+        });
+        setProducts(Array.from(uniqueItemsMap.values()));
+      } else if (stepsRes.data?.steps) {
+        const catStep = stepsRes.data.steps.find((s: any) => s.step_key === 'product_catalog');
+        if (catStep?.metadata?.products) {
+          const uniqueItemsMap = new Map();
+          catStep.metadata.products.forEach((p: any) => {
+            uniqueItemsMap.set(p.subcategory_id, {
+              ...p,
+              price: String(p.price || ''),
+              stock_quantity: String(p.stock_quantity || ''),
+              deposit_amount: String(p.deposit_amount || '0'),
+              image_url: p.image_url || null,
+              is_available: p.is_available !== undefined ? p.is_available : true,
+              is_gst: !!p.is_gst,
+              tax_percentage: String(p.tax_percentage || '0'),
+              type: p.type || "water"
+            });
+          });
+          setProducts(Array.from(uniqueItemsMap.values()));
         }
       }
     } catch (err) {
@@ -114,20 +126,23 @@ export default function ShopInventoryScreen() {
     loadData(true);
   }, []);
 
-  const updatePrice = (subcatId: number, price: string) => {
-    setProducts(prev => prev.map(p =>
-      p.subcategory_id === subcatId ? { ...p, price } : p
-    ));
+  const updatePrice = (prod: any, price: string) => {
+    setProducts(prev => prev.map(p => {
+      const isMatch = p.id ? p.id === prod.id : p.subcategory_id === prod.subcategory_id;
+      return isMatch ? { ...p, price } : p;
+    }));
   };
 
-  const updateStocks = (subcatId: number, key: 'stock_quantity', val: string) => {
-    setProducts(prev => prev.map(p =>
-      p.subcategory_id === subcatId ? { ...p, [key]: val } : p
-    ));
+  const updateStocks = (prod: any, key: 'stock_quantity', val: string) => {
+    setProducts(prev => prev.map(p => {
+      const isMatch = p.id ? p.id === prod.id : p.subcategory_id === prod.subcategory_id;
+      return isMatch ? { ...p, [key]: val } : p;
+    }));
   };
 
-  const removeProduct = (subcatId: number) => {
-    setProducts(prev => prev.filter(p => p.subcategory_id !== subcatId));
+  const removeProduct = (target: any) => {
+    // If it has a subcat ID and an ID, use both to be safe, otherwise just filter by something unique
+    setProducts(prev => prev.filter(p => (p.id ? p.id !== target.id : p.subcategory_id !== target.subcategory_id)));
   };
 
   const pickImage = async () => {
@@ -186,7 +201,7 @@ export default function ShopInventoryScreen() {
       }
     }
 
-    setEditingSubchainId(prod.subcategory_id);
+    setEditingProdId(prod.id || `temp-${prod.subcategory_id}`);
     setSelectedCategoryId(catId);
     setSelectedSubchainId(prod.subcategory_id);
     setNewPrice(String(prod.price || '40'));
@@ -202,63 +217,104 @@ export default function ShopInventoryScreen() {
     setModalVisible(true);
   };
 
-  const handleAddProduct = () => {
-    if (!selectedSubchainId || !newPrice) return;
+  const handleAddProduct = (bulkIds?: number[]) => {
+    const idsToAdd = bulkIds || (selectedSubchainId ? [selectedSubchainId] : []);
+    const existingIds = new Set(products.map(p => p.subcategory_id));
+    const uniqueIdsToAdd = idsToAdd.filter(id => !existingIds.has(id));
 
-    // Find subcategory info to get name
-    let foundName = 'Water Product';
-    for (const cat of categories) {
-      const sub = cat.Subcategories?.find((s: any) => s.id === selectedSubchainId);
-      if (sub) {
-        foundName = sub.name_en;
-        break;
+    if (uniqueIdsToAdd.length === 0 && !isEditing) {
+      Toast.show({ type: 'info', text1: 'Already in Draft', text2: 'Selected products are already in your inventory list.' });
+      return;
+    }
+
+    const newItems: any[] = [];
+
+    (isEditing ? idsToAdd : uniqueIdsToAdd).forEach(id => {
+      // Find subcategory info to get name
+      let foundName = 'Water Product';
+      let isWaterCan = false;
+      for (const cat of categories) {
+        const sub = cat.Subcategories?.find((s: any) => s.id === id);
+        if (sub) {
+          foundName = sub.name_en;
+          isWaterCan = !!sub.is_water_can;
+          break;
+        }
       }
-    }
 
-    const newProd = {
-      subcategory_id: selectedSubchainId,
-      name: newName || foundName,
-      price: newPrice,
-      stock_quantity: newStock,
-      deposit_amount: newDeposit,
-      image_url: newImageUrl,
-      is_available: newIsAvailable,
-      is_gst: newIsGst,
-      tax_percentage: newTaxPercentage,
-      type: categories.find(c => c.id === selectedCategoryId)?.Subcategories?.find((s: any) => s.id === selectedSubchainId)?.is_water_can ? 'WATER_CAN' : 'NORMAL',
-      is_water_can: !!categories.find(c => c.id === selectedCategoryId)?.Subcategories?.find((s: any) => s.id === selectedSubchainId)?.is_water_can
-    };
+      const newItem = {
+        id: `draft-${Math.random().toString(36).substring(7)}`,
+        subcategory_id: id,
+        name: idsToAdd.length > 1 ? foundName : (newName || foundName),
+        price: newPrice || '40',
+        stock_quantity: newStock || '100',
+        deposit_amount: newDeposit || (isWaterCan ? '150' : '0'),
+        image_url: newImageUrl,
+        is_available: newIsAvailable,
+        is_gst: newIsGst,
+        tax_percentage: newTaxPercentage,
+        type: isWaterCan ? 'WATER_CAN' : 'NORMAL',
+        is_water_can: isWaterCan
+      };
+      newItems.push(newItem);
+    });
 
-    if (isEditing && editingSubchainId) {
-      setProducts(prev => prev.map(p =>
-        p.subcategory_id === editingSubchainId ? newProd : p
-      ));
+    if (isEditing && editingProdId) {
+      setProducts(prev => prev.map(p => {
+        const pUid = p.id || `temp-${p.subcategory_id}`;
+        return pUid === editingProdId ? newItems[0] : p;
+      }));
+      setModalVisible(false);
     } else {
-      setProducts(prev => [...prev, newProd]);
+      setProducts(prev => [...prev, ...newItems]);
+      // Show feedback but don't close modal if it's a new add
+      setLastAddedId(idsToAdd[idsToAdd.length - 1]);
+      Toast.show({ type: 'success', text1: 'Added to Draft', text2: `${newItems.length} product(s) added.` });
+      
+      // If was in details step, go back to subcat list to add more
+      if (modalStep === 2) {
+        setModalStep(1);
+      }
+      // Clear selections but keep category
+      setSelectedSubchainId(null);
+      setSelectedSubchainIds([]);
     }
 
-    setModalVisible(false);
     setIsEditing(false);
-    setEditingSubchainId(null);
-    setSelectedSubchainId(null);
-    setSelectedCategoryId(null);
-    setModalStep(0);
-    setNewPrice('40'); // Senseful default to enable button
-    setNewStock('100'); // Senseful default
-    setNewDeposit('150'); // Senseful default for cans
+    setEditingProdId(null);
+    setNewPrice('40');
+    setNewStock('100');
     setNewImageUrl(null);
     setNewIsAvailable(true);
     setNewName('');
   };
 
   const handleSave = async () => {
-    if (!shopId) return;
+    if (!shopId || saving) return;
 
     try {
       setSaving(true);
-      // Use the live product management API:
-      // For each product — if it has a backend id, PATCH it; otherwise POST as new.
-      const ops = products.map(async (p) => {
+      
+      // Strong Deduplication: Latest entry for each subcategory wins
+      const map = new Map();
+      products.forEach(p => {
+        map.set(p.subcategory_id, p);
+      });
+      const uniqueProducts = Array.from(map.values());
+
+      // Initialize unsynced items to pending, skip successful ones
+      const initialStatuses = { ...syncStatus };
+      uniqueProducts.forEach(p => {
+        if (initialStatuses[p.id] !== 'success') {
+          initialStatuses[p.id] = 'pending';
+        }
+      });
+      setSyncStatus(initialStatuses);
+
+      for (const p of uniqueProducts) {
+        if (initialStatuses[p.id] === 'success') continue; 
+        
+        const isDraft = String(p.id).startsWith('draft-');
         const body = {
           subcategory_id: p.subcategory_id,
           name: p.name,
@@ -271,19 +327,45 @@ export default function ShopInventoryScreen() {
           tax_percentage: parseFloat(p.tax_percentage) || 0,
           type: p.is_water_can ? 'WATER_CAN' : 'NORMAL',
         };
-        if (p.id) {
-          return apiClient.patch(`/shop-owner/products/${p.id}`, body);
-        } else {
-          return apiClient.post('/shop-owner/products', body);
-        }
-      });
-      await Promise.all(ops);
 
-      Toast.show({ type: 'success', text1: 'Success', text2: 'Inventory changes saved.' });
+        try {
+          // Check if already exists in local list with a real numeric ID (from server)
+          // This prevents duplicates if user re-adds a product that they already own.
+          const existingRealProduct = products.find(
+            item => item.subcategory_id === p.subcategory_id && item.id && !String(item.id).startsWith('draft-')
+          );
+
+          if (!isDraft || existingRealProduct) {
+            const targetId = isDraft ? existingRealProduct.id : p.id;
+            await apiClient.patch(`/shop-owner/products/${targetId}`, body);
+            
+            // If it was a draft but we matched an existing real product, sync the ID
+            if (isDraft) {
+               setProducts(curr => curr.map(item => 
+                (item.id === p.id) ? { ...item, id: targetId } : item
+              ));
+            }
+          } else {
+            const res = await apiClient.post('/shop-owner/products', body);
+            // Convert draft ID to real database ID
+            if (res.data?.id) {
+              setProducts(curr => curr.map(item => 
+                (item.id === p.id) ? { ...item, id: res.data.id } : item
+              ));
+            }
+          }
+          setSyncStatus(prev => ({ ...prev, [p.id]: 'success' }));
+        } catch (err) {
+          console.error(`Failed to sync product ${p.id}:`, err);
+          setSyncStatus(prev => ({ ...prev, [p.id]: 'error' }));
+        }
+      }
+
+      Toast.show({ type: 'success', text1: 'Stock Synced', text2: 'All valid changes have been saved.' });
       await refreshShopStatus();
-      loadData(true); // Refresh list so new IDs are populated
+      loadData(true); 
     } catch (error: any) {
-      Toast.show({ type: 'error', text1: 'Error', text2: error?.response?.data?.message || 'Failed to update inventory.' });
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Something went wrong during sync.' });
     } finally {
       setSaving(false);
     }
@@ -295,56 +377,90 @@ export default function ShopInventoryScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity style={styles.backBtn} onPress={() => safeBack('/shop/settings')}>
+          <Ionicons name="chevron-back" size={24} color={thannigoPalette.darkText} />
+        </TouchableOpacity>
         <View style={styles.brandRow}>
           <Logo size="sm" />
           <Text style={styles.brandName}>ThanniGo</Text>
         </View>
-        <View style={{ width: 40 }} />
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/notifications' as any)}>
+          <Ionicons name="notifications-outline" size={20} color={thannigoPalette.darkText} />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[SHOP_ACCENT]} tintColor={SHOP_ACCENT} />} contentContainerStyle={[styles.scrollContent, { paddingBottom: 120 }]} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[SHOP_ACCENT]} tintColor={SHOP_ACCENT} />} 
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.titleRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.pageTitle}>Shop Inventory</Text>
-            <Text style={styles.pageSub}>Add products from the Master list and set your selling price.</Text>
+            <Text style={styles.pageTitle}>Inventory</Text>
+            <Text style={styles.pageSub}>Manage your shop catalog and stock levels.</Text>
           </View>
           <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)} disabled={loading}>
-            <Ionicons name="add" size={16} color="white" />
-            <Text style={styles.addBtnText}>Add</Text>
+            <Ionicons name="add-circle" size={20} color="white" />
+            <Text style={styles.addBtnText}>Add Product</Text>
           </TouchableOpacity>
         </View>
 
         {loading ? (
-          <ActivityIndicator size="large" color={SHOP_ACCENT} style={{ marginTop: 60 }} />
+          <View style={{ marginTop: 100, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={SHOP_ACCENT} />
+            <Text style={{ marginTop: 16, color: thannigoPalette.neutral, fontWeight: '600' }}>Syncing catalog...</Text>
+          </View>
         ) : (
           <>
             <View style={styles.listContainer}>
               {products.length === 0 ? (
-                <View style={styles.emptyCard}>
-                  <Ionicons name="layers-outline" size={32} color="#bfc7d1" />
-                  <Text style={styles.emptyText}>No products added yet. Click &apos;Add Product&apos; to pull from Master list.</Text>
+                <View style={[styles.emptyCard, { marginTop: 40 }]}>
+                  <View style={{ backgroundColor: SHOP_SURF, width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+                    <Ionicons name="cube-outline" size={40} color={SHOP_ACCENT} />
+                  </View>
+                  <Text style={[styles.pageTitle, { fontSize: 22, textAlign: 'center' }]}>No Products Yet</Text>
+                  <Text style={styles.emptyText}>Start by adding products from the master list to showcase them in your shop.</Text>
+                  <TouchableOpacity style={[styles.addBtn, { marginTop: 24 }]} onPress={() => setModalVisible(true)}>
+                    <Text style={styles.addBtnText}>Add Your First Product</Text>
+                  </TouchableOpacity>
                 </View>
               ) : (
-                products.map((prod) => {
+                products.map((prod, index) => {
                   const isAvailable = prod.is_available !== false;
+                  // Use real ID if available, else fallback to subcategory_id + index for uniqueness guarantee
+                  const itemKey = prod.id ? `prod-${prod.id}` : `sub-${prod.subcategory_id}-${index}`;
+                  const status = syncStatus[prod.id || `temp-${prod.subcategory_id}`];
+                  
                   return (
-                    <View key={prod.subcategory_id} style={[styles.card, !isAvailable && styles.cardDisabled]}>
-                      {!isAvailable && (
-                        <View style={styles.disabledBadge}>
-                          <Text style={styles.disabledBadgeText}>OFF</Text>
+                    <View key={itemKey} style={[styles.card, !isAvailable && styles.cardDisabled]}>
+                      {status === 'error' && (
+                        <View style={[styles.statusBadge, { backgroundColor: '#ffeceb' }]}>
+                          <Ionicons name="alert-circle" size={12} color="#ba1a1a" />
+                          <Text style={[styles.statusBadgeText, { color: '#ba1a1a' }]}>SYNC ERROR</Text>
                         </View>
                       )}
+                      {status === 'pending' && (
+                        <View style={[styles.statusBadge, { backgroundColor: '#fff8e1' }]}>
+                          <ActivityIndicator size="small" color="#fbc02d" style={{ transform: [{ scale: 0.6 }] }} />
+                          <Text style={[styles.statusBadgeText, { color: '#fbc02d' }]}>SYNCING...</Text>
+                        </View>
+                      )}
+                      {!isAvailable && (
+                        <View style={styles.disabledBadge}>
+                          <Text style={styles.disabledBadgeText}>INACTIVE</Text>
+                        </View>
+                      )}
+                      
                       <View style={styles.cardTop}>
                         <View style={styles.iconWrap}>
                           {prod.image_url ? (
                             <Image source={{ uri: resolveApiUrl(prod.image_url) }} style={styles.thumbnail} />
                           ) : (
-                            <Ionicons name="water" size={20} color={SHOP_ACCENT} />
+                            <Ionicons name="water-outline" size={24} color={SHOP_ACCENT} />
                           )}
                         </View>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.catName}>{prod.name}</Text>
+                          <Text style={styles.catName} numberOfLines={1}>{prod.name}</Text>
                           {(() => {
                             let catName = '';
                             let subName = '';
@@ -356,63 +472,80 @@ export default function ShopInventoryScreen() {
                                 break;
                               }
                             }
-                            return (
-                              <Text style={styles.catUnit}>{catName} • {subName}</Text>
-                            );
+                            return <Text style={styles.catUnit}>{catName} • {subName}</Text>;
                           })()}
                         </View>
 
                         <View style={styles.actionRow}>
-                          <Switch
-                            value={isAvailable}
-                            onValueChange={(v) => {
-                              setProducts(prev => prev.map(p =>
-                                p.subcategory_id === prod.subcategory_id ? { ...p, is_available: v } : p
-                              ));
-                            }}
-                            trackColor={{ false: thannigoPalette.borderSoft, true: '#a7edff' }}
-                            thumbColor={isAvailable ? SHOP_ACCENT : thannigoPalette.neutral}
-                            style={{ marginHorizontal: 8, transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
-                          />
                           <TouchableOpacity style={styles.editCardBtn} onPress={() => handleEditProduct(prod)}>
-                            <Ionicons name="pencil-outline" size={16} color={SHOP_ACCENT} />
+                            <Ionicons name="create-outline" size={18} color={SHOP_ACCENT} />
                           </TouchableOpacity>
-                          <TouchableOpacity style={styles.removeBtn} onPress={() => removeProduct(prod.subcategory_id)}>
-                            <Ionicons name="trash-outline" size={16} color="#ba1a1a" />
+                          <TouchableOpacity style={styles.removeBtn} onPress={() => removeProduct(prod)}>
+                            <Ionicons name="trash-outline" size={18} color="#ba1a1a" />
                           </TouchableOpacity>
                         </View>
                       </View>
 
-
-
                       <View style={styles.stockSection}>
                         <View style={styles.stockCol}>
-                          <Text style={styles.stockLabel}>Stock Level</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                             <Text style={styles.stockLabel}>Stock Level</Text>
+                             {parseInt(prod.stock_quantity) < 20 && <Ionicons name="alert-circle" size={12} color="#ba1a1a" />}
+                          </View>
                           <View style={[styles.stockInputWrap, parseInt(prod.stock_quantity) < 20 && styles.lowStockBorder]}>
                             <TextInput
                               style={styles.stockInput}
                               value={prod.stock_quantity.toString()}
-                              onChangeText={(v) => updateStocks(prod.subcategory_id, 'stock_quantity', v)}
+                              onChangeText={(v) => updateStocks(prod, 'stock_quantity', v)}
                               keyboardType="number-pad"
                             />
-                            {parseInt(prod.stock_quantity) < 20 && (
-                              <Ionicons name="alert-circle" size={14} color="#ba1a1a" />
-                            )}
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral }}>UNITS</Text>
                           </View>
                         </View>
-                        <View style={styles.stockCol} />
+                        <View style={styles.stockCol}>
+                          <Text style={styles.stockLabel}>Live Status</Text>
+                          <View style={[styles.stockInputWrap, { justifyContent: 'space-between' }]}>
+                            <Text style={{ fontSize: 13, fontWeight: '800', color: isAvailable ? thannigoPalette.success : thannigoPalette.neutral }}>
+                              {isAvailable ? 'ACTIVE' : 'HIDDEN'}
+                            </Text>
+                            <Switch
+                              value={isAvailable}
+                              onValueChange={(v) => {
+                                setProducts(prev => prev.map(p => {
+                                  const isMatch = p.id ? p.id === prod.id : p.subcategory_id === prod.subcategory_id;
+                                  return isMatch ? { ...p, is_available: v } : p;
+                                }));
+                              }}
+                              trackColor={{ false: thannigoPalette.borderSoft, true: '#a7edff' }}
+                              thumbColor={isAvailable ? SHOP_ACCENT : thannigoPalette.neutral}
+                              style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+                            />
+                          </View>
+                        </View>
                       </View>
+
+                      {prod.is_gst && (
+                        <View style={styles.taxRowList}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                             <Ionicons name="receipt-outline" size={14} color={thannigoPalette.neutral} />
+                             <Text style={styles.taxLabelList}>GST Tax Rate</Text>
+                          </View>
+                          <View style={styles.taxBadge}>
+                            <Text style={styles.taxValueList}>{prod.tax_percentage}% GST</Text>
+                          </View>
+                        </View>
+                      )}
 
                       <View style={styles.dividerInner} />
 
                       <View style={styles.priceRow}>
-                        <Text style={styles.priceLabel}>Selling Price:</Text>
+                        <Text style={styles.priceLabel}>Selling Price</Text>
                         <View style={styles.priceInputWrap}>
                           <Text style={styles.rupeeIcon}>₹</Text>
                           <TextInput
                             style={styles.priceInput}
                             value={prod.price.toString()}
-                            onChangeText={(val) => updatePrice(prod.subcategory_id, val)}
+                            onChangeText={(val) => updatePrice(prod, val)}
                             keyboardType="number-pad"
                             placeholder="0"
                           />
@@ -421,7 +554,10 @@ export default function ShopInventoryScreen() {
 
                       {parseFloat(prod.deposit_amount) > 0 && (
                         <View style={styles.depositRowList}>
-                          <Text style={styles.depositLabelList}>Container Charge:</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                             <Ionicons name="shield-outline" size={14} color={thannigoPalette.neutral} />
+                             <Text style={styles.depositLabelList}>Secutity Deposit (per unit)</Text>
+                          </View>
                           <Text style={styles.depositValueList}>₹{prod.deposit_amount}</Text>
                         </View>
                       )}
@@ -432,7 +568,14 @@ export default function ShopInventoryScreen() {
             </View>
             {products.length > 0 && (
               <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
-                {saving ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>Save Changes</Text>}
+                {saving ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <ActivityIndicator color="white" size="small" />
+                    <Text style={styles.saveBtnText}>Persisting Updates...</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.saveBtnText}>Update Inventory</Text>
+                )}
               </TouchableOpacity>
             )}
           </>
@@ -446,34 +589,54 @@ export default function ShopInventoryScreen() {
             <View style={styles.modalHeader}>
               <View>
                 <Text style={styles.modalTitle}>
-                  {isEditing ? 'Edit Product' : (modalStep === 0 ? 'Select Category' : modalStep === 1 ? 'Select Subcategory' : 'Product Details')}
+                  {isEditing ? 'Edit Product' : (modalStep === 0 ? 'Select Category' : modalStep === 1 ? 'Select Size/Type' : 'Product Details')}
                 </Text>
-                <Text style={styles.modalStepText}>{isEditing ? 'Update your product configuration' : `Step ${modalStep + 1} of 3`}</Text>
+                <Text style={styles.modalStepText}>{isEditing ? 'Syncing with Master Catalog' : `Inventory Builder – Step ${modalStep + 1}`}</Text>
               </View>
-              <TouchableOpacity onPress={() => { setModalVisible(false); setSelectedSubchainId(null); setModalStep(0); setIsEditing(false); setEditingSubchainId(null); setNewPrice(''); }} style={styles.closeBtn}>
-                <Ionicons name="close" size={20} color="#707881" />
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                {!isEditing && (
+                  <TouchableOpacity 
+                    onPress={() => { setModalVisible(false); setSelectedSubchainId(null); setModalStep(0); setIsEditing(false); setEditingProdId(null); setNewPrice(''); }} 
+                    style={styles.finishBtn}
+                  >
+                    <Text style={styles.finishBtnText}>Finish</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={() => { setModalVisible(false); setSelectedSubchainId(null); setModalStep(0); setIsEditing(false); setEditingProdId(null); setNewPrice(''); }} style={styles.closeBtn}>
+                  <Ionicons name="close" size={24} color={thannigoPalette.neutral} />
+                </TouchableOpacity>
+              </View>
             </View>
 
             {(() => {
               if (modalStep === 0) {
                 return (
-                  <View style={styles.gridContainer}>
-                    {categories.map(cat => (
-                      <TouchableOpacity
-                        key={cat.id}
-                        style={[styles.catGridCard, selectedCategoryId === cat.id && styles.catGridCardActive]}
-                        onPress={() => {
-                          setSelectedCategoryId(cat.id);
-                          setModalStep(1);
-                        }}
-                      >
-                        <View style={[styles.catIconBox, selectedCategoryId === cat.id && { backgroundColor: 'white' }]}>
-                          <Ionicons name={cat.id === 1 ? "water" : "cafe"} size={24} color={selectedCategoryId === cat.id ? SHOP_ACCENT : '#94a3b8'} />
-                        </View>
-                        <Text style={[styles.catGridLabel, selectedCategoryId === cat.id && { color: 'white' }]}>{cat.name_en}</Text>
-                      </TouchableOpacity>
-                    ))}
+                  <View>
+                    <Text style={styles.inputLabel}>Choose a Category</Text>
+                    <View style={styles.gridContainer}>
+                      {categories.map(cat => {
+                         const isActive = selectedCategoryId === cat.id;
+                         return (
+                          <TouchableOpacity
+                            key={cat.id}
+                            style={[styles.catGridCard, isActive && styles.catGridCardActive]}
+                            onPress={() => {
+                              setSelectedCategoryId(cat.id);
+                              setModalStep(1);
+                            }}
+                          >
+                            <View style={[styles.catIconBox, isActive && { backgroundColor: 'white' }]}>
+                              <Ionicons 
+                                name={cat.id === 1 ? "water-outline" : cat.id === 2 ? "cafe-outline" : "cube-outline"} 
+                                size={28} 
+                                color={isActive ? SHOP_ACCENT : thannigoPalette.neutral} 
+                              />
+                            </View>
+                            <Text style={[styles.catGridLabel, isActive && { color: 'white' }]}>{cat.name_en}</Text>
+                          </TouchableOpacity>
+                         );
+                      })}
+                    </View>
                   </View>
                 );
               }
@@ -483,45 +646,88 @@ export default function ShopInventoryScreen() {
                 return (
                   <View>
                     <TouchableOpacity style={styles.backLink} onPress={() => setModalStep(0)}>
-                      <Ionicons name="arrow-back" size={14} color={SHOP_ACCENT} />
-                      <Text style={styles.backLinkText}>Change Category</Text>
+                      <Ionicons name="arrow-back" size={16} color={SHOP_ACCENT} />
+                      <Text style={styles.backLinkText}>Back to Categories</Text>
                     </TouchableOpacity>
+                    <Text style={styles.inputLabel}>Available in {category?.name_en}</Text>
                     <ScrollView style={styles.masterList} showsVerticalScrollIndicator={false}>
-                      {category?.Subcategories?.map((sub: any) => (
-                        <TouchableOpacity
-                          key={sub.id}
-                          style={[styles.masterCatRow, selectedSubchainId === sub.id && styles.masterCatRowActive]}
-                          onPress={() => {
-                            setSelectedSubchainId(sub.id);
-                            setNewName(sub.name_en);
-                            setNewDeposit(sub.is_water_can ? '150' : '0');
-                            setModalStep(2);
-                          }}
-                        >
-                          <Ionicons
-                            name={selectedSubchainId === sub.id ? "radio-button-on" : "radio-button-off"}
-                            size={20}
-                            color={selectedSubchainId === sub.id ? SHOP_ACCENT : '#bfc7d1'}
-                          />
-                          <Text style={[styles.masterCatText, selectedSubchainId === sub.id && { color: SHOP_ACCENT, fontWeight: '800' }]}>
-                            {sub.name_en}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
+                      {category?.Subcategories?.map((sub: any) => {
+                        const isItemSelected = selectedSubchainIds.includes(sub.id);
+                        const isJustAdded = lastAddedId === sub.id;
+                        const isAlreadyInCatalog = products.some(p => p.subcategory_id === sub.id && (!!p.id || p.id.startsWith('draft-')));
+
+                        return (
+                          <TouchableOpacity
+                            key={sub.id}
+                            disabled={isAlreadyInCatalog}
+                            style={[
+                              styles.masterCatRow, 
+                              isItemSelected && styles.masterCatRowActive,
+                              isAlreadyInCatalog && { opacity: 0.5, backgroundColor: thannigoPalette.borderSoft }
+                            ]}
+                            onPress={() => {
+                              if (selectedSubchainIds.includes(sub.id)) {
+                                setSelectedSubchainIds(prev => prev.filter(id => id !== sub.id));
+                              } else {
+                                setSelectedSubchainIds(prev => [...prev, sub.id]);
+                                setSelectedSubchainId(sub.id);
+                                setNewName(sub.name_en);
+                                setNewDeposit(sub.is_water_can ? '150' : '0');
+                              }
+                            }}
+                          >
+                            <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: isAlreadyInCatalog ? thannigoPalette.neutral : (isItemSelected ? SHOP_ACCENT : thannigoPalette.borderSoft), alignItems: 'center', justifyContent: 'center', backgroundColor: isItemSelected ? SHOP_ACCENT : 'transparent' }}>
+                               {isItemSelected && <Ionicons name="checkmark" size={16} color="white" />}
+                               {isAlreadyInCatalog && <Ionicons name="lock-closed" size={12} color={thannigoPalette.neutral} />}
+                            </View>
+                            <View style={{ flex: 1, marginLeft: 12 }}>
+                              <Text style={[styles.masterCatText, isItemSelected && { color: SHOP_ACCENT, fontWeight: '700' }, isAlreadyInCatalog && { color: thannigoPalette.neutral }]}>
+                                {sub.name_en}
+                              </Text>
+                              {isJustAdded && <Text style={{ fontSize: 10, color: '#4caf50', fontWeight: 'bold' }}>ADDED ✓</Text>}
+                              {isAlreadyInCatalog && <Text style={{ fontSize: 10, color: thannigoPalette.neutral }}>ALREADY IN SHOP</Text>}
+                            </View>
+                            {!isJustAdded && !isAlreadyInCatalog && (
+                              <TouchableOpacity 
+                                style={styles.quickAddBtn}
+                                onPress={() => {
+                                  setSelectedSubchainId(sub.id);
+                                  setNewName(sub.name_en);
+                                  setModalStep(2);
+                                }}
+                              >
+                                <Text style={styles.quickAddText}>Setup</Text>
+                              </TouchableOpacity>
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
                     </ScrollView>
+
+                    {selectedSubchainIds.length > 0 && (
+                      <TouchableOpacity 
+                        style={styles.bulkAddFab} 
+                        onPress={() => handleAddProduct(selectedSubchainIds)}
+                      >
+                        <Text style={styles.bulkAddFabText}>Add {selectedSubchainIds.length} Products to Shop</Text>
+                        <Ionicons name="flash" size={18} color="white" />
+                      </TouchableOpacity>
+                    )}
                   </View>
                 );
               }
 
               if (modalStep === 2) {
                 return (
-                  <ScrollView showsVerticalScrollIndicator={false}>
-                    <TouchableOpacity style={styles.backLink} onPress={() => setModalStep(1)}>
-                      <Ionicons name="arrow-back" size={14} color={SHOP_ACCENT} />
-                      <Text style={styles.backLinkText}>Change Subcategory</Text>
-                    </TouchableOpacity>
+                  <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+                    {!isEditing && (
+                       <TouchableOpacity style={styles.backLink} onPress={() => setModalStep(1)}>
+                        <Ionicons name="arrow-back" size={16} color={SHOP_ACCENT} />
+                        <Text style={styles.backLinkText}>Change Product Type</Text>
+                      </TouchableOpacity>
+                    )}
 
-                    <Text style={styles.inputLabel}>Product Photo</Text>
+                    <Text style={styles.inputLabel}>Product Presentation</Text>
                     <TouchableOpacity style={styles.imagePickerCard} onPress={pickImage} disabled={uploadingImage}>
                       {newImageUrl ? (
                         <Image source={{ uri: resolveApiUrl(newImageUrl) }} style={styles.pickerPreview} />
@@ -531,34 +737,37 @@ export default function ShopInventoryScreen() {
                             <ActivityIndicator color={SHOP_ACCENT} />
                           ) : (
                             <>
-                              <Ionicons name="camera-outline" size={32} color="#94a3b8" />
-                              <Text style={styles.pickerText}>Tap to upload image</Text>
+                              <View style={{ backgroundColor: SHOP_SURF, padding: 12, borderRadius: 30 }}>
+                                <Ionicons name="camera-outline" size={32} color={SHOP_ACCENT} />
+                              </View>
+                              <Text style={styles.pickerText}>Upload Product Photo</Text>
+                              <Text style={{ fontSize: 11, color: thannigoPalette.neutral }}>Supports PNG, JPG (Max 5MB)</Text>
                             </>
                           )}
                         </View>
                       )}
                       {newImageUrl && !uploadingImage && (
                         <View style={styles.editBadge}>
-                          <Ionicons name="pencil" size={12} color="white" />
+                          <Ionicons name="pencil" size={16} color="white" />
                         </View>
                       )}
                     </TouchableOpacity>
 
-                    <View style={{ marginBottom: 20 }}>
-                      <Text style={styles.inputLabel}>Product Name</Text>
+                    <View style={{ marginBottom: 24 }}>
+                      <Text style={styles.inputLabel}>Display Name</Text>
                       <View style={styles.modalPriceInputWrap}>
                         <TextInput
                           style={[styles.modalPriceInput, { fontSize: 16 }]}
                           value={newName}
                           onChangeText={setNewName}
-                          placeholder="Enter product name"
+                          placeholder="e.g. Kinley 20L Water Can"
                         />
                       </View>
                     </View>
 
                     <View style={styles.formSplit}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.inputLabel}>Price (₹)</Text>
+                      <View style={{ flex: 1.2 }}>
+                        <Text style={styles.inputLabel}>Selling Price (₹)</Text>
                         <View style={styles.modalPriceInputWrap}>
                           <Text style={styles.rupeeIcon}>₹</Text>
                           <TextInput
@@ -586,11 +795,15 @@ export default function ShopInventoryScreen() {
 
                     {(() => {
                       const category = categories.find(c => c.id === selectedCategoryId);
-                      const subcat = category?.Subcategories?.find((s: any) => s.id === (isEditing ? editingSubchainId : selectedSubchainId));
+                      // Use subchain ID for logic if we found it, but for is_water_can check we need the subcat info
+                      const subcat = category?.Subcategories?.find((s: any) => s.id === selectedSubchainId);
                       if (subcat?.is_water_can) {
                         return (
-                          <View style={{ marginTop: 20 }}>
-                            <Text style={styles.inputLabel}>Container Charge (₹)</Text>
+                          <View style={{ marginBottom: 24 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                               <Ionicons name="shield-checkmark" size={14} color={thannigoPalette.neutral} />
+                               <Text style={[styles.inputLabel, { marginBottom: 0 }]}>Bottle Security Deposit (₹)</Text>
+                            </View>
                             <View style={styles.modalPriceInputWrap}>
                               <Text style={styles.rupeeIcon}>₹</Text>
                               <TextInput
@@ -607,26 +820,26 @@ export default function ShopInventoryScreen() {
                       return null;
                     })()}
 
-                    <View style={styles.dividerInner} />
+                    <View style={[styles.dividerInner, { marginVertical: 24 }]} />
 
                     <View style={styles.promoRow}>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.inputLabel}>GST Applicable</Text>
-                        <Text style={styles.hintText}>Enable if this product includes tax</Text>
+                        <Text style={styles.inputLabel}>Taxation (GST)</Text>
+                        <Text style={styles.hintText}>Is GST applicable for this product?</Text>
                       </View>
                       <Switch
                         value={newIsGst}
                         onValueChange={setNewIsGst}
-                        trackColor={{ false: '#e0e2e8', true: '#a7edff' }}
+                        trackColor={{ false: thannigoPalette.borderSoft, true: '#a7edff' }}
                         thumbColor={newIsGst ? SHOP_ACCENT : thannigoPalette.neutral}
                       />
                     </View>
 
                     {newIsGst && (
-                      <View style={{ marginTop: 20 }}>
+                      <View style={{ marginTop: 24 }}>
                         <View style={styles.labelRow}>
-                          <Ionicons name="calculator-outline" size={14} color="#64748b" />
-                          <Text style={styles.inputLabel}>Tax Rate (%)</Text>
+                          <Ionicons name="receipt-outline" size={14} color={SHOP_ACCENT} />
+                          <Text style={[styles.inputLabel, { marginBottom: 0 }]}>GST Tax Rate (%)</Text>
                         </View>
                         <View style={styles.modalPriceInputWrap}>
                           <TextInput
@@ -636,17 +849,19 @@ export default function ShopInventoryScreen() {
                             keyboardType="number-pad"
                             placeholder="18"
                           />
-                          <Text style={styles.sliderUnitDisplay}>% GST</Text>
+                          <Text style={styles.sliderUnitDisplay}>PERCENT</Text>
                         </View>
                       </View>
                     )}
 
                     <TouchableOpacity
-                      style={[styles.submitBtn, (!selectedSubchainId || !newPrice) && { backgroundColor: '#e0e2e8', shadowOpacity: 0 }]}
-                      onPress={handleAddProduct}
+                      style={[styles.submitBtn, (!selectedSubchainId || !newPrice) && { backgroundColor: thannigoPalette.borderSoft, shadowOpacity: 0 }]}
+                      onPress={() => handleAddProduct()}
                       disabled={!selectedSubchainId || !newPrice || uploadingImage}
                     >
-                      <Text style={[styles.submitBtnText, (!selectedSubchainId || !newPrice) && { color: '#94a3b8' }]}>{isEditing ? 'Update Product' : 'Add to My Shop'}</Text>
+                      <Text style={[styles.submitBtnText, (!selectedSubchainId || !newPrice) && { color: thannigoPalette.neutral }]}>
+                         {isEditing ? 'Save Product Sync' : 'Add to Shop Catalog'}
+                      </Text>
                     </TouchableOpacity>
                   </ScrollView>
                 );
@@ -667,94 +882,108 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 24, paddingVertical: 14, backgroundColor: thannigoPalette.surface,
     borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
+    ...Shadow.xs,
   },
-  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center', ...Shadow.xs },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  backBtn: { width: 42, height: 42, borderRadius: Radius.md, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center', ...Shadow.xs },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.6 },
 
-  scrollContent: { paddingHorizontal: 24, paddingTop: 10 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, marginBottom: 24 },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  pageSub: { fontSize: 13, color: thannigoPalette.neutral, marginTop: 4, lineHeight: 18 },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: SHOP_ACCENT, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 14 },
-  addBtnText: { color: 'white', fontWeight: '800', fontSize: 13 },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 100 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 20 },
+  pageTitle: { fontSize: 30, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.8 },
+  pageSub: { fontSize: 13, color: thannigoPalette.neutral, marginTop: 4, lineHeight: 18, fontWeight: '500' },
+  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: SHOP_ACCENT, paddingHorizontal: 18, paddingVertical: 12, borderRadius: Radius.lg, ...Shadow.sm },
+  addBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
 
-  listContainer: { gap: 16, marginBottom: 24 },
-  card: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 16, borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.xs },
+  listContainer: { gap: 18, marginBottom: 24 },
+  card: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 18, borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.sm, position: 'relative' },
 
-  cardTop: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  iconWrap: { width: 44, height: 44, borderRadius: 12, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
-  catName: { fontSize: 16, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 2 },
-  catUnit: { fontSize: 13, fontWeight: '600', color: thannigoPalette.neutral },
-  removeBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#ffdad6', alignItems: 'center', justifyContent: 'center' },
+  cardTop: { flexDirection: 'row', gap: 14, alignItems: 'center' },
+  iconWrap: { width: 48, height: 48, borderRadius: Radius.md, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  catName: { fontSize: 17, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 1 },
+  catUnit: { fontSize: 12, fontWeight: '600', color: thannigoPalette.neutral },
+  removeBtn: { width: 38, height: 38, borderRadius: Radius.md, backgroundColor: '#fff0f0', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ffdad6' },
 
   dividerInner: { height: 1, backgroundColor: thannigoPalette.borderSoft, marginVertical: 16 },
 
-  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  priceLabel: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
-  priceInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.background, borderRadius: 12, paddingHorizontal: 12, width: 120, height: 48 },
-  rupeeIcon: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginRight: 6 },
-  priceInput: { flex: 1, fontSize: 18, fontWeight: '900', color: SHOP_ACCENT },
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
+  priceLabel: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral, textTransform: 'uppercase', letterSpacing: 0.5 },
+  priceInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.background, borderRadius: Radius.md, paddingHorizontal: 14, width: 130, height: 50, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  rupeeIcon: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText, marginRight: 4 },
+  priceInput: { flex: 1, fontSize: 20, fontWeight: '900', color: SHOP_ACCENT },
 
-  saveBtn: { backgroundColor: SHOP_ACCENT, borderRadius: 16, paddingVertical: 16, alignItems: 'center', shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
-  saveBtnText: { color: 'white', fontSize: 16, fontWeight: '900' },
+  saveBtn: { backgroundColor: SHOP_ACCENT, borderRadius: Radius.xl, paddingVertical: 18, alignItems: 'center', shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 15, elevation: 10, marginHorizontal: 20, marginBottom: 30 },
+  saveBtnText: { color: 'white', fontSize: 17, fontWeight: '900', letterSpacing: 0.3 },
 
-  stockSection: { flexDirection: 'row', gap: 12, marginBottom: 4 },
-  stockCol: { flex: 1, gap: 6 },
-  stockLabel: { fontSize: 11, fontWeight: '800', color: thannigoPalette.neutral, textTransform: 'uppercase' },
-  stockInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.background, borderRadius: 10, paddingHorizontal: 12, height: 42 },
-  stockInput: { flex: 1, fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText },
-  lowStockBorder: { borderWidth: 1.5, borderColor: '#ba1a1a', backgroundColor: '#fff5f4' },
+  stockSection: { flexDirection: 'row', gap: 14, marginTop: 4 },
+  stockCol: { flex: 1, gap: 8 },
+  stockLabel: { fontSize: 11, fontWeight: '800', color: thannigoPalette.neutral, textTransform: 'uppercase', letterSpacing: 0.8 },
+  stockInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.background, borderRadius: Radius.md, paddingHorizontal: 14, height: 46, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  stockInput: { flex: 1, fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText },
+  lowStockBorder: { borderWidth: 2, borderColor: '#ba1a1a', backgroundColor: '#fff5f4' },
 
-  depositRowList: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft, borderStyle: 'dotted' },
+  depositRowList: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft, borderStyle: 'dashed' },
   depositLabelList: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
-  depositValueList: { fontSize: 14, fontWeight: '800', color: SHOP_ACCENT },
+  depositValueList: { fontSize: 15, fontWeight: '900', color: SHOP_ACCENT },
 
-  emptyCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 30, alignItems: 'center', ...Shadow.xs, borderWidth: 1, borderColor: thannigoPalette.borderSoft, borderStyle: 'dashed' },
-  emptyText: { textAlign: 'center', color: thannigoPalette.neutral, marginTop: 10, lineHeight: 20, fontWeight: '500' },
+  taxRowList: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingHorizontal: 4 },
+  taxLabelList: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '700' },
+  taxBadge: { backgroundColor: '#f0f9ff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: '#bae6ff' },
+  taxValueList: { fontSize: 11, fontWeight: '900', color: SHOP_ACCENT, letterSpacing: 0.5 },
 
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: thannigoPalette.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40, maxHeight: '80%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
-  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
+  emptyCard: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 40, alignItems: 'center', ...Shadow.sm, borderWidth: 2, borderColor: thannigoPalette.borderSoft, borderStyle: 'dashed' },
+  emptyText: { textAlign: 'center', color: thannigoPalette.neutral, marginTop: 14, lineHeight: 22, fontWeight: '600', fontSize: 14 },
 
-  inputLabel: { fontSize: 13, fontWeight: '800', color: thannigoPalette.neutral, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+  modalContent: { backgroundColor: thannigoPalette.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40, maxHeight: '85%', ...Shadow.lg },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  modalTitle: { fontSize: 24, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
 
-  masterList: { maxHeight: 200, backgroundColor: thannigoPalette.background, borderRadius: 16, padding: 8 },
-  masterCatRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 10 },
-  masterCatRowActive: { backgroundColor: SHOP_SURF },
-  masterCatText: { fontSize: 15, fontWeight: '600', color: thannigoPalette.darkText },
+  inputLabel: { fontSize: 12, fontWeight: '800', color: thannigoPalette.neutral, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 12, marginLeft: 2 },
 
-  modalPriceInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.background, borderRadius: 14, paddingHorizontal: 16, height: 56 },
-  modalPriceInput: { flex: 1, fontSize: 20, fontWeight: '900', color: SHOP_ACCENT },
+  masterList: { maxHeight: 240, backgroundColor: thannigoPalette.background, borderRadius: Radius.lg, padding: 10, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  masterCatRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: Radius.md, marginBottom: 4 },
+  masterCatRowActive: { backgroundColor: SHOP_SURF, borderWidth: 1, borderColor: SHOP_ACCENT + '40' },
+  masterCatText: { fontSize: 16, fontWeight: '700', color: thannigoPalette.darkText },
 
-  submitBtn: { backgroundColor: SHOP_ACCENT, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginTop: 30, shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6 },
-  submitBtnText: { color: 'white', fontWeight: '900', fontSize: 15 },
-  thumbnail: { width: '100%', height: '100%', borderRadius: 12, resizeMode: 'cover' },
-  modalStepText: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral, marginTop: 2, textTransform: 'uppercase' },
-  gridContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 8 },
-  catGridCard: { width: '30%', aspectRatio: 1, backgroundColor: thannigoPalette.background, borderRadius: 20, alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
-  catGridCardActive: { backgroundColor: SHOP_ACCENT, borderColor: SHOP_ACCENT },
-  catIconBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
-  catGridLabel: { fontSize: 11, fontWeight: '800', color: thannigoPalette.neutral, textAlign: 'center' },
-  backLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 },
-  backLinkText: { fontSize: 13, fontWeight: '700', color: SHOP_ACCENT },
-  imagePickerCard: { height: 160, backgroundColor: thannigoPalette.background, borderRadius: 24, borderWidth: 2, borderColor: thannigoPalette.borderSoft, borderStyle: 'dashed', overflow: 'hidden', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
+  modalPriceInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.background, borderRadius: Radius.lg, paddingHorizontal: 16, height: 60, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  modalPriceInput: { flex: 1, fontSize: 22, fontWeight: '900', color: SHOP_ACCENT },
+
+  submitBtn: { backgroundColor: SHOP_ACCENT, borderRadius: Radius.xl, paddingVertical: 18, alignItems: 'center', marginTop: 32, ...Shadow.md },
+  submitBtnText: { color: 'white', fontWeight: '900', fontSize: 16, letterSpacing: 0.5 },
+  thumbnail: { width: '100%', height: '100%', borderRadius: Radius.md, resizeMode: 'cover' },
+  modalStepText: { fontSize: 11, fontWeight: '800', color: SHOP_ACCENT, marginTop: 4, textTransform: 'uppercase', letterSpacing: 1 },
+  gridContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginTop: 10 },
+  catGridCard: { width: '30%', aspectRatio: 1, backgroundColor: thannigoPalette.background, borderRadius: Radius.xl, alignItems: 'center', justifyContent: 'center', gap: 10, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  catGridCardActive: { backgroundColor: SHOP_ACCENT, borderColor: SHOP_ACCENT, ...Shadow.sm },
+  catIconBox: { width: 48, height: 48, borderRadius: Radius.md, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
+  catGridLabel: { fontSize: 12, fontWeight: '800', color: thannigoPalette.neutral, textAlign: 'center', paddingHorizontal: 4 },
+  backLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 20 },
+  backLinkText: { fontSize: 14, fontWeight: '800', color: SHOP_ACCENT },
+  imagePickerCard: { height: 180, backgroundColor: thannigoPalette.background, borderRadius: Radius.xl, borderWidth: 2, borderColor: thannigoPalette.borderSoft, borderStyle: 'dashed', overflow: 'hidden', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
   pickerPreview: { width: '100%', height: '100%', resizeMode: 'cover' },
-  pickerPlaceholder: { alignItems: 'center', gap: 8 },
-  pickerText: { fontSize: 13, fontWeight: '600', color: thannigoPalette.neutral },
-  editBadge: { position: 'absolute', top: 12, right: 12, width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
-  formSplit: { flexDirection: 'row', gap: 16 },
-  actionRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
-  editCardBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
-  cardDisabled: { opacity: 0.6, backgroundColor: thannigoPalette.background, borderColor: thannigoPalette.borderSoft },
-  disabledBadge: { position: 'absolute', top: -10, left: 16, backgroundColor: thannigoPalette.neutral, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, zIndex: 10 },
-  disabledBadgeText: { color: 'white', fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
-  promoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 },
-  sliderUnitDisplay: { fontSize: 13, fontWeight: '600', color: thannigoPalette.neutral, marginLeft: 8 },
-  hintText: { fontSize: 13, color: thannigoPalette.neutral, marginTop: 4 },
-  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 },
+  pickerPlaceholder: { alignItems: 'center', gap: 10 },
+  pickerText: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
+  editBadge: { position: 'absolute', top: 14, right: 14, width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
+  formSplit: { flexDirection: 'row', gap: 16, marginBottom: 20 },
+  actionRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  editCardBtn: { width: 38, height: 38, borderRadius: Radius.md, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: SHOP_ACCENT + '30' },
+  cardDisabled: { opacity: 0.5, backgroundColor: '#f8fafc', borderColor: thannigoPalette.borderSoft },
+  disabledBadge: { position: 'absolute', top: -12, left: 20, backgroundColor: thannigoPalette.neutral, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8, zIndex: 10, ...Shadow.xs },
+  disabledBadgeText: { color: 'white', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
+  promoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 },
+  sliderUnitDisplay: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral, marginLeft: 8 },
+  hintText: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 4, fontWeight: '500' },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  statusBadge: { position: 'absolute', top: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, zIndex: 10 },
+  statusBadgeText: { fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
+  quickAddBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'white', paddingHorizontal: 10, paddingVertical: 6, borderRadius: Radius.md, borderWidth: 1, borderColor: SHOP_ACCENT + '40' },
+  quickAddText: { fontSize: 11, fontWeight: '800', color: SHOP_ACCENT },
+  bulkAddFab: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SHOP_ACCENT, paddingVertical: 14, borderRadius: Radius.lg, marginTop: 16, ...Shadow.md },
+  bulkAddFabText: { color: 'white', fontWeight: '900', fontSize: 15 },
+  finishBtn: { backgroundColor: '#4caf50', paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radius.md },
+  finishBtnText: { color: 'white', fontWeight: '900', fontSize: 12 },
 });
 
 

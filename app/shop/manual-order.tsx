@@ -17,6 +17,12 @@ import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { inventoryApi } from '@/api/inventoryApi';
 import { shopApi } from '@/api/shopApi';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
+const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
+
 // Manual order entry for shop staff
 export default function ManualOrderScreen() {
   const router = useRouter();
@@ -106,7 +112,7 @@ export default function ManualOrderScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#005d90" />
+        <ActivityIndicator size="large" color={SHOP_ACCENT} />
       </View>
     );
   }
@@ -122,7 +128,7 @@ export default function ManualOrderScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.infoCard}>
-          <Ionicons name="information-circle-outline" size={18} color="#005d90" />
+          <Ionicons name="information-circle-outline" size={18} color={SHOP_ACCENT} />
           <Text style={styles.infoText}>
             Use this to place orders for walk-in or phone customers directly from the shop panel.
           </Text>
@@ -154,7 +160,7 @@ export default function ManualOrderScreen() {
               onPress={() => setSelectedProduct(p)}
             >
               <Text style={[styles.typePillText, selectedProduct?.id === p.id && styles.typePillTextActive]}>{p.name}</Text>
-              <Text style={[styles.priceTag, selectedProduct?.id === p.id && { color: '#005d90' }]}>₹{p.price}</Text>
+              <Text style={[styles.priceTag, selectedProduct?.id === p.id && { color: SHOP_ACCENT }]}>₹{p.price}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -163,11 +169,11 @@ export default function ManualOrderScreen() {
           <Text style={styles.inputLabel}>Quantity</Text>
           <View style={styles.qtyRow}>
             <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuantity((q: string) => Math.max(1, parseInt(q || '1') - 1).toString())}>
-              <Ionicons name="remove" size={20} color="#005d90" />
+              <Ionicons name="remove" size={20} color={SHOP_ACCENT} />
             </TouchableOpacity>
             <Text style={styles.qtyValue}>{quantity}</Text>
             <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuantity((q: string) => (parseInt(q || '1') + 1).toString())}>
-              <Ionicons name="add" size={20} color="#005d90" />
+              <Ionicons name="add" size={20} color={SHOP_ACCENT} />
             </TouchableOpacity>
           </View>
         </View>
@@ -184,7 +190,7 @@ export default function ManualOrderScreen() {
               <Ionicons
                 name={p === 'cash' ? 'cash-outline' : 'phone-portrait-outline'}
                 size={16}
-                color={paymentMode === p ? '#005d90' : '#707881'}
+                color={paymentMode === p ? SHOP_ACCENT : thannigoPalette.neutral}
               />
               <Text style={[styles.paymentText, paymentMode === p && styles.paymentTextActive]}>
                 {p.toUpperCase()}
@@ -213,13 +219,13 @@ export default function ManualOrderScreen() {
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Payment</Text>
-            <Text style={[styles.summaryValue, { color: '#005d90' }]}>{paymentMode.toUpperCase()}</Text>
+            <Text style={[styles.summaryValue, { color: SHOP_ACCENT }]}>{paymentMode.toUpperCase()}</Text>
           </View>
         </View>
 
         {/* PLACE ORDER */}
         <TouchableOpacity style={styles.placeBtn} onPress={handlePlace}>
-          <LinearGradient colors={['#005d90', '#0077b6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.placeBtnGrad}>
+          <LinearGradient colors={[SHOP_ACCENT, SHOP_GRAD[1]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.placeBtnGrad}>
             <Ionicons name="receipt-outline" size={20} color="white" />
             <Text style={styles.placeBtnText}>Place Order — ₹{total}</Text>
           </LinearGradient>
@@ -231,40 +237,40 @@ export default function ManualOrderScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
   content: { padding: 20, gap: 14, paddingBottom: 40 },
   infoCard: { flexDirection: 'row', gap: 10, backgroundColor: '#e0f0ff', borderRadius: 14, padding: 14, alignItems: 'flex-start' },
-  infoText: { flex: 1, fontSize: 12, color: '#005d90', lineHeight: 17, fontWeight: '600' },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#181c20', letterSpacing: -0.3 },
+  infoText: { flex: 1, fontSize: 12, color: SHOP_ACCENT, lineHeight: 17, fontWeight: '600' },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },
   inputGroup: { gap: 6 },
-  inputLabel: { fontSize: 12, fontWeight: '700', color: '#707881' },
-  input: { backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, fontWeight: '600', color: '#181c20', borderWidth: 1, borderColor: '#e0e2e8' },
+  inputLabel: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
+  input: { backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, fontWeight: '600', color: thannigoPalette.darkText, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
   typeRow: { flexDirection: 'row', gap: 8, marginBottom: 10 },
-  productPill: { minWidth: 100, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1.5, borderColor: '#e0e2e8', alignItems: 'center', backgroundColor: 'white', marginRight: 10 },
-  productPillActive: { borderColor: '#005d90', backgroundColor: '#e0f0ff' },
+  productPill: { minWidth: 100, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, alignItems: 'center', backgroundColor: 'white', marginRight: 10 },
+  productPillActive: { borderColor: SHOP_ACCENT, backgroundColor: '#e0f0ff' },
   priceTag: { fontSize: 11, fontWeight: '800', color: '#94a3b8', marginTop: 2 },
-  typePillText: { fontSize: 14, fontWeight: '700', color: '#707881' },
-  typePillTextActive: { color: '#005d90' },
-  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 20, backgroundColor: 'white', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: '#e0e2e8', alignSelf: 'flex-start' },
+  typePillText: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
+  typePillTextActive: { color: SHOP_ACCENT },
+  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 20, backgroundColor: 'white', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: thannigoPalette.borderSoft, alignSelf: 'flex-start' },
   qtyBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
-  qtyValue: { fontSize: 22, fontWeight: '900', color: '#181c20', minWidth: 30, textAlign: 'center' },
+  qtyValue: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, minWidth: 30, textAlign: 'center' },
   paymentRow: { flexDirection: 'row', gap: 10 },
-  paymentPill: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 14, borderWidth: 1.5, borderColor: '#e0e2e8', backgroundColor: 'white' },
-  paymentPillActive: { borderColor: '#005d90', backgroundColor: '#e0f0ff' },
-  paymentText: { fontSize: 12, fontWeight: '700', color: '#707881' },
-  paymentTextActive: { color: '#005d90' },
+  paymentPill: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 14, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, backgroundColor: 'white' },
+  paymentPillActive: { borderColor: SHOP_ACCENT, backgroundColor: '#e0f0ff' },
+  paymentText: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
+  paymentTextActive: { color: SHOP_ACCENT },
   summaryCard: { backgroundColor: 'white', borderRadius: 18, padding: 18, gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
-  summaryTitle: { fontSize: 14, fontWeight: '800', color: '#181c20', marginBottom: 4 },
+  summaryTitle: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 4 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  summaryLabel: { fontSize: 13, color: '#707881', fontWeight: '600' },
-  summaryValue: { fontSize: 13, fontWeight: '700', color: '#181c20' },
-  divider: { height: 1, backgroundColor: '#f1f4f9' },
-  totalLabel: { fontSize: 16, fontWeight: '800', color: '#181c20' },
-  totalValue: { fontSize: 20, fontWeight: '900', color: '#005d90' },
+  summaryLabel: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600' },
+  summaryValue: { fontSize: 13, fontWeight: '700', color: thannigoPalette.darkText },
+  divider: { height: 1, backgroundColor: thannigoPalette.borderSoft },
+  totalLabel: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
+  totalValue: { fontSize: 20, fontWeight: '900', color: SHOP_ACCENT },
   placeBtn: { borderRadius: 18, overflow: 'hidden' },
   placeBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
   placeBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },

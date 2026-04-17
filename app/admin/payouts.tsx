@@ -19,6 +19,11 @@ import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { adminPayoutsApi, type AdminPayout, type AdminPayoutSummary } from '@/api/adminUsersApi';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const ADMIN_ACCENT = roleAccent.admin;
+const ADMIN_SURF = roleSurface.admin;
+
 // ─── Types & constants ────────────────────────────────────────────────────────
 
 type StatusFilter = 'pending' | 'processed' | '';
@@ -59,7 +64,7 @@ interface SummaryBannerProps {
 function SummaryBanner({ summary, loading }: SummaryBannerProps) {
   return (
     <LinearGradient
-      colors={['#ba1a1a', '#e32424']}
+      colors={[ADMIN_ACCENT, ADMIN_ACCENT]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.summaryBanner}
@@ -70,7 +75,7 @@ function SummaryBanner({ summary, loading }: SummaryBannerProps) {
         <View style={styles.summaryRow}>
           <View style={styles.summaryItem}>
             <View style={styles.summaryIconBox}>
-              <Ionicons name="time-outline" size={20} color="#ba1a1a" />
+              <Ionicons name="time-outline" size={20} color={ADMIN_ACCENT} />
             </View>
             <View>
               <Text style={styles.summaryLabel}>Pending Amount</Text>
@@ -84,7 +89,7 @@ function SummaryBanner({ summary, loading }: SummaryBannerProps) {
 
           <View style={styles.summaryItem}>
             <View style={styles.summaryIconBox}>
-              <Ionicons name="business-outline" size={20} color="#ba1a1a" />
+              <Ionicons name="business-outline" size={20} color={ADMIN_ACCENT} />
             </View>
             <View>
               <Text style={styles.summaryLabel}>Shops Waiting</Text>
@@ -114,7 +119,7 @@ function PayoutCard({ payout, onProcess, actionLoadingId }: PayoutCardProps) {
       {/* Top row: shop name + status */}
       <View style={styles.cardTopRow}>
         <View style={styles.shopIconBox}>
-          <Ionicons name="business" size={20} color="#ba1a1a" />
+          <Ionicons name="business" size={20} color={ADMIN_ACCENT} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.cardShopName} numberOfLines={1}>{payout.shop_name}</Text>
@@ -128,7 +133,7 @@ function PayoutCard({ payout, onProcess, actionLoadingId }: PayoutCardProps) {
         ]}>
           <Text style={[
             styles.statusBadgeText,
-            { color: isPending ? '#e65100' : '#2e7d32' },
+            { color: isPending ? '#e65100' : thannigoPalette.success },
           ]}>
             {isPending ? 'Pending' : 'Processed'}
           </Text>
@@ -158,13 +163,13 @@ function PayoutCard({ payout, onProcess, actionLoadingId }: PayoutCardProps) {
         {/* Mark Processed button — only for pending */}
         {isPending && (
           isActing ? (
-            <ActivityIndicator size="small" color="#ba1a1a" />
+            <ActivityIndicator size="small" color={ADMIN_ACCENT} />
           ) : (
             <TouchableOpacity
               style={styles.processBtn}
               onPress={() => onProcess(payout.id)}
             >
-              <Ionicons name="checkmark-done-outline" size={14} color="#ba1a1a" />
+              <Ionicons name="checkmark-done-outline" size={14} color={ADMIN_ACCENT} />
               <Text style={styles.processBtnText}>Mark Processed</Text>
             </TouchableOpacity>
           )
@@ -315,7 +320,7 @@ export default function AdminPayoutsScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
+              <Ionicons name="chevron-back" size={20} color={ADMIN_ACCENT} />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={styles.pageTitle}>Payouts</Text>
@@ -347,7 +352,7 @@ export default function AdminPayoutsScreen() {
 
       {/* Content */}
       {loading ? (
-        <ActivityIndicator size="large" color="#ba1a1a" style={{ marginTop: 80 }} />
+        <ActivityIndicator size="large" color={ADMIN_ACCENT} style={{ marginTop: 80 }} />
       ) : error ? (
         <View style={styles.emptyWrap}>
           <Ionicons name="cloud-offline-outline" size={64} color="#c8d6e0" />
@@ -373,8 +378,8 @@ export default function AdminPayoutsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#ba1a1a']}
-              tintColor="#ba1a1a"
+              colors={[ADMIN_ACCENT]}
+              tintColor={ADMIN_ACCENT}
             />
           }
           ListEmptyComponent={renderEmpty}
@@ -388,12 +393,12 @@ export default function AdminPayoutsScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
 
   headerSafe: { 
     backgroundColor: 'white', 
     borderBottomWidth: 1, 
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: thannigoPalette.borderSoft,
     alignItems: 'center',
   },
   headerContent: {
@@ -407,23 +412,23 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: thannigoPalette.borderSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
 
-  filterBarWrap: { paddingVertical: 18, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  filterBarWrap: { paddingVertical: 18, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
   tabContent: { gap: 10, paddingHorizontal: 24 },
   tab: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 14,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: thannigoPalette.borderSoft,
   },
-  tabActive: { backgroundColor: '#ba1a1a' },
-  tabText: { fontSize: 13, fontWeight: '800', color: '#64748b' },
+  tabActive: { backgroundColor: ADMIN_ACCENT },
+  tabText: { fontSize: 13, fontWeight: '800', color: thannigoPalette.neutral },
   tabTextActive: { color: 'white' },
 
   listContent: { padding: 20, paddingBottom: 100 },
@@ -487,7 +492,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: thannigoPalette.borderSoft,
   },
   cardPending: {
     borderLeftWidth: 4,
@@ -503,18 +508,18 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#ffdad6',
+    backgroundColor: ADMIN_SURF,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardShopName: { fontSize: 15, fontWeight: '800', color: '#181c20', marginBottom: 2 },
-  cardPeriod: { fontSize: 12, color: '#707881', fontWeight: '500' },
+  cardShopName: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
+  cardPeriod: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
   statusBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   statusBadgeText: { fontSize: 11, fontWeight: '800' },
   cardAmount: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#181c20',
+    color: thannigoPalette.darkText,
     letterSpacing: -0.5,
     marginBottom: 8,
   },
@@ -524,7 +529,7 @@ const styles = StyleSheet.create({
     gap: 5,
     marginBottom: 8,
   },
-  processedText: { fontSize: 12, color: '#2e7d32', fontWeight: '600' },
+  processedText: { fontSize: 12, color: thannigoPalette.success, fontWeight: '600' },
   cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   cardFooter: {
     flexDirection: 'row',
@@ -533,7 +538,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: thannigoPalette.borderSoft,
   },
   cardFooterText: { fontSize: 11, color: '#94a3b8', fontWeight: '500' },
 
@@ -545,15 +550,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
-    backgroundColor: '#ffdad6',
+    backgroundColor: ADMIN_SURF,
     borderWidth: 1,
     borderColor: '#ffb4ab',
   },
-  processBtnText: { fontSize: 12, fontWeight: '800', color: '#ba1a1a' },
+  processBtnText: { fontSize: 12, fontWeight: '800', color: ADMIN_ACCENT },
 
   // Empty / error
   emptyWrap: { alignItems: 'center', marginTop: 80, gap: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#181c20' },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
   emptySubtitle: {
     fontSize: 14,
     color: '#94a3b8',
@@ -563,7 +568,7 @@ const styles = StyleSheet.create({
   },
   retryBtn: {
     marginTop: 8,
-    backgroundColor: '#ba1a1a',
+    backgroundColor: ADMIN_ACCENT,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 14,

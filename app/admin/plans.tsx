@@ -14,8 +14,13 @@ import Toast from 'react-native-toast-message';
 
 import { useWindowDimensions } from 'react-native';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const ADMIN_ACCENT = roleAccent.admin;
+const ADMIN_SURF = roleSurface.admin;
+
 const ROLE_COLORS: Record<string, string> = {
-  customer: '#ba1a1a', shop_owner: '#cc6600', delivery: '#7c3aed', admin: '#ba1a1a',
+  customer: ADMIN_ACCENT, shop_owner: '#cc6600', delivery: '#7c3aed', admin: ADMIN_ACCENT,
 };
 
 const NUMERIC_KEYS = new Set(['price_monthly', 'price_yearly', 'auto_discount_pct', 'monthly_coupon_count',
@@ -93,14 +98,14 @@ export default function AdminPlansScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
+              <Ionicons name="chevron-back" size={20} color={ADMIN_ACCENT} />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={styles.pageTitle}>Plans</Text>
               <Text style={styles.headerSub}>{plans.length} total configurations</Text>
             </View>
             <TouchableOpacity style={styles.addBtnHeader} onPress={openCreate}>
-              <Ionicons name="add" size={24} color="#ba1a1a" />
+              <Ionicons name="add" size={24} color={ADMIN_ACCENT} />
             </TouchableOpacity>
           </View>
         </View>
@@ -108,13 +113,13 @@ export default function AdminPlansScreen() {
 
       <ScrollView
         style={{ flex: 1 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchPlans(); }} colors={['#ba1a1a']} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchPlans(); }} colors={[ADMIN_ACCENT]} />}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { alignItems: 'center' }]}
       >
         <View style={{ width: '100%', maxWidth: 1200 }}>
         {loading ? (
-          <View style={styles.centered}><ActivityIndicator size="large" color="#ba1a1a" /></View>
+          <View style={styles.centered}><ActivityIndicator size="large" color={ADMIN_ACCENT} /></View>
         ) : plans.length === 0 ? (
           <View style={styles.centered}>
             <Ionicons name="card-outline" size={56} color="#94a3b8" />
@@ -124,14 +129,14 @@ export default function AdminPlansScreen() {
           plans.map((plan) => (
             <View key={plan.id} style={styles.planCard}>
               <View style={styles.planTop}>
-                <View style={[styles.planIcon, { backgroundColor: (ROLE_COLORS[plan.role || 'customer'] ?? '#ba1a1a') + '18' }]}>
-                  <Ionicons name="card-outline" size={22} color={ROLE_COLORS[plan.role || 'customer'] ?? '#ba1a1a'} />
+                <View style={[styles.planIcon, { backgroundColor: (ROLE_COLORS[plan.role || 'customer'] ?? ADMIN_ACCENT) + '18' }]}>
+                  <Ionicons name="card-outline" size={22} color={ROLE_COLORS[plan.role || 'customer'] ?? ADMIN_ACCENT} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={styles.planNameRow}>
                     <Text style={styles.planName}>{plan.name}</Text>
                     <View style={[styles.statusBadge, { backgroundColor: plan.is_active ? '#e8f5e9' : '#ffebee' }]}>
-                      <Text style={[styles.statusText, { color: plan.is_active ? '#2e7d32' : '#c62828' }]}>
+                      <Text style={[styles.statusText, { color: plan.is_active ? thannigoPalette.success : thannigoPalette.adminRed }]}>
                         {plan.is_active ? 'Active' : 'Inactive'}
                       </Text>
                     </View>
@@ -139,7 +144,7 @@ export default function AdminPlansScreen() {
                   <Text style={styles.planSlug}>{plan.slug}</Text>
                 </View>
                 <TouchableOpacity onPress={() => openEdit(plan)} style={styles.editBtn}>
-                  <Ionicons name="pencil-outline" size={18} color="#ba1a1a" />
+                  <Ionicons name="pencil-outline" size={18} color={ADMIN_ACCENT} />
                 </TouchableOpacity>
               </View>
 
@@ -158,7 +163,7 @@ export default function AdminPlansScreen() {
                   { icon: 'ribbon-outline', label: 'Loyalty boost', value: `${plan.loyalty_boost_pct}%` },
                 ].map((b) => (
                   <View key={b.label} style={styles.benefitItem}>
-                    <Ionicons name={b.icon as any} size={16} color="#ba1a1a" />
+                    <Ionicons name={b.icon as any} size={16} color={ADMIN_ACCENT} />
                     <View>
                       <Text style={styles.benefitLabel}>{b.label}</Text>
                       <Text style={styles.benefitValue}>{b.value}</Text>
@@ -226,7 +231,7 @@ export default function AdminPlansScreen() {
               onPress={handleSave}
               disabled={saving}
             >
-              <LinearGradient colors={['#ba1a1a', '#e32424']} style={styles.saveBtnGrad}>
+              <LinearGradient colors={[ADMIN_ACCENT, ADMIN_ACCENT]} style={styles.saveBtnGrad}>
                 {saving ? <ActivityIndicator color="white" /> : <Text style={styles.saveBtnText}>Save Plan</Text>}
               </LinearGradient>
             </TouchableOpacity>
@@ -238,12 +243,12 @@ export default function AdminPlansScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
 
   headerSafe: { 
     backgroundColor: 'white', 
     borderBottomWidth: 1, 
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: thannigoPalette.borderSoft,
     alignItems: 'center',
   },
   headerContent: {
@@ -257,17 +262,17 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: thannigoPalette.borderSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
-  addBtnHeader: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
+  addBtnHeader: { width: 40, height: 40, borderRadius: 12, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
 
   content: { padding: 16, paddingBottom: 100 },
   centered: { paddingTop: 80, alignItems: 'center' },
-  emptyText: { marginTop: 14, color: '#64748b', fontWeight: '600', fontSize: 15, textAlign: 'center' },
+  emptyText: { marginTop: 14, color: thannigoPalette.neutral, fontWeight: '600', fontSize: 15, textAlign: 'center' },
   planCard: {
     backgroundColor: 'white', borderRadius: 20, padding: 18,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
@@ -275,19 +280,19 @@ const styles = StyleSheet.create({
   planTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   planIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   planNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
-  planName: { fontSize: 17, fontWeight: '900', color: '#181c20' },
+  planName: { fontSize: 17, fontWeight: '900', color: thannigoPalette.darkText },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
   statusText: { fontSize: 11, fontWeight: '800' },
   planSlug: { fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' },
   editBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 14 },
-  price: { fontSize: 28, fontWeight: '900', color: '#ba1a1a' },
-  pricePeriod: { fontSize: 14, fontWeight: '600', color: '#707881' },
-  priceYearly: { fontSize: 14, fontWeight: '700', color: '#64748b' },
+  price: { fontSize: 28, fontWeight: '900', color: ADMIN_ACCENT },
+  pricePeriod: { fontSize: 14, fontWeight: '600', color: thannigoPalette.neutral },
+  priceYearly: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
   benefitsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   benefitItem: { flexDirection: 'row', alignItems: 'center', gap: 6, width: '47%' },
   benefitLabel: { fontSize: 10, color: '#94a3b8', fontWeight: '600' },
-  benefitValue: { fontSize: 14, fontWeight: '800', color: '#181c20' },
+  benefitValue: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText },
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: {
@@ -295,21 +300,21 @@ const styles = StyleSheet.create({
     padding: 24, maxHeight: '85%',
   },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: '#181c20' },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
   fieldRow: { marginBottom: 14 },
   fieldLabel: { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 6 },
   fieldInput: {
-    borderWidth: 1.5, borderColor: '#e0e2e8', borderRadius: 12,
-    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#181c20',
+    borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: thannigoPalette.darkText,
   },
   saveBtn: { borderRadius: 16, overflow: 'hidden', marginTop: 16 },
   saveBtnGrad: { paddingVertical: 16, alignItems: 'center' },
   saveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
   toggleBtn: {
-    backgroundColor: '#f1f5f9', paddingVertical: 12, paddingHorizontal: 16,
-    borderRadius: 12, borderWidth: 1.5, borderColor: '#e0e2e8', alignItems: 'center',
+    backgroundColor: thannigoPalette.borderSoft, paddingVertical: 12, paddingHorizontal: 16,
+    borderRadius: 12, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, alignItems: 'center',
   },
-  toggleBtnActive: { backgroundColor: '#ffdad6', borderColor: '#ba1a1a' },
-  toggleBtnText: { color: '#64748b', fontWeight: '700', fontSize: 15 },
-  toggleBtnActiveText: { color: '#ba1a1a' },
+  toggleBtnActive: { backgroundColor: ADMIN_SURF, borderColor: ADMIN_ACCENT },
+  toggleBtnText: { color: thannigoPalette.neutral, fontWeight: '700', fontSize: 15 },
+  toggleBtnActiveText: { color: ADMIN_ACCENT },
 });

@@ -12,6 +12,11 @@ import Toast from 'react-native-toast-message';
 import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const ADMIN_ACCENT = roleAccent.admin;
+const ADMIN_SURF = roleSurface.admin;
+
 export default function AdminOrdersListScreen() {
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
@@ -45,18 +50,18 @@ export default function AdminOrdersListScreen() {
       placed: '#005d90',
       accepted: '#006878',
       dispatched: '#006878',
-      delivered: '#2e7d32',
-      cancelled: '#ba1a1a',
-      failed: '#ba1a1a',
+      delivered: thannigoPalette.success,
+      cancelled: ADMIN_ACCENT,
+      failed: ADMIN_ACCENT,
     };
-    return map[status] || '#707881';
+    return map[status] || thannigoPalette.neutral;
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
       <View style={styles.header}>
-        <BackButton fallback="/admin/(tabs)" iconColor="#ba1a1a" />
+        <BackButton fallback="/admin/(tabs)" iconColor={ADMIN_ACCENT} />
         <View style={styles.headerTitleWrap}>
            <Text style={styles.headerTitle}>Global Orders</Text>
            <Text style={styles.headerSub}>Manage all platform transactions</Text>
@@ -64,11 +69,11 @@ export default function AdminOrdersListScreen() {
       </View>
 
       <ScrollView 
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#ba1a1a']} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ADMIN_ACCENT]} />}
         contentContainerStyle={styles.scrollContent}
       >
         {loading ? (
-          <ActivityIndicator size="large" color="#ba1a1a" style={{ marginTop: 40 }} />
+          <ActivityIndicator size="large" color={ADMIN_ACCENT} style={{ marginTop: 40 }} />
         ) : orders.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="receipt-outline" size={64} color="#cbd5e1" />
@@ -105,23 +110,23 @@ export default function AdminOrdersListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
   headerTitleWrap: { marginLeft: 16 },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
-  headerSub: { fontSize: 12, color: '#64748b' },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
+  headerSub: { fontSize: 12, color: thannigoPalette.neutral },
   scrollContent: { padding: 16 },
   orderCard: { backgroundColor: 'white', borderRadius: 20, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2, position: 'relative' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  orderNumber: { fontSize: 14, fontWeight: '800', color: '#0f172a' },
+  orderNumber: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   statusText: { fontSize: 10, fontWeight: '900' },
   cardBody: { marginTop: 4 },
-  shopName: { fontSize: 16, fontWeight: '800', color: '#1e293b' },
-  customerName: { fontSize: 13, color: '#64748b', marginTop: 2 },
-  metaRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
+  shopName: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
+  customerName: { fontSize: 13, color: thannigoPalette.neutral, marginTop: 2 },
+  metaRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft },
   dateText: { fontSize: 12, color: '#94a3b8' },
-  amountText: { fontSize: 14, fontWeight: '900', color: '#0f172a' },
+  amountText: { fontSize: 14, fontWeight: '900', color: thannigoPalette.darkText },
   chevron: { position: 'absolute', right: 16, top: 40 },
   emptyState: { padding: 60, alignItems: 'center' },
   emptyText: { fontSize: 16, color: '#94a3b8', fontWeight: '600', marginTop: 12 },

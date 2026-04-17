@@ -19,6 +19,11 @@ import Toast from 'react-native-toast-message';
 import { complaintApi } from '@/api/complaintApi';
 import type { Complaint } from '@/types/api';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const ADMIN_ACCENT = roleAccent.admin;
+const ADMIN_SURF = roleSurface.admin;
+
 /* ---- Filter tab types ---- */
 type FilterTab = 'all' | 'open' | 'in_progress' | 'resolved' | 'closed';
 
@@ -48,15 +53,15 @@ function formatTime(iso: string): string {
 function getStatusTheme(status: Complaint['status']) {
   switch (status) {
     case 'open':
-      return { bg: '#ffdad6', text: '#ba1a1a', label: 'Open' };
+      return { bg: ADMIN_SURF, text: ADMIN_ACCENT, label: 'Open' };
     case 'in_progress':
       return { bg: '#fff3e0', text: '#e65100', label: 'In Progress' };
     case 'resolved':
-      return { bg: '#e8f5e9', text: '#2e7d32', label: 'Resolved' };
+      return { bg: '#e8f5e9', text: thannigoPalette.success, label: 'Resolved' };
     case 'closed':
-      return { bg: '#f1f5f9', text: '#64748b', label: 'Closed' };
+      return { bg: thannigoPalette.borderSoft, text: thannigoPalette.neutral, label: 'Closed' };
     default:
-      return { bg: '#f1f5f9', text: '#64748b', label: status };
+      return { bg: thannigoPalette.borderSoft, text: thannigoPalette.neutral, label: status };
   }
 }
 
@@ -87,11 +92,11 @@ function ComplaintCard({ complaint, expanded, onToggle, onAction, actionLoading 
             )}
             <View style={[
               styles.priorityBadge,
-              { backgroundColor: complaint.priority === 'urgent' ? '#ffdad6' : '#f1f5f9' },
+              { backgroundColor: complaint.priority === 'urgent' ? ADMIN_SURF : thannigoPalette.borderSoft },
             ]}>
               <Text style={[
                 styles.priorityText,
-                { color: complaint.priority === 'urgent' ? '#ba1a1a' : '#64748b' },
+                { color: complaint.priority === 'urgent' ? ADMIN_ACCENT : thannigoPalette.neutral },
               ]}>
                 {complaint.priority.toUpperCase()}
               </Text>
@@ -166,7 +171,7 @@ function ComplaintCard({ complaint, expanded, onToggle, onAction, actionLoading 
             <View style={styles.expandedRow}>
               <Ionicons name="checkmark-circle-outline" size={14} color="#2e7d32" />
               <Text style={styles.expandedLabel}>Resolution:</Text>
-              <Text style={[styles.expandedValue, { color: '#2e7d32', fontWeight: '700' }]}>
+              <Text style={[styles.expandedValue, { color: thannigoPalette.success, fontWeight: '700' }]}>
                 {complaint.resolution_type.charAt(0).toUpperCase() + complaint.resolution_type.slice(1)}
               </Text>
             </View>
@@ -185,12 +190,12 @@ function ComplaintCard({ complaint, expanded, onToggle, onAction, actionLoading 
               <Ionicons
                 name={complaint.admin_action === 'approved' ? 'checkmark-circle' : 'close-circle'}
                 size={14}
-                color={complaint.admin_action === 'approved' ? '#2e7d32' : '#ba1a1a'}
+                color={complaint.admin_action === 'approved' ? thannigoPalette.success : ADMIN_ACCENT}
               />
               <Text style={styles.expandedLabel}>Admin Action:</Text>
               <Text style={[
                 styles.expandedValue,
-                { fontWeight: '700', color: complaint.admin_action === 'approved' ? '#2e7d32' : '#ba1a1a' },
+                { fontWeight: '700', color: complaint.admin_action === 'approved' ? thannigoPalette.success : ADMIN_ACCENT },
               ]}>
                 {complaint.admin_action.charAt(0).toUpperCase() + complaint.admin_action.slice(1)}
               </Text>
@@ -201,14 +206,14 @@ function ComplaintCard({ complaint, expanded, onToggle, onAction, actionLoading 
           {canAction && (
             <View style={styles.actionRow}>
               {actionLoading ? (
-                <ActivityIndicator size="small" color="#ba1a1a" style={{ marginVertical: 8 }} />
+                <ActivityIndicator size="small" color={ADMIN_ACCENT} style={{ marginVertical: 8 }} />
               ) : (
                 <>
                   <TouchableOpacity
                     style={[styles.actionBtn, { flex: 1, minWidth: 120 }]}
                     onPress={() => onAction(complaint.id, 'refund')}
                   >
-                    <LinearGradient colors={['#ba1a1a', '#e32424']} style={styles.actionBtnGrad}>
+                    <LinearGradient colors={[ADMIN_ACCENT, ADMIN_ACCENT]} style={styles.actionBtnGrad}>
                       <Ionicons name="cash-outline" size={14} color="white" />
                       <Text style={styles.actionBtnText}>Approve + Refund</Text>
                     </LinearGradient>
@@ -229,7 +234,7 @@ function ComplaintCard({ complaint, expanded, onToggle, onAction, actionLoading 
                     onPress={() => onAction(complaint.id, 'reject')}
                   >
                     <View style={styles.actionBtnRejectInner}>
-                      <Ionicons name="close-outline" size={14} color="#ba1a1a" />
+                      <Ionicons name="close-outline" size={14} color={ADMIN_ACCENT} />
                       <Text style={styles.actionBtnRejectText}>Reject</Text>
                     </View>
                   </TouchableOpacity>
@@ -361,7 +366,7 @@ export default function AdminComplaintsScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
+              <Ionicons name="chevron-back" size={20} color={ADMIN_ACCENT} />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <View style={styles.headerTitleRow}>
@@ -383,7 +388,7 @@ export default function AdminComplaintsScreen() {
               <Ionicons
                 name="warning"
                 size={14}
-                color={showSosOnly ? 'white' : '#ba1a1a'}
+                color={showSosOnly ? 'white' : ADMIN_ACCENT}
               />
               <Text style={[styles.sosToggleText, showSosOnly && { color: 'white' }]}>SOS</Text>
             </TouchableOpacity>
@@ -418,8 +423,8 @@ export default function AdminComplaintsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#ba1a1a']}
-            tintColor="#ba1a1a"
+            colors={[ADMIN_ACCENT]}
+            tintColor={ADMIN_ACCENT}
           />
         }
         style={{ flex: 1 }}
@@ -431,7 +436,7 @@ export default function AdminComplaintsScreen() {
       >
         <View style={{ width: '100%', maxWidth: 1200 }}>
         {loading ? (
-          <ActivityIndicator size="large" color="#ba1a1a" style={{ marginTop: 80 }} />
+          <ActivityIndicator size="large" color={ADMIN_ACCENT} style={{ marginTop: 80 }} />
         ) : complaints.length === 0 ? (
           <View style={styles.emptyWrap}>
             <Ionicons name="checkmark-circle-outline" size={64} color="#c8d6e0" />
@@ -466,12 +471,12 @@ export default function AdminComplaintsScreen() {
 
 /* ---- Styles ---- */
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
 
   headerSafe: { 
     backgroundColor: 'white', 
     borderBottomWidth: 1, 
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: thannigoPalette.borderSoft,
     alignItems: 'center',
   },
   headerContent: {
@@ -486,18 +491,18 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: thannigoPalette.borderSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
   
   sosHeaderBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#ba1a1a',
+    backgroundColor: ADMIN_ACCENT,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -512,17 +517,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#ffdad6',
-    backgroundColor: '#fff8f7',
+    borderColor: ADMIN_SURF,
+    backgroundColor: ADMIN_SURF,
   },
-  sosToggleActive: { backgroundColor: '#ba1a1a', borderColor: '#ba1a1a' },
-  sosToggleText: { fontSize: 13, fontWeight: '800', color: '#ba1a1a' },
+  sosToggleActive: { backgroundColor: ADMIN_ACCENT, borderColor: ADMIN_ACCENT },
+  sosToggleText: { fontSize: 13, fontWeight: '800', color: ADMIN_ACCENT },
 
   filterBar: {
     paddingVertical: 14,
     backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: thannigoPalette.borderSoft,
   },
   tabContent: { gap: 8, paddingRight: 24 },
   tab: {
@@ -531,10 +536,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 12,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: thannigoPalette.borderSoft,
   },
-  tabActive: { backgroundColor: '#ba1a1a' },
-  tabText: { fontSize: 12, fontWeight: '800', color: '#64748b' },
+  tabActive: { backgroundColor: ADMIN_ACCENT },
+  tabText: { fontSize: 12, fontWeight: '800', color: thannigoPalette.neutral },
   tabTextActive: { color: 'white' },
 
   scrollContent: { padding: 20, paddingBottom: 100 },
@@ -551,13 +556,13 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: thannigoPalette.borderSoft,
   },
   cardSos: {
-    borderColor: '#ffdad6',
+    borderColor: ADMIN_SURF,
     borderWidth: 1.5,
     borderLeftWidth: 4,
-    borderLeftColor: '#ba1a1a',
+    borderLeftColor: ADMIN_ACCENT,
   },
 
   cardTopRow: {
@@ -572,7 +577,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#ba1a1a',
+    backgroundColor: ADMIN_ACCENT,
     borderRadius: 6,
     paddingHorizontal: 7,
     paddingVertical: 3,
@@ -587,16 +592,16 @@ const styles = StyleSheet.create({
 
   cardMeta: { gap: 4, marginBottom: 8 },
   cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  cardMetaText: { fontSize: 12, color: '#707881', fontWeight: '500' },
+  cardMetaText: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
 
   issueType: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#181c20',
+    color: thannigoPalette.darkText,
     marginBottom: 4,
     letterSpacing: -0.2,
   },
-  issueDesc: { fontSize: 13, color: '#64748b', lineHeight: 19, marginBottom: 10 },
+  issueDesc: { fontSize: 13, color: thannigoPalette.neutral, lineHeight: 19, marginBottom: 10 },
 
   cardFooter: {
     flexDirection: 'row',
@@ -608,15 +613,15 @@ const styles = StyleSheet.create({
 
   /* Expanded */
   expandedSection: { marginTop: 4 },
-  expandedDivider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 12 },
+  expandedDivider: { height: 1, backgroundColor: thannigoPalette.borderSoft, marginVertical: 12 },
   expandedRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 6,
     marginBottom: 8,
   },
-  expandedLabel: { fontSize: 12, color: '#707881', fontWeight: '700', minWidth: 96 },
-  expandedValue: { fontSize: 12, color: '#181c20', fontWeight: '500', flex: 1 },
+  expandedLabel: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '700', minWidth: 96 },
+  expandedValue: { fontSize: 12, color: thannigoPalette.darkText, fontWeight: '500', flex: 1 },
 
   /* Action buttons */
   actionRow: {
@@ -637,8 +642,8 @@ const styles = StyleSheet.create({
   actionBtnText: { color: 'white', fontWeight: '800', fontSize: 12 },
   actionBtnReject: {
     borderWidth: 1.5,
-    borderColor: '#ffdad6',
-    backgroundColor: '#fff8f7',
+    borderColor: ADMIN_SURF,
+    backgroundColor: ADMIN_SURF,
     borderRadius: 12,
   },
   actionBtnRejectInner: {
@@ -649,11 +654,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
   },
-  actionBtnRejectText: { color: '#ba1a1a', fontWeight: '800', fontSize: 12 },
+  actionBtnRejectText: { color: ADMIN_ACCENT, fontWeight: '800', fontSize: 12 },
 
   /* Empty */
   emptyWrap: { alignItems: 'center', marginTop: 100, gap: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#181c20' },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
   emptySubtitle: {
     fontSize: 14,
     color: '#94a3b8',

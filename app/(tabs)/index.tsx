@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
   Modal,
 } from 'react-native';
@@ -23,7 +22,10 @@ import { useCartStore } from '@/stores/cartStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { addressApi } from '@/api/addressApi';
 import { apiClient } from '@/api/client';
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients, Radius } from '@/constants/theme';
+import { SkeletonShopCard } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 const CUSTOMER_ACCENT = roleAccent.customer;
 const CUSTOMER_SURF = roleSurface.customer;
@@ -199,31 +201,34 @@ export default function HomeScreen() {
     })
     .sort((a,b) => a.distanceKm - b.distanceKm);
 
+  const { colors, isDark } = useAppTheme();
+
   if (loadingLoc) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: thannigoPalette.background }}>
-         <ActivityIndicator size="large" color={CUSTOMER_ACCENT} />
-         <Text style={{ marginTop: 10, color: thannigoPalette.neutral, fontWeight: '600' }}>Locating nearby shops...</Text>
-      </View>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+        <View style={{ paddingHorizontal: 24, paddingTop: 20 }}>
+          {[1, 2, 3].map(k => <SkeletonShopCard key={k} />)}
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface }]}>
         <View style={{ gap: 2 }}>
-          <Text style={styles.brandName}>ThanniGo</Text>
+          <Text style={[styles.brandName, { color: colors.text }]}>ThanniGo</Text>
           <TouchableOpacity
             style={styles.locationRow}
             onPress={() => router.push('/addresses' as any)}
             activeOpacity={0.7}
           >
             <Ionicons name="location" size={12} color={CUSTOMER_ACCENT} />
-            <Text style={styles.locationLabel}>{currentAddressTitle}</Text>
-            <Text style={styles.locationText} numberOfLines={1}>· {currentAddress}</Text>
+            <Text style={[styles.locationLabel, { color: CUSTOMER_ACCENT }]}>{currentAddressTitle}</Text>
+            <Text style={[styles.locationText, { color: colors.muted }]} numberOfLines={1}>· {currentAddress}</Text>
             <Ionicons name="chevron-down" size={10} color={CUSTOMER_ACCENT} />
           </TouchableOpacity>
         </View>
@@ -238,22 +243,22 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.iconBtn}
+            style={[styles.iconBtn, { backgroundColor: colors.surface }]}
             onPress={() => router.push('/notifications' as any)}
             activeOpacity={0.8}
           >
             <Ionicons name="notifications-outline" size={22} color={CUSTOMER_ACCENT} />
-            <View style={styles.notifDot} />
+            <View style={[styles.notifDot, { backgroundColor: thannigoPalette.error, borderColor: colors.surface }]} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.iconBtn}
+            style={[styles.iconBtn, { backgroundColor: colors.surface }]}
             onPress={() => router.push('/order/checkout' as any)}
             activeOpacity={0.8}
           >
             <Ionicons name="cart-outline" size={22} color={CUSTOMER_ACCENT} />
             {cartCount > 0 && (
-              <View style={styles.cartBadge}>
+              <View style={[styles.cartBadge, { backgroundColor: thannigoPalette.error, borderColor: colors.background }]}>
                 <Text style={styles.cartBadgeText}>{cartCount}</Text>
               </View>
             )}
@@ -305,12 +310,12 @@ export default function HomeScreen() {
         </LinearGradient>
 
         {/* SEARCH BAR */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#64748b" style={styles.searchIcon} />
+        <View style={[styles.searchContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Ionicons name="search" size={20} color={colors.muted} style={styles.searchIcon} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search shops..."
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor={colors.muted}
             value={search}
             onChangeText={(v) => {
               setSearch(v);
@@ -358,12 +363,11 @@ export default function HomeScreen() {
         </View>
 
         {filteredShops.length === 0 ? (
-          <View style={styles.emptyCard}>
-            <Ionicons name="sad-outline" size={40} color="#94a3b8" />
-            <Text style={styles.emptyText}>
-              {search.trim() !== '' ? `No shops found matching "${search}"` : 'No shops found within 3km of your location.'}
-            </Text>
-          </View>
+          <EmptyState
+            icon="sad-outline"
+            title={search.trim() !== '' ? `No shops found matching "${search}"` : 'No shops nearby'}
+            subtitle={search.trim() !== '' ? 'Try searching different keywords.' : 'No shops found within 3km of your location.'}
+          />
         ) : isMapView ? (
           <View style={{ height: 400, borderRadius: 20, overflow: 'hidden', marginTop: 10, borderColor: '#e2e8f0', borderWidth: 1 }}>
             <ExpoMap 
@@ -385,13 +389,13 @@ export default function HomeScreen() {
                    latitude: s.lat,
                    longitude: s.lng,
                    title: s.name,
-                   color: '#005d90',
+                   color: CUSTOMER_ACCENT,
                    iconType: 'shop' as const
                  }))
                ]}
             />
             <View style={{ position: 'absolute', bottom: 12, left: 12, right: 12, backgroundColor: 'rgba(255,255,255,0.9)', padding: 8, borderRadius: 12, alignItems: 'center' }}>
-              <Text style={{ fontSize: 11, fontWeight: '700', color: '#005d90' }}>Tap map to search alternative areas</Text>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: CUSTOMER_ACCENT }}>Tap map to search alternative areas</Text>
             </View>
           </View>
         ) : (
@@ -454,10 +458,10 @@ export default function HomeScreen() {
                      </TouchableOpacity>
                    ) : isRequested ? (
                      <View style={[styles.orderBtn, { backgroundColor: '#e0f0ff', borderColor: '#e0f0ff' }]}>
-                       <Text style={[styles.orderBtnText, { color: '#005d90' }]}>Request Pending...</Text>
+                       <Text style={[styles.orderBtnText, { color: CUSTOMER_ACCENT }]}>Request Pending...</Text>
                      </View>
                    ) : (
-                     <TouchableOpacity style={[styles.orderBtn, { backgroundColor: '#005d90', borderColor: '#005d90' }]} onPress={() => handleRequestLink(shop.id)}>
+                     <TouchableOpacity style={[styles.orderBtn, { backgroundColor: CUSTOMER_ACCENT, borderColor: CUSTOMER_ACCENT }]} onPress={() => handleRequestLink(shop.id)}>
                        <Text style={[styles.orderBtnText, { color: 'white' }]}>Request Connection</Text>
                      </TouchableOpacity>
                    )}
@@ -484,11 +488,11 @@ export default function HomeScreen() {
             activeOpacity={1} 
             onPress={() => setIsAddressModalVisible(false)} 
           />
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             <View style={styles.modalHeader}>
               <View>
-                <Text style={styles.modalTitle}>Select Delivery Address</Text>
-                <Text style={styles.modalSubtitle}>Where should this shop deliver?</Text>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>Select Delivery Address</Text>
+                <Text style={[styles.modalSubtitle, { color: colors.muted }]}>Where should this shop deliver?</Text>
               </View>
               <TouchableOpacity onPress={() => setIsAddressModalVisible(false)}>
                 <Ionicons name="close" size={24} color="#94a3b8" />
@@ -499,14 +503,14 @@ export default function HomeScreen() {
               {userAddresses.map((addr) => (
                 <TouchableOpacity 
                   key={addr.id} 
-                  style={styles.addressItem}
+                  style={[styles.addressItem, { backgroundColor: colors.background, borderColor: colors.border }]}
                   onPress={() => confirmConnectionRequest(addr.id)}
                 >
-                  <View style={[styles.addrIcon, { backgroundColor: addr.label?.toLowerCase() === 'home' ? '#ecfeff' : '#eff6ff' }]}>
+                  <View style={[styles.addrIcon, { backgroundColor: addr.label?.toLowerCase() === 'home' ? thannigoPalette.infoSoft : thannigoPalette.deliveryGreenLight }]}>
                     <Ionicons 
                       name={addr.label?.toLowerCase() === 'home' ? 'home' : 'briefcase'} 
                       size={18} 
-                      color={addr.label?.toLowerCase() === 'home' ? '#0891b2' : '#2563eb'} 
+                      color={addr.label?.toLowerCase() === 'home' ? CUSTOMER_ACCENT : thannigoPalette.deliveryGreen} 
                     />
                   </View>
                   <View style={{ flex: 1 }}>
@@ -536,17 +540,17 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+  container: { flex: 1 },
 
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 24, paddingVertical: 12, backgroundColor: 'rgba(255,255,255,0.92)',
+    paddingHorizontal: 24, paddingVertical: 12,
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.8 },
+  brandName: { fontSize: 20, fontWeight: '900', letterSpacing: -0.8 },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  locationLabel: { fontSize: 11, fontWeight: '700', color: CUSTOMER_ACCENT },
-  locationText: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '600', maxWidth: 160 },
+  locationLabel: { fontSize: 11, fontWeight: '700' },
+  locationText: { fontSize: 12, fontWeight: '600', maxWidth: 160 },
   headerRight: { flexDirection: 'row', gap: 10, alignItems: 'center' },
   pointsChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -555,21 +559,20 @@ const styles = StyleSheet.create({
   },
   pointsText: { fontSize: 13, fontWeight: '800', color: CUSTOMER_ACCENT },
   iconBtn: {
-    width: 42, height: 42, borderRadius: 12,
-    backgroundColor: thannigoPalette.surface, alignItems: 'center', justifyContent: 'center',
+    width: 42, height: 42, borderRadius: Radius.md,
+    alignItems: 'center', justifyContent: 'center',
     position: 'relative', ...Shadow.xs,
   },
   notifDot: {
     position: 'absolute', top: 10, right: 10,
     width: 8, height: 8, borderRadius: 4,
-    backgroundColor: '#ef4444',
-    borderWidth: 1.5, borderColor: thannigoPalette.surface,
+    borderWidth: 1.5,
   },
   cartBadge: {
     position: 'absolute', top: -4, right: -4,
     width: 17, height: 17, borderRadius: 8.5,
-    backgroundColor: '#ef4444', alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: thannigoPalette.background,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2,
   },
   cartBadgeText: { color: 'white', fontSize: 9, fontWeight: '900' },
 
@@ -593,7 +596,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 22, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3, marginBottom: 4 },
   sectionSubtitle: { fontSize: 13, color: thannigoPalette.neutral },
 
-  shopCard: { backgroundColor: thannigoPalette.surface, borderRadius: 24, marginBottom: 20, overflow: 'hidden', ...Shadow.sm },
+  shopCard: { borderRadius: Radius.xl, marginBottom: 20, overflow: 'hidden', ...Shadow.sm },
   shopImageContainer: { height: 160, width: '100%', position: 'relative', backgroundColor: thannigoPalette.borderSoft },
   shopImage: { width: '100%', height: '100%' },
   favBtn: { position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.3)', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
@@ -602,29 +605,26 @@ const styles = StyleSheet.create({
 
   shopInfo: { padding: 18 },
   shopInfoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  shopName: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 4 },
+  shopName: { fontSize: 18, fontWeight: '800', marginBottom: 4 },
   shopMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  shopRating: { fontSize: 13, fontWeight: '700', color: thannigoPalette.darkText },
+  shopRating: { fontSize: 13, fontWeight: '700' },
   shopPrice: { fontSize: 22, fontWeight: '900', color: CUSTOMER_ACCENT },
   shopPriceLabel: { fontSize: 9, color: thannigoPalette.neutral, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
 
-  orderBtn: { backgroundColor: thannigoPalette.background, alignItems: 'center', borderRadius: 12, paddingVertical: 12, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  orderBtn: { alignItems: 'center', borderRadius: Radius.md, paddingVertical: 12, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
   orderBtnText: { color: CUSTOMER_ACCENT, fontWeight: '800', fontSize: 14 },
-
-  emptyCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 30, alignItems: 'center', ...Shadow.xs },
-  emptyText: { textAlign: 'center', color: thannigoPalette.neutral, marginTop: 10, lineHeight: 20, fontWeight: '500' },
 
   // MODAL STYLES
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,58,92,0.4)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: thannigoPalette.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
+  modalContent: { borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 4 },
-  modalSubtitle: { fontSize: 13, color: thannigoPalette.neutral },
+  modalTitle: { fontSize: 20, fontWeight: '800', marginBottom: 4 },
+  modalSubtitle: { fontSize: 13 },
   addressList: { gap: 12 },
-  addressItem: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, backgroundColor: thannigoPalette.background, borderRadius: 16, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  addressItem: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: Radius.lg, borderWidth: 1 },
   addrIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  addrTitle: { fontSize: 15, fontWeight: '700', color: thannigoPalette.darkText, marginBottom: 2 },
-  addrText: { fontSize: 12, color: thannigoPalette.neutral },
+  addrTitle: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
+  addrText: { fontSize: 12 },
   addAddrBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, marginTop: 8 },
   addAddrText: { fontSize: 14, fontWeight: '700', color: CUSTOMER_ACCENT },
 });

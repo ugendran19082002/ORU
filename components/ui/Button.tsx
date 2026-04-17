@@ -1,7 +1,16 @@
-import React from 'react';
-import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import React, { useRef } from 'react';
+import {
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+  Animated,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoleTheme } from '@/hooks/use-role-theme';
+import { thannigoPalette, Radius } from '@/constants/theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -36,6 +45,7 @@ export function Button({
 }: ButtonProps) {
   const { accent } = useRoleTheme();
   const resolvedAccent = accentColor ?? accent;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const sizeStyle = sizeMap[size];
   const iconSize = size === 'sm' ? 16 : size === 'lg' ? 22 : 18;
@@ -46,10 +56,18 @@ export function Button({
     ...sizeStyle.container,
     opacity: isDisabled ? 0.5 : 1,
     ...(variant === 'primary' && { backgroundColor: resolvedAccent }),
-    ...(variant === 'secondary' && styles.secondary),
-    ...(variant === 'outline' && { ...styles.outline, borderColor: resolvedAccent }),
-    ...(variant === 'ghost' && styles.ghost),
-    ...(variant === 'danger' && styles.danger),
+    ...(variant === 'secondary' && {
+      backgroundColor: thannigoPalette.borderSoft,
+    }),
+    ...(variant === 'outline' && {
+      backgroundColor: 'transparent',
+      borderWidth: 1.5,
+      borderColor: resolvedAccent,
+    }),
+    ...(variant === 'ghost' && { backgroundColor: 'transparent' }),
+    ...(variant === 'danger' && {
+      backgroundColor: thannigoPalette.error,
+    }),
     ...style,
   };
 
@@ -57,8 +75,8 @@ export function Button({
     if (variant === 'primary') return '#fff';
     if (variant === 'danger') return '#fff';
     if (variant === 'outline') return resolvedAccent;
-    if (variant === 'secondary') return '#1A1A2E';
-    return '#74777C';
+    if (variant === 'secondary') return thannigoPalette.darkText;
+    return thannigoPalette.neutral;
   })();
 
   const labelStyle: TextStyle = {
@@ -82,23 +100,45 @@ export function Button({
     );
   };
 
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.97,
+      useNativeDriver: true,
+      speed: 40,
+      bounciness: 0,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 30,
+      bounciness: 4,
+    }).start();
+  };
+
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={isDisabled}
-      style={containerStyle}
-      activeOpacity={0.82}
-    >
-      {isLoading && (
-        <ActivityIndicator
-          color={variant === 'primary' || variant === 'danger' ? '#fff' : resolvedAccent}
-          style={{ marginRight: 8 }}
-        />
-      )}
-      {renderIcon('left')}
-      <Text style={labelStyle}>{title}</Text>
-      {renderIcon('right')}
-    </TouchableOpacity>
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        disabled={isDisabled}
+        style={containerStyle}
+        activeOpacity={0.9}
+      >
+        {isLoading && (
+          <ActivityIndicator
+            color={variant === 'primary' || variant === 'danger' ? '#fff' : resolvedAccent}
+            style={{ marginRight: 8 }}
+          />
+        )}
+        {renderIcon('left')}
+        <Text style={labelStyle}>{title}</Text>
+        {renderIcon('right')}
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 
@@ -106,7 +146,7 @@ const baseContainer: ViewStyle = {
   flexDirection: 'row',
   alignItems: 'center',
   justifyContent: 'center',
-  borderRadius: 16,
+  borderRadius: Radius.xl,
 };
 
 const sizeMap: Record<ButtonSize, { container: ViewStyle; text: TextStyle }> = {
@@ -123,19 +163,3 @@ const sizeMap: Record<ButtonSize, { container: ViewStyle; text: TextStyle }> = {
     text: { fontSize: 16 },
   },
 };
-
-const styles = StyleSheet.create({
-  secondary: {
-    backgroundColor: '#F1F4F9',
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-  },
-  danger: {
-    backgroundColor: '#C0392B',
-  },
-});

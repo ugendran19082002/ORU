@@ -16,6 +16,12 @@ import * as Haptics from 'expo-haptics';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
+const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
+
 interface ShopHoliday {
   id: number;
   holiday_date: string;
@@ -108,7 +114,7 @@ export default function ShopHolidaysScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#005d90" />
+        <ActivityIndicator size="large" color={SHOP_ACCENT} />
       </View>
     );
   }
@@ -144,7 +150,7 @@ export default function ShopHolidaysScreen() {
         </View>
 
         <View style={styles.infoCard}>
-          <Ionicons name="calendar-outline" size={20} color="#005d90" />
+          <Ionicons name="calendar-outline" size={20} color={SHOP_ACCENT} />
           <Text style={styles.infoText}>
             Scheduled holidays will automatically close your shop for new orders on those dates.
           </Text>
@@ -181,7 +187,7 @@ export default function ShopHolidaysScreen() {
             <Text style={[styles.sectionHeader, { marginTop: 24 }]}>Past Holidays</Text>
             {pastHolidays.map((h) => (
               <View key={h.id} style={[styles.holidayCard, { opacity: 0.6 }]}>
-                <View style={[styles.dateBox, { backgroundColor: '#f1f4f9' }]}>
+                <View style={[styles.dateBox, { backgroundColor: thannigoPalette.borderSoft }]}>
                   <Text style={[styles.dateDay, { color: '#94a3b8' }]}>{moment(h.holiday_date).format('DD')}</Text>
                   <Text style={[styles.dateMonth, { color: '#94a3b8' }]}>{moment(h.holiday_date).format('MMM')}</Text>
                 </View>
@@ -204,13 +210,13 @@ export default function ShopHolidaysScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>New Holiday</Text>
               <TouchableOpacity onPress={() => setShowAddModal(false)} style={styles.closeBtn}>
-                <Ionicons name="close" size={20} color="#707881" />
+                <Ionicons name="close" size={20} color={thannigoPalette.neutral} />
               </TouchableOpacity>
             </View>
 
             <Text style={styles.label}>Select Date</Text>
             <TouchableOpacity style={styles.dateInput} onPress={() => setShowDatePicker(true)}>
-              <Ionicons name="calendar-outline" size={20} color="#005d90" style={{ marginRight: 10 }} />
+              <Ionicons name="calendar-outline" size={20} color={SHOP_ACCENT} style={{ marginRight: 10 }} />
               <Text style={styles.dateInputText}>{moment(newDate).format('DD MMMM YYYY')}</Text>
             </TouchableOpacity>
 
@@ -260,7 +266,7 @@ export default function ShopHolidaysScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     flexDirection: 'row',
@@ -270,15 +276,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
-  roleLabel: { fontSize: 9, fontWeight: '700', color: '#006878', letterSpacing: 1.5, marginTop: 3 },
+  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
 
   scrollContent: { paddingHorizontal: 24, paddingVertical: 10, paddingBottom: 120 },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
   addBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#005d90', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14,
+    backgroundColor: SHOP_ACCENT, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14,
   },
   addBtnText: { color: 'white', fontWeight: '800', fontSize: 13 },
 
@@ -286,7 +292,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', backgroundColor: '#e0f7fa', padding: 16, borderRadius: 20,
     marginBottom: 24, alignItems: 'center', gap: 12,
   },
-  infoText: { flex: 1, fontSize: 13, color: '#006878', lineHeight: 18, fontWeight: '600' },
+  infoText: { flex: 1, fontSize: 13, color: SHOP_ACCENT, lineHeight: 18, fontWeight: '600' },
 
   sectionHeader: { fontSize: 12, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16, marginLeft: 4 },
 
@@ -296,14 +302,14 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
   dateBox: {
-    width: 52, height: 52, borderRadius: 16, backgroundColor: '#f1f4f9',
+    width: 52, height: 52, borderRadius: 16, backgroundColor: thannigoPalette.borderSoft,
     alignItems: 'center', justifyContent: 'center', gap: 1,
   },
-  dateDay: { fontSize: 18, fontWeight: '900', color: '#181c20' },
-  dateMonth: { fontSize: 10, fontWeight: '800', color: '#005d90', textTransform: 'uppercase' },
+  dateDay: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
+  dateMonth: { fontSize: 10, fontWeight: '800', color: SHOP_ACCENT, textTransform: 'uppercase' },
   holidayInfo: { flex: 1, marginLeft: 16 },
-  holidayReason: { fontSize: 15, fontWeight: '800', color: '#181c20', marginBottom: 2 },
-  holidayYear: { fontSize: 12, color: '#707881', fontWeight: '500' },
+  holidayReason: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
+  holidayYear: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
   deleteBtn: { width: 38, height: 38, borderRadius: 12, backgroundColor: '#fff0f0', alignItems: 'center', justifyContent: 'center' },
 
   emptyState: { paddingVertical: 40, alignItems: 'center' },
@@ -312,23 +318,23 @@ const styles = StyleSheet.create({
   modalOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(15,23,42,0.6)', justifyContent: 'center', padding: 24 },
   modalContent: { backgroundColor: 'white', borderRadius: 28, padding: 24 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  modalTitle: { fontSize: 22, fontWeight: '900', color: '#181c20' },
-  closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
+  modalTitle: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText },
+  closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
 
   label: { fontSize: 12, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, marginTop: 16 },
   dateInput: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc',
+    flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.background,
     borderWidth: 1.5, borderColor: '#e2e8f0', borderRadius: 16, padding: 14,
   },
-  dateInputText: { fontSize: 15, fontWeight: '700', color: '#1e293b' },
+  dateInputText: { fontSize: 15, fontWeight: '700', color: thannigoPalette.darkText },
   input: {
-    backgroundColor: '#f8fafc', borderWidth: 1.5, borderColor: '#e2e8f0',
-    borderRadius: 16, padding: 14, fontSize: 15, fontWeight: '700', color: '#1e293b',
+    backgroundColor: thannigoPalette.background, borderWidth: 1.5, borderColor: '#e2e8f0',
+    borderRadius: 16, padding: 14, fontSize: 15, fontWeight: '700', color: thannigoPalette.darkText,
   },
 
   modalActions: { flexDirection: 'row', gap: 12, marginTop: 32 },
-  cancelBtn: { flex: 1, height: 54, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f4f9' },
-  cancelText: { fontWeight: '800', color: '#475569', fontSize: 15 },
-  confirmBtn: { flex: 1, height: 54, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: '#005d90' },
+  cancelBtn: { flex: 1, height: 54, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: thannigoPalette.borderSoft },
+  cancelText: { fontWeight: '800', color: thannigoPalette.neutral, fontSize: 15 },
+  confirmBtn: { flex: 1, height: 54, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: SHOP_ACCENT },
   confirmText: { fontWeight: '800', color: 'white', fontSize: 15 },
 });

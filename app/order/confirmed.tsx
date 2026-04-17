@@ -12,6 +12,12 @@ import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const CUSTOMER_ACCENT = roleAccent.customer;
+const CUSTOMER_SURF = roleSurface.customer;
+const CUSTOMER_GRAD: [string, string] = [roleGradients.customer.start, roleGradients.customer.end];
+
 export default function OrderConfirmedScreen() {
   const router = useRouter();
   const scaleAnim = useRef(new Animated.Value(0)).current;
@@ -95,7 +101,7 @@ export default function OrderConfirmedScreen() {
       <View style={styles.content}>
         {/* SUCCESS ICON */}
         <Animated.View style={[styles.iconWrap, { transform: [{ scale: scaleAnim }] }]}>
-          <LinearGradient colors={['#2e7d32', '#388e3c']} style={styles.iconGrad}>
+          <LinearGradient colors={[thannigoPalette.success, '#388e3c']} style={styles.iconGrad}>
             <Ionicons name="checkmark" size={56} color="white" />
           </LinearGradient>
           <View style={styles.iconRing} />
@@ -114,7 +120,7 @@ export default function OrderConfirmedScreen() {
           <Animated.View style={[styles.otpCard, { opacity: opacityAnim }]}>
             <View style={styles.otpTop}>
               <View style={styles.otpIconWrap}>
-                <Ionicons name="lock-closed" size={18} color="#005d90" />
+                <Ionicons name="lock-closed" size={18} color={CUSTOMER_ACCENT} />
               </View>
               <View>
                 <Text style={styles.otpLabel}>DELIVERY OTP</Text>
@@ -140,7 +146,7 @@ export default function OrderConfirmedScreen() {
           ].map((row) => (
             <View key={row.label} style={styles.summaryRow}>
               <View style={styles.summaryIcon}>
-                <Ionicons name={row.icon as any} size={16} color="#005d90" />
+                <Ionicons name={row.icon as any} size={16} color={CUSTOMER_ACCENT} />
               </View>
               <Text style={styles.summaryLabel}>{row.label}</Text>
               <Text style={styles.summaryValue} numberOfLines={1}>{row.value}</Text>
@@ -151,7 +157,7 @@ export default function OrderConfirmedScreen() {
         {/* QUICK CONTACT */}
         <Animated.View style={[styles.contactRow, { opacity: opacityAnim }]}>
           <TouchableOpacity style={styles.contactBtn} onPress={handleCallShop}>
-            <Ionicons name="call" size={18} color="#005d90" />
+            <Ionicons name="call" size={18} color={CUSTOMER_ACCENT} />
             <Text style={styles.contactBtnText}>Call Shop</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.contactBtn, styles.whatsappBtn]} onPress={handleWhatsApp}>
@@ -167,7 +173,7 @@ export default function OrderConfirmedScreen() {
             onPress={() => router.replace('/order/tracking' as any)}
           >
             <LinearGradient
-              colors={['#005d90', '#0077b6']}
+              colors={[CUSTOMER_ACCENT, CUSTOMER_GRAD[1]]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.primaryBtnGrad}
@@ -190,36 +196,36 @@ export default function OrderConfirmedScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   content: { flex: 1, paddingHorizontal: 24, paddingVertical: 20, alignItems: 'center', justifyContent: 'center', gap: 16 },
 
   iconWrap: { alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   iconGrad: {
     width: 100, height: 100, borderRadius: 50,
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#2e7d32', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8,
+    shadowColor: thannigoPalette.success, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8,
   },
   iconRing: {
     position: 'absolute', width: 120, height: 120, borderRadius: 60,
     borderWidth: 2, borderColor: '#c8e6c9',
   },
 
-  title: { fontSize: 30, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, textAlign: 'center' },
-  subtitle: { fontSize: 15, color: '#64748b', textAlign: 'center', lineHeight: 22, fontWeight: '500' },
-  highlight: { color: '#005d90', fontWeight: '800' },
+  title: { fontSize: 30, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5, textAlign: 'center' },
+  subtitle: { fontSize: 15, color: thannigoPalette.neutral, textAlign: 'center', lineHeight: 22, fontWeight: '500' },
+  highlight: { color: CUSTOMER_ACCENT, fontWeight: '800' },
   orderId: { fontSize: 13, fontWeight: '700', color: '#94a3b8', marginTop: 2 },
 
   otpCard: {
     backgroundColor: 'white', borderRadius: 24, padding: 22, width: '100%',
     borderWidth: 2, borderColor: '#bfdbf7',
-    shadowColor: '#005d90', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4,
+    shadowColor: CUSTOMER_ACCENT, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4,
     alignItems: 'center',
   },
   otpTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16, alignSelf: 'flex-start' },
   otpIconWrap: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
-  otpLabel: { fontSize: 11, fontWeight: '800', color: '#005d90', letterSpacing: 1 },
-  otpHint: { fontSize: 11, color: '#707881', fontWeight: '500', marginTop: 1 },
-  otpValue: { fontSize: 48, fontWeight: '900', color: '#005d90', letterSpacing: 16, marginBottom: 10 },
+  otpLabel: { fontSize: 11, fontWeight: '800', color: CUSTOMER_ACCENT, letterSpacing: 1 },
+  otpHint: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 1 },
+  otpValue: { fontSize: 48, fontWeight: '900', color: CUSTOMER_ACCENT, letterSpacing: 16, marginBottom: 10 },
   otpDots: { flexDirection: 'row', gap: 8 },
   otpDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#bfdbf7' },
 
@@ -230,8 +236,8 @@ const styles = StyleSheet.create({
   },
   summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   summaryIcon: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#f0f7ff', alignItems: 'center', justifyContent: 'center' },
-  summaryLabel: { flex: 0.4, fontSize: 13, color: '#707881', fontWeight: '600' },
-  summaryValue: { flex: 0.6, fontSize: 13, fontWeight: '800', color: '#181c20', textAlign: 'right' },
+  summaryLabel: { flex: 0.4, fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600' },
+  summaryValue: { flex: 0.6, fontSize: 13, fontWeight: '800', color: thannigoPalette.darkText, textAlign: 'right' },
 
   contactRow: { flexDirection: 'row', gap: 10, width: '100%' },
   contactBtn: {
@@ -239,14 +245,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#e0f0ff', borderRadius: 16, paddingVertical: 12,
   },
   whatsappBtn: { backgroundColor: '#e8f5e9' },
-  contactBtnText: { color: '#005d90', fontWeight: '700', fontSize: 14 },
+  contactBtnText: { color: CUSTOMER_ACCENT, fontWeight: '700', fontSize: 14 },
 
   actions: { width: '100%', gap: 10 },
   primaryBtn: { borderRadius: 18, overflow: 'hidden' },
   primaryBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
   primaryBtnText: { color: 'white', fontSize: 16, fontWeight: '800', letterSpacing: -0.3 },
-  secondaryBtn: { paddingVertical: 14, alignItems: 'center', borderRadius: 18, backgroundColor: 'white', borderWidth: 1, borderColor: '#e0e2e8' },
-  secondaryBtnText: { fontSize: 15, fontWeight: '700', color: '#64748b' },
+  secondaryBtn: { paddingVertical: 14, alignItems: 'center', borderRadius: 18, backgroundColor: 'white', borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  secondaryBtnText: { fontSize: 15, fontWeight: '700', color: thannigoPalette.neutral },
 });
 
 

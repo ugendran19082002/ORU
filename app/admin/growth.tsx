@@ -13,6 +13,11 @@ import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { adminApi } from '@/api/adminApi';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const ADMIN_ACCENT = roleAccent.admin;
+const ADMIN_SURF = roleSurface.admin;
+
 export default function AdminGrowthScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -72,7 +77,7 @@ export default function AdminGrowthScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#ba1a1a" />
+        <ActivityIndicator size="large" color={ADMIN_ACCENT} />
       </View>
     );
   }
@@ -84,14 +89,14 @@ export default function AdminGrowthScreen() {
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
             <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color="#ba1a1a" />
+              <Ionicons name="chevron-back" size={20} color={ADMIN_ACCENT} />
             </TouchableOpacity>
             <View style={{ flex: 1 }}>
               <Text style={styles.pageTitle}>Growth Engine</Text>
               <Text style={styles.headerSub}>Loyalty & Referral Mechanics</Text>
             </View>
             <TouchableOpacity style={styles.refreshBtn} onPress={fetchData}>
-              <Ionicons name="refresh" size={20} color="#ba1a1a" />
+              <Ionicons name="refresh" size={20} color={ADMIN_ACCENT} />
             </TouchableOpacity>
           </View>
         </View>
@@ -124,7 +129,7 @@ export default function AdminGrowthScreen() {
             <>
               {/* LOYALTY SECTION */}
               <View style={styles.sectionHeader}>
-                <Ionicons name="ribbon-outline" size={20} color="#ba1a1a" />
+                <Ionicons name="ribbon-outline" size={20} color={ADMIN_ACCENT} />
                 <Text style={styles.sectionTitle}>Loyalty Settings (Phase 1)</Text>
               </View>
               <View style={styles.card}>
@@ -166,7 +171,7 @@ export default function AdminGrowthScreen() {
 
               {/* REFERRAL SECTION */}
               <View style={styles.sectionHeader}>
-                <Ionicons name="people-outline" size={20} color="#ba1a1a" />
+                <Ionicons name="people-outline" size={20} color={ADMIN_ACCENT} />
                 <Text style={styles.sectionTitle}>Referral Rewards (Admin Funded)</Text>
               </View>
               <View style={styles.card}>
@@ -198,7 +203,7 @@ export default function AdminGrowthScreen() {
               </View>
 
               <View style={styles.infoBox}>
-                <Ionicons name="information-circle-outline" size={18} color="#ba1a1a" />
+                <Ionicons name="information-circle-outline" size={18} color={ADMIN_ACCENT} />
                 <Text style={styles.infoText}>
                   Note: All loyalty points issued currently are Admin-Funded. Payouts to shops are NOT reduced when customers use these points.
                 </Text>
@@ -209,7 +214,7 @@ export default function AdminGrowthScreen() {
           {activeTab === 'tiers' && (
             <View style={{ gap: 12 }}>
               <View style={styles.sectionHeader}>
-                <Ionicons name="trophy-outline" size={20} color="#ba1a1a" />
+                <Ionicons name="trophy-outline" size={20} color={ADMIN_ACCENT} />
                 <Text style={styles.sectionTitle}>Platform Tiers</Text>
                 <TouchableOpacity 
                   style={styles.addBtn}
@@ -225,7 +230,7 @@ export default function AdminGrowthScreen() {
                     setModalVisible(true);
                   }}
                 >
-                  <Ionicons name="add" size={20} color="#ba1a1a" />
+                  <Ionicons name="add" size={20} color={ADMIN_ACCENT} />
                 </TouchableOpacity>
               </View>
               {levels.map((level) => (
@@ -332,12 +337,12 @@ function ConfigItem({ label, value, onChange, keyboardType = 'default', helper }
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   headerSafe: { 
     backgroundColor: 'white', 
     borderBottomWidth: 1, 
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: thannigoPalette.borderSoft,
     alignItems: 'center',
   },
   headerContent: {
@@ -351,52 +356,52 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: thannigoPalette.borderSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: '#1a1c1e', letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: '#64748b', fontWeight: '600', marginTop: 2 },
-  refreshBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
+  refreshBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
 
   scrollContent: { padding: 20 },
   tabRow: {
-    flexDirection: 'row', backgroundColor: '#f1f4f9', borderRadius: 14, padding: 4, marginBottom: 25,
+    flexDirection: 'row', backgroundColor: thannigoPalette.borderSoft, borderRadius: 14, padding: 4, marginBottom: 25,
   },
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10 },
   tabActive: { backgroundColor: 'white', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1 },
-  tabText: { fontSize: 14, fontWeight: '700', color: '#707881' },
-  tabTextActive: { color: '#ba1a1a' },
+  tabText: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
+  tabTextActive: { color: ADMIN_ACCENT },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#1a1c1e' },
-  card: { backgroundColor: 'white', borderRadius: 20, padding: 20, marginBottom: 25, borderWidth: 1, borderColor: '#ebeef4' },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
+  card: { backgroundColor: 'white', borderRadius: 20, padding: 20, marginBottom: 25, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
   configItem: { marginBottom: 16 },
-  configLabel: { fontSize: 13, fontWeight: '700', color: '#707881', marginBottom: 8 },
-  inputWrap: { backgroundColor: '#f1f4f9', borderRadius: 12, borderWidth: 1, borderColor: '#e1e3e8' },
-  input: { paddingHorizontal: 15, paddingVertical: 12, fontSize: 15, fontWeight: '600', color: '#1a1c1e' },
+  configLabel: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral, marginBottom: 8 },
+  inputWrap: { backgroundColor: thannigoPalette.borderSoft, borderRadius: 12, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  input: { paddingHorizontal: 15, paddingVertical: 12, fontSize: 15, fontWeight: '600', color: thannigoPalette.darkText },
   helperText: { fontSize: 11, color: '#94a3b8', marginTop: 4, fontWeight: '500' },
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8 },
-  toggleLabel: { fontSize: 14, fontWeight: '700', color: '#1a1c1e' },
-  infoBox: { flexDirection: 'row', gap: 10, backgroundColor: '#ffdad6', borderRadius: 15, padding: 15, marginBottom: 25 },
-  infoText: { flex: 1, fontSize: 12, color: '#ba1a1a', lineHeight: 18, fontWeight: '600' },
+  toggleLabel: { fontSize: 14, fontWeight: '700', color: thannigoPalette.darkText },
+  infoBox: { flexDirection: 'row', gap: 10, backgroundColor: ADMIN_SURF, borderRadius: 15, padding: 15, marginBottom: 25 },
+  infoText: { flex: 1, fontSize: 12, color: ADMIN_ACCENT, lineHeight: 18, fontWeight: '600' },
   tierCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: 'white', borderRadius: 18, padding: 18, borderWidth: 1, borderColor: '#ebeef4',
+    backgroundColor: 'white', borderRadius: 18, padding: 18, borderWidth: 1, borderColor: thannigoPalette.borderSoft,
     marginBottom: 10,
   },
   tierMain: { flex: 1 },
-  tierName: { fontSize: 16, fontWeight: '900', color: '#1a1c1e', marginBottom: 2 },
-  tierReq: { fontSize: 12, color: '#707881', fontWeight: '600' },
+  tierName: { fontSize: 16, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 2 },
+  tierReq: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '600' },
   tierBenefit: { alignItems: 'flex-end' },
-  tierDiscount: { fontSize: 18, fontWeight: '900', color: '#ba1a1a' },
+  tierDiscount: { fontSize: 18, fontWeight: '900', color: ADMIN_ACCENT },
   tierSub: { fontSize: 10, color: '#94a3b8', fontWeight: '700', letterSpacing: 0.5 },
-  addBtn: { marginLeft: 'auto', backgroundColor: '#f1f5f9', width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  addBtn: { marginLeft: 'auto', backgroundColor: thannigoPalette.borderSoft, width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalContent: { backgroundColor: 'white', borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 25, maxHeight: '80%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: '#1a1c1e' },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
   modalForm: { marginBottom: 20 },
-  saveBtn: { backgroundColor: '#ba1a1a', paddingVertical: 15, borderRadius: 15, alignItems: 'center' },
+  saveBtn: { backgroundColor: ADMIN_ACCENT, paddingVertical: 15, borderRadius: 15, alignItems: 'center' },
   saveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
 });
 

@@ -29,10 +29,10 @@ const CUSTOMER_ACCENT = roleAccent.customer;
 const CUSTOMER_SURF = roleSurface.customer;
 const CUSTOMER_GRAD: [string, string] = [roleGradients.customer.start, roleGradients.customer.end];
 
-const WARNING_BG = '#fffbe6';
-const WARNING_BORDER = '#ffe58f';
-const WARNING_TEXT = '#b45309';
-const WARNING_DARK = '#856404';
+const WARNING_BG     = '#FFF8E1';
+const WARNING_BORDER = '#FFE082';
+const WARNING_TEXT   = thannigoPalette.warning;
+const WARNING_DARK   = thannigoPalette.warning;
 
 interface OrderItem {
   id: number;
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
   timelineContent: { flex: 1, paddingBottom: 12 },
   timelineStatus: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral, letterSpacing: 0.3 },
   timelineStatusActive: { color: CUSTOMER_ACCENT, fontSize: 13 },
-  timelineDate: { fontSize: 11, color: '#94a3b8', marginTop: 2 },
+  timelineDate: { fontSize: 11, color: thannigoPalette.neutral, marginTop: 2 },
 
   cancelLink: { alignSelf: 'center', padding: 12 },
   cancelLinkText: { color: thannigoPalette.adminRed, fontSize: 14, fontWeight: '700', textDecorationLine: 'underline' },

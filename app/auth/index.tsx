@@ -18,7 +18,7 @@ import { thannigoPalette, roleGradients } from '@/constants/theme';
 const { width, height } = Dimensions.get('window');
 
 const WELCOME_GRAD: [string, string, string] = [
-  '#003a5c',
+  thannigoPalette.darkText,
   roleGradients.customer.start,
   roleGradients.customer.end,
 ];

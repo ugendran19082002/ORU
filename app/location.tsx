@@ -8,10 +8,15 @@ import * as Location from 'expo-location';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppSession } from '@/hooks/use-app-session';
+import { Shadow, thannigoPalette, roleAccent, Radius } from '@/constants/theme';
+import { useAppTheme } from '@/providers/ThemeContext';
+
+const ACCENT = roleAccent.customer;
 
 export default function EnableLocationScreen() {
   const router = useRouter();
   const { setIsLocationVerified } = useAppSession();
+  const { colors, isDark } = useAppTheme();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [denied, setDenied] = useState(false);
@@ -94,8 +99,8 @@ export default function EnableLocationScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       
       {/* HEADER ESCAPE */}
       <View style={{ paddingHorizontal: 20, paddingTop: 10 }}>
@@ -106,12 +111,12 @@ export default function EnableLocationScreen() {
         {/* BIG LOCATION ICON */}
         <View style={styles.iconCircle}>
           <LinearGradient
-            colors={['#e0f0ff', '#f7f9ff']}
+            colors={[thannigoPalette.infoSoft, colors.background]}
             style={styles.iconGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Ionicons name="location" size={80} color="#005d90" style={{ transform: [{ translateY: -4 }] }} />
+            <Ionicons name="location" size={80} color={ACCENT} style={{ transform: [{ translateY: -4 }] }} />
           </LinearGradient>
         </View>
 
@@ -122,7 +127,7 @@ export default function EnableLocationScreen() {
 
         {errorMsg && (
           <View style={styles.errorBox}>
-            <Ionicons name="warning-outline" size={20} color="#ba1a1a" />
+            <Ionicons name="warning-outline" size={20} color={thannigoPalette.adminRed} />
             <Text style={styles.errorText}>{errorMsg}</Text>
           </View>
         )}
@@ -133,7 +138,7 @@ export default function EnableLocationScreen() {
           <View style={{ gap: 12 }}>
             <TouchableOpacity
               activeOpacity={0.8}
-              style={[styles.button, { backgroundColor: '#0d9488' }]}
+              style={[styles.button, { backgroundColor: thannigoPalette.shopTeal }]}
               onPress={handleEnableLocation}
             >
               <Ionicons name="refresh" size={20} color="white" />
@@ -142,7 +147,7 @@ export default function EnableLocationScreen() {
             
             <TouchableOpacity
               activeOpacity={0.8}
-              style={[styles.button, { backgroundColor: '#475569', paddingVertical: 14 }]}
+              style={[styles.button, { backgroundColor: thannigoPalette.neutral, paddingVertical: 14 }]}
               onPress={() => Linking.openSettings()}
             >
               <Ionicons name="settings" size={18} color="white" />
@@ -179,36 +184,38 @@ export default function EnableLocationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1 },
   content: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  
+
   iconCircle: {
     width: 160, height: 160, borderRadius: 80,
-    backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#005d90', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 8,
-    marginBottom: 40,
+    backgroundColor: thannigoPalette.surface, alignItems: 'center', justifyContent: 'center',
+    ...Shadow.lg, marginBottom: 40,
   },
   iconGradient: { width: '100%', height: '100%', borderRadius: 80, alignItems: 'center', justifyContent: 'center' },
 
-  title: { fontSize: 28, fontWeight: '900', color: '#181c20', letterSpacing: -0.5, marginBottom: 12 },
-  subtitle: { fontSize: 16, color: '#707881', textAlign: 'center', lineHeight: 24, paddingHorizontal: 12 },
-  
+  title: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5, marginBottom: 12 },
+  subtitle: { fontSize: 16, color: thannigoPalette.neutral, textAlign: 'center', lineHeight: 24, paddingHorizontal: 12 },
+
   errorBox: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
-    backgroundColor: '#ffdad6', padding: 16, borderRadius: 16, width: '100%', marginTop: 24,
+    backgroundColor: thannigoPalette.adminRedLight, padding: 16, borderRadius: Radius.lg, width: '100%', marginTop: 24,
   },
-  errorText: { flex: 1, color: '#ba1a1a', fontSize: 13, fontWeight: '600', lineHeight: 18 },
+  errorText: { flex: 1, color: thannigoPalette.adminRed, fontSize: 13, fontWeight: '600', lineHeight: 18 },
 
   bottomBar: { paddingHorizontal: 24, paddingBottom: 40, paddingTop: 20 },
   button: {
-    backgroundColor: '#005d90', borderRadius: 20, paddingVertical: 18,
+    backgroundColor: ACCENT, borderRadius: Radius.xl, paddingVertical: 18,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    shadowColor: '#005d90', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 6,
+    ...Shadow.lg,
   },
   buttonText: { color: 'white', fontSize: 17, fontWeight: '900', letterSpacing: 0.5 },
-  
+
   skipBtn: { alignItems: 'center', paddingVertical: 18 },
-  skipText: { fontSize: 13, color: '#94a3b8', fontWeight: '700' }
+  skipText: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '700' }
 });
+
+
+
 
 

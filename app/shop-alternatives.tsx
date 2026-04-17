@@ -13,12 +13,18 @@ import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { useShopStore } from '@/stores/shopStore';
 import { shopApi } from '@/api/shopApi';
 import type { Shop } from '@/types/domain';
+import { Shadow, thannigoPalette, roleAccent, Radius } from '@/constants/theme';
+import { useAppTheme } from '@/providers/ThemeContext';
+
+const ACCENT = roleAccent.customer;
+const GRAD: [string, string] = [ACCENT, '#0077b6'];
 
 type SortKey = 'price' | 'rating' | 'distance';
 
 export default function ShopAlternativesScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
+  const { colors, isDark } = useAppTheme();
   const { setSelectedShop, userLat, userLng } = useShopStore() as any;
   const [sort, setSort]         = useState<SortKey>('price');
   const [compareIds, setCompareIds] = useState<string[]>([]);
@@ -62,10 +68,10 @@ export default function ShopAlternativesScreen() {
   const compareShops = compareIds.map(id => shops.find(s => s.id === id)!).filter(Boolean);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <BackButton fallback="/(tabs)" />
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>Compare Shops</Text>
@@ -74,10 +80,10 @@ export default function ShopAlternativesScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#005d90" style={{ marginTop: 80 }} />
+        <ActivityIndicator size="large" color={ACCENT} style={{ marginTop: 80 }} />
       ) : error ? (
         <View style={styles.emptyWrap}>
-          <Ionicons name="cloud-offline-outline" size={56} color="#cbd5e1" />
+          <Ionicons name="cloud-offline-outline" size={56} color={colors.muted} />
           <Text style={styles.emptyTitle}>Failed to Load</Text>
           <Text style={styles.emptySub}>{error}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={() => load()}>
@@ -88,7 +94,7 @@ export default function ShopAlternativesScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#005d90']} tintColor="#005d90" />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[ACCENT]} tintColor={ACCENT} />}
         >
           <View style={styles.sortRow}>
             <Text style={styles.sortLabel}>Sort by:</Text>
@@ -133,7 +139,7 @@ export default function ShopAlternativesScreen() {
 
           {sorted.length === 0 && (
             <View style={styles.emptyWrap}>
-              <Ionicons name="storefront-outline" size={56} color="#cbd5e1" />
+              <Ionicons name="storefront-outline" size={56} color={colors.muted} />
               <Text style={styles.emptyTitle}>No Shops Found</Text>
               <Text style={styles.emptySub}>No water delivery shops available near you.</Text>
             </View>
@@ -143,12 +149,12 @@ export default function ShopAlternativesScreen() {
             <View key={shop.id} style={[styles.shopCard, !shop.isOpen && { opacity: 0.65 }]}>
               <View style={styles.shopTop}>
                 <View style={[styles.shopIcon, { backgroundColor: compareIds.includes(shop.id) ? '#e0f0ff' : '#f0f7ff' }]}>
-                  <Ionicons name="storefront" size={22} color={shop.isOpen ? '#005d90' : '#94a3b8'} />
+                  <Ionicons name="storefront" size={22} color={shop.isOpen ? ACCENT : colors.muted} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.shopName}>{shop.name}</Text>
                   <View style={styles.shopMeta}>
-                    <Ionicons name="star" size={12} color="#f59e0b" />
+                    <Ionicons name="star" size={12} color={thannigoPalette.warning} />
                     <Text style={styles.shopRating}>{shop.rating?.toFixed(1) ?? '—'}</Text>
                     <Text style={styles.shopDot}>·</Text>
                     <Text style={styles.shopDist}>{shop.distanceKm?.toFixed(1) ?? '—'} km</Text>
@@ -162,15 +168,15 @@ export default function ShopAlternativesScreen() {
 
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <TouchableOpacity style={[styles.compareBtn, compareIds.includes(shop.id) && styles.compareBtnActive]} onPress={() => toggleCompare(shop.id)}>
-                  <Ionicons name="git-compare-outline" size={14} color={compareIds.includes(shop.id) ? '#005d90' : '#707881'} />
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: compareIds.includes(shop.id) ? '#005d90' : '#707881' }}>
+                  <Ionicons name="git-compare-outline" size={14} color={compareIds.includes(shop.id) ? ACCENT : thannigoPalette.neutral} />
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: compareIds.includes(shop.id) ? ACCENT : thannigoPalette.neutral }}>
                     {compareIds.includes(shop.id) ? 'Selected' : 'Compare'}
                   </Text>
                 </TouchableOpacity>
 
                 {shop.isOpen ? (
                   <TouchableOpacity style={styles.selectBtn} onPress={() => { setSelectedShop?.(shop.id); router.push(`/shop-detail/${shop.id}` as any); }}>
-                    <LinearGradient colors={['#005d90', '#0077b6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.selectBtnGrad}>
+                    <LinearGradient colors={GRAD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.selectBtnGrad}>
                       <Text style={styles.selectBtnText}>Order Now</Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -189,41 +195,41 @@ export default function ShopAlternativesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
-  headerSub: { fontSize: 12, color: '#64748b', fontWeight: '600', marginTop: 1 },
+  container: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1 },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
+  headerSub: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 1 },
   content: { padding: 20, gap: 14, paddingBottom: 40 },
   emptyWrap: { alignItems: 'center', paddingTop: 60, gap: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: '#181c20' },
-  emptySub: { fontSize: 13, color: '#707881', textAlign: 'center', paddingHorizontal: 32 },
-  retryBtn: { backgroundColor: '#005d90', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14 },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
+  emptySub: { fontSize: 13, color: thannigoPalette.neutral, textAlign: 'center', paddingHorizontal: 32 },
+  retryBtn: { backgroundColor: ACCENT, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14 },
   retryBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
   sortRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  sortLabel: { fontSize: 13, fontWeight: '600', color: '#707881' },
-  sortChip: { backgroundColor: '#f1f4f9', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14 },
-  sortChipActive: { backgroundColor: '#005d90' },
-  sortChipText: { fontSize: 12, fontWeight: '700', color: '#707881' },
-  comparePanel: { backgroundColor: 'white', borderRadius: 20, padding: 16, borderWidth: 1.5, borderColor: '#005d90' },
-  comparePanelTitle: { fontSize: 14, fontWeight: '800', color: '#181c20', marginBottom: 12 },
+  sortLabel: { fontSize: 13, fontWeight: '600', color: thannigoPalette.neutral },
+  sortChip: { backgroundColor: thannigoPalette.borderSoft, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14 },
+  sortChipActive: { backgroundColor: ACCENT },
+  sortChipText: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
+  comparePanel: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 16, borderWidth: 1.5, borderColor: ACCENT },
+  comparePanelTitle: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 12 },
   compareTable: { flexDirection: 'row', gap: 8 },
   compareCol: { flex: 1, gap: 8 },
-  compareHeader: { fontSize: 12, fontWeight: '800', color: '#005d90', borderBottomWidth: 1, borderBottomColor: '#f1f4f9', paddingBottom: 6 },
-  compareKey: { fontSize: 12, color: '#707881', fontWeight: '600' },
-  compareVal: { fontSize: 13, color: '#181c20', fontWeight: '700' },
-  compareTip: { flexDirection: 'row', gap: 8, backgroundColor: '#e0f0ff', borderRadius: 14, padding: 12, alignItems: 'center' },
-  shopCard: { backgroundColor: 'white', borderRadius: 20, padding: 18, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  compareHeader: { fontSize: 12, fontWeight: '800', color: ACCENT, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft, paddingBottom: 6 },
+  compareKey: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '600' },
+  compareVal: { fontSize: 13, color: thannigoPalette.darkText, fontWeight: '700' },
+  compareTip: { flexDirection: 'row', gap: 8, backgroundColor: thannigoPalette.infoSoft, borderRadius: 14, padding: 12, alignItems: 'center' },
+  shopCard: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 18, gap: 12, ...Shadow.xs },
   shopTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   shopIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  shopName: { fontSize: 15, fontWeight: '800', color: '#181c20', marginBottom: 4 },
+  shopName: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 4 },
   shopMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  shopRating: { fontSize: 12, fontWeight: '700', color: '#181c20' },
-  shopDot: { fontSize: 12, color: '#94a3b8' },
-  shopDist: { fontSize: 12, color: '#707881', fontWeight: '500' },
-  shopPrice: { fontSize: 18, fontWeight: '900', color: '#005d90' },
-  shopEta: { fontSize: 11, color: '#707881', fontWeight: '600', marginTop: 2 },
-  compareBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: '#e0e2e8' },
-  compareBtnActive: { borderColor: '#005d90', backgroundColor: '#e0f0ff' },
+  shopRating: { fontSize: 12, fontWeight: '700', color: thannigoPalette.darkText },
+  shopDot: { fontSize: 12, color: thannigoPalette.neutral },
+  shopDist: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
+  shopPrice: { fontSize: 18, fontWeight: '900', color: ACCENT },
+  shopEta: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
+  compareBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft },
+  compareBtnActive: { borderColor: ACCENT, backgroundColor: thannigoPalette.infoSoft },
   selectBtn: { flex: 1, borderRadius: 14, overflow: 'hidden' },
   selectBtnGrad: { paddingVertical: 13, alignItems: 'center' },
   selectBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },

@@ -20,6 +20,8 @@ import { useAppSession } from '@/hooks/use-app-session';
 import { PinEntryModal } from '@/components/security/PinEntryModal';
 import { Logo } from '@/components/ui/Logo';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
 const { width } = Dimensions.get('window');
 
 export default function QuickLoginScreen() {
@@ -103,7 +105,7 @@ export default function QuickLoginScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
       <LinearGradient
-        colors={['#003a5c', '#005d90']}
+        colors={[thannigoPalette.darkText, thannigoPalette.primary]}
         style={StyleSheet.absoluteFillObject}
       />
 
@@ -197,7 +199,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
   },
-  pinBtnText: { color: '#005d90', fontSize: 18, fontWeight: '800' },
+  pinBtnText: { color: thannigoPalette.primary, fontSize: 18, fontWeight: '800' },
   
   switchAccount: { marginTop: 40, padding: 10 },
   switchText: { color: 'rgba(255,255,255,0.6)', fontSize: 14, textDecorationLine: 'underline' },

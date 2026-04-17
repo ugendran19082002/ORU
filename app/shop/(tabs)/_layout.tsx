@@ -2,6 +2,11 @@ import React from "react";
 import { Text, View } from "react-native";
 import { Tabs, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { roleAccent, roleSurface, thannigoPalette } from "@/constants/theme";
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
+const TAB_INACTIVE = thannigoPalette.neutral;
 
 function TabIcon({
   name,
@@ -22,17 +27,17 @@ function TabIcon({
         paddingHorizontal: focused ? 10 : 0,
         paddingVertical: 8,
         borderRadius: 20,
-        backgroundColor: focused ? "#e0f4f4" : "transparent",
+        backgroundColor: focused ? SHOP_SURF : "transparent",
         minWidth: 64,
         minHeight: 45,
       }}
     >
-      <Ionicons name={name} size={22} color={focused ? "#006878" : "#94a3b8"} />
+      <Ionicons name={name} size={22} color={focused ? SHOP_ACCENT : TAB_INACTIVE} />
       <Text
         style={{
           fontSize: 9,
           fontWeight: "700",
-          color: focused ? "#006878" : "#94a3b8",
+          color: focused ? SHOP_ACCENT : TAB_INACTIVE,
           marginTop: 2,
           textAlign: "center",
         }}
@@ -50,7 +55,7 @@ export default function ShopTabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "#ffffff",
+          backgroundColor: thannigoPalette.surface,
           borderTopWidth: 0,
           elevation: 0,
           shadowColor: "#000",
@@ -65,8 +70,8 @@ export default function ShopTabsLayout() {
           position: "absolute",
         },
         tabBarShowLabel: false,
-        tabBarActiveTintColor: "#006878",
-        tabBarInactiveTintColor: "#94a3b8",
+        tabBarActiveTintColor: SHOP_ACCENT,
+        tabBarInactiveTintColor: TAB_INACTIVE,
         tabBarItemStyle: {
           flex: 1,
           justifyContent: "center",

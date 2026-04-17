@@ -149,6 +149,8 @@ export type ShopSettings = {
   delivery_limit_per_km: number;
   floor_charge_per_floor: number;
   invoice_prefix?: string;
+  enable_instant_delivery?: boolean;
+  allow_cod?: boolean;
 };
 
 export type ShopToggleResult = {
@@ -217,6 +219,20 @@ export type ShopUpdatePayload = Partial<{
   gstin: string;
   bank_account_no: string;
   bank_ifsc: string;
+  owner_name: string;
+  fssai_no: string;
+  address_line1: string;
+  address_line2: string;
+  pan_no: string;
+  aadhar_no: string;
+  alternate_phone: string;
+  email: string;
+  bank_name: string;
+  bank_branch: string;
+  account_holder_name: string;
+  upi_id: string;
+  latitude: number;
+  longitude: number;
 }>;
 
 export type ShopSettingsPayload = Partial<ShopSettings>;

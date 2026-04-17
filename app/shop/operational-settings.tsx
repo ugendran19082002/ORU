@@ -18,6 +18,12 @@ import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
 import { PanResponder } from 'react-native';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+
+const SHOP_ACCENT = roleAccent.shop_owner;
+const SHOP_SURF = roleSurface.shop_owner;
+const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
+
 
 export default function ShopOperationalSettingsScreen() {
   const router = useRouter();
@@ -125,7 +131,7 @@ export default function ShopOperationalSettingsScreen() {
           </View>
 
           <View style={styles.infoCard}>
-            <Ionicons name="information-circle-outline" size={20} color="#005d90" />
+            <Ionicons name="information-circle-outline" size={20} color={SHOP_ACCENT} />
             <Text style={styles.infoText}>
               These rules define your shop's pricing and compliance standards. Updates apply immediately to all new orders.
             </Text>
@@ -133,7 +139,7 @@ export default function ShopOperationalSettingsScreen() {
 
           {loading ? (
             <View style={styles.centered}>
-              <ActivityIndicator size="large" color="#005d90" />
+              <ActivityIndicator size="large" color={SHOP_ACCENT} />
               <Text style={styles.loadingText}>Loading configurations...</Text>
             </View>
           ) : (
@@ -279,7 +285,7 @@ const Stepper = ({ label, value, onUpdate, unit = '' }: StepperProps) => {
       </View>
       <View style={styles.stepperContainer}>
         <TouchableOpacity onPress={decrement} style={styles.stepperBtn}>
-          <Ionicons name="remove" size={20} color="#005d90" />
+          <Ionicons name="remove" size={20} color={SHOP_ACCENT} />
         </TouchableOpacity>
         <TextInput
           style={styles.stepperInput}
@@ -289,7 +295,7 @@ const Stepper = ({ label, value, onUpdate, unit = '' }: StepperProps) => {
           selectTextOnFocus
         />
         <TouchableOpacity onPress={increment} style={styles.stepperBtn}>
-          <Ionicons name="add" size={20} color="#005d90" />
+          <Ionicons name="add" size={20} color={SHOP_ACCENT} />
         </TouchableOpacity>
         <Text style={styles.stepperUnit}>{unit}</Text>
       </View>
@@ -494,37 +500,37 @@ const DraggableSlider = ({ label, value, onUpdate, min, max, unit = '', step = 1
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1, backgroundColor: thannigoPalette.background },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 24, paddingVertical: 14, backgroundColor: 'rgba(255,255,255,0.92)',
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', letterSpacing: -0.5 },
-  roleLabel: { fontSize: 9, fontWeight: '700', color: '#006878', letterSpacing: 1.5, marginTop: 3 },
+  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
   content: { paddingHorizontal: 24, paddingVertical: 20, paddingBottom: 120 },
   titleRow: { marginBottom: 18 },
-  pageTitle: { fontSize: 32, fontWeight: '900', color: '#181c20', letterSpacing: -0.5 },
+  pageTitle: { fontSize: 32, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
   infoCard: {
     flexDirection: 'row', backgroundColor: '#e0f0ff', padding: 16, borderRadius: 16,
     marginBottom: 24, alignItems: 'center', gap: 12,
   },
-  infoText: { flex: 1, fontSize: 13, color: '#005d90', lineHeight: 18, fontWeight: '600' },
+  infoText: { flex: 1, fontSize: 13, color: SHOP_ACCENT, lineHeight: 18, fontWeight: '600' },
   centered: { padding: 40, alignItems: 'center', gap: 12 },
   loadingText: { fontSize: 14, color: '#94a3b8', fontWeight: '600' },
   form: { gap: 24 },
   inputGroup: { gap: 8 },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 4 },
-  inputLabel: { fontSize: 13, fontWeight: '800', color: '#475569' },
+  inputLabel: { fontSize: 13, fontWeight: '800', color: thannigoPalette.neutral },
   input: {
     backgroundColor: 'white', borderRadius: 14, height: 56, paddingHorizontal: 16,
-    fontSize: 18, fontWeight: '700', color: '#1e293b',
+    fontSize: 18, fontWeight: '700', color: thannigoPalette.darkText,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
     borderWidth: 1, borderColor: '#e2e8f0',
   },
   hintText: { fontSize: 12, color: '#94a3b8', fontWeight: '500', marginLeft: 4, marginTop: -4 },
   divider: { height: 1, backgroundColor: '#e2e8f0', marginVertical: 8 },
-  sectionHeader: { fontSize: 16, fontWeight: '900', color: '#003a5c', marginBottom: 4 },
+  sectionHeader: { fontSize: 16, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 4 },
   
   sliderGroup: { gap: 12, marginTop: 8 },
   sliderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
@@ -536,16 +542,16 @@ const styles = StyleSheet.create({
     minWidth: 80, justifyContent: 'flex-end'
   },
   sliderInput: { 
-    fontSize: 16, fontWeight: '900', color: '#005d90', 
+    fontSize: 16, fontWeight: '900', color: SHOP_ACCENT, 
     padding: 0, textAlign: 'right', minWidth: 40
   },
-  sliderUnitDisplay: { fontSize: 13, fontWeight: '700', color: '#64748b', marginLeft: 4 },
+  sliderUnitDisplay: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral, marginLeft: 4 },
   sliderTrackContainer: { gap: 12, paddingVertical: 12 },
 
   hybridRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },
   hybridColumn: { gap: 10, marginTop: 16 },
   labelRowHybrid: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 4 },
-  sliderValueHighlight: { fontSize: 16, fontWeight: '900', color: '#005d90' },
+  sliderValueHighlight: { fontSize: 16, fontWeight: '900', color: SHOP_ACCENT },
   
   stepperContainer: { 
     flexDirection: 'row', alignItems: 'center', 
@@ -556,38 +562,38 @@ const styles = StyleSheet.create({
   stepperBtn: { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
   stepperInput: { 
     width: 50, textAlign: 'center', fontSize: 16, 
-    fontWeight: '800', color: '#005d90' 
+    fontWeight: '800', color: SHOP_ACCENT 
   },
-  stepperUnit: { fontSize: 12, fontWeight: '700', color: '#64748b', marginRight: 10 },
+  stepperUnit: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral, marginRight: 10 },
   
   dropdownContainer: { flex: 2, marginLeft: 12 },
   dropdownContainerHybrid: { marginTop: 4 },
   chip: { 
     paddingHorizontal: 14, paddingVertical: 8, 
-    borderRadius: 10, backgroundColor: '#f1f5f9',
+    borderRadius: 10, backgroundColor: thannigoPalette.borderSoft,
     borderWidth: 1, borderColor: '#e2e8f0'
   },
-  activeChip: { backgroundColor: '#005d90', borderColor: '#005d90' },
-  chipText: { fontSize: 13, fontWeight: '700', color: '#475569' },
+  activeChip: { backgroundColor: SHOP_ACCENT, borderColor: SHOP_ACCENT },
+  chipText: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral },
   activeChipText: { color: 'white' },
   sliderTrack: { height: 10, backgroundColor: '#e0f0ff', borderRadius: 5, position: 'relative' },
-  sliderFill: { height: '100%', backgroundColor: '#005d90', borderRadius: 5 },
+  sliderFill: { height: '100%', backgroundColor: SHOP_ACCENT, borderRadius: 5 },
   sliderThumb: { 
     position: 'absolute', top: -10, width: 30, height: 30, 
     borderRadius: 15, backgroundColor: 'white', 
     justifyContent: 'center', alignItems: 'center',
     marginLeft: -15, // Center the thumb on the point
     shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 5, elevation: 5,
-    borderWidth: 2, borderColor: '#005d90',
+    borderWidth: 2, borderColor: SHOP_ACCENT,
   },
-  sliderThumbInner: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#005d90' },
+  sliderThumbInner: { width: 8, height: 8, borderRadius: 4, backgroundColor: SHOP_ACCENT },
   rangeLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 },
   rangeLabelText: { fontSize: 11, fontWeight: '700', color: '#94a3b8' },
 
   saveBtn: {
-    backgroundColor: '#005d90', height: 60, borderRadius: 18,
+    backgroundColor: SHOP_ACCENT, height: 60, borderRadius: 18,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    marginTop: 20, shadowColor: '#005d90', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 4,
+    marginTop: 20, shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 4,
   },
   saveBtnText: { color: 'white', fontWeight: '800', fontSize: 16 },
 });

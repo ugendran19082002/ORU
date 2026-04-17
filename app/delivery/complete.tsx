@@ -165,22 +165,22 @@ export default function DeliveryCompleteScreen() {
             style={[styles.modeBtn, mode === 'success' && styles.modeBtnSuccess]}
             onPress={() => setMode('success')}
           >
-            <Ionicons name="checkmark-circle-outline" size={20} color={mode === 'success' ? '#2e7d32' : '#707881'} />
-            <Text style={[styles.modeBtnText, mode === 'success' && { color: '#2e7d32' }]}>Delivered</Text>
+            <Ionicons name="checkmark-circle-outline" size={20} color={mode === 'success' ? thannigoPalette.deliveryGreen : thannigoPalette.neutral} />
+            <Text style={[styles.modeBtnText, mode === 'success' && { color: thannigoPalette.deliveryGreen }]}>Delivered</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.modeBtn, mode === 'failed' && styles.modeBtnFailed]}
             onPress={() => setMode('failed')}
           >
-            <Ionicons name="close-circle-outline" size={20} color={mode === 'failed' ? '#c62828' : '#707881'} />
-            <Text style={[styles.modeBtnText, mode === 'failed' && { color: '#c62828' }]}>Failed / Reschedule</Text>
+            <Ionicons name="close-circle-outline" size={20} color={mode === 'failed' ? thannigoPalette.error : thannigoPalette.neutral} />
+            <Text style={[styles.modeBtnText, mode === 'failed' && { color: thannigoPalette.error }]}>Failed / Reschedule</Text>
           </TouchableOpacity>
         </View>
 
         {/* SUCCESS VIEW */}
         {mode === 'success' && (
           <View style={styles.successCard}>
-            <LinearGradient colors={['#2e7d32', '#388e3c']} style={styles.successGrad}>
+            <LinearGradient colors={[thannigoPalette.deliveryGreen, '#388e3c']} style={styles.successGrad}>
               <Ionicons name="checkmark-circle" size={64} color="rgba(255,255,255,0.2)" style={styles.successDecor} />
               <Ionicons name="checkmark-circle" size={52} color="white" />
               <Text style={styles.successTitle}>Delivery Successful</Text>
@@ -233,7 +233,7 @@ export default function DeliveryCompleteScreen() {
                 onPress={() => setSelectedReason(r.id)}
               >
                 <View style={[styles.reasonIcon, selectedReason === r.id && styles.reasonIconActive]}>
-                  <Ionicons name={r.icon as any} size={18} color={selectedReason === r.id ? '#c62828' : '#707881'} />
+                  <Ionicons name={r.icon as any} size={18} color={selectedReason === r.id ? thannigoPalette.error : thannigoPalette.neutral} />
                 </View>
                 <Text style={[styles.reasonText, selectedReason === r.id && styles.reasonTextActive]}>{r.label}</Text>
                 <View style={[styles.radioOuter, selectedReason === r.id && styles.radioOuterActive]}>
@@ -262,7 +262,7 @@ export default function DeliveryCompleteScreen() {
             />
 
             <View style={styles.failNoteCard}>
-              <Ionicons name="alert-circle-outline" size={18} color="#b45309" />
+              <Ionicons name="alert-circle-outline" size={18} color={thannigoPalette.warning} />
               <Text style={styles.failNoteText}>
                 Customer and shop will be notified of the failed attempt and new slot.
               </Text>
@@ -273,7 +273,7 @@ export default function DeliveryCompleteScreen() {
         {/* SUBMIT */}
         <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={isSubmitting}>
           <LinearGradient
-            colors={mode === 'success' ? ['#2e7d32', '#388e3c'] : ['#c62828', '#ef4444']}
+            colors={mode === 'success' ? [thannigoPalette.deliveryGreen, '#388e3c'] : [thannigoPalette.error, '#ef4444']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={[styles.submitBtnGrad, isSubmitting && { opacity: 0.7 }]}
@@ -322,8 +322,8 @@ const styles = StyleSheet.create({
 
   modeRow: { flexDirection: 'row', backgroundColor: thannigoPalette.background, borderRadius: 16, padding: 4 },
   modeBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 12 },
-  modeBtnSuccess: { backgroundColor: '#e8f5e9' },
-  modeBtnFailed: { backgroundColor: '#ffebee' },
+  modeBtnSuccess: { backgroundColor: thannigoPalette.deliveryGreenLight },
+  modeBtnFailed: { backgroundColor: thannigoPalette.dangerSoft },
   modeBtnText: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral },
 
   successCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, overflow: 'hidden', ...Shadow.sm },
@@ -346,14 +346,14 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },
 
   reasonRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: thannigoPalette.surface, borderRadius: 16, padding: 14, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft },
-  reasonRowActive: { borderColor: '#f87171', backgroundColor: '#fff5f5' },
+  reasonRowActive: { borderColor: '#f87171', backgroundColor: thannigoPalette.dangerSoft },
   reasonIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
-  reasonIconActive: { backgroundColor: '#ffebee' },
+  reasonIconActive: { backgroundColor: thannigoPalette.dangerSoft },
   reasonText: { flex: 1, fontSize: 13, fontWeight: '700', color: thannigoPalette.darkText },
-  reasonTextActive: { color: '#c62828' },
+  reasonTextActive: { color: thannigoPalette.error },
   radioOuter: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
-  radioOuterActive: { borderColor: '#c62828' },
-  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#c62828' },
+  radioOuterActive: { borderColor: thannigoPalette.error },
+  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: thannigoPalette.error },
 
   otherInput: {
     backgroundColor: thannigoPalette.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: thannigoPalette.borderSoft,
@@ -363,8 +363,8 @@ const styles = StyleSheet.create({
     backgroundColor: thannigoPalette.surface, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, borderWidth: 1, borderColor: thannigoPalette.borderSoft,
     fontSize: 14, color: thannigoPalette.darkText,
   },
-  failNoteCard: { flexDirection: 'row', gap: 10, backgroundColor: '#fef3c7', borderRadius: 14, padding: 14, alignItems: 'flex-start' },
-  failNoteText: { flex: 1, fontSize: 12, color: '#b45309', lineHeight: 17, fontWeight: '600' },
+  failNoteCard: { flexDirection: 'row', gap: 10, backgroundColor: '#FFF8E1', borderRadius: 14, padding: 14, alignItems: 'flex-start' },
+  failNoteText: { flex: 1, fontSize: 12, color: thannigoPalette.warning, lineHeight: 17, fontWeight: '600' },
 
   submitBtn: { borderRadius: 18, overflow: 'hidden', marginTop: 4 },
   submitBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },

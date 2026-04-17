@@ -4,6 +4,11 @@ import { StatusBar } from 'expo-status-bar';
 import { useAppSession } from '@/providers/AppSessionProvider';
 import { View, ActivityIndicator } from 'react-native';
 
+import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+
+const ADMIN_ACCENT = roleAccent.admin;
+const ADMIN_SURF = roleSurface.admin;
+
 export default function AdminRootLayout() {
   const { user, status, isHydrated } = useAppSession();
 
@@ -15,8 +20,8 @@ export default function AdminRootLayout() {
   // All of the above show the same spinner to prevent a black/blank screen.
   if (!isHydrated || status !== 'authenticated' || !user || user.role !== 'admin') {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f7f9ff' }}>
-        <ActivityIndicator size="large" color="#ba1a1a" />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: thannigoPalette.background }}>
+        <ActivityIndicator size="large" color={ADMIN_ACCENT} />
       </View>
     );
   }

@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Modal,
   RefreshControl,
@@ -13,19 +13,31 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Toast from 'react-native-toast-message';
+import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Logo } from "@/components/ui/Logo";
-import { Shadow, roleAccent, roleGradients, thannigoPalette } from "@/constants/theme";
+import { RoleHeader } from "@/components/ui/RoleHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import {
+  Shadow,
+  roleAccent,
+  roleGradients,
+  thannigoPalette,
+  Radius,
+  Spacing,
+  Typography,
+} from "@/constants/theme";
+import { useAppTheme } from "@/providers/ThemeContext";
 import { useOrderStore } from "@/stores/orderStore";
 import { useShopStore } from "@/stores/shopStore";
 import { apiClient } from "@/api/client";
 
 const SHOP_ACCENT = roleAccent.shop_owner;
-const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
+const SHOP_GRAD: [string, string] = [
+  roleGradients.shop_owner.start,
+  roleGradients.shop_owner.end,
+];
 
-type OrderAction = "accept" | "reject" | "delivered";
 type TabState = "active" | "completed";
 
 const REJECT_REASONS = [
@@ -36,119 +48,254 @@ const REJECT_REASONS = [
   "Customer unreachable",
 ];
 
+const STATUS_COLORS: Record<string, string> = {
+  pending: thannigoPalette.warning,
+  accepted: SHOP_ACCENT,
+  out_for_delivery: thannigoPalette.primary,
+  completed: thannigoPalette.success,
+  cancelled: thannigoPalette.adminRed,
+  delivered: thannigoPalette.success,
+};
+
+// ─── Order Card ───────────────────────────────────────────────────────────────
+function OrderCard({
+  order,
+  shop,
+  colors,
+  onAccept,
+  onReject,
+  onDelivered,
+  onPress,
+}: {
+  order: any;
+  shop: any;
+  colors: any;
+  onAccept: () => void;
+  onReject: () => void;
+  onDelivered: () => void;
+  onPress: () => void;
+}) {
+  const [acting, setActing] = useState<"accept" | "reject" | "delivered" | null>(null);
+  const router = useRouter();
+
+  const totalQty = order.items?.reduce((s: number, i: any) => s + i.quantity, 0) ?? 0;
+  const totalAmt = order.total_amount ?? order.totalAmount ?? 0;
+  const isPending = order.status === "pending";
+  const isAccepted = order.status === "accepted";
+
+  const doAction = async (type: "accept" | "reject" | "delivered") => {
+    setActing(type);
+    try {
+      if (type === "accept") await onAccept();
+      else if (type === "reject") onReject();
+      else await onDelivered();
+    } finally {
+      setTimeout(() => setActing(null), 1200);
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.92}
+      style={[styles.orderCard, { backgroundColor: colors.surface }, Shadow.sm]}
+      onPress={onPress}
+    >
+      {/* Top row */}
+      <View style={styles.orderTop}>
+        <View style={[styles.orderIconWrap, { backgroundColor: thannigoPalette.deliveryGreenLight }]}>
+          <Ionicons name="water" size={20} color={SHOP_ACCENT} />
+        </View>
+        <View style={{ flex: 1 }}>
+          {isPending && (
+            <Text style={styles.priorityLabel}>NEW ORDER</Text>
+          )}
+          <Text style={[styles.customerName, { color: colors.text }]} numberOfLines={1}>
+            {order.customerName ?? order.customer_name ?? "Customer"}
+          </Text>
+        </View>
+        <View style={[styles.statusBadge, { backgroundColor: (STATUS_COLORS[order.status] ?? SHOP_ACCENT) + "20" }]}>
+          <Text style={[styles.statusBadgeText, { color: STATUS_COLORS[order.status] ?? SHOP_ACCENT }]}>
+            {order.status?.replace(/_/g, " ") ?? "—"}
+          </Text>
+        </View>
+      </View>
+
+      {/* Details row */}
+      <View style={styles.orderMetaRow}>
+        <View style={styles.orderMetaItem}>
+          <Ionicons name="layers-outline" size={14} color={colors.muted} />
+          <Text style={[styles.orderMetaText, { color: colors.text }]}>
+            {totalQty} can{totalQty !== 1 ? "s" : ""}
+          </Text>
+        </View>
+        <View style={styles.orderMetaItem}>
+          <Ionicons name="cash-outline" size={14} color={colors.muted} />
+          <Text style={[styles.orderMetaText, { color: colors.text }]}>
+            ₹{Number(totalAmt).toFixed(0)}
+          </Text>
+        </View>
+        <View style={styles.orderMetaItem}>
+          <Ionicons name="pricetag-outline" size={14} color={colors.muted} />
+          <Text style={[styles.orderMetaText, { color: colors.text }]}>
+            #{String(order.id).slice(-6)}
+          </Text>
+        </View>
+      </View>
+
+      {/* Address */}
+      <TouchableOpacity
+        style={styles.addressRow}
+        activeOpacity={0.7}
+        onPress={() =>
+          router.push({
+            pathname: "/map-preview",
+            params: {
+              lat: order.delivery_lat ?? "12.9716",
+              lng: order.delivery_lng ?? "80.221",
+              title: order.customerName ?? "Delivery",
+            },
+          })
+        }
+      >
+        <Ionicons name="location-outline" size={14} color={colors.muted} />
+        <Text style={[styles.addressText, { color: colors.muted }]} numberOfLines={2}>
+          {order.address ?? order.delivery_address ?? "Address not available"}
+        </Text>
+        <Ionicons name="chevron-forward" size={12} color={colors.muted} />
+      </TouchableOpacity>
+
+      {/* Action Buttons — only for pending/accepted */}
+      {(isPending || isAccepted) && (
+        <View style={styles.actionArea}>
+          {isPending && (
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={{ flex: 1 }}
+                activeOpacity={0.9}
+                onPress={() => doAction("accept")}
+                disabled={acting !== null}
+              >
+                <LinearGradient
+                  colors={SHOP_GRAD}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={[styles.acceptBtn, acting === "accept" && { opacity: 0.7 }]}
+                >
+                  <Ionicons name="checkmark-circle" size={18} color="white" />
+                  <Text style={styles.acceptBtnText}>
+                    {acting === "accept" ? "Accepting…" : "Accept"}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.rejectBtn, { borderColor: thannigoPalette.adminRedLight, backgroundColor: colors.surface }]}
+                onPress={() => doAction("reject")}
+                disabled={acting !== null}
+              >
+                <Ionicons name="close" size={16} color={thannigoPalette.adminRed} />
+                <Text style={[styles.rejectBtnText, { color: thannigoPalette.adminRed }]}>Reject</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          {isAccepted && (
+            <TouchableOpacity
+              style={[styles.deliveredBtn, { backgroundColor: SHOP_ACCENT }, acting === "delivered" && { opacity: 0.7 }]}
+              onPress={() => doAction("delivered")}
+              disabled={acting !== null}
+            >
+              <Ionicons name="bicycle" size={16} color="white" />
+              <Text style={styles.deliveredBtnText}>
+                {acting === "delivered" ? "Updating…" : "Mark as Delivered"}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+// ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function ShopOrdersScreen() {
-  const [refreshing, setRefreshing] = React.useState(false);
-  const [actionDone, setActionDone] = useState<OrderAction | null>(null);
+  const { colors, isDark } = useAppTheme();
+  const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabState>("active");
   const [acceptingOrders, setAcceptingOrders] = useState(true);
   const [busyMode, setBusyMode] = useState(false);
   const [rejectModalOrderId, setRejectModalOrderId] = useState<string | null>(null);
   const [selectedRejectReason, setSelectedRejectReason] = useState<string | null>(null);
-  const [orderSearchText, setOrderSearchText] = useState("");
+  const [searchText, setSearchText] = useState("");
 
   const router = useRouter();
   const { orders, updateStatus, setActiveOrder, fetchOrders } = useOrderStore();
   const { shops } = useShopStore();
 
-  const onRefresh = React.useCallback(() => {
+  const pendingAlertRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchOrders().finally(() => setRefreshing(false));
   }, [fetchOrders]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchOrders();
-  }, [fetchOrders]);
-  const shop = shops[0];
-  const activeOrders = orders
-    .filter((order) => !["completed", "cancelled"].includes(order.status))
-    .filter((order) => {
-      const q = orderSearchText.toLowerCase();
-      return (
-        order.customerName.toLowerCase().includes(q) ||
-        order.id.toLowerCase().includes(q)
-      );
-    });
-  const completedOrders = orders
-    .filter((order) => ["completed", "cancelled"].includes(order.status))
-    .filter((order) => {
-      const q = orderSearchText.toLowerCase();
-      return (
-        order.customerName.toLowerCase().includes(q) ||
-        order.id.toLowerCase().includes(q)
-      );
-    });
-  const nextOrder = activeOrders[0];
-  const lowStock =
-    shop?.products.filter((product) => product.stockCount < 30) ?? [];
+  }, []);
 
-  // P0: Delivery capacity management - auto busy mode
-  React.useEffect(() => {
-    if (activeOrders.length >= 5 && !busyMode) {
-      setBusyMode(true);
-    }
-  }, [activeOrders.length]);
+  const shop = shops?.[0];
 
-  // P0: 5-min auto-reminder when order not accepted
-  React.useEffect(() => {
-    const pendingCount = activeOrders.filter(
-      (o) => o.status === "pending",
-    ).length;
-    if (pendingCount === 0) return;
-    // In a real app we'd compare created timestamps, but here we trigger a timer.
-    const timer = setTimeout(
-      () => {
-        Toast.show({
-          type: 'info',
-          text1: '⚠️ Unaccepted Orders',
-          text2: `You have ${pendingCount} order(s) waiting for acceptance. Please action them immediately.`
-        });
-      },
-      5 * 60 * 1000,
-    );
-    return () => clearTimeout(timer);
-  }, [activeOrders]);
-
-  const handleAction = async (action: OrderAction, orderId?: string) => {
-    setActionDone(action);
-    if (orderId) {
-      setActiveOrder(orderId);
-    }
-
-    if (action === "accept" && orderId) {
-      try {
-        await apiClient.patch(`/shop-owner/orders/${orderId}/status`, { status: "accepted" });
-        updateStatus(orderId, "accepted");
-      } catch (e: any) {
-        Toast.show({ type: 'error', text1: 'Accept failed', text2: e?.response?.data?.message ?? 'Try again' });
-        return;
-      }
-    }
-
-    // 'reject' is handled by openRejectModal — never called directly here
-
-    if (action === "delivered" && orderId) {
-      try {
-        await apiClient.patch(`/shop-owner/orders/${orderId}/status`, { status: "delivered" });
-        updateStatus(orderId, "completed");
-      } catch (e: any) {
-        Toast.show({ type: 'error', text1: 'Update failed', text2: e?.response?.data?.message ?? 'Try again' });
-        return;
-      }
-    }
-
-    if (action === "delivered") {
-      setTimeout(() => {
-        setActionDone(null);
-        if (orderId) {
-          router.push(`/shop/order/${orderId}` as any);
-        }
-      }, 700);
-    } else {
-      setTimeout(() => setActionDone(null), 2000);
-    }
+  const filterFn = (o: any) => {
+    const q = searchText.toLowerCase();
+    if (!q) return true;
+    const name = (o.customerName ?? o.customer_name ?? "").toLowerCase();
+    const id = String(o.id).toLowerCase();
+    return name.includes(q) || id.includes(q);
   };
 
-  /** P0: Reject reason is MANDATORY — opens bottom-sheet */
+  const activeOrders = orders
+    .filter((o) => !["completed", "cancelled", "delivered"].includes(o.status))
+    .filter(filterFn);
+
+  const completedOrders = orders
+    .filter((o) => ["completed", "cancelled", "delivered"].includes(o.status))
+    .filter(filterFn);
+
+  const pendingCount = activeOrders.filter((o) => o.status === "pending").length;
+  const lowStockCount = shop?.products?.filter((p: any) => p.stockCount < 30)?.length ?? 0;
+
+  // Auto busy-mode
+  useEffect(() => {
+    if (activeOrders.length >= 5 && !busyMode) setBusyMode(true);
+  }, [activeOrders.length]);
+
+  // Pending alert — fire once when there are pending orders, debounce on changes
+  useEffect(() => {
+    if (pendingAlertRef.current) clearTimeout(pendingAlertRef.current);
+    if (pendingCount === 0) return;
+    pendingAlertRef.current = setTimeout(() => {
+      Toast.show({
+        type: "info",
+        text1: "Unaccepted Orders",
+        text2: `${pendingCount} order(s) still waiting for acceptance.`,
+      });
+    }, 5 * 60 * 1000);
+    return () => {
+      if (pendingAlertRef.current) clearTimeout(pendingAlertRef.current);
+    };
+  }, [pendingCount]);
+
+  const handleAccept = async (orderId: string) => {
+    setActiveOrder(orderId);
+    await apiClient.patch(`/shop-owner/orders/${orderId}/status`, { status: "accepted" });
+    updateStatus(orderId, "accepted");
+  };
+
+  const handleDelivered = async (orderId: string) => {
+    setActiveOrder(orderId);
+    await apiClient.patch(`/shop-owner/orders/${orderId}/status`, { status: "delivered" });
+    updateStatus(orderId, "completed");
+    router.push(`/shop/order/${orderId}` as any);
+  };
+
   const openRejectModal = (orderId: string) => {
     setSelectedRejectReason(null);
     setRejectModalOrderId(orderId);
@@ -156,412 +303,281 @@ export default function ShopOrdersScreen() {
 
   const confirmReject = async () => {
     if (!selectedRejectReason) {
-      Toast.show({
-        type: 'error',
-        text1: 'Reason Required',
-        text2: 'Please select a reason before rejecting this order.'
-      });
+      Toast.show({ type: "error", text1: "Reason required", text2: "Select a reason to reject." });
       return;
     }
-    if (rejectModalOrderId) {
-      try {
-        const res = await apiClient.post(`/shop-owner/orders/${rejectModalOrderId}/reject`, { reason: selectedRejectReason });
-        setActiveOrder(rejectModalOrderId);
-        // If fallback found, backend notifies customer via socket — update local status to show searching
-        if (res.data.data?.fallback) {
-          updateStatus(rejectModalOrderId, "cancelled"); // Remove from shop queue
-          Toast.show({ type: 'info', text1: 'Searching for next shop', text2: 'Customer will be notified with a new offer.' });
-        } else {
-          updateStatus(rejectModalOrderId, "cancelled");
-          Toast.show({ type: 'success', text1: 'Order Rejected', text2: 'Order has been cancelled.' });
-        }
-        setActionDone("reject");
-        setTimeout(() => setActionDone(null), 2000);
-      } catch (e: any) {
-        Toast.show({ type: 'error', text1: 'Reject failed', text2: e?.response?.data?.message ?? 'Try again' });
-      }
+    if (!rejectModalOrderId) return;
+    try {
+      const res = await apiClient.post(`/shop-owner/orders/${rejectModalOrderId}/reject`, {
+        reason: selectedRejectReason,
+      });
+      setActiveOrder(rejectModalOrderId);
+      updateStatus(rejectModalOrderId, "cancelled");
+      Toast.show({
+        type: res.data.data?.fallback ? "info" : "success",
+        text1: res.data.data?.fallback ? "Finding next shop" : "Order Rejected",
+        text2: res.data.data?.fallback
+          ? "Customer will receive a new offer."
+          : "Order has been cancelled.",
+      });
+    } catch (e: any) {
+      Toast.show({ type: "error", text1: "Reject failed", text2: e?.response?.data?.message ?? "Try again" });
+    } finally {
+      setRejectModalOrderId(null);
+      setSelectedRejectReason(null);
     }
-    setRejectModalOrderId(null);
-    setSelectedRejectReason(null);
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+      <StatusBar style={isDark ? "light" : "dark"} />
 
-      {/* HEADER */}
-      <View style={styles.header}>
-        <View>
-          <View style={styles.brandRow}>
-            <Logo size="md" />
-            <Text style={styles.brandName}>ThanniGo</Text>
-          </View>
-          <Text style={styles.roleLabel}>SHOP PANEL</Text>
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => router.push("/shop/settings" as any)}
-          >
-            <Ionicons name="grid-outline" size={20} color={SHOP_ACCENT} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.iconBtn}
-            onPress={() => router.push("/notifications" as any)}
-          >
-            <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
-            <View style={styles.notifDot} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <RoleHeader
+        role="shop_owner"
+        title="Shop Panel"
+        hasNotif
+        onNotif={() => router.push("/notifications" as any)}
+        onSettings={() => router.push("/shop/settings" as any)}
+      />
 
       <ScrollView
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#005d90"]}
-            tintColor="#005d90"
+            colors={[SHOP_ACCENT]}
+            tintColor={SHOP_ACCENT}
           />
         }
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
       >
-        <Text style={styles.pageTitle}>Orders</Text>
+        <Text style={[styles.pageTitle, { color: colors.text }]}>Orders</Text>
 
-        {/* SEARCH BAR (P1) */}
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={20}
-            color="#707881"
-            style={styles.searchIcon}
-          />
+        {/* Search */}
+        <View style={[styles.searchWrap, { backgroundColor: colors.surface, borderColor: colors.border }, Shadow.xs]}>
+          <Ionicons name="search" size={18} color={colors.muted} />
           <TextInput
-            value={orderSearchText}
-            onChangeText={setOrderSearchText}
-            placeholder="Search customer name or Order ID..."
-            placeholderTextColor="#bfc7d1"
-            style={styles.searchInput}
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholder="Search by customer or order ID…"
+            placeholderTextColor={colors.muted}
+            style={[styles.searchInput, { color: colors.text }]}
           />
-          {orderSearchText ? (
-            <TouchableOpacity onPress={() => setOrderSearchText("")}>
-              <Ionicons name="close-circle" size={18} color="#bfc7d1" />
+          {searchText.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchText("")}>
+              <Ionicons name="close-circle" size={18} color={colors.muted} />
             </TouchableOpacity>
-          ) : null}
+          )}
         </View>
 
-        {/* --- DELIVERY MODE HERO CARD --- */}
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() => router.push("/delivery" as any)}
-        >
+        {/* Delivery mode hero */}
+        <TouchableOpacity activeOpacity={0.9} onPress={() => router.push("/delivery" as any)}>
           <LinearGradient
             colors={SHOP_GRAD}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.deliveryHeroCard}
+            style={[styles.heroCard, { shadowColor: SHOP_ACCENT }]}
           >
             <View style={styles.heroLeft}>
-              <View style={styles.heroIconBackground}>
-                <Ionicons name="bicycle" size={28} color="#006878" />
+              <View style={styles.heroIcon}>
+                <Ionicons name="bicycle" size={26} color={SHOP_ACCENT} />
               </View>
               <View>
                 <Text style={styles.heroTitle}>Switch to Delivery Mode</Text>
-                <Text style={styles.heroSub}>
-                  Act as delivery agent for your shop
-                </Text>
+                <Text style={styles.heroSub}>Act as delivery agent for your shop</Text>
               </View>
             </View>
-            <View style={styles.heroAction}>
-              <Ionicons name="arrow-forward" size={20} color="white" />
+            <View style={styles.heroArrow}>
+              <Ionicons name="arrow-forward" size={18} color="white" />
             </View>
           </LinearGradient>
         </TouchableOpacity>
 
-        <View style={styles.opsCard}>
+        {/* Ops toggles */}
+        <View style={[styles.opsCard, { backgroundColor: colors.surface }, Shadow.sm]}>
           <View style={styles.opsRow}>
-            <View>
-              <Text style={styles.opsTitle}>Accept Orders</Text>
-              <Text style={styles.opsSub}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.opsTitle, { color: colors.text }]}>Accept Orders</Text>
+              <Text style={[styles.opsSub, { color: colors.muted }]}>
                 Control whether customers can place new orders right now.
               </Text>
             </View>
             <TouchableOpacity
               style={[
-                styles.statePill,
-                acceptingOrders && styles.statePillActive,
+                styles.togglePill,
+                { backgroundColor: acceptingOrders ? thannigoPalette.deliveryGreenLight : colors.background },
               ]}
-              onPress={() => setAcceptingOrders((value) => !value)}
+              onPress={() => setAcceptingOrders((v) => !v)}
             >
-              <Text
-                style={[
-                  styles.statePillText,
-                  acceptingOrders && styles.statePillTextActive,
-                ]}
-              >
+              <Text style={[styles.toggleText, { color: acceptingOrders ? thannigoPalette.deliveryGreen : colors.muted }]}>
                 {acceptingOrders ? "Online" : "Paused"}
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* --- QUICK ANALYTICS LINK (Hidden Menu Entry Point) --- */}
           <TouchableOpacity
-            style={styles.insightsRow}
+            style={[styles.analyticsRow, { backgroundColor: thannigoPalette.deliveryGreenLight, borderColor: SHOP_ACCENT }]}
             onPress={() => router.push("/shop/analytics" as any)}
           >
-            <View style={styles.insightsLeft}>
-              <Ionicons name="trending-up" size={16} color="#006878" />
-              <Text style={styles.insightsText}>
-                View Shop Analytics & Trends
-              </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Ionicons name="trending-up" size={15} color={SHOP_ACCENT} />
+              <Text style={[styles.analyticsText, { color: SHOP_ACCENT }]}>View Shop Analytics &amp; Trends</Text>
             </View>
-            <Ionicons name="chevron-forward" size={14} color="#94a3b8" />
+            <Ionicons name="chevron-forward" size={13} color={colors.muted} />
           </TouchableOpacity>
-          <View style={styles.dividerLine} />
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
           <View style={styles.opsRow}>
-            <View>
-              <Text style={styles.opsTitle}>Busy Mode</Text>
-              <Text style={styles.opsSub}>
-                Use when capacity is full and new requests should be slowed
-                down.
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.opsTitle, { color: colors.text }]}>Busy Mode</Text>
+              <Text style={[styles.opsSub, { color: colors.muted }]}>
+                Slow down new orders when capacity is full.
               </Text>
             </View>
             <TouchableOpacity
-              style={[styles.statePill, busyMode && styles.statePillWarn]}
-              onPress={() => setBusyMode((value) => !value)}
+              style={[
+                styles.togglePill,
+                { backgroundColor: busyMode ? "#FFF3E0" : colors.background },
+              ]}
+              onPress={() => setBusyMode((v) => !v)}
             >
-              <Text
-                style={[
-                  styles.statePillText,
-                  busyMode && styles.statePillWarnText,
-                ]}
-              >
+              <Text style={[styles.toggleText, { color: busyMode ? thannigoPalette.warning : colors.muted }]}>
                 {busyMode ? "Busy" : "Normal"}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.capacityRow}>
-          <View style={styles.capacityCard}>
-            <Text style={styles.capacityLabel}>Open Orders</Text>
-            <Text style={styles.capacityValue}>{activeOrders.length}</Text>
-          </View>
-          <View style={styles.capacityCard}>
-            <Text style={styles.capacityLabel}>Per Hour Capacity</Text>
-            <Text style={styles.capacityValue}>5</Text>
-          </View>
-          <View style={styles.capacityCard}>
-            <Text style={styles.capacityLabel}>Low Stock SKUs</Text>
-            <Text style={styles.capacityValue}>{lowStock.length}</Text>
-          </View>
+        {/* Stats row */}
+        <View style={styles.statsRow}>
+          {[
+            { label: "Active", value: activeOrders.length, icon: "receipt-outline" },
+            { label: "Pending", value: pendingCount, icon: "time-outline" },
+            { label: "Low Stock", value: lowStockCount, icon: "warning-outline" },
+          ].map((s) => (
+            <View key={s.label} style={[styles.statCard, { backgroundColor: colors.surface }, Shadow.xs]}>
+              <Ionicons name={s.icon as any} size={16} color={SHOP_ACCENT} />
+              <Text style={[styles.statValue, { color: colors.text }]}>{s.value}</Text>
+              <Text style={[styles.statLabel, { color: colors.muted }]}>{s.label}</Text>
+            </View>
+          ))}
         </View>
 
-        {/* CUSTOM TABS */}
-        <View style={styles.tabsWrap}>
-          <TouchableOpacity
-            style={[
-              styles.tabBtn,
-              activeTab === "active" && styles.tabBtnActive,
-            ]}
-            onPress={() => setActiveTab("active")}
-          >
-            <Text
+        {/* Tabs */}
+        <View style={[styles.tabsWrap, { backgroundColor: colors.border }]}>
+          {(["active", "completed"] as TabState[]).map((tab) => (
+            <TouchableOpacity
+              key={tab}
               style={[
-                styles.tabText,
-                activeTab === "active" && styles.tabTextActive,
+                styles.tabBtn,
+                activeTab === tab && [styles.tabBtnActive, { backgroundColor: colors.surface }, Shadow.xs],
               ]}
+              onPress={() => setActiveTab(tab)}
             >
-              Active
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.tabBtn,
-              activeTab === "completed" && styles.tabBtnActive,
-            ]}
-            onPress={() => setActiveTab("completed")}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "completed" && styles.tabTextActive,
-              ]}
-            >
-              Completed
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.tabText,
+                  { color: colors.muted },
+                  activeTab === tab && { color: SHOP_ACCENT, fontWeight: "800" },
+                ]}
+              >
+                {tab === "active"
+                  ? `Active${activeOrders.length > 0 ? ` (${activeOrders.length})` : ""}`
+                  : "Completed"}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
+        {/* Active orders list */}
         {activeTab === "active" && (
-          <>
-            <Text style={styles.sectionHeader}>Pending Actions</Text>
-            {nextOrder ? (
-              <View style={styles.orderCard}>
-                <View style={styles.orderTop}>
-                  <View style={styles.orderIconWrap}>
-                    <Ionicons name="water" size={22} color="#004e5b" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.priorityLabel}>Priority Order</Text>
-                    <Text style={styles.customerName}>
-                      {nextOrder.customerName}
-                    </Text>
-                  </View>
-                  <View style={styles.orderIdBadge}>
-                    <Text style={styles.orderIdText}>#{nextOrder.id}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.detailRow}>
-                  <View style={styles.detailIconWrap}>
-                    <Ionicons name="layers-outline" size={18} color={SHOP_ACCENT} />
-                  </View>
-                  <Text style={styles.detailValue}>
-                    {nextOrder.items.reduce(
-                      (sum, item) => sum + item.quantity,
-                      0,
-                    )}{" "}
-                    Cans{" "}
-                    <Text style={styles.detailValueSub}>
-                      ({shop?.products[0]?.unitLabel ?? "20L"})
-                    </Text>
-                  </Text>
-                </View>
-
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  style={styles.detailRow}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/map-preview",
-                      params: {
-                        lat: "28.4595",
-                        lng: "77.0266",
-                        title: nextOrder.customerName,
-                      },
-                    })
+          activeOrders.length === 0 ? (
+            <EmptyState
+              icon="checkmark-done-circle-outline"
+              title="No active orders"
+              subtitle="New customer orders will appear here."
+            />
+          ) : (
+            activeOrders.map((order) => (
+              <OrderCard
+                key={order.id}
+                order={order}
+                shop={shop}
+                colors={colors}
+                onAccept={async () => {
+                  try { await handleAccept(order.id); }
+                  catch (e: any) {
+                    Toast.show({ type: "error", text1: "Accept failed", text2: e?.response?.data?.message ?? "Try again" });
+                    throw e;
                   }
-                >
-                  <View style={styles.detailIconWrap}>
-                    <Ionicons
-                      name="location-outline"
-                      size={18}
-                      color="#707881"
-                    />
-                  </View>
-                  <Text style={styles.addressText}>{nextOrder.address}</Text>
-                </TouchableOpacity>
-
-                {/* Action Buttons */}
-                <View style={styles.actionGrid}>
-                  <TouchableOpacity
-                    activeOpacity={0.9}
-                    style={{ flex: 1 }}
-                    onPress={() => handleAction("accept", nextOrder.id)}
-                  >
-                    <LinearGradient
-                      colors={SHOP_GRAD}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.acceptBtn}
-                    >
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={20}
-                        color="white"
-                      />
-                      <Text style={styles.acceptBtnText}>ACCEPT</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.rejectBtn}
-                    onPress={() => openRejectModal(nextOrder.id)}
-                  >
-                    <Ionicons name="close" size={18} color="#ba1a1a" />
-                    <Text style={styles.rejectBtnText}>REJECT</Text>
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity
-                  style={styles.deliveredBtn}
-                  onPress={() => handleAction("delivered", nextOrder.id)}
-                >
-                  <Ionicons name="bicycle" size={18} color="white" />
-                  <Text style={styles.deliveredBtnText}>MARK AS DELIVERED</Text>
-                </TouchableOpacity>
-
-                {/* STATUS MESSAGE */}
-                {actionDone && (
-                  <View
-                    style={[
-                      styles.statusMsg,
-                      actionDone === "accept"
-                        ? styles.statusMsgSuccess
-                        : actionDone === "reject"
-                          ? styles.statusMsgError
-                          : styles.statusMsgInfo,
-                    ]}
-                  >
-                    <Text style={styles.statusMsgText}>
-                      {actionDone === "accept"
-                        ? "Order Accepted!"
-                        : actionDone === "reject"
-                          ? "Order Rejected"
-                          : "Marked as Delivered!"}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            ) : (
-              <View style={styles.emptyState}>
-                <Ionicons
-                  name="checkmark-done-circle-outline"
-                  size={48}
-                  color="#bfc7d1"
-                />
-                <Text style={styles.emptyTitle}>No active shop orders</Text>
-                <Text style={styles.emptySub}>
-                  New customer orders will appear here.
-                </Text>
-              </View>
-            )}
-          </>
+                }}
+                onReject={() => openRejectModal(order.id)}
+                onDelivered={async () => {
+                  try { await handleDelivered(order.id); }
+                  catch (e: any) {
+                    Toast.show({ type: "error", text1: "Update failed", text2: e?.response?.data?.message ?? "Try again" });
+                    throw e;
+                  }
+                }}
+                onPress={() => router.push(`/shop/order/${order.id}` as any)}
+              />
+            ))
+          )
         )}
 
-        {activeTab === "completed" &&
-          (completedOrders.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons
-                name="checkmark-done-circle-outline"
-                size={48}
-                color="#bfc7d1"
-              />
-              <Text style={styles.emptyTitle}>No completed orders yet</Text>
-              <Text style={styles.emptySub}>
-                Orders marked as delivered will appear here.
-              </Text>
-            </View>
+        {/* Completed orders list */}
+        {activeTab === "completed" && (
+          completedOrders.length === 0 ? (
+            <EmptyState
+              icon="checkmark-done-circle-outline"
+              title="No completed orders yet"
+              subtitle="Delivered and cancelled orders appear here."
+            />
           ) : (
-            completedOrders.map((order) => (
-              <TouchableOpacity
-                key={order.id}
-                style={styles.completedCard}
-                onPress={() => router.push(`/shop/order/${order.id}` as any)}
-              >
-                <View>
-                  <Text style={styles.completedId}>#{order.id}</Text>
-                  <Text style={styles.completedName}>{order.customerName}</Text>
-                </View>
-                <Text style={styles.completedStatus}>
-                  {order.status.replaceAll("_", " ")}
-                </Text>
-              </TouchableOpacity>
-            ))
-          ))}
+            completedOrders.map((order) => {
+              const totalAmt = order.total_amount ?? order.totalAmount ?? 0;
+              const isCancelled = order.status === "cancelled";
+              return (
+                <TouchableOpacity
+                  key={order.id}
+                  style={[styles.completedCard, { backgroundColor: colors.surface }, Shadow.xs]}
+                  onPress={() => router.push(`/shop/order/${order.id}` as any)}
+                >
+                  <View style={[styles.completedIconWrap, { backgroundColor: isCancelled ? thannigoPalette.dangerSoft : thannigoPalette.deliveryGreenLight }]}>
+                    <Ionicons
+                      name={isCancelled ? "close-circle-outline" : "checkmark-circle-outline"}
+                      size={20}
+                      color={isCancelled ? thannigoPalette.adminRed : SHOP_ACCENT}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.completedName, { color: colors.text }]} numberOfLines={1}>
+                      {order.customerName ?? order.customer_name ?? "Customer"}
+                    </Text>
+                    <Text style={[styles.completedId, { color: colors.muted }]}>
+                      #{String(order.id).slice(-6)}
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: "flex-end", gap: 4 }}>
+                    <Text style={[styles.completedAmt, { color: colors.text }]}>₹{Number(totalAmt).toFixed(0)}</Text>
+                    <View style={[styles.statusBadge, { backgroundColor: (STATUS_COLORS[order.status] ?? SHOP_ACCENT) + "20" }]}>
+                      <Text style={[styles.statusBadgeText, { color: STATUS_COLORS[order.status] ?? SHOP_ACCENT }]}>
+                        {order.status?.replace(/_/g, " ")}
+                      </Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={colors.muted} style={{ marginLeft: 4 }} />
+                </TouchableOpacity>
+              );
+            })
+          )
+        )}
       </ScrollView>
 
-      {/* MANDATORY REJECT REASON MODAL (P0) */}
+      {/* Reject Modal */}
       <Modal
         visible={rejectModalOrderId !== null}
         transparent
@@ -569,59 +585,54 @@ export default function ShopOrdersScreen() {
         onRequestClose={() => setRejectModalOrderId(null)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Reject Order</Text>
+          <View style={[styles.modalSheet, { backgroundColor: colors.surface }]}>
+            <View style={styles.modalHandle} />
+            <View style={styles.modalHeaderRow}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Reject Order</Text>
               <TouchableOpacity
-                style={styles.modalCloseBtn}
+                style={[styles.modalCloseBtn, { backgroundColor: colors.background }]}
                 onPress={() => setRejectModalOrderId(null)}
               >
-                <Ionicons name="close" size={20} color="#707881" />
+                <Ionicons name="close" size={18} color={colors.muted} />
               </TouchableOpacity>
             </View>
-            <Text style={styles.modalSubtitle}>Select a reason (required)</Text>
-            <View style={{ gap: 10, width: "100%", marginBottom: 20 }}>
-              {REJECT_REASONS.map((reason) => (
-                <TouchableOpacity
-                  key={reason}
-                  style={[
-                    styles.reasonOption,
-                    selectedRejectReason === reason &&
-                      styles.reasonOptionSelected,
-                  ]}
-                  onPress={() => setSelectedRejectReason(reason)}
-                >
-                  <Ionicons
-                    name={
-                      selectedRejectReason === reason
-                        ? "radio-button-on"
-                        : "radio-button-off"
-                    }
-                    size={20}
-                    color={
-                      selectedRejectReason === reason ? "#ba1a1a" : "#94a3b8"
-                    }
-                  />
-                  <Text
+            <Text style={[styles.modalSub, { color: colors.muted }]}>Select a reason (required)</Text>
+
+            <View style={{ gap: 8, marginBottom: 20 }}>
+              {REJECT_REASONS.map((reason) => {
+                const selected = selectedRejectReason === reason;
+                return (
+                  <TouchableOpacity
+                    key={reason}
                     style={[
-                      styles.reasonText,
-                      selectedRejectReason === reason &&
-                        styles.reasonTextSelected,
+                      styles.reasonItem,
+                      { borderColor: colors.border, backgroundColor: colors.background },
+                      selected && { borderColor: thannigoPalette.adminRedLight, backgroundColor: thannigoPalette.dangerSoft },
                     ]}
+                    onPress={() => setSelectedRejectReason(reason)}
                   >
-                    {reason}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Ionicons
+                      name={selected ? "radio-button-on" : "radio-button-off"}
+                      size={18}
+                      color={selected ? thannigoPalette.adminRed : colors.muted}
+                    />
+                    <Text style={[styles.reasonText, { color: colors.text }, selected && { color: thannigoPalette.adminRed, fontWeight: "800" }]}>
+                      {reason}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
+
             <TouchableOpacity
               style={[
                 styles.confirmRejectBtn,
+                { backgroundColor: thannigoPalette.adminRed },
                 !selectedRejectReason && { opacity: 0.4 },
               ]}
               onPress={confirmReject}
             >
-              <Ionicons name="close-circle" size={18} color="white" />
+              <Ionicons name="close-circle" size={16} color="white" />
               <Text style={styles.confirmRejectText}>Confirm Rejection</Text>
             </TouchableOpacity>
           </View>
@@ -632,129 +643,176 @@ export default function ShopOrdersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
-  header: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingHorizontal: 24, paddingVertical: 14,
-    backgroundColor: "rgba(255,255,255,0.95)",
+  container: { flex: 1 },
+  pageTitle: { ...Typography.h1, letterSpacing: -0.5, marginTop: 10, marginBottom: 12 },
+
+  searchWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderRadius: Radius.xl,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 16,
+    borderWidth: 1,
   },
-  brandRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  brandName: { fontSize: 20, fontWeight: "900", color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  roleLabel: { fontSize: 8, fontWeight: "700", color: SHOP_ACCENT, letterSpacing: 1.2, marginTop: 2 },
-  headerRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-  iconBtn: {
-    width: 40, height: 40, borderRadius: 12,
-    backgroundColor: thannigoPalette.surface,
-    alignItems: "center", justifyContent: "center", position: "relative",
-    ...Shadow.xs,
+  searchInput: { flex: 1, fontSize: 14, fontWeight: "600" },
+
+  heroCard: {
+    borderRadius: Radius.xl,
+    padding: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+    ...Shadow.hero,
   },
-  deliveryHeroCard: {
-    borderRadius: 24, padding: 20, flexDirection: "row", alignItems: "center",
-    marginBottom: 24, overflow: "hidden",
-    shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18, shadowRadius: 20, elevation: 6,
+  heroLeft: { flex: 1, flexDirection: "row", alignItems: "center", gap: 14 },
+  heroIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "white",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  heroLeft: { flex: 1, flexDirection: "row", alignItems: "center", gap: 16 },
-  heroIconBackground: { width: 52, height: 52, borderRadius: 16, backgroundColor: "white", alignItems: "center", justifyContent: "center" },
-  heroTitle: { fontSize: 18, fontWeight: "900", color: "white" },
-  heroSub: { fontSize: 12, color: "rgba(255,255,255,0.85)", marginTop: 2 },
-  heroAction: { width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.2)", alignItems: "center", justifyContent: "center" },
-  notifDot: {
-    position: "absolute", top: 8, right: 8, width: 8, height: 8,
-    backgroundColor: thannigoPalette.error, borderRadius: 4,
-    borderWidth: 1.5, borderColor: thannigoPalette.surface,
+  heroTitle: { fontSize: 16, fontWeight: "900", color: "white" },
+  heroSub: { fontSize: 11, color: "rgba(255,255,255,0.85)", marginTop: 2 },
+  heroArrow: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  pageTitle: { fontSize: 32, fontWeight: "900", color: thannigoPalette.darkText, letterSpacing: -0.5, marginTop: 10, marginBottom: 12 },
-
-  searchContainer: {
-    flexDirection: "row", alignItems: "center", backgroundColor: thannigoPalette.surface,
-    borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 24,
-    borderWidth: 1, borderColor: thannigoPalette.borderSoft,
-    ...Shadow.xs,
+  opsCard: { borderRadius: Radius.xl, padding: 16, gap: 12, marginBottom: 16 },
+  opsRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 12 },
+  opsTitle: { fontSize: 14, fontWeight: "800" },
+  opsSub: { fontSize: 12, lineHeight: 17, marginTop: 2, flexShrink: 1 },
+  divider: { height: 1 },
+  togglePill: { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8 },
+  toggleText: { fontWeight: "800", fontSize: 13 },
+  analyticsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: Radius.md,
+    borderStyle: "dashed",
+    borderWidth: 1,
   },
-  searchIcon: { marginRight: 10 },
-  searchInput: { flex: 1, fontSize: 14, fontWeight: "600", color: thannigoPalette.darkText },
+  analyticsText: { fontSize: 12, fontWeight: "700" },
 
-  tabsWrap: { flexDirection: "row", backgroundColor: "#EBEEF4", borderRadius: 16, padding: 4, marginBottom: 24 },
-  tabBtn: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: 12 },
-  tabBtnActive: { backgroundColor: thannigoPalette.surface, ...Shadow.xs },
-  tabText: { fontSize: 13, fontWeight: "600", color: thannigoPalette.neutral },
-  tabTextActive: { color: SHOP_ACCENT, fontWeight: "800" },
+  statsRow: { flexDirection: "row", gap: 10, marginBottom: 16 },
+  statCard: {
+    flex: 1,
+    borderRadius: Radius.xl,
+    padding: 14,
+    alignItems: "center",
+    gap: 4,
+  },
+  statValue: { fontSize: 20, fontWeight: "900" },
+  statLabel: { fontSize: 10, fontWeight: "700", textAlign: "center" },
 
-  sectionHeader: { fontSize: 11, fontWeight: "800", color: thannigoPalette.neutral, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 },
-  opsCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 18, gap: 14, marginBottom: 16, ...Shadow.sm },
-  opsRow: { flexDirection: "row", justifyContent: "space-between", gap: 12, alignItems: "center" },
-  opsTitle: { fontSize: 15, fontWeight: "800", color: thannigoPalette.darkText },
-  opsSub: { color: thannigoPalette.neutral, width: 220, lineHeight: 18, fontSize: 12 },
-  dividerLine: { height: 1, backgroundColor: thannigoPalette.borderSoft },
-  statePill: { borderRadius: 999, backgroundColor: "#F1F4F9", paddingHorizontal: 14, paddingVertical: 10 },
-  statePillActive: { backgroundColor: "#E0F7FA" },
-  statePillWarn: { backgroundColor: "#FFF3E0" },
-  statePillText: { color: thannigoPalette.neutral, fontWeight: "800" },
-  statePillTextActive: { color: SHOP_ACCENT },
-  statePillWarnText: { color: thannigoPalette.warning },
-  capacityRow: { flexDirection: "row", gap: 10, marginBottom: 24 },
-  capacityCard: { flex: 1, backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 14, alignItems: "center", ...Shadow.xs },
-  capacityLabel: { color: thannigoPalette.neutral, fontSize: 11, fontWeight: "700", textAlign: "center" },
-  capacityValue: { color: thannigoPalette.darkText, fontSize: 22, fontWeight: "900", marginTop: 6 },
+  tabsWrap: { flexDirection: "row", borderRadius: Radius.lg, padding: 4, marginBottom: 16 },
+  tabBtn: { flex: 1, paddingVertical: 10, alignItems: "center", borderRadius: Radius.md },
+  tabBtnActive: {},
+  tabText: { fontSize: 13, fontWeight: "600" },
 
-  orderCard: { backgroundColor: thannigoPalette.surface, borderRadius: 24, padding: 20, ...Shadow.sm },
-  orderTop: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 },
-  orderIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: "#E0F7FA", alignItems: "center", justifyContent: "center" },
-  priorityLabel: { fontSize: 10, fontWeight: "700", color: SHOP_ACCENT, textTransform: "uppercase", letterSpacing: 1 },
-  customerName: { fontSize: 18, fontWeight: "900", color: thannigoPalette.darkText },
-  orderIdBadge: { backgroundColor: "#E0F7FA", borderRadius: 16, paddingHorizontal: 10, paddingVertical: 4 },
-  orderIdText: { color: SHOP_ACCENT, fontWeight: "800", fontSize: 11 },
+  // Order card
+  orderCard: { borderRadius: Radius.xl, padding: 16, marginBottom: 12 },
+  orderTop: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 },
+  orderIconWrap: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  priorityLabel: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: SHOP_ACCENT,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  customerName: { fontSize: 16, fontWeight: "900" },
+  statusBadge: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  statusBadgeText: { fontSize: 10, fontWeight: "800", textTransform: "capitalize" },
 
-  detailRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 },
-  detailIconWrap: { width: 32, height: 32, borderRadius: 10, backgroundColor: "#F1F4F9", alignItems: "center", justifyContent: "center" },
-  detailValue: { fontSize: 16, fontWeight: "900", color: thannigoPalette.darkText },
-  detailValueSub: { fontSize: 13, fontWeight: "500", color: thannigoPalette.neutral },
-  addressText: { fontSize: 13, color: thannigoPalette.darkText, lineHeight: 18, flex: 1 },
+  orderMetaRow: { flexDirection: "row", gap: 16, marginBottom: 10 },
+  orderMetaItem: { flexDirection: "row", alignItems: "center", gap: 5 },
+  orderMetaText: { fontSize: 13, fontWeight: "700" },
 
-  actionGrid: { flexDirection: "row", gap: 10, marginVertical: 12 },
-  acceptBtn: { borderRadius: 16, paddingVertical: 14, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
-  acceptBtnText: { color: "white", fontSize: 14, fontWeight: "900", letterSpacing: 0.5 },
-  rejectBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: "white", borderRadius: 16, borderWidth: 1.5, borderColor: thannigoPalette.adminRedLight },
-  rejectBtnText: { color: thannigoPalette.adminRed, fontWeight: "800", fontSize: 13 },
-  deliveredBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: SHOP_ACCENT, borderRadius: 16, paddingVertical: 14 },
+  addressRow: { flexDirection: "row", alignItems: "flex-start", gap: 6, marginBottom: 12 },
+  addressText: { flex: 1, fontSize: 12, lineHeight: 17 },
+
+  actionArea: { gap: 8 },
+  actionRow: { flexDirection: "row", gap: 10 },
+  acceptBtn: {
+    borderRadius: Radius.lg,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  acceptBtnText: { color: "white", fontSize: 13, fontWeight: "900" },
+  rejectBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderRadius: Radius.lg,
+    borderWidth: 1.5,
+    paddingVertical: 12,
+  },
+  rejectBtnText: { fontWeight: "800", fontSize: 12 },
+  deliveredBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderRadius: Radius.lg,
+    paddingVertical: 12,
+  },
   deliveredBtnText: { color: "white", fontWeight: "800", fontSize: 13 },
 
-  statusMsg: { flexDirection: "row", alignItems: "center", padding: 12, borderRadius: 12, marginTop: 12 },
-  statusMsgSuccess: { backgroundColor: SHOP_ACCENT },
-  statusMsgError: { backgroundColor: thannigoPalette.adminRed },
-  statusMsgInfo: { backgroundColor: thannigoPalette.primary },
-  statusMsgText: { color: "white", fontWeight: "700", fontSize: 13, marginLeft: 8 },
-
-  emptyState: { alignItems: "center", justifyContent: "center", paddingVertical: 40 },
-  emptyTitle: { fontSize: 16, fontWeight: "800", color: thannigoPalette.darkText, marginTop: 12 },
-  emptySub: { fontSize: 13, color: thannigoPalette.neutral, marginTop: 4, textAlign: "center" },
-  completedCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 16, marginBottom: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center", ...Shadow.xs },
-  completedId: { color: SHOP_ACCENT, fontWeight: "800", fontSize: 12 },
-  completedName: { color: thannigoPalette.darkText, fontWeight: "800", fontSize: 16, marginTop: 4 },
-  completedStatus: { color: SHOP_ACCENT, fontWeight: "700", textTransform: "capitalize" },
-
-  insightsRow: {
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    backgroundColor: "#E0F7FA", paddingHorizontal: 16, paddingVertical: 12,
-    borderRadius: 16, marginBottom: 24, borderStyle: "dashed", borderWidth: 1, borderColor: SHOP_ACCENT,
+  // Completed card
+  completedCard: {
+    borderRadius: Radius.xl,
+    padding: 14,
+    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
-  insightsLeft: { flexDirection: "row", alignItems: "center", gap: 10 },
-  insightsText: { fontSize: 13, fontWeight: "700", color: SHOP_ACCENT },
+  completedIconWrap: { width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  completedName: { fontSize: 14, fontWeight: "800" },
+  completedId: { fontSize: 11, marginTop: 2 },
+  completedAmt: { fontSize: 14, fontWeight: "900" },
 
+  // Modal
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,40,60,0.45)", justifyContent: "flex-end" },
-  modalContent: { backgroundColor: "white", borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 36, alignItems: "center" },
-  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: 4 },
-  modalTitle: { fontSize: 22, fontWeight: "900", color: thannigoPalette.darkText },
-  modalCloseBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#F1F4F9", alignItems: "center", justifyContent: "center" },
-  modalSubtitle: { fontSize: 13, color: thannigoPalette.neutral, alignSelf: "flex-start", marginBottom: 16, fontWeight: "500" },
-  reasonOption: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 16, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, backgroundColor: "#FAFAFA" },
-  reasonOptionSelected: { borderColor: thannigoPalette.adminRedLight, backgroundColor: "#FFF5F4" },
-  reasonText: { fontSize: 14, color: "#404850", fontWeight: "600", flex: 1 },
-  reasonTextSelected: { color: thannigoPalette.adminRed, fontWeight: "800" },
-  confirmRejectBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: thannigoPalette.adminRed, borderRadius: 18, paddingVertical: 16, width: "100%" },
+  modalSheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 36 },
+  modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: "#ccc", alignSelf: "center", marginBottom: 16 },
+  modalHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
+  modalTitle: { fontSize: 20, fontWeight: "900" },
+  modalCloseBtn: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  modalSub: { fontSize: 13, marginBottom: 16, fontWeight: "500" },
+  reasonItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 13,
+    borderRadius: Radius.lg,
+    borderWidth: 1.5,
+  },
+  reasonText: { fontSize: 14, fontWeight: "600", flex: 1 },
+  confirmRejectBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderRadius: Radius.xl,
+    paddingVertical: 15,
+  },
   confirmRejectText: { color: "white", fontWeight: "800", fontSize: 15 },
 });
-
-

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { roleAccent } from '@/constants/theme';
+import { roleAccent, thannigoPalette } from '@/constants/theme';
 import type { AppRole } from '@/types/session';
 
 type BadgeVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'outline' | 'glass';
@@ -18,12 +18,12 @@ interface BadgeProps {
 }
 
 const variantTokens: Record<BadgeVariant, { bg: string; text: string; border?: string }> = {
-  primary:   { bg: '#E8F0FA', text: '#005D90' },
-  secondary: { bg: '#F1F3F5', text: '#74777C' },
-  success:   { bg: '#E8F5E9', text: '#2e7d32' },
-  warning:   { bg: '#FFF8E1', text: '#E67E22' },
-  error:     { bg: '#FFEBEE', text: '#C0392B' },
-  outline:   { bg: 'transparent', text: '#74777C', border: '#E0EAF5' },
+  primary:   { bg: '#E8F0FA',                         text: '#005D90' },
+  secondary: { bg: thannigoPalette.borderSoft,         text: thannigoPalette.neutral },
+  success:   { bg: thannigoPalette.successSoft,        text: thannigoPalette.deliveryGreen },
+  warning:   { bg: '#FFF8E1',                          text: thannigoPalette.warning },
+  error:     { bg: thannigoPalette.dangerSoft,         text: thannigoPalette.error },
+  outline:   { bg: 'transparent', text: thannigoPalette.neutral, border: thannigoPalette.borderSoft },
   glass:     { bg: 'rgba(255,255,255,0.2)', text: '#fff', border: 'rgba(255,255,255,0.3)' },
 };
 
