@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Switch, Linking,
@@ -45,12 +45,11 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
 });
 
 export default function DeliveryDashboardScreen() {
-  const { colors, isDark } = useAppTheme();
+  const { colors, isDark, themePreference, setThemePreference } = useAppTheme();
   const styles = makeStyles(colors);
   const router = useRouter();
   const { user, signOut } = useAppSession();
   const { tasks, online, toggleOnline, assignCurrentTask, updateTaskStatus, removeTask } = useDeliveryStore();
-  const { colors, isDark, themePreference, setThemePreference } = useAppTheme();
 
   const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 

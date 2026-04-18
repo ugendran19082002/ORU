@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, RefreshControl, Alert
@@ -15,11 +15,12 @@ import type { OnboardingStatus } from '@/types/onboarding';
 import { useAppSession } from '@/hooks/use-app-session';
 import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
-import { useAppTheme } from '@/providers/ThemeContext';
+import { useAppTheme, type ColorSchemeColors } from '@/providers/ThemeContext';
 
 export default function CustomerOnboardingScreen() {
   const router = useRouter();
   const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const { user, updateUser, status, syncSession } = useAppSession();
   const { handleAuthBack } = useLogoutBackHandler();
   const [loading, setLoading] = useState(true);
@@ -226,7 +227,7 @@ export default function CustomerOnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   safe: { flex: 1 },

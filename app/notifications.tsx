@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, RefreshControl,
@@ -31,13 +31,6 @@ interface Notif {
   icon: string;
 }
 
-const TYPE_CONFIG: Record<NotifType, { label: string; color: string; bg: string }> = {
-  order:     { label: 'ORDER',   color: colors.primary,    bg: colors.inputBg },
-  promo:     { label: 'OFFER',   color: colors.warning,    bg: '#FFF8E1' },
-  system:    { label: 'SYSTEM',  color: colors.muted,    bg: colors.border },
-  complaint: { label: 'SUPPORT', color: '#7c3aed',                  bg: '#ede9fe' },
-};
-
 const ICON_MAP: Record<string, string> = {
   order:     'receipt-outline',
   promo:     'pricetag-outline',
@@ -67,6 +60,14 @@ function mapNotif(n: any): Notif {
 export default function NotificationsScreen() {
   const { colors, isDark } = useAppTheme();
   const styles = makeStyles(colors);
+
+  const TYPE_CONFIG: Record<NotifType, { label: string; color: string; bg: string }> = {
+    order:     { label: 'ORDER',   color: colors.primary,    bg: colors.inputBg },
+    promo:     { label: 'OFFER',   color: colors.warning,    bg: '#FFF8E1' },
+    system:    { label: 'SYSTEM',  color: colors.muted,    bg: colors.border },
+    complaint: { label: 'SUPPORT', color: '#7c3aed',                  bg: '#ede9fe' },
+  };
+
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   useAndroidBackHandler(() => { safeBack('/(tabs)'); });

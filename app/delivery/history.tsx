@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -15,12 +15,7 @@ const DELIVERY_SURF = roleSurface.delivery;
 
 type Period = 'today' | 'week' | 'month' | undefined;
 
-const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
-  delivered: { label: 'Delivered', color: '#2e7d32', bg: colors.deliverySoft },
-  failed:    { label: 'Failed',    color: colors.error, bg: colors.adminSoft },
-  picked_up: { label: 'Picked Up', color: colors.warning, bg: '#FFF8E1' },
-  assigned:  { label: 'Assigned',  color: DELIVERY_ACCENT, bg: DELIVERY_SURF },
-};
+
 
 function formatDateTime(iso: string | null): string {
   if (!iso) return '—';
@@ -33,6 +28,14 @@ function formatDateTime(iso: string | null): string {
 
 export default function DeliveryHistoryScreen() {
   const { colors, isDark } = useAppTheme();
+
+  const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
+    delivered: { label: 'Delivered', color: '#2e7d32', bg: colors.deliverySoft },
+    failed:    { label: 'Failed',    color: colors.error, bg: colors.adminSoft },
+    picked_up: { label: 'Picked Up', color: colors.warning, bg: '#FFF8E1' },
+    assigned:  { label: 'Assigned',  color: DELIVERY_ACCENT, bg: DELIVERY_SURF },
+  };
+
   const styles = makeStyles(colors);
   const router = useRouter();
   const [filter, setFilter] = useState<Period>(undefined);

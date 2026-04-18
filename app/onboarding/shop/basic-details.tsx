@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView, TextInput,
@@ -21,6 +21,7 @@ import { useRef, useEffect } from "react";
 export default function ShopBasicDetailsScreen() {
   const { colors, isDark } = useAppTheme();
   const router = useRouter();
+  const styles = makeStyles(colors);
   const { user, refreshShopStatus } = useAppSession();
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
@@ -405,7 +406,7 @@ export default function ShopBasicDetailsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   safe: { flex: 1 },
   scrollContent: { paddingHorizontal: 32, paddingTop: 40, paddingBottom: 40 },
@@ -586,6 +587,7 @@ const styles = StyleSheet.create({
   setLocTitle: { fontSize: 15, fontWeight: '800', color: '#134e4a' },
   setLocSub: { fontSize: 12, color: '#64748b', marginTop: 2 },
 
+  // @ts-ignore
   activeLocationCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -617,5 +619,3 @@ const styles = StyleSheet.create({
     borderColor: '#f1f5f9',
   }
 });
-
-

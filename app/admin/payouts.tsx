@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -64,6 +64,9 @@ interface SummaryBannerProps {
 }
 
 function SummaryBanner({ summary, loading }: SummaryBannerProps) {
+  const { colors } = useAppTheme();
+  const styles = makeStyles(colors);
+
   return (
     <LinearGradient
       colors={[ADMIN_ACCENT, ADMIN_ACCENT]}
@@ -113,6 +116,9 @@ interface PayoutCardProps {
 }
 
 function PayoutCard({ payout, onProcess, actionLoadingId }: PayoutCardProps) {
+  const { colors } = useAppTheme();
+  const styles = makeStyles(colors);
+
   const isPending = payout.status === 'pending';
   const isActing = actionLoadingId === payout.id;
 

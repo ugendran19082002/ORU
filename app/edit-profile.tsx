@@ -1,4 +1,4 @@
-﻿import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Modal } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import Toast from 'react-native-toast-message';
 import * as SecureStore from 'expo-secure-store';
@@ -18,7 +18,7 @@ import { ActivityIndicator } from 'react-native';
 import { Shadow, roleAccent, Radius } from '@/constants/theme';
 import { useAppTheme } from '@/providers/ThemeContext';
 
-const PRIMARY = colors.primary;
+
 
 export default function EditProfileScreen() {
   const { colors, isDark } = useAppTheme();
@@ -124,7 +124,7 @@ export default function EditProfileScreen() {
           <Text style={[styles.headerTitle, { color: colors.text }]}>Edit Profile</Text>
 
           <TouchableOpacity
-            style={[styles.headerSaveBtn, { backgroundColor: PRIMARY }, isLoading && { opacity: 0.7 }]}
+            style={[styles.headerSaveBtn, { backgroundColor: colors.primary }, isLoading && { opacity: 0.7 }]}
             onPress={saveProfile}
             activeOpacity={0.7}
             disabled={isLoading}
@@ -150,7 +150,7 @@ export default function EditProfileScreen() {
                     <Ionicons name="person" size={50} color={colors.muted} />
                    </View>
                 )}
-                <View style={styles.cameraBadge}>
+                <View style={[styles.cameraBadge, { backgroundColor: colors.primary }]}>
                   <Ionicons name="camera" size={16} color="white" />
                 </View>
               </TouchableOpacity>
@@ -206,7 +206,7 @@ export default function EditProfileScreen() {
                   />
                   {!isEmailVerified ? (
                     <TouchableOpacity style={styles.verifyBtn} onPress={handleVerifyEmail}>
-                      <Text style={styles.verifyText}>Verify</Text>
+                      <Text style={[styles.verifyText, { color: colors.primary }]}>Verify</Text>
                     </TouchableOpacity>
                   ) : (
                     <View style={styles.verifiedBadge}>
@@ -275,7 +275,7 @@ export default function EditProfileScreen() {
             <View style={styles.modalOverlay}>
               <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
                 <View style={styles.modalIconWrap}>
-          <Ionicons name="mail-unread" size={36} color={PRIMARY} />
+          <Ionicons name="mail-unread" size={36} color={colors.primary} />
                 </View>
                 <Text style={[styles.modalTitle, { color: colors.text }]}>Verify Email</Text>
               <Text style={[styles.modalSub, { color: colors.muted }]}>We've sent a 4-digit secure OTP to{' '}<Text style={{ fontWeight: '800', color: colors.text }}>{email}</Text></Text>
@@ -291,7 +291,7 @@ export default function EditProfileScreen() {
                   autoFocus
                 />
 
-                <TouchableOpacity style={styles.modalVerifyBtn} onPress={handleConfirmOtp} activeOpacity={0.8}>
+                <TouchableOpacity style={[styles.modalVerifyBtn, { backgroundColor: colors.primary, shadowColor: colors.primary }]} onPress={handleConfirmOtp} activeOpacity={0.8}>
                   <Text style={styles.modalVerifyBtnText}>Confirm OTP</Text>
                 </TouchableOpacity>
 
@@ -321,7 +321,7 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   avatarContainer: { alignItems: 'center', marginBottom: 36 },
   avatarWrap: { width: 110, height: 110, borderRadius: 55, position: 'relative', ...Shadow.md },
   avatarImage: { width: '100%', height: '100%', borderRadius: 55, overflow: 'hidden' },
-  cameraBadge: { position: 'absolute', bottom: 0, right: 0, backgroundColor: PRIMARY, width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'white' },
+  cameraBadge: { position: 'absolute', bottom: 0, right: 0, width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'white' },
   avatarHint: { marginTop: 12, fontSize: 13, fontWeight: '500' },
 
   formSection: { gap: 20, marginBottom: 40 },
@@ -334,10 +334,10 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   input: { flex: 1, paddingVertical: 18, paddingRight: 16, fontSize: 16, fontWeight: '600' },
 
   verifyBtn: { position: 'absolute', right: 8, top: 10, bottom: 10, backgroundColor: colors.inputBg, paddingHorizontal: 16, borderRadius: 10, justifyContent: 'center' },
-  verifyText: { color: PRIMARY, fontSize: 13, fontWeight: '800' },
+  verifyText: { fontSize: 13, fontWeight: '800' },
   verifiedBadge: { position: 'absolute', right: 16, justifyContent: 'center' },
 
-  saveBtn: { backgroundColor: PRIMARY, paddingVertical: 18, borderRadius: Radius.lg, alignItems: 'center', ...Shadow.md, shadowColor: PRIMARY },
+  saveBtn: { paddingVertical: 18, borderRadius: Radius.lg, alignItems: 'center', ...Shadow.md },
   saveBtnText: { color: 'white', fontSize: 16, fontWeight: '800', letterSpacing: 0.5 },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.65)', justifyContent: 'flex-end' },
@@ -346,7 +346,7 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   modalTitle: { fontSize: 26, fontWeight: '900', marginBottom: 8, letterSpacing: -0.5 },
   modalSub: { fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 30 },
   otpInput: { width: '80%', borderWidth: 2, borderRadius: 20, fontSize: 36, fontWeight: '900', textAlign: 'center', paddingVertical: 16, letterSpacing: 16, marginBottom: 36 },
-  modalVerifyBtn: { width: '100%', backgroundColor: PRIMARY, paddingVertical: 20, borderRadius: Radius.lg, alignItems: 'center', marginBottom: 12, ...Shadow.md, shadowColor: PRIMARY },
+  modalVerifyBtn: { width: '100%', paddingVertical: 20, borderRadius: Radius.lg, alignItems: 'center', marginBottom: 12, ...Shadow.md },
   modalVerifyBtnText: { color: 'white', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 },
   modalCancelBtn: { paddingVertical: 14, paddingHorizontal: 30 },
   modalCancelBtnText: { fontSize: 15, fontWeight: '800' },

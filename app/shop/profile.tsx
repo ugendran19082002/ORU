@@ -530,24 +530,26 @@ export default function ShopProfileScreen() {
               <View style={styles.locationStepBadge}><Text style={styles.locationStepNum}>2</Text></View>
               <Text style={styles.locationStepLabel}>Drag the pin to your exact shop location</Text>
             </View>
-            <View style={styles.mapContainer}>
-              <ExpoMap
-                style={styles.map}
-                region={region}
-                onRegionChangeComplete={setRegion}
-                showsUserLocation
-                draggable
-                markerTitle={shopName}
-                onMarkerDragEnd={handleMarkerDragEnd}
-                hideControls
-              >
-                <ExpoMarker
-                  coordinate={{ latitude: currentLat, longitude: currentLng }}
+            <View style={styles.mapWrapper}>
+              <View style={styles.mapContainer}>
+                <ExpoMap
+                  style={styles.map}
+                  region={region}
+                  onRegionChangeComplete={setRegion}
+                  showsUserLocation
                   draggable
-                  onDragEnd={handleNativeMarkerDragEnd}
-                  title={shopName}
-                />
-              </ExpoMap>
+                  markerTitle={shopName}
+                  onMarkerDragEnd={handleMarkerDragEnd}
+                  hideControls
+                >
+                  <ExpoMarker
+                    coordinate={{ latitude: currentLat, longitude: currentLng }}
+                    draggable
+                    onDragEnd={handleNativeMarkerDragEnd}
+                    title={shopName}
+                  />
+                </ExpoMap>
+              </View>
               <TouchableOpacity
                 style={styles.expandMapBtn}
                 onPress={() =>
@@ -802,12 +804,15 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   suggestionSubtitle: { fontSize: 12, color: colors.muted, marginTop: 2 },
 
   // Map
+  mapWrapper: {
+    position: "relative",
+    marginBottom: 12,
+  },
   mapContainer: {
     borderRadius: 18,
     overflow: "hidden",
     height: 240,
     backgroundColor: colors.border,
-    marginBottom: 12,
     ...Shadow.sm,
   },
   map: { width: "100%", height: "100%" },
@@ -821,7 +826,9 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 10,
     ...Shadow.sm,
+    elevation: 10,
   },
 
   mapActionsRow: { flexDirection: "row", gap: 10, marginBottom: 16 },

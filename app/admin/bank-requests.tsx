@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, TextInput, Modal, RefreshControl
@@ -92,7 +92,7 @@ export default function BankRequestsScreen() {
 
       <ScrollView 
         contentContainerStyle={styles.scroll}
-        refreshControl={<RefreshControl refreshing={false} onRefresh={fetchRequests} color={ADMIN_ACCENT} />}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={fetchRequests} colors={[ADMIN_ACCENT]} tintColor={ADMIN_ACCENT} />}
       >
         {loading ? (
           <ActivityIndicator size="large" color={ADMIN_ACCENT} style={{ marginTop: 100 }} />

@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   ActivityIndicator, RefreshControl,
@@ -32,12 +32,7 @@ interface Payment {
   };
 }
 
-const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  paid:     { bg: colors.successSoft,       color: colors.success },
-  pending:  { bg: '#fff3e0',                         color: colors.warning },
-  failed:   { bg: colors.adminSoft,        color: colors.error },
-  refunded: { bg: colors.inputBg,          color: ACCENT },
-};
+
 
 const METHOD_ICON: Record<string, string> = {
   cod: 'cash-outline',
@@ -49,6 +44,14 @@ const METHOD_ICON: Record<string, string> = {
 
 export default function CustomerPaymentHistoryScreen() {
   const { colors, isDark } = useAppTheme();
+  
+  const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
+    paid:     { bg: colors.successSoft,       color: colors.success },
+    pending:  { bg: '#fff3e0',                         color: colors.warning },
+    failed:   { bg: colors.adminSoft,        color: colors.error },
+    refunded: { bg: colors.inputBg,          color: ACCENT },
+  };
+
   const styles = makeStyles(colors);
   const { safeBack } = useAppNavigation();
 

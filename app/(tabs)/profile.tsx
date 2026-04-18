@@ -1,4 +1,4 @@
-﻿import React, { useCallback } from 'react';
+import React, { useCallback } from 'react';
 import {
   View, Text, ScrollView,
   RefreshControl, Linking, TouchableOpacity, StyleSheet, Switch, Alert,
@@ -16,7 +16,7 @@ import { addressApi } from '@/api/addressApi';
 import { useSecurityStore } from '@/stores/securityStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { Shadow, roleAccent, roleSurface, roleGradients, Radius } from '@/constants/theme';
-import { useAppTheme, ThemePreference } from '@/providers/ThemeContext';
+import { useAppTheme, ThemePreference, type ColorSchemeColors } from '@/providers/ThemeContext';
 
 const CUSTOMER_ACCENT = roleAccent.customer;
 const CUSTOMER_SURF = roleSurface.customer;
@@ -87,6 +87,8 @@ export default function ProfileScreen() {
       Toast.show({ type: 'info', text1: 'ThanniGo', text2: "India's fastest 15-minute water delivery.\n© 2026 ThanniGo Pvt. Ltd." });
     }
   };
+
+  const styles = makeStyles(colors);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -264,7 +266,7 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -316,3 +318,4 @@ const styles = StyleSheet.create({
 
   footer: { textAlign: 'center', fontSize: 12, marginBottom: 8 },
 });
+

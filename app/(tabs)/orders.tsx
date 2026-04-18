@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -35,6 +35,9 @@ function OrderCard({ order, onTrack, onReorder, onSupport, onPress, accent }: {
   onPress: () => void;
   accent: string;
 }) {
+  const { colors } = useAppTheme();
+  const styles = makeStyles(colors);
+
   return (
     <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={[styles.orderCard, Shadow.sm]}>
       {/* Top Row */}

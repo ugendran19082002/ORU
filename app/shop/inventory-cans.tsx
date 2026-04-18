@@ -1,4 +1,4 @@
-﻿import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Modal, TextInput, ActivityIndicator, RefreshControl, Image,
@@ -42,15 +42,18 @@ interface InventoryLog {
   created_at: string;
 }
 
-const ACTIONS = [
-  { key: 'add_full', label: 'Add Full', icon: 'add-circle-outline' as const, color: colors.success, bg: '#e8f5e9' },
-  { key: 'mark_empty', label: 'Mark Empty', icon: 'remove-circle-outline' as const, color: '#b45309', bg: '#fef3c7' },
-  { key: 'mark_damaged', label: 'Mark Damaged', icon: 'alert-circle-outline' as const, color: '#ba1a1a', bg: '#ffebee' },
-  { key: 'collected_empty', label: 'Collected Empty', icon: 'checkmark-circle-outline' as const, color: SHOP_ACCENT, bg: SHOP_SURF },
-];
+
 
 export default function InventoryCansScreen() {
   const { colors, isDark } = useAppTheme();
+
+  const ACTIONS = [
+    { key: 'add_full', label: 'Add Full', icon: 'add-circle-outline' as const, color: colors.success, bg: '#e8f5e9' },
+    { key: 'mark_empty', label: 'Mark Empty', icon: 'remove-circle-outline' as const, color: '#b45309', bg: '#fef3c7' },
+    { key: 'mark_damaged', label: 'Mark Damaged', icon: 'alert-circle-outline' as const, color: '#ba1a1a', bg: '#ffebee' },
+    { key: 'collected_empty', label: 'Collected Empty', icon: 'checkmark-circle-outline' as const, color: SHOP_ACCENT, bg: SHOP_SURF },
+  ];
+
   const styles = makeStyles(colors);
   const { safeBack } = useAppNavigation();
   const router = useRouter();

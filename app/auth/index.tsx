@@ -1,4 +1,4 @@
-﻿import type { ColorSchemeColors } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import React, { useEffect, useRef } from "react";
 import {
   View,
@@ -19,15 +19,18 @@ import { roleGradients } from "@/constants/theme";
 
 const { width, height } = Dimensions.get("window");
 
-const WELCOME_GRAD: [string, string, string] = [
-  colors.text,
-  roleGradients.customer.start,
-  roleGradients.customer.end,
-];
+
 const FEATURE_ICON_COLOR = "#69e5ff";
 
 export default function WelcomeScreen() {
   const { colors, isDark } = useAppTheme();
+  
+  const WELCOME_GRAD: [string, string, string] = [
+    colors.text,
+    roleGradients.customer.start,
+    roleGradients.customer.end,
+  ];
+
   const styles = makeStyles(colors);
   const router = useRouter();
 

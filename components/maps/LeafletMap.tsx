@@ -187,10 +187,10 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
 </head>
 <body>
 <div id="map"></div>
-<div class="layer-ctrl" style="\${HIDE_CONTROLS ? 'display:none' : ''}">
-  <button id="btn-std" class="layer-btn \${INITIAL_MODE === 'std' ? 'active' : ''}" onclick="switchLayer('std')">Map</button>
-  <button id="btn-sat" class="layer-btn \${INITIAL_MODE === 'sat' ? 'active' : ''}" onclick="switchLayer('sat')">Sat</button>
-  <button id="btn-ter" class="layer-btn \${INITIAL_MODE === 'ter' ? 'active' : ''}" onclick="switchLayer('ter')">Topo</button>
+<div id="layer-ctrl-wrap" class="layer-ctrl">
+  <button id="btn-std" class="layer-btn" onclick="switchLayer('std')">Map</button>
+  <button id="btn-sat" class="layer-btn" onclick="switchLayer('sat')">Sat</button>
+  <button id="btn-ter" class="layer-btn" onclick="switchLayer('ter')">Topo</button>
 </div>
 <script>
   var MARKERS = ${markersJs};
@@ -203,6 +203,11 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
   var INITIAL_MODE = 'std';
   if ('${mapType}' === 'satellite' || '${mapType}' === 'hybrid') INITIAL_MODE = 'sat';
   if ('${mapType}' === 'terrain') INITIAL_MODE = 'ter';
+
+  // Apply HIDE_CONTROLS and initial active button state
+  if (HIDE_CONTROLS) document.getElementById('layer-ctrl-wrap').style.display = 'none';
+  var activeId = INITIAL_MODE === 'sat' ? 'btn-sat' : INITIAL_MODE === 'ter' ? 'btn-ter' : 'btn-std';
+  document.getElementById(activeId).classList.add('active');
 
   var map = L.map('map',{attributionControl:false,tap:true,zoomControl:false}).setView([LAT,LNG],ZOOM);
   if (!HIDE_CONTROLS) {

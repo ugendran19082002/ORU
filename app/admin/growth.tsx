@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   ActivityIndicator, TextInput, Switch, RefreshControl, Modal,
@@ -320,6 +320,8 @@ export default function AdminGrowthScreen() {
 }
 
 function ConfigItem({ label, value, onChange, keyboardType = 'default', helper }: any) {
+  const { colors } = useAppTheme();
+  const styles = makeStyles(colors);
   const [localVal, setLocalVal] = useState(value);
   useEffect(() => { setLocalVal(value); }, [value]);
 

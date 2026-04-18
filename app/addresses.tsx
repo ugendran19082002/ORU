@@ -1,4 +1,4 @@
-﻿import type { ColorSchemeColors } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
@@ -19,6 +19,7 @@ import {
   Platform,
   Share,
   KeyboardAvoidingView,
+  Switch,
 } from "react-native";
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -115,18 +116,6 @@ export default function AddressesScreen() {
 
   useEffect(() => {
     fetchAddresses();
-    setGlobalLocationListener((coords) => {
-      console.log('=== [ADDRESSES GLOBAL LISTENER] Map Selected ===', coords);
-      setCurrentLat(coords.lat);
-      setCurrentLng(coords.lng);
-      setRegion({
-        latitude: coords.lat,
-        longitude: coords.lng,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
-      });
-    });
-    return () => clearGlobalLocationListener();
   }, []);
 
   const fetchAddresses = async () => {
@@ -291,6 +280,7 @@ export default function AddressesScreen() {
     console.log('Pinned Coords:', { latitude, longitude });
     setCurrentLat(latitude);
     setCurrentLng(longitude);
+    setRegion({ latitude, longitude, latitudeDelta: 0.005, longitudeDelta: 0.005 });
 
     // Auto-open confirm form so user can verify + save
     if (!isAdding) setIsAdding(true);
@@ -568,74 +558,76 @@ export default function AddressesScreen() {
           )}
 
           {/* 2. MAP PREVIEW INSIDE CARD */}
-          <View style={[styles.mapContainer, { borderRadius: 16, marginTop: 12, marginBottom: 16, borderColor: colors.border }]}>
-            <ExpoMap
-              ref={mapRef}
-              style={styles.mapView}
-              initialRegion={region}
-              onRegionChangeComplete={setRegion}
-              showsUserLocation
-              draggable
-              markerTitle="Deliver Here"
-              onMarkerDragEnd={handleMarkerDragEnd}
-              mapType={mapType}
-              showsTraffic={true}
-              showsBuildings={true}
-              hideControls={true}
-            >
-              <ExpoMarker
-                coordinate={{ latitude: currentLat, longitude: currentLng }}
+          <View style={[styles.mapWrapper, { marginTop: 12, marginBottom: 16 }]}>
+            <View style={[styles.mapContainer, { borderColor: colors.border }]}>
+              <ExpoMap
+                ref={mapRef}
+                style={styles.mapView}
+                initialRegion={region}
+                onRegionChangeComplete={setRegion}
+                showsUserLocation
                 draggable
-                onDragEnd={handleNativeMarkerDragEnd}
-                pinColor="#00647a"
-                title="Deliver Here"
-              />
-            </ExpoMap>
+                markerTitle="Deliver Here"
+                onMarkerDragEnd={handleMarkerDragEnd}
+                mapType={mapType}
+                showsTraffic={true}
+                showsBuildings={true}
+                hideControls={true}
+              >
+                <ExpoMarker
+                  coordinate={{ latitude: currentLat, longitude: currentLng }}
+                  draggable
+                  onDragEnd={handleNativeMarkerDragEnd}
+                  pinColor="#00647a"
+                  title="Deliver Here"
+                />
+              </ExpoMap>
 
-            {Platform.OS !== 'web' && accuracy !== null && (
-              <View style={styles.accuracyOverlay}>
-                <View style={styles.accuracyTag}>
-                  <View style={[styles.accuracyDot, {
-                  backgroundColor: accuracy < 15 ? colors.success : colors.warning
-                  }]} />
-                  <Text style={styles.accuracyLabel}>
-                    {accuracy < 15 ? `High Precision` : `GPS: ±${Math.round(accuracy)}m`}
-                  </Text>
+              {Platform.OS !== 'web' && accuracy !== null && (
+                <View style={styles.accuracyOverlay}>
+                  <View style={styles.accuracyTag}>
+                    <View style={[styles.accuracyDot, {
+                    backgroundColor: accuracy < 15 ? colors.success : colors.warning
+                    }]} />
+                    <Text style={styles.accuracyLabel}>
+                      {accuracy < 15 ? `High Precision` : `GPS: ±${Math.round(accuracy)}m`}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            )}
-            <Text style={styles.liveMapText}>TAP MAP OR DRAG PIN TO PINPOINT</Text>
+              )}
+              <Text style={styles.liveMapText}>TAP MAP OR DRAG PIN TO PINPOINT</Text>
+            </View>
 
-            {/* TOP RIGHT: MAP TYPE INDICATOR */}
-            <View style={styles.typeSelectorOverlay}>
-              <TouchableOpacity onPress={() => {
+            {/* MAP TYPE TOGGLE — outside overflow:hidden so taps register */}
+            <TouchableOpacity
+              style={[styles.mapActionBtnMini, styles.typeSelectorOverlay, { borderColor: colors.border }]}
+              onPress={() => {
                 const types: any[] = ['standard', 'satellite', 'terrain'];
                 const nextIdx = (types.indexOf(mapType) + 1) % 3;
                 setMapType(types[nextIdx]);
-              }} style={[styles.mapActionBtnMini, { borderColor: colors.border }]}>
-                <Ionicons
-                  name={mapType === 'satellite' ? 'images' : mapType === 'terrain' ? 'earth' : 'map'}
-                  size={18}
-                  color={ACCENT}
-                />
-              </TouchableOpacity>
-            </View>
+              }}
+            >
+              <Ionicons
+                name={mapType === 'satellite' ? 'images' : mapType === 'terrain' ? 'earth' : 'map'}
+                size={18}
+                color={ACCENT}
+              />
+            </TouchableOpacity>
 
-            <View style={styles.mapOverlayActions}>
-              <TouchableOpacity
-                style={styles.mapActionBtn}
-                onPress={() => {
-                  safeNavigate("/map-preview", {
-                    lat: currentLat.toString(),
-                    lng: currentLng.toString(),
-                    title: searchQuery || "Location",
-                    target: "select",
-                  });
-                }}
-              >
-                <Ionicons name="expand-outline" size={20} color={ACCENT} />
-              </TouchableOpacity>
-            </View>
+            {/* EXPAND BUTTON — outside overflow:hidden so taps register */}
+            <TouchableOpacity
+              style={[styles.mapActionBtn, styles.mapOverlayActions]}
+              onPress={() => {
+                safeNavigate("/map-preview", {
+                  lat: currentLat.toString(),
+                  lng: currentLng.toString(),
+                  title: searchQuery || "Location",
+                  target: "select",
+                });
+              }}
+            >
+              <Ionicons name="expand-outline" size={20} color={ACCENT} />
+            </TouchableOpacity>
           </View>
 
           {/* 3. QUICK ACTIONS ROW (OUTSIDE MAP) */}
@@ -956,14 +948,17 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   cancelActionBtn: { paddingVertical: 14, alignItems: "center", marginTop: 4 },
   cancelActionText: { fontSize: 14, fontWeight: "600" },
 
+  mapWrapper: {
+    position: "relative",
+  },
   mapContainer: {
     height: 240, borderRadius: Radius.xl, overflow: "hidden", position: "relative",
-    marginBottom: 28, backgroundColor: "#1e293b", borderWidth: 1,
+    backgroundColor: "#1e293b", borderWidth: 1,
   },
   mapView: { flex: 1 },
   accuracyOverlay: { position: "absolute", top: 12, left: 12 },
-  typeSelectorOverlay: { position: "absolute", top: 12, right: 12 },
-  mapOverlayActions: { position: "absolute", bottom: 12, right: 12, gap: 8 },
+  typeSelectorOverlay: { position: "absolute", top: 12, right: 12, zIndex: 10, elevation: 10 },
+  mapOverlayActions: { position: "absolute", bottom: 12, right: 12, zIndex: 10, elevation: 10 },
   mapActionBtn: {
     backgroundColor: colors.surface, width: 44, height: 44, borderRadius: 22,
     alignItems: "center", justifyContent: "center", ...Shadow.sm,
@@ -1035,4 +1030,5 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   },
   suggestionTitle: { fontSize: 14, fontWeight: "700" },
   suggestionSub: { fontSize: 12, marginTop: 2, fontWeight: "500" },
+  hybridRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
 });

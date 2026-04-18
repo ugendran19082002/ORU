@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, RefreshControl, Alert
@@ -20,6 +20,7 @@ import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 export default function ShopOnboardingDashboard() {
   const { colors, isDark } = useAppTheme();
   const router = useRouter();
+  const styles = makeStyles(colors);
   const { user, updateUser, status, refreshShopStatus, syncSession } = useAppSession();
   const { handleAuthBack } = useLogoutBackHandler();
   const [loading, setLoading] = useState(true);
@@ -393,7 +394,7 @@ export default function ShopOnboardingDashboard() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fdfdfd' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   safe: { flex: 1 },
@@ -498,5 +499,3 @@ const styles = StyleSheet.create({
   roleSwitchText: { fontSize: 13, color: '#64748b', fontWeight: '500' },
   roleSwitchLink: { fontSize: 13, color: '#006878', fontWeight: '800', textDecorationLine: 'underline' }
 });
-
-

@@ -1,8 +1,8 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useAppTheme } from '@/providers/ThemeContext';
+import { useAppTheme, type ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
@@ -33,6 +33,7 @@ function mapReview(r: any): Review {
 
 export default function CustomerReviewsScreen() {
   const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const { safeBack } = useAppNavigation();
   useAndroidBackHandler(() => { safeBack('/(tabs)/profile'); });
 
@@ -122,7 +123,7 @@ export default function CustomerReviewsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },

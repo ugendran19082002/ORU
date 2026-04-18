@@ -1,11 +1,11 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View, Text, StyleSheet, Dimensions, FlatList,
   TouchableOpacity, Animated, NativeScrollEvent, NativeSyntheticEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useAppTheme } from '@/providers/ThemeContext';
+import { useAppTheme, type ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -42,6 +42,7 @@ const SLIDES = [
 
 export default function OnboardingScreen() {
   const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -173,7 +174,7 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: '#005d90' },
   slide: { width, height },
   slideBg: { flex: 1, paddingHorizontal: 40, justifyContent: 'center', alignItems: 'center' },

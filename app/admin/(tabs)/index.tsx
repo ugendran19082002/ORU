@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -28,27 +28,31 @@ import type { AdminDashboard } from '@/types/api';
 const ADMIN_ACCENT = roleAccent.admin;
 const ADMIN_GRAD: [string, string] = [roleGradients.admin.start, roleGradients.admin.end];
 
-/* ---- DATA (fallback skeleton while loading) ---- */
-const STATS_CONFIG = [
-  { label: 'Total Orders',  icon: 'bag-handle-outline' as const, color: ADMIN_ACCENT,               bg: '#FFF5F5' },
-  { label: 'Active Users',  icon: 'people-outline' as const,     color: '#006878',   bg: colors.deliverySoft },
-  { label: 'Revenue',       icon: 'cash-outline' as const,       color: '#B45309',                  bg: '#FEF3C7' },
-  { label: 'Active Shops',  icon: 'water-outline' as const,      color: colors.muted,    bg: colors.border },
-];
 
-/* ---- COMPONENTS ---- */
-type StatCardData = {
-  label: string;
-  icon: React.ComponentProps<typeof Ionicons>['name'];
-  color: string;
-  bg: string;
-  value: string;
-  delta: string;
-  deltaPos: boolean;
-};
+/* ---- SCREEN ---- */
+export default function AdminOverviewScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
 
-function AdminStatCard({ stat, colors }: { stat: StatCardData; colors: any }) {
-  return (
+  /* ---- DATA (fallback skeleton while loading) ---- */
+  const STATS_CONFIG = [
+    { label: 'Total Orders',  icon: 'bag-handle-outline' as const, color: ADMIN_ACCENT,               bg: '#FFF5F5' },
+    { label: 'Active Users',  icon: 'people-outline' as const,     color: '#006878',   bg: colors.deliverySoft },
+    { label: 'Revenue',       icon: 'cash-outline' as const,       color: '#B45309',                  bg: '#FEF3C7' },
+    { label: 'Active Shops',  icon: 'water-outline' as const,      color: colors.muted,    bg: colors.border },
+  ];
+
+  type StatCardData = {
+    label: string;
+    icon: React.ComponentProps<typeof Ionicons>['name'];
+    color: string;
+    bg: string;
+    value: string;
+    delta: string;
+    deltaPos: boolean;
+  };
+
+  const AdminStatCard = ({ stat }: { stat: StatCardData }) => (
     <View style={[styles.statCard, Shadow.sm, { backgroundColor: colors.surface }]}>
       <View style={styles.statCardTop}>
         <View style={[styles.statIcon, { backgroundColor: stat.bg }]}>
@@ -64,12 +68,7 @@ function AdminStatCard({ stat, colors }: { stat: StatCardData; colors: any }) {
       <Text style={[styles.statLabel, { color: colors.muted }]}>{stat.label}</Text>
     </View>
   );
-}
 
-/* ---- SCREEN ---- */
-export default function AdminOverviewScreen() {
-  const { colors, isDark } = useAppTheme();
-  const styles = makeStyles(colors);
   const router = useRouter();
   const { user, status } = useAppSession();
 
@@ -200,7 +199,7 @@ export default function AdminOverviewScreen() {
 
               return statsData.map((stat, i) => (
                 <View key={i} style={styles.statCardWrapper}>
-                  <AdminStatCard stat={stat} colors={colors} />
+                  <AdminStatCard stat={stat} />
                 </View>
               ));
             })()}

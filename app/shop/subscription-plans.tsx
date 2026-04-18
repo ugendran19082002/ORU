@@ -1,4 +1,4 @@
-﻿import {
+import {
   View, Text, StyleSheet, TouchableOpacity, Switch,
   ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
@@ -25,22 +25,9 @@ const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradien
 
 type SubStatus = 'INACTIVE' | 'PENDING_PAYMENT' | 'ACTIVE' | 'PAYMENT_FAILED' | 'EXPIRED' | 'CANCELLED';
 
-const PLAN_FEATURES = [
-  { icon: 'checkmark-circle', text: 'Priority listing in search results', color: colors.success },
-  { icon: 'checkmark-circle', text: 'Advanced analytics dashboard', color: colors.success },
-  { icon: 'checkmark-circle', text: 'Lower platform commission', color: colors.success },
-  { icon: 'checkmark-circle', text: 'Instant delivery support', color: colors.success },
-  { icon: 'checkmark-circle', text: 'Cancel anytime', color: colors.success },
-];
 
-const STATUS_COLOR: Record<string, string> = {
-  ACTIVE: colors.success,
-  INACTIVE: colors.muted,
-  PENDING_PAYMENT: '#b45309',
-  PAYMENT_FAILED: '#dc2626',
-  EXPIRED: '#94a3b8',
-  CANCELLED: '#94a3b8',
-};
+
+
 
 const STATUS_LABEL: Record<string, string> = {
   ACTIVE: 'Active',
@@ -53,6 +40,24 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function ShopSubscriptionPlansScreen() {
   const { colors, isDark } = useAppTheme();
+
+  const PLAN_FEATURES = [
+    { icon: 'checkmark-circle', text: 'Priority listing in search results', color: colors.success },
+    { icon: 'checkmark-circle', text: 'Advanced analytics dashboard', color: colors.success },
+    { icon: 'checkmark-circle', text: 'Lower platform commission', color: colors.success },
+    { icon: 'checkmark-circle', text: 'Instant delivery support', color: colors.success },
+    { icon: 'checkmark-circle', text: 'Cancel anytime', color: colors.success },
+  ];
+
+  const STATUS_COLOR: Record<string, string> = {
+    ACTIVE: colors.success,
+    INACTIVE: colors.muted,
+    PENDING_PAYMENT: '#b45309',
+    PAYMENT_FAILED: '#dc2626',
+    EXPIRED: '#94a3b8',
+    CANCELLED: '#94a3b8',
+  };
+
   const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();

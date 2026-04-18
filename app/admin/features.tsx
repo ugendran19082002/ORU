@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   Switch, RefreshControl, ActivityIndicator, Alert, Modal, TextInput,
@@ -34,15 +34,17 @@ type Feature = {
   is_beta: boolean;
 };
 
-const PRICING_COLORS: Record<string, { bg: string; text: string }> = {
-  free: { bg: '#e8f5e9', text: colors.success },
-  plan_only: { bg: ADMIN_SURF, text: ADMIN_ACCENT },
-  pay_per_use: { bg: '#fef3c7', text: '#b45309' },
-};
 
 export default function AdminFeaturesScreen() {
   const { colors, isDark } = useAppTheme();
   const styles = makeStyles(colors);
+
+  const PRICING_COLORS: Record<string, { bg: string; text: string }> = {
+    free: { bg: '#e8f5e9', text: colors.success },
+    plan_only: { bg: ADMIN_SURF, text: ADMIN_ACCENT },
+    pay_per_use: { bg: '#fef3c7', text: '#b45309' },
+  };
+
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const router = useRouter();

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Platform,
 } from 'react-native';
@@ -33,6 +33,7 @@ import { BackButton } from '@/components/ui/BackButton';
 export default function EmergencyHelpScreen() {
   const router = useRouter();
   const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const { safeBack } = useAppNavigation();
 
   useAndroidBackHandler(() => {
@@ -209,7 +210,7 @@ export default function EmergencyHelpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1 },
   urgentHeader: { paddingTop: 8, paddingBottom: 24, paddingHorizontal: 20 },
   backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },

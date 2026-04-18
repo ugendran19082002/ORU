@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,8 @@ import {
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useAppTheme } from '@/providers/ThemeContext';
-import type { ColorSchemeColors } from '@/providers/ThemeContext';
+import { useAppTheme, type ColorSchemeColors } from '@/providers/ThemeContext';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -33,8 +33,7 @@ const CUSTOMER_GRAD: [string, string] = [roleGradients.customer.start, roleGradi
 
 const WARNING_BG     = '#FFF8E1';
 const WARNING_BORDER = '#FFE082';
-const WARNING_TEXT   = colors.warning;
-const WARNING_DARK   = colors.warning;
+
 
 interface OrderItem {
   id: number;
@@ -68,6 +67,8 @@ interface OrderDetail {
 
 export default function OrderDetailScreen() {
   const { colors, isDark } = useAppTheme();
+
+
   const styles = makeStyles(colors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -189,7 +190,7 @@ export default function OrderDetailScreen() {
         {/* DELIVERY PIN IF ACTIVE */}
         {isActive && order.delivery_otp && (
           <View style={styles.otpCard}>
-            <Ionicons name="key-outline" size={24} color={WARNING_TEXT} />
+            <Ionicons name="key-outline" size={24} color={colors.warning} />
             <View style={{ flex: 1 }}>
               <Text style={styles.otpLabel}>Delivery Verification PIN</Text>
               <Text style={styles.otpValue}>{order.delivery_otp}</Text>
@@ -359,9 +360,9 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
     padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14,
     borderWidth: 1, borderColor: WARNING_BORDER,
   },
-  otpLabel: { fontSize: 12, color: WARNING_DARK, fontWeight: '600' },
-  otpValue: { fontSize: 28, color: WARNING_TEXT, fontWeight: '900', letterSpacing: 4 },
-  otpHint: { fontSize: 10, color: WARNING_DARK, opacity: 0.7, position: 'absolute', bottom: 8, right: 16 },
+  otpLabel: { fontSize: 12, color: colors.warning, fontWeight: '600' },
+  otpValue: { fontSize: 28, color: colors.warning, fontWeight: '900', letterSpacing: 4 },
+  otpHint: { fontSize: 10, color: colors.warning, opacity: 0.7, position: 'absolute', bottom: 8, right: 16 },
 
   section: { marginHorizontal: 20, marginBottom: 24 },
   sectionTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 12, letterSpacing: -0.3 },

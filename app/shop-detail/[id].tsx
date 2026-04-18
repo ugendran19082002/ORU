@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
@@ -49,6 +49,7 @@ interface ShopDetail {
 export default function ShopDetailScreen() {
   const { colors, isDark } = useAppTheme();
   const router = useRouter();
+  const styles = makeStyles(colors);
   const { safeBack } = useAppNavigation();
 
   useAndroidBackHandler(() => { safeBack('/(tabs)'); });
@@ -318,7 +319,7 @@ export default function ShopDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: any) => StyleSheet.create({
   root: { flex: 1, backgroundColor: '#f7f9ff' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14, backgroundColor: '#f7f9ff' },
   errorText: { fontSize: 17, fontWeight: '700', color: '#707881' },

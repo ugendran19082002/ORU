@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, ActivityIndicator, RefreshControl,
@@ -15,27 +15,27 @@ import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { apiClient } from '@/api/client';
-
 import { Shadow, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
 
 const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_SURF = roleSurface.shop_owner;
 const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
 
-const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
-  pending: { bg: colors.border, color: colors.muted, label: 'Pending' },
-  assigned: { bg: '#fef3c7', color: '#b45309', label: 'Assigned' },
-  accepted: { bg: '#fef3c7', color: '#b45309', label: 'Accepted' },
-  picked: { bg: '#e0f0ff', color: SHOP_ACCENT, label: 'Picked up' },
-  delivered: { bg: '#e8f5e9', color: colors.success, label: 'Delivered' },
-  completed: { bg: '#e8f5e9', color: colors.success, label: 'Completed' },
-  cancelled: { bg: '#ffebee', color: '#ba1a1a', label: 'Cancelled' },
-};
-
 const FILTERS = ['All', 'Active', 'Delivered', 'Failed'];
 
 export default function ShopDeliveryManagementScreen() {
   const { colors, isDark } = useAppTheme();
+
+  const STATUS_COLORS: Record<string, { bg: string; color: string; label: string }> = {
+    pending: { bg: colors.border, color: colors.muted, label: 'Pending' },
+    assigned: { bg: '#fef3c7', color: '#b45309', label: 'Assigned' },
+    accepted: { bg: '#fef3c7', color: '#b45309', label: 'Accepted' },
+    picked: { bg: '#e0f0ff', color: SHOP_ACCENT, label: 'Picked up' },
+    delivered: { bg: '#e8f5e9', color: colors.success, label: 'Delivered' },
+    completed: { bg: '#e8f5e9', color: colors.success, label: 'Completed' },
+    cancelled: { bg: '#ffebee', color: '#ba1a1a', label: 'Cancelled' },
+  };
+
   const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();

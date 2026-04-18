@@ -44,8 +44,8 @@ export default function MapPreviewScreen() {
     markers?: string;
   }>();
 
-  const [draftLat, setDraftLat] = React.useState(parseFloat(lat || '0'));
-  const [draftLng, setDraftLng] = React.useState(parseFloat(lng || '0'));
+  const [draftLat, setDraftLat] = React.useState(parseFloat(lat ?? 'NaN'));
+  const [draftLng, setDraftLng] = React.useState(parseFloat(lng ?? 'NaN'));
   const [mapType, setMapType] = React.useState<'standard' | 'satellite' | 'hybrid' | 'terrain' | 'none'>('terrain');
   const [parsedMarkers, setParsedMarkers] = React.useState<any[]>([]);
   const label = title || 'Location';
@@ -71,10 +71,10 @@ export default function MapPreviewScreen() {
   };
 
   const isValidCoord = (
-    draftLat !== 0 &&
-    draftLng !== 0 &&
     !isNaN(draftLat) &&
     !isNaN(draftLng) &&
+    draftLat !== 0 &&
+    draftLng !== 0 &&
     draftLat >= -90 &&
     draftLat <= 90 &&
     draftLng >= -180 &&

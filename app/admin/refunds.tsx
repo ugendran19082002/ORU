@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -52,18 +52,7 @@ function formatDate(iso: string): string {
   }
 }
 
-function getStatusTheme(status: AdminRefund['status']) {
-  switch (status) {
-    case 'pending':
-      return { bg: '#fff3e0', text: '#e65100', label: 'Pending' };
-    case 'approved':
-      return { bg: '#e8f5e9', text: colors.success, label: 'Approved' };
-    case 'denied':
-      return { bg: ADMIN_SURF, text: ADMIN_ACCENT, label: 'Denied' };
-    default:
-      return { bg: colors.border, text: colors.muted, label: status };
-  }
-}
+
 
 // ─── Deny Reason Modal ────────────────────────────────────────────────────────
 
@@ -74,7 +63,7 @@ interface DenyModalProps {
   loading: boolean;
 }
 
-function DenyReasonModal({ visible, onClose, onConfirm, loading }: DenyModalProps) {
+function DenyReasonModal({ visible, onClose, onConfirm, loading, styles, colors }: DenyModalProps & { styles: any; colors: ColorSchemeColors }) {
   const [reason, setReason] = useState('');
 
   const handleConfirm = () => {
@@ -130,7 +119,7 @@ interface RefundCardProps {
   actionLoadingId: number | null;
 }
 
-function RefundCard({ refund, onApprove, onDeny, actionLoadingId }: RefundCardProps) {
+function RefundCard({ refund, onApprove, onDeny, actionLoadingId, styles, getStatusTheme, colors }: RefundCardProps & { styles: any; getStatusTheme: any; colors: ColorSchemeColors }) {
   const statusTheme = getStatusTheme(refund.status);
   const isPending = refund.status === 'pending';
   const isActing = actionLoadingId === refund.id;
@@ -222,6 +211,20 @@ function RefundCard({ refund, onApprove, onDeny, actionLoadingId }: RefundCardPr
 
 export default function AdminRefundsScreen() {
   const { colors, isDark } = useAppTheme();
+  
+  const getStatusTheme = (status: AdminRefund['status']) => {
+    switch (status) {
+      case 'pending':
+        return { bg: '#fff3e0', text: '#e65100', label: 'Pending' };
+      case 'approved':
+        return { bg: '#e8f5e9', text: colors.success, label: 'Approved' };
+      case 'denied':
+        return { bg: ADMIN_SURF, text: ADMIN_ACCENT, label: 'Denied' };
+      default:
+        return { bg: colors.border, text: colors.muted, label: status };
+    }
+  };
+
   const styles = makeStyles(colors);
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -338,9 +341,12 @@ export default function AdminRefundsScreen() {
         onApprove={handleApprove}
         onDeny={handleDenyPress}
         actionLoadingId={actionLoadingId}
+        styles={styles}
+        getStatusTheme={getStatusTheme}
+        colors={colors}
       />
     ),
-    [handleApprove, handleDenyPress, actionLoadingId],
+    [handleApprove, handleDenyPress, actionLoadingId, styles, getStatusTheme],
   );
 
   const renderEmpty = () => {
@@ -437,6 +443,8 @@ export default function AdminRefundsScreen() {
         onClose={() => setDenyTargetId(null)}
         onConfirm={handleDenyConfirm}
         loading={denyLoading}
+        styles={styles}
+        colors={colors}
       />
     </View>
   );

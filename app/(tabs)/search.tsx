@@ -1,4 +1,4 @@
-﻿import type { ColorSchemeColors } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { ExpoMap } from "@/components/maps/ExpoMap";
 import { useShopStore } from "@/stores/shopStore";
 import { Ionicons } from "@expo/vector-icons";
@@ -276,6 +276,8 @@ export default function SearchScreen() {
 }
 
 function FilterChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  const { colors } = useAppTheme();
+  const styles = makeStyles(colors);
   return (
     <TouchableOpacity style={[styles.chip, active && styles.chipActive]} onPress={onPress}>
       <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
@@ -284,6 +286,8 @@ function FilterChip({ label, active, onPress }: { label: string; active: boolean
 }
 
 function ToggleButton({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  const { colors } = useAppTheme();
+  const styles = makeStyles(colors);
   return (
     <TouchableOpacity style={[styles.toggle, active && styles.toggleActive]} onPress={onPress}>
       <Text style={[styles.toggleText, active && styles.toggleTextActive]}>{label}</Text>
