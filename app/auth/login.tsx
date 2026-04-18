@@ -116,7 +116,7 @@ export default function LoginScreen() {
 
         if (skip_otp && has_pin) {
           // Returning user with PIN — go straight to PIN/biometric login
-          router.push({ pathname: "/auth/quick-login", params: { phone } });
+          router.push({ pathname: "/auth/quick-login", params: { phone, has_pin: '1' } });
         } else {
           // New user or forgot-PIN flow — verify OTP first
           router.push({ pathname: "/auth/otp", params: { phone, role: role || "" } });
@@ -125,10 +125,13 @@ export default function LoginScreen() {
         throw new Error(response.message || "Failed to send OTP");
       }
     } catch (err: any) {
+      const isRateLimit = err?.response?.status === 429 || err?.response?.data?.code === 'RATE_LIMIT_EXCEEDED';
       Toast.show({
-        type: 'error',
-        text1: 'Authentication Error',
-        text2: err?.response?.data?.message || err?.message || "Failed to send OTP. Please try again.",
+        type: isRateLimit ? 'info' : 'error',
+        text1: isRateLimit ? 'Too Many Attempts' : 'Authentication Error',
+        text2: isRateLimit
+          ? 'Please wait 15 minutes before requesting a new OTP.'
+          : err?.response?.data?.message || err?.message || 'Failed to send OTP. Please try again.',
       });
     } finally {
       isSubmittingRef.current = false;

@@ -1,11 +1,10 @@
-﻿import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Dimensions,
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
+import Toast from 'react-native-toast-message';
 import { useAppTheme } from '@/providers/ThemeContext';
 import type { ColorSchemeColors } from '@/providers/ThemeContext';
 
@@ -22,73 +22,85 @@ import { useAppSession } from '@/hooks/use-app-session';
 import { PinEntryModal } from '@/components/security/PinEntryModal';
 import { Logo } from '@/components/ui/Logo';
 
-import { Shadow, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
-
-const { width } = Dimensions.get('window');
+const LAST_PHONE_KEY = 'thannigo_last_phone_v1';
+const LAST_NAME_KEY = 'thannigo_last_name_v1';
 
 export default function QuickLoginScreen() {
-  const { colors, isDark } = useAppTheme();
+  const { colors } = useAppTheme();
   const styles = makeStyles(colors);
   const router = useRouter();
   const { signIn } = useAppSession();
-  const { 
-    isBiometricsEnabled, 
-    isPinEnabled, 
-    loginWithPin, 
-    loginWithBiometric 
+  const {
+    isBiometricsEnabled,
+    isPinEnabled,
+    loginWithPin,
+    loginWithBiometric,
   } = useSecurityStore();
 
-  const params = useLocalSearchParams<{ phone?: string }>();
+  const params = useLocalSearchParams<{ phone?: string; has_pin?: string }>();
   const [userName, setUserName] = useState('User');
   const [phone, setPhone] = useState(params.phone ?? '');
   const [isPinModalVisible, setIsPinModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Animation values
+  // has_pin param = backend confirmed PIN exists (used before signIn syncs the store)
+  const showPin = isPinEnabled || params.has_pin === '1';
+  const showBiometric = isBiometricsEnabled;
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
-    const loadIdentity = async () => {
-      const name = await SecureStore.getItemAsync('thannigo_last_name');
-      const storedPhone = await SecureStore.getItemAsync('thannigo_last_phone');
-      if (name) setUserName(name);
-      // Prefer param phone (coming from login screen) over stored phone
-      const resolvedPhone = params.phone || storedPhone || '';
-      if (!params.phone && storedPhone) setPhone(storedPhone);
-
-      // Auto-trigger biometrics if enabled
-      if (isBiometricsEnabled && resolvedPhone) {
-          handleBiometricLogin(resolvedPhone);
-      }
-    };
-    loadIdentity();
-
     Animated.parallel([
       Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
       Animated.spring(slideAnim, { toValue: 0, tension: 50, friction: 7, useNativeDriver: true }),
     ]).start();
+
+    const loadIdentity = async () => {
+      const [name, storedPhone] = await Promise.all([
+        SecureStore.getItemAsync(LAST_NAME_KEY),
+        SecureStore.getItemAsync(LAST_PHONE_KEY),
+      ]);
+
+      if (name) setUserName(name);
+
+      const resolvedPhone = params.phone || storedPhone || '';
+      if (!params.phone && storedPhone) setPhone(storedPhone);
+
+      // Read store state directly to avoid stale closure
+      const biometricEnabled = useSecurityStore.getState().isBiometricsEnabled;
+      if (biometricEnabled && resolvedPhone) {
+        handleBiometricLogin(resolvedPhone);
+      }
+    };
+
+    loadIdentity();
   }, []);
 
   const handleBiometricLogin = async (targetPhone: string) => {
     try {
       setLoading(true);
-      const data = await loginWithBiometric(targetPhone);
+      const normalizedPhone = targetPhone.startsWith('+91') ? targetPhone : `+91${targetPhone}`;
+      const data = await loginWithBiometric(normalizedPhone);
       await signIn(data);
     } catch (error: any) {
-      console.log('[QuickLogin] Biometric login failed:', error.message);
-      
-      const isDeviceError = error.response?.status === 403 || error.message?.includes('trust');
-      
-      require('react-native-toast-message').default.show({
-        type: 'info',
-        text1: 'Biometric Login Failed',
-        text2: isDeviceError ? 'This device is not trusted. Use PIN instead.' : 'Verification failed or cancelled.'
-      });
-      
-      // Auto-open PIN modal if biometrics failed for hardware/trust reasons
-      if (isDeviceError || !error.message?.includes('cancel')) {
-          setIsPinModalVisible(true);
+      const msg: string = error.message ?? '';
+      const isUserCancel = /cancel/i.test(msg) || msg.includes('user_cancel');
+      const isDeviceError = error.response?.status === 403 || msg.includes('trust');
+
+      if (!isUserCancel) {
+        Toast.show({
+          type: 'info',
+          text1: 'Biometric Login Failed',
+          text2: isDeviceError
+            ? 'This device is not trusted. Use PIN instead.'
+            : 'Verification failed.',
+        });
+      }
+
+      // Only auto-open PIN on explicit trust/device errors
+      if (isDeviceError) {
+        setIsPinModalVisible(true);
       }
     } finally {
       setLoading(false);
@@ -98,11 +110,12 @@ export default function QuickLoginScreen() {
   const handlePinLogin = async (pin: string) => {
     try {
       setLoading(true);
-      const data = await loginWithPin(phone, pin);
+      const normalizedPhone = phone.startsWith('+91') ? phone : `+91${phone}`;
+      const data = await loginWithPin(normalizedPhone, pin);
       await signIn(data);
       setIsPinModalVisible(false);
     } catch (error: any) {
-      throw error; // Let the Modal handle the vibrating error
+      throw error; // let PinEntryModal handle shake + error display
     } finally {
       setLoading(false);
     }
@@ -117,17 +130,19 @@ export default function QuickLoginScreen() {
       />
 
       <SafeAreaView style={styles.safe}>
-        <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+        <Animated.View
+          style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
+        >
           <Logo size="lg" style={styles.logo} />
-          
+
           <Text style={styles.welcomeText}>Welcome Back,</Text>
           <Text style={styles.userName}>{userName}</Text>
           <Text style={styles.phoneSub}>{phone}</Text>
 
           <View style={styles.actionContainer}>
-            {isBiometricsEnabled && (
-              <TouchableOpacity 
-                style={styles.biometricBtn} 
+            {showBiometric && (
+              <TouchableOpacity
+                style={styles.biometricBtn}
                 onPress={() => handleBiometricLogin(phone)}
                 disabled={loading}
               >
@@ -136,9 +151,9 @@ export default function QuickLoginScreen() {
               </TouchableOpacity>
             )}
 
-            {isPinEnabled && (
-              <TouchableOpacity 
-                style={styles.pinBtn} 
+            {showPin && (
+              <TouchableOpacity
+                style={styles.pinBtn}
                 onPress={() => setIsPinModalVisible(true)}
                 disabled={loading}
               >
@@ -167,7 +182,7 @@ export default function QuickLoginScreen() {
 
         {loading && (
           <View style={styles.loaderOverlay}>
-             <ActivityIndicator size="large" color="white" />
+            <ActivityIndicator size="large" color="white" />
           </View>
         )}
 
@@ -175,6 +190,10 @@ export default function QuickLoginScreen() {
           visible={isPinModalVisible}
           onCancel={() => setIsPinModalVisible(false)}
           onSuccess={handlePinLogin}
+          onForgotPin={() => {
+            setIsPinModalVisible(false);
+            router.push({ pathname: '/auth/forgot-pin' as any, params: { phone } });
+          }}
           mode="verify"
           title="Enter PIN to Login"
         />
@@ -191,15 +210,15 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   welcomeText: { color: 'rgba(255,255,255,0.7)', fontSize: 18, fontWeight: '500' },
   userName: { color: 'white', fontSize: 32, fontWeight: '900', marginTop: 4 },
   phoneSub: { color: 'rgba(255,255,255,0.5)', fontSize: 16, marginTop: 8 },
-  
+
   actionContainer: { width: '100%', marginTop: 60, gap: 20 },
   biometricBtn: {
     alignItems: 'center',
     gap: 12,
-    marginBottom: 20
+    marginBottom: 20,
   },
   biometricText: { color: 'white', fontSize: 16, fontWeight: '600' },
-  
+
   pinBtn: {
     backgroundColor: colors.surface,
     borderRadius: 16,
@@ -215,14 +234,14 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
     elevation: 5,
   },
   pinBtnText: { color: colors.primary, fontSize: 18, fontWeight: '800' },
-  
+
   switchAccount: { marginTop: 40, padding: 10 },
   switchText: { color: 'rgba(255,255,255,0.6)', fontSize: 14, textDecorationLine: 'underline' },
-  
+
   loaderOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.3)',
     alignItems: 'center',
-    justifyContent: 'center'
-  }
+    justifyContent: 'center',
+  },
 });

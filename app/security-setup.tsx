@@ -25,6 +25,7 @@ export default function SecuritySetupScreen() {
   const { enablePinRemote, enableBiometricRemote, initialize } = useSecurityStore();
   const [showModal, setShowModal] = useState(false);
   const [complete, setComplete] = useState(false);
+  const [pinLength, setPinLength] = useState<4 | 6>(4);
 
   const handleStartSetup = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -124,6 +125,23 @@ export default function SecuritySetupScreen() {
         <View style={styles.actions}>
            {!complete ? (
              <>
+               {/* PIN LENGTH CHOICE */}
+               <Text style={[styles.choiceLabel, { color: colors.muted }]}>Choose PIN length</Text>
+               <View style={styles.lengthRow}>
+                 {([4, 6] as const).map((len) => (
+                   <TouchableOpacity
+                     key={len}
+                     style={[styles.lengthBtn, { borderColor: colors.border }, pinLength === len && styles.lengthBtnActive]}
+                     onPress={() => setPinLength(len)}
+                   >
+                     <Text style={[styles.lengthBtnText, { color: colors.muted }, pinLength === len && styles.lengthBtnTextActive]}>
+                       {len}-Digit
+                     </Text>
+                     {pinLength === len && <Ionicons name="checkmark-circle" size={16} color="#0ea5e9" style={{ marginLeft: 4 }} />}
+                   </TouchableOpacity>
+                 ))}
+               </View>
+
                <TouchableOpacity
                  style={styles.primaryBtn}
                  onPress={handleStartSetup}
@@ -135,7 +153,7 @@ export default function SecuritySetupScreen() {
                    end={{ x: 1, y: 0 }}
                    style={styles.gradient}
                  >
-                   <Text style={styles.primaryBtnText}>Set 4-Digit PIN</Text>
+                   <Text style={styles.primaryBtnText}>Set {pinLength}-Digit PIN</Text>
                    <Ionicons name="arrow-forward" size={20} color="white" />
                  </LinearGradient>
                </TouchableOpacity>
@@ -168,10 +186,10 @@ export default function SecuritySetupScreen() {
       <PinEntryModal
         visible={showModal}
         mode="set"
-        onSuccess={async () => {}} // Handled via onSetPin
+        pinLength={pinLength}
+        onSuccess={handleSetPin}
         onCancel={() => setShowModal(false)}
-        onSetPin={handleSetPin}
-        title="Create App PIN"
+        title={`Create ${pinLength}-Digit PIN`}
       />
     </SafeAreaView>
   );
@@ -198,4 +216,10 @@ const styles = StyleSheet.create({
   primaryBtnText: { color: 'white', fontSize: 18, fontWeight: '900' },
 
   footerNote: { fontSize: 13, textAlign: 'center', marginTop: 8 },
+  choiceLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.5, marginBottom: 10, alignSelf: 'flex-start' },
+  lengthRow: { flexDirection: 'row', gap: 12, marginBottom: 20, width: '100%' },
+  lengthBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 14, borderWidth: 1.5, backgroundColor: 'transparent' },
+  lengthBtnActive: { borderColor: '#0ea5e9', backgroundColor: '#e0f2fe' },
+  lengthBtnText: { fontSize: 14, fontWeight: '700' },
+  lengthBtnTextActive: { color: '#0ea5e9' },
 });

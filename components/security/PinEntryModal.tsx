@@ -1,12 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
-  Modal,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-  Platform,
+  View, Text, Modal, StyleSheet, TouchableOpacity,
+  Dimensions, Platform, Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator } from 'react-native';
@@ -14,180 +9,262 @@ import { useSecurityStore } from '@/stores/securityStore';
 import * as Haptics from 'expo-haptics';
 
 const { width } = Dimensions.get('window');
+const ACCENT = '#005d90';
 
-type PinEntryModalProps = {
+export type PinEntryModalProps = {
   visible: boolean;
-  /** Always async — callers must return a Promise (throw on failure). */
   onSuccess: (pin: string) => Promise<void>;
   onCancel?: () => void;
+  onForgotPin?: () => void;
   title?: string;
-  mode?: 'verify' | 'set' | 'confirm';
-  onSetPin?: (pin: string) => void;
+  mode?: 'verify' | 'set';
+  pinLength?: 4 | 6;
 };
 
 export const PinEntryModal: React.FC<PinEntryModalProps> = ({
   visible,
   onSuccess,
   onCancel,
+  onForgotPin,
   title = 'Enter PIN',
   mode = 'verify',
-  onSetPin,
+  pinLength = 4,
 }) => {
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [currentStep, setCurrentStep] = useState<'enter' | 'confirm'>(mode === 'set' ? 'enter' : 'enter');
-  const { isBiometricsEnabled, authenticateBiometrics } = useSecurityStore();
-  const [error, setError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [step, setStep] = useState<'enter' | 'confirm'>('enter');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [attemptsLeft, setAttemptsLeft] = useState<number | null>(null);
+  const [lockedSeconds, setLockedSeconds] = useState(0);
 
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+  const { isBiometricsEnabled, authenticateBiometrics } = useSecurityStore();
+
+  // Lockout countdown
   useEffect(() => {
-    if (visible && mode === 'verify' && isBiometricsEnabled) {
-      handleBiometrics();
-    }
+    if (lockedSeconds <= 0) return;
+    const t = setInterval(() => {
+      setLockedSeconds((s) => {
+        if (s <= 1) { clearInterval(t); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [lockedSeconds]);
+
+  // Reset state when modal opens/closes
+  useEffect(() => {
     if (!visible) {
-        setPin('');
-        setIsLoading(false);
-        setError(false);
+      setPin('');
+      setConfirmPin('');
+      setStep('enter');
+      setError('');
+      setIsLoading(false);
+      setAttemptsLeft(null);
+    } else if (mode === 'verify' && isBiometricsEnabled) {
+      triggerBiometrics();
     }
   }, [visible]);
 
-  const handleBiometrics = async () => {
+  const shake = () => {
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 10, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 8, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -8, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 60, useNativeDriver: true }),
+    ]).start();
+  };
+
+  const triggerBiometrics = async () => {
     const success = await authenticateBiometrics();
     if (success) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      onSuccess(''); // Pass empty for biometrics as PIN is not used
+      await onSuccess('');
     }
   };
 
-  const handleKeyPress = (key: string) => {
-    if (pin.length >= 4) return;
+  const handleKey = (key: string) => {
+    if (isLoading || lockedSeconds > 0) return;
+    if (pin.length >= pinLength) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const newPin = pin + key;
-    setPin(newPin);
-    setError(false);
-
-    if (newPin.length === 4) {
-      handleComplete(newPin);
-    }
+    const next = pin + key;
+    setPin(next);
+    setError('');
+    if (next.length === pinLength) handleComplete(next);
   };
 
   const handleDelete = () => {
+    if (isLoading) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setPin(pin.slice(0, -1));
-    setError(false);
+    setPin((p) => p.slice(0, -1));
+    setError('');
   };
 
   const handleComplete = async (finalPin: string) => {
-    if (mode === 'verify') {
-      try {
-        setIsLoading(true);
-        setError(false);
-        setErrorMessage('');
-        await onSuccess(finalPin);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      } catch (err: any) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        setError(true);
-        setPin('');
-        
-        // Extract message from backend response if available
-        const backendMsg = err.response?.data?.message || err.message;
-        setErrorMessage(backendMsg || 'Incorrect PIN');
-      } finally {
-        setIsLoading(false);
-      }
-    } else if (mode === 'set') {
-      if (currentStep === 'enter') {
+    if (mode === 'set') {
+      if (step === 'enter') {
         setConfirmPin(finalPin);
         setPin('');
-        setCurrentStep('confirm');
+        setStep('confirm');
       } else {
         if (finalPin === confirmPin) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          onSetPin?.(finalPin);
-          onSuccess(finalPin);
+          setIsLoading(true);
+          try { await onSuccess(finalPin); } finally { setIsLoading(false); }
         } else {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-          setError(true);
-          setErrorMessage('PINs do not match');
+          shake();
+          setError('PINs do not match. Try again.');
           setPin('');
-          setCurrentStep('enter');
           setConfirmPin('');
+          setStep('enter');
         }
       }
+      return;
+    }
+
+    // verify mode
+    setIsLoading(true);
+    try {
+      await onSuccess(finalPin);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setAttemptsLeft(null);
+    } catch (err: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      shake();
+      setPin('');
+
+      const data = err?.response?.data?.error?.details ?? err?.response?.data?.data ?? {};
+      const code = err?.response?.data?.error?.code ?? '';
+
+      if (code === 'PIN_LOCKED') {
+        setLockedSeconds(data.locked_seconds ?? 300);
+        setError('');
+        setAttemptsLeft(0);
+      } else {
+        const remaining = data.attempts_remaining ?? null;
+        setAttemptsLeft(remaining);
+        setError(err?.response?.data?.message || err?.message || 'Incorrect PIN');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const renderDot = (index: number) => {
-    const active = pin.length > index;
+  const dots = Array.from({ length: pinLength }, (_, i) => {
+    const filled = pin.length > i;
+    const isError = !!error || lockedSeconds > 0;
     return (
       <View
-        key={index}
+        key={i}
         style={[
           styles.dot,
-          active && styles.dotActive,
-          error && styles.dotError,
+          filled && styles.dotFilled,
+          isError && filled && styles.dotError,
         ]}
       />
     );
-  };
+  });
 
-  const renderKey = (key: string) => (
-    <TouchableOpacity
-      key={key}
-      style={styles.key}
-      onPress={() => handleKeyPress(key)}
-    >
-      <Text style={styles.keyText}>{key}</Text>
-    </TouchableOpacity>
-  );
+  const lockedMin = Math.floor(lockedSeconds / 60);
+  const lockedSec = lockedSeconds % 60;
+  const lockedLabel = lockedSeconds > 0
+    ? `${lockedMin}:${String(lockedSec).padStart(2, '0')}`
+    : '';
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.container}>
-        <View style={styles.content}>
-          {onCancel && (
-            <TouchableOpacity style={styles.closeBtn} onPress={onCancel}>
-              <Ionicons name="close" size={24} color="#64748b" />
-            </TouchableOpacity>
-          )}
+    <Modal visible={visible} animationType="slide" transparent statusBarTranslucent>
+      <View style={styles.overlay}>
+        <View style={styles.sheet}>
+          {/* Header */}
+          <View style={styles.headerRow}>
+            {onCancel ? (
+              <TouchableOpacity style={styles.headerBtn} onPress={onCancel}>
+                <Ionicons name="close" size={22} color="#64748b" />
+              </TouchableOpacity>
+            ) : <View style={styles.headerBtn} />}
 
-          <Text style={styles.title}>
-            {currentStep === 'confirm' ? 'Confirm PIN' : title}
-          </Text>
-          
-          <View style={styles.dotsContainer}>
-            {isLoading ? <ActivityIndicator color="#005d90" /> : [0, 1, 2, 3].map(renderDot)}
+            <Text style={styles.title}>
+              {step === 'confirm' ? 'Confirm PIN' : title}
+            </Text>
+
+            {mode === 'verify' && isBiometricsEnabled ? (
+              <TouchableOpacity style={styles.headerBtn} onPress={triggerBiometrics}>
+                <Ionicons name="finger-print" size={24} color={ACCENT} />
+              </TouchableOpacity>
+            ) : <View style={styles.headerBtn} />}
           </View>
 
-          {error && (
-            <Text style={styles.errorText}>
-              {errorMessage}
-            </Text>
+          {/* Subtitle */}
+          <Text style={styles.subtitle}>
+            {step === 'confirm'
+              ? 'Re-enter your PIN to confirm'
+              : mode === 'set'
+              ? `Choose a ${pinLength}-digit PIN for your account`
+              : 'Enter your PIN to continue'}
+          </Text>
+
+          {/* Lockout banner */}
+          {lockedSeconds > 0 && (
+            <View style={styles.lockBanner}>
+              <Ionicons name="lock-closed" size={16} color="#b45309" />
+              <Text style={styles.lockText}>
+                Too many attempts. Try again in {lockedLabel}
+              </Text>
+            </View>
           )}
 
+          {/* Dots */}
+          <Animated.View style={[styles.dotsRow, { transform: [{ translateX: shakeAnim }] }]}>
+            {isLoading
+              ? <ActivityIndicator color={ACCENT} size="large" />
+              : dots}
+          </Animated.View>
+
+          {/* Error / attempts left */}
+          {!!error && (
+            <Text style={styles.errorText}>{error}</Text>
+          )}
+          {attemptsLeft !== null && attemptsLeft > 0 && !error && (
+            <Text style={styles.attemptsText}>{attemptsLeft} attempt{attemptsLeft !== 1 ? 's' : ''} remaining</Text>
+          )}
+
+          {/* Keypad */}
           <View style={styles.keypad}>
+            {[[1,2,3],[4,5,6],[7,8,9]].map((row, ri) => (
+              <View key={ri} style={styles.row}>
+                {row.map((k) => (
+                  <TouchableOpacity
+                    key={k}
+                    style={[styles.key, (isLoading || lockedSeconds > 0) && styles.keyDisabled]}
+                    onPress={() => handleKey(k.toString())}
+                    disabled={isLoading || lockedSeconds > 0}
+                  >
+                    <Text style={styles.keyText}>{k}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))}
             <View style={styles.row}>
-              {[1, 2, 3].map(k => renderKey(k.toString()))}
-            </View>
-            <View style={styles.row}>
-              {[4, 5, 6].map(k => renderKey(k.toString()))}
-            </View>
-            <View style={styles.row}>
-              {[7, 8, 9].map(k => renderKey(k.toString()))}
-            </View>
-            <View style={styles.row}>
-              {mode === 'verify' && isBiometricsEnabled ? (
-                <TouchableOpacity style={styles.key} onPress={handleBiometrics}>
-                  <Ionicons name="finger-print" size={28} color="#005d90" />
+              {/* Forgot PIN (verify mode only) */}
+              {mode === 'verify' && onForgotPin ? (
+                <TouchableOpacity style={styles.key} onPress={onForgotPin}>
+                  <Text style={styles.forgotText}>Forgot?</Text>
                 </TouchableOpacity>
               ) : (
                 <View style={styles.key} />
               )}
-              {renderKey('0')}
-              <TouchableOpacity style={styles.key} onPress={handleDelete}>
-                <Ionicons name="backspace-outline" size={24} color="#181c20" />
+              <TouchableOpacity
+                style={[styles.key, (isLoading || lockedSeconds > 0) && styles.keyDisabled]}
+                onPress={() => handleKey('0')}
+                disabled={isLoading || lockedSeconds > 0}
+              >
+                <Text style={styles.keyText}>0</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.key} onPress={handleDelete} disabled={isLoading}>
+                <Ionicons name="backspace-outline" size={24} color="#334155" />
               </TouchableOpacity>
             </View>
           </View>
@@ -198,76 +275,51 @@ export const PinEntryModal: React.FC<PinEntryModalProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+  overlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.55)',
     justifyContent: 'flex-end',
   },
-  content: {
+  sheet: {
     backgroundColor: 'white',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    paddingTop: 40,
-    paddingBottom: Platform.OS === 'ios' ? 60 : 40,
+    borderTopLeftRadius: 32, borderTopRightRadius: 32,
+    paddingTop: 24, paddingBottom: Platform.OS === 'ios' ? 48 : 32,
     alignItems: 'center',
   },
-  closeBtn: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    padding: 8,
+  headerRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    width: '100%', paddingHorizontal: 20, marginBottom: 6,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#181c20',
-    marginBottom: 30,
+  headerBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  title: { fontSize: 18, fontWeight: '800', color: '#0f172a' },
+  subtitle: { fontSize: 13, color: '#64748b', marginBottom: 24, textAlign: 'center' },
+
+  lockBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#fffbeb', borderRadius: 12,
+    paddingHorizontal: 16, paddingVertical: 10,
+    marginBottom: 16, borderWidth: 1, borderColor: '#fcd34d',
   },
-  dotsContainer: {
-    flexDirection: 'row',
-    gap: 20,
-    marginBottom: 40,
-  },
+  lockText: { fontSize: 13, fontWeight: '700', color: '#b45309' },
+
+  dotsRow: { flexDirection: 'row', gap: 16, marginBottom: 12, minHeight: 28 },
   dot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#e2e8f0',
+    width: 16, height: 16, borderRadius: 8,
+    borderWidth: 2, borderColor: '#cbd5e1',
   },
-  dotActive: {
-    backgroundColor: '#005d90',
-    borderColor: '#005d90',
-  },
-  dotError: {
-    backgroundColor: '#ef4444',
-    borderColor: '#ef4444',
-  },
-  errorText: {
-    color: '#ef4444',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 20,
-  },
-  keypad: {
-    width: width * 0.8,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
+  dotFilled: { backgroundColor: ACCENT, borderColor: ACCENT },
+  dotError: { backgroundColor: '#ef4444', borderColor: '#ef4444' },
+
+  errorText: { color: '#ef4444', fontSize: 13, fontWeight: '600', marginBottom: 16, textAlign: 'center' },
+  attemptsText: { color: '#f59e0b', fontSize: 12, fontWeight: '700', marginBottom: 16 },
+
+  keypad: { width: width * 0.78, marginTop: 8 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   key: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#f8fafc',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 72, height: 72, borderRadius: 36,
+    backgroundColor: '#f1f5f9',
+    alignItems: 'center', justifyContent: 'center',
   },
-  keyText: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#181c20',
-  },
+  keyDisabled: { opacity: 0.4 },
+  keyText: { fontSize: 26, fontWeight: '700', color: '#0f172a' },
+  forgotText: { fontSize: 11, fontWeight: '800', color: ACCENT, textAlign: 'center' },
 });

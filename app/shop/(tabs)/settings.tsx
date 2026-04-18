@@ -371,9 +371,11 @@ export default function ShopSettingsScreen() {
       <PinEntryModal
         visible={showPinModal}
         mode={pinMode}
-        onSuccess={async () => setShowPinModal(false)}
+        onSuccess={async (pin) => {
+          if (pinMode === 'set') { await enablePinRemote(pin); Toast.show({ type: 'success', text1: 'PIN set' }); }
+          setShowPinModal(false);
+        }}
         onCancel={() => setShowPinModal(false)}
-        onSetPin={async (pin) => { await enablePinRemote(pin); Toast.show({ type: 'success', text1: 'PIN set' }); }}
         title={pinMode === 'set' ? 'Set App PIN' : 'Verify PIN'}
       />
     </SafeAreaView>

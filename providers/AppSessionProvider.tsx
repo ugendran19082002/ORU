@@ -416,6 +416,9 @@ export function AppSessionProvider({
         if (mappedUser.name) {
           await SecureStore.setItemAsync(LAST_NAME_KEY, mappedUser.name);
         }
+
+        // Sync PIN/biometric flags so quick-login shows the correct buttons
+        await useSecurityStore.getState().syncWithUser(mappedUser);
       },
 
       signOut: handleSignOut,
