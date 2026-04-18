@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
@@ -19,8 +19,9 @@ import { useAppTheme } from '@/providers/ThemeContext';
  */
 export default function SecuritySetupScreen() {
   const router = useRouter();
+  const { is_new_user, is_forgot_pin } = useLocalSearchParams<{ is_new_user?: string; is_forgot_pin?: string }>();
   const { colors, isDark } = useAppTheme();
-  const { setIsVerified, syncSession } = useAppSession();
+  const { setIsVerified, syncSession, user } = useAppSession();
   const { enablePinRemote, enableBiometricRemote, initialize } = useSecurityStore();
   const [showModal, setShowModal] = useState(false);
   const [complete, setComplete] = useState(false);
@@ -65,9 +66,23 @@ export default function SecuritySetupScreen() {
   };
 
   const handleFinish = async () => {
-    // Final sync and move to dashboard
     await syncSession();
-    router.replace('/(tabs)' as any);
+    if (is_forgot_pin === '1') {
+      // Forgot PIN reset complete — go to quick-login to re-authenticate
+      router.replace('/auth/quick-login' as any);
+      return;
+    }
+    if (is_new_user === '1') {
+      // New user — go to role selection / onboarding
+      router.replace('/auth/role' as any);
+      return;
+    }
+    // Returning user PIN reset — go to their role dashboard
+    const role = user?.role;
+    if (role === 'shop_owner') router.replace('/shop' as any);
+    else if (role === 'admin') router.replace('/admin' as any);
+    else if (role === 'delivery') router.replace('/delivery' as any);
+    else router.replace('/(tabs)' as any);
   };
 
   return (

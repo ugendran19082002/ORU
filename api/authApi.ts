@@ -5,7 +5,10 @@ export interface SendOtpResponse {
   status: number;
   message: string;
   data: {
-    expires_in: number;
+    expires_in?: number;
+    is_new_user?: boolean;
+    has_pin?: boolean;
+    skip_otp?: boolean;
   };
 }
 
@@ -36,6 +39,7 @@ export interface VerifyOtpResponse {
       preferred_language: string;
       biometric_enabled: boolean;
       onboarding_completed: boolean;
+      security_pin_enabled?: boolean;
       created_at: string;
     };
   };
@@ -45,10 +49,11 @@ export const authApi = {
   /**
    * Send OTP to a phone number
    */
-  sendOtp: async (phone: string, device_id: string = "1"): Promise<SendOtpResponse> => {
+  sendOtp: async (phone: string, device_id: string = "1", action: string = "login"): Promise<SendOtpResponse> => {
     const response = await apiClient.post<SendOtpResponse>('/auth/send-otp', {
       phone,
-      device_id
+      device_id,
+      action,
     });
     return response.data;
   },

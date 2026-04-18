@@ -48,7 +48,34 @@ export default function MapPreviewScreen() {
   const [draftLng, setDraftLng] = React.useState(parseFloat(lng ?? 'NaN'));
   const [mapType, setMapType] = React.useState<'standard' | 'satellite' | 'hybrid' | 'terrain' | 'none'>('terrain');
   const [parsedMarkers, setParsedMarkers] = React.useState<any[]>([]);
+  const [currentAddress, setCurrentAddress] = React.useState<string>('');
   const label = title || 'Location';
+
+  React.useEffect(() => {
+    if (isNaN(draftLat) || isNaN(draftLng)) return;
+    let cancelled = false;
+    fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${draftLat}&lon=${draftLng}&format=json&zoom=18&addressdetails=1`,
+      { headers: { 'User-Agent': 'ThanniGoApp/1.0' } }
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data?.address) {
+          const a = data.address;
+          const parts = [
+            a.road || a.pedestrian || a.neighbourhood,
+            a.suburb || a.quarter,
+            a.city || a.town || a.village || a.county,
+          ].filter(Boolean);
+          setCurrentAddress(parts.join(', ') || data.display_name || '');
+        } else if (data?.display_name) {
+          setCurrentAddress(data.display_name);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [draftLat, draftLng]);
 
   React.useEffect(() => {
     if (markers) {
@@ -248,24 +275,34 @@ export default function MapPreviewScreen() {
 
             {/* Action buttons */}
             {target === 'select' ? (
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={styles.actionBtnWrap}
-                onPress={() => {
-                  emitGlobalLocation(draftLat, draftLng);
-                  safeBack('/(tabs)');
-                }}
-              >
-                <LinearGradient
-                  colors={['#10b981', '#059669']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.actionBtnGrad}
+              <>
+                {currentAddress.length > 0 && (
+                  <View style={[styles.currentAddressRow, { backgroundColor: inputBg }]}>
+                    <Ionicons name="location" size={15} color="#005d90" style={{ marginTop: 1 }} />
+                    <Text style={[styles.currentAddressText, { color: text }]} numberOfLines={2}>
+                      {currentAddress}
+                    </Text>
+                  </View>
+                )}
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  style={styles.actionBtnWrap}
+                  onPress={() => {
+                    emitGlobalLocation(draftLat, draftLng);
+                    safeBack('/(tabs)');
+                  }}
                 >
-                  <Ionicons name="checkmark-circle" size={20} color="white" />
-                  <Text style={styles.actionBtnText}>Confirm Selected Location</Text>
-                </LinearGradient>
-              </TouchableOpacity>
+                  <LinearGradient
+                    colors={['#10b981', '#059669']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.actionBtnGrad}
+                  >
+                    <Ionicons name="checkmark-circle" size={20} color="white" />
+                    <Text style={styles.actionBtnText}>Confirm Selected Location</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </>
             ) : (
               <View style={{ gap: 10 }}>
                 <TouchableOpacity
@@ -348,4 +385,6 @@ const styles = StyleSheet.create({
   errorSub: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: 32 },
   errorBackBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 28, paddingVertical: 15, borderRadius: 16 },
   errorBackBtnText: { color: 'white', fontSize: 15, fontWeight: '800' },
+  currentAddressRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 10 },
+  currentAddressText: { flex: 1, fontSize: 13, fontWeight: '600', lineHeight: 18 },
 });

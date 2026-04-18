@@ -112,7 +112,15 @@ export default function LoginScreen() {
       const deviceId = await getOriginalDeviceId();
       const response = await authApi.sendOtp(`+91${phone}`, deviceId);
       if (response.status === 1) {
-        router.push({ pathname: "/auth/otp", params: { phone, role: role || "" } });
+        const { skip_otp, has_pin } = response.data ?? {};
+
+        if (skip_otp && has_pin) {
+          // Returning user with PIN — go straight to PIN/biometric login
+          router.push({ pathname: "/auth/quick-login", params: { phone } });
+        } else {
+          // New user or forgot-PIN flow — verify OTP first
+          router.push({ pathname: "/auth/otp", params: { phone, role: role || "" } });
+        }
       } else {
         throw new Error(response.message || "Failed to send OTP");
       }

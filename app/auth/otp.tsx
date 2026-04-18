@@ -149,10 +149,17 @@ export default function OTPScreen() {
         }).start();
 
         const { user, next_step, is_new_user } = response.data;
+
+        // New users MUST set a PIN before proceeding — spec requirement
+        if (is_new_user || !user.security_pin_enabled) {
+          router.replace({ pathname: '/security-setup' as any, params: { is_new_user: '1', phone } });
+          return;
+        }
+
         const destination = (() => {
           if (user.role === 'admin') return '/admin';
           if (user.role === 'delivery') return '/delivery';
-          if (is_new_user || !user.onboarding_completed) {
+          if (!user.onboarding_completed) {
             return (next_step?.screen_route || '/auth/role') as string;
           }
           if (user.role === 'shop_owner') return '/shop';

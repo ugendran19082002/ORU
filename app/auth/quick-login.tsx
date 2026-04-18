@@ -9,7 +9,7 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -38,8 +38,9 @@ export default function QuickLoginScreen() {
     loginWithBiometric 
   } = useSecurityStore();
 
+  const params = useLocalSearchParams<{ phone?: string }>();
   const [userName, setUserName] = useState('User');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(params.phone ?? '');
   const [isPinModalVisible, setIsPinModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -50,13 +51,15 @@ export default function QuickLoginScreen() {
   useEffect(() => {
     const loadIdentity = async () => {
       const name = await SecureStore.getItemAsync('thannigo_last_name');
-      const phoneNum = await SecureStore.getItemAsync('thannigo_last_phone');
+      const storedPhone = await SecureStore.getItemAsync('thannigo_last_phone');
       if (name) setUserName(name);
-      if (phoneNum) setPhone(phoneNum);
-      
+      // Prefer param phone (coming from login screen) over stored phone
+      const resolvedPhone = params.phone || storedPhone || '';
+      if (!params.phone && storedPhone) setPhone(storedPhone);
+
       // Auto-trigger biometrics if enabled
-      if (isBiometricsEnabled && phoneNum) {
-          handleBiometricLogin(phoneNum);
+      if (isBiometricsEnabled && resolvedPhone) {
+          handleBiometricLogin(resolvedPhone);
       }
     };
     loadIdentity();
@@ -145,8 +148,16 @@ export default function QuickLoginScreen() {
             )}
           </View>
 
-          <TouchableOpacity 
-            style={styles.switchAccount} 
+          <TouchableOpacity
+            style={{ marginTop: 16, padding: 10 }}
+            onPress={() => router.push({ pathname: '/auth/forgot-pin' as any, params: { phone } })}
+            disabled={loading}
+          >
+            <Text style={[styles.switchText, { color: 'rgba(255,255,255,0.5)' }]}>Forgot PIN?</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.switchAccount}
             onPress={() => router.replace('/auth')}
             disabled={loading}
           >
