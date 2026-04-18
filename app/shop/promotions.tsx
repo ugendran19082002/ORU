@@ -139,7 +139,6 @@ export default function ShopPromotionsScreen() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
           <BackButton fallback="/shop/settings" />
           <View>
-
             <View style={styles.brandRow}>
               <Logo size="md" />
               <Text style={styles.brandName}>ThanniGo</Text>
@@ -147,13 +146,21 @@ export default function ShopPromotionsScreen() {
             <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.createBtn}
-          onPress={() => setShowCreate(true)}
-        >
-          <Ionicons name="add" size={18} color="white" />
-          <Text style={styles.createBtnText}>New Coupon</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <TouchableOpacity 
+            style={styles.notifBtnSub} 
+            onPress={() => router.push('/notifications' as any)}
+          >
+            <Ionicons name="notifications-outline" size={22} color={CUSTOMER_ACCENT} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.createBtn}
+            onPress={() => setShowCreate(true)}
+          >
+            <Ionicons name="add" size={18} color="white" />
+            <Text style={styles.createBtnText}>New Coupon</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}>
@@ -437,6 +444,7 @@ const styles = StyleSheet.create({
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
+  notifBtnSub: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
   backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
   createBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,

@@ -13,9 +13,11 @@ import { useAppSession } from '@/hooks/use-app-session';
 import { userApi } from '@/api/userApi';
 import { onboardingApi } from '@/api/onboardingApi';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 export default function CustomerProfileScreen() {
   const router = useRouter();
+  const { colors, isDark } = useAppTheme();
   const { user, updateUser, status, syncSession } = useAppSession();
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +25,7 @@ export default function CustomerProfileScreen() {
   if (status === 'authenticated' && user?.role !== 'customer') {
     return null;
   }
-  
+
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [referralCode, setReferralCode] = useState('');
@@ -40,27 +42,27 @@ export default function CustomerProfileScreen() {
 
     try {
       setLoading(true);
-      
+
       // 1. Update permanent profile
-      await userApi.updateProfile({ 
-        name, 
-        email: email || undefined, 
-        referral_code: referralCode || undefined 
+      await userApi.updateProfile({
+        name,
+        email: email || undefined,
+        referral_code: referralCode || undefined
       });
-      
+
       // 2. Mark onboarding step as complete
       const res = await onboardingApi.completeCustomerStep('set_profile', { email });
-      
+
       if (res.status === 1) {
         // 3. Refresh full session to ensure next_step and onboarding_completed are updated
         await syncSession();
-        
+
         // 4. Return to checklist
         router.replace('/onboarding/customer');
       }
     } catch (error: any) {
       if (error.response?.status === 404) return;
-      
+
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -72,11 +74,11 @@ export default function CustomerProfileScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
         >
           <View style={{ paddingHorizontal: 20, paddingTop: 10 }}>
@@ -86,23 +88,24 @@ export default function CustomerProfileScreen() {
             {/* STEP INDICATOR */}
             <View style={styles.stepContainer}>
               <View style={[styles.stepDot, styles.stepDotActive]} />
-              <View style={styles.stepLine} />
-              <View style={styles.stepDot} />
+              <View style={[styles.stepLine, { backgroundColor: colors.border }]} />
+              <View style={[styles.stepDot, { backgroundColor: colors.border }]} />
             </View>
 
             <View style={styles.header}>
-              <Text style={styles.title}>Complete Your Profile</Text>
-              <Text style={styles.subtitle}>Tell us a bit about yourself so we can give you the best experience.</Text>
+              <Text style={[styles.title, { color: colors.text }]}>Complete Your Profile</Text>
+              <Text style={[styles.subtitle, { color: colors.muted }]}>Tell us a bit about yourself so we can give you the best experience.</Text>
             </View>
 
             <View style={styles.form}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Full Name</Text>
-                <View style={styles.inputWrap}>
+                <Text style={[styles.label, { color: colors.muted }]}>Full Name</Text>
+                <View style={[styles.inputWrap, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                   <Ionicons name="person-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.text }]}
                     placeholder="e.g. Rahul Sharma"
+                    placeholderTextColor={colors.placeholder}
                     value={name}
                     onChangeText={setName}
                     autoFocus
@@ -111,39 +114,41 @@ export default function CustomerProfileScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email Address (Optional)</Text>
-                <View style={styles.inputWrap}>
+                <Text style={[styles.label, { color: colors.muted }]}>Email Address (Optional)</Text>
+                <View style={[styles.inputWrap, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                   <Ionicons name="mail-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.text }]}
                     placeholder="rahul@example.com"
+                    placeholderTextColor={colors.placeholder}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
                   />
                 </View>
-                <Text style={styles.helper}>We use this to send order receipts and updates.</Text>
+                <Text style={[styles.helper, { color: colors.muted }]}>We use this to send order receipts and updates.</Text>
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Referral Code (Optional)</Text>
-                <View style={styles.inputWrap}>
+                <Text style={[styles.label, { color: colors.muted }]}>Referral Code (Optional)</Text>
+                <View style={[styles.inputWrap, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                   <Ionicons name="gift-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { color: colors.text }]}
                     placeholder="TG-XXXX-XXXX"
+                    placeholderTextColor={colors.placeholder}
                     value={referralCode}
                     onChangeText={setReferralCode}
                     autoCapitalize="characters"
                   />
                 </View>
-                <Text style={styles.helper}>Have a friend's code? Enter it here for rewards!</Text>
+                <Text style={[styles.helper, { color: colors.muted }]}>Have a friend's code? Enter it here for rewards!</Text>
               </View>
             </View>
           </ScrollView>
 
-          <View style={styles.footer}>
+          <View style={[styles.footer, { backgroundColor: colors.background }]}>
             <TouchableOpacity onPress={handleContinue} disabled={loading} activeOpacity={0.8}>
               <LinearGradient
                 colors={['#005d90', '#0077b6']}
@@ -169,35 +174,33 @@ export default function CustomerProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1 },
   safe: { flex: 1 },
   scrollContent: { paddingHorizontal: 32, paddingTop: 20 },
-  
+
   stepContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 32 },
-  stepDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#e2e8f0' },
+  stepDot: { width: 10, height: 10, borderRadius: 5 },
   stepDotActive: { backgroundColor: '#005d90', width: 24 },
-  stepLine: { width: 30, height: 2, backgroundColor: '#f1f5f9', marginHorizontal: 8 },
+  stepLine: { width: 30, height: 2, marginHorizontal: 8 },
 
   header: { marginBottom: 40 },
-  title: { fontSize: 28, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 },
-  subtitle: { fontSize: 15, color: '#64748b', marginTop: 12, lineHeight: 22 },
+  title: { fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
+  subtitle: { fontSize: 15, marginTop: 12, lineHeight: 22 },
 
   form: { gap: 24 },
   inputGroup: { gap: 8 },
-  label: { fontSize: 13, fontWeight: '800', color: '#475569', marginLeft: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
+  label: { fontSize: 13, fontWeight: '800', marginLeft: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
     paddingHorizontal: 16,
     height: 60,
   },
   inputIcon: { marginRight: 12 },
-  input: { flex: 1, fontSize: 16, color: '#1e293b', fontWeight: '600' },
-  helper: { fontSize: 12, color: '#94a3b8', fontStyle: 'italic', marginLeft: 4 },
+  input: { flex: 1, fontSize: 16, fontWeight: '600' },
+  helper: { fontSize: 12, fontStyle: 'italic', marginLeft: 4 },
 
   footer: { padding: 32 },
   cta: {
@@ -215,5 +218,4 @@ const styles = StyleSheet.create({
   },
   ctaText: { color: 'white', fontSize: 18, fontWeight: '800', letterSpacing: 0.5 }
 });
-
 

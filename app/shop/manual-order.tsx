@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
 
 import { useOrderStore } from '@/stores/orderStore';
@@ -122,11 +123,27 @@ export default function ManualOrderScreen() {
       <StatusBar style="dark" />
 
       <View style={styles.header}>
-        <BackButton fallback="/shop" />
-        <Text style={styles.headerTitle}>Manual Order Entry</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          <BackButton fallback="/shop" />
+          <View>
+            <View style={styles.brandRow}>
+              <Logo size="md" />
+              <Text style={styles.brandName}>ThanniGo</Text>
+            </View>
+            <Text style={styles.roleLabel}>SHOP PANEL</Text>
+          </View>
+        </View>
+        <TouchableOpacity 
+          style={styles.notifBtnSub} 
+          onPress={() => router.push('/notifications' as any)}
+        >
+          <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        <Text style={styles.pageTitle}>Manual Order Entry</Text>
+
         <View style={styles.infoCard}>
           <Ionicons name="information-circle-outline" size={18} color={SHOP_ACCENT} />
           <Text style={styles.infoText}>
@@ -239,10 +256,14 @@ export default function ManualOrderScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: thannigoPalette.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  notifBtnSub: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
   backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
   content: { padding: 20, gap: 14, paddingBottom: 40 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5, marginBottom: 4 },
   infoCard: { flexDirection: 'row', gap: 10, backgroundColor: '#e0f0ff', borderRadius: 14, padding: 14, alignItems: 'flex-start' },
   infoText: { flex: 1, fontSize: 12, color: SHOP_ACCENT, lineHeight: 17, fontWeight: '600' },
   sectionTitle: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },

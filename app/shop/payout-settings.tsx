@@ -30,6 +30,7 @@ export default function PayoutSettingsScreen() {
     ifsc: '', 
     holder_name: '' 
   });
+  const [pendingRequest, setPendingRequest] = useState<any>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -47,6 +48,12 @@ export default function PayoutSettingsScreen() {
           holder_name: w.account_holder_name || '',
         });
         setConfirmAccountNumber(w.bank_account_no || '');
+      }
+
+      // Check for pending bank requests
+      const reqRes = await payoutApi.getBankRequestStatus();
+      if (reqRes.status === 1) {
+        setPendingRequest(reqRes.data);
       }
     } catch {
       Toast.show({ type: 'error', text1: 'Load failed', text2: 'Please try again.' });
@@ -77,16 +84,36 @@ export default function PayoutSettingsScreen() {
 
     setIsSaving(true);
     try {
-      await payoutApi.updateSettings({
-        payout_mode: payoutMode,
-        upi_id: upiId,
-        bank_details: bankDetails,
-        payout_cycle: 'daily',
+      if (payoutMode === 'bank') {
+        // If bank details changed, create a request
+        await payoutApi.requestBankChange({
+          account_number: bankDetails.account_number,
+          ifsc: bankDetails.ifsc,
+          holder_name: bankDetails.holder_name,
+        });
+        Toast.show({ 
+          type: 'success', 
+          text1: 'Request Submitted', 
+          text2: 'Bank change is pending admin approval.' 
+        });
+      } else {
+        await payoutApi.updateSettings({
+          payout_mode: payoutMode,
+          upi_id: upiId,
+          bank_details: bankDetails,
+          payout_cycle: 'daily',
+        });
+        Toast.show({ type: 'success', text1: 'Saved', text2: 'Payment details updated.' });
+      }
+      
+      // Refresh data instead of going back immediately to show pending status
+      fetchData();
+    } catch (err: any) {
+      Toast.show({ 
+        type: 'error', 
+        text1: 'Update failed', 
+        text2: err.message || 'Could not save settings.' 
       });
-      Toast.show({ type: 'success', text1: 'Saved', text2: 'Payment details updated.' });
-      router.back();
-    } catch {
-      Toast.show({ type: 'error', text1: 'Save failed', text2: 'Could not save settings.' });
     } finally {
       setIsSaving(false);
     }
@@ -124,13 +151,19 @@ export default function PayoutSettingsScreen() {
       
       {/* Header */}
       <View style={styles.header}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 14 }}>
           <BackButton fallback="/shop/earnings" />
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.headerTitle}>Payout Details</Text>
             <Text style={styles.headerSub}>Manage how you receive money</Text>
           </View>
         </View>
+        <TouchableOpacity 
+          style={styles.notifBtnSub} 
+          onPress={() => router.push('/notifications' as any)}
+        >
+          <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView 
@@ -168,33 +201,36 @@ export default function PayoutSettingsScreen() {
                 <View style={styles.field}>
                   <Text style={styles.fieldLabel}>Account Holder Name</Text>
                   <TextInput 
-                    style={styles.input} 
+                    style={[styles.input, !!pendingRequest && styles.inputDisabled]} 
                     value={bankDetails.holder_name} 
                     onChangeText={(v) => setBankDetails({ ...bankDetails, holder_name: v })}
                     placeholder="Full name as per bank records"
                     placeholderTextColor={thannigoPalette.neutral + '80'}
+                    editable={!pendingRequest}
                   />
                 </View>
                 <View style={styles.field}>
                   <Text style={styles.fieldLabel}>Account Number</Text>
                   <TextInput 
-                    style={styles.input} 
+                    style={[styles.input, !!pendingRequest && styles.inputDisabled]} 
                     value={bankDetails.account_number} 
                     onChangeText={(v) => setBankDetails({ ...bankDetails, account_number: v })}
                     placeholder="Enter account number"
                     keyboardType="numeric"
                     placeholderTextColor={thannigoPalette.neutral + '80'}
+                    editable={!pendingRequest}
                   />
                 </View>
                 <View style={styles.field}>
                   <Text style={styles.fieldLabel}>Confirm Account Number</Text>
                   <TextInput 
-                    style={styles.input} 
+                    style={[styles.input, !!pendingRequest && styles.inputDisabled]} 
                     value={confirmAccountNumber} 
                     onChangeText={setConfirmAccountNumber}
                     placeholder="Re-enter account number"
                     keyboardType="numeric"
                     placeholderTextColor={thannigoPalette.neutral + '80'}
+                    editable={!pendingRequest}
                   />
                   {confirmAccountNumber && bankDetails.account_number !== confirmAccountNumber && (
                     <Text style={{ fontSize: 11, color: '#ba1a1a', marginTop: 4, fontWeight: '700' }}>
@@ -205,12 +241,13 @@ export default function PayoutSettingsScreen() {
                 <View style={styles.field}>
                   <Text style={styles.fieldLabel}>IFSC Code</Text>
                   <TextInput 
-                    style={styles.input} 
+                    style={[styles.input, !!pendingRequest && styles.inputDisabled]} 
                     value={bankDetails.ifsc} 
                     onChangeText={(v) => setBankDetails({ ...bankDetails, ifsc: v.toUpperCase() })}
                     placeholder="e.g. SBIN0001234"
                     autoCapitalize="characters"
                     placeholderTextColor={thannigoPalette.neutral + '80'}
+                    editable={!pendingRequest}
                   />
                 </View>
 
@@ -230,10 +267,18 @@ export default function PayoutSettingsScreen() {
                     )}
                   </TouchableOpacity>
                 )}
-                {bankVerified && (
+                {bankVerified && !pendingRequest && (
                    <View style={styles.verifiedBadgeRow}>
                     <Ionicons name="checkmark-circle" size={16} color={thannigoPalette.success} />
                     <Text style={styles.verifiedBadgeText}>YOUR BANK ACCOUNT IS VERIFIED</Text>
+                  </View>
+                )}
+                {pendingRequest && (
+                  <View style={[styles.verifiedBadgeRow, { backgroundColor: '#fff7ed' }]}>
+                    <Ionicons name="time-outline" size={16} color="#d97706" />
+                    <Text style={[styles.verifiedBadgeText, { color: '#d97706' }]}>
+                      {pendingRequest.status === 'PENDING' ? 'VERIFICATION IN PROGRESS' : 'PENDING ADMIN APPROVAL'}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -336,11 +381,20 @@ export default function PayoutSettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: thannigoPalette.background },
   header: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 24, paddingVertical: 18,
     backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
   },
   headerTitle: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
   headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
+  notifBtnSub: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    backgroundColor: SHOP_SURF,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   
   scrollContent: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 100 },
   formContainer: { gap: 24 },
@@ -363,6 +417,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'white', borderRadius: 16, padding: 16,
     fontSize: 16, color: thannigoPalette.darkText, fontWeight: '600',
     borderWidth: 1.5, borderColor: thannigoPalette.borderSoft,
+  },
+  inputDisabled: {
+    backgroundColor: thannigoPalette.borderSoft,
+    color: thannigoPalette.neutral,
   },
   hintText: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '600', lineHeight: 18 },
   

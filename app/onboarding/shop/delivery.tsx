@@ -14,10 +14,12 @@ import * as Haptics from 'expo-haptics';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 export default function ShopDeliveryConfigScreen() {
   const router = useRouter();
   const { user, status } = useAppSession();
+  const { colors, isDark } = useAppTheme();
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
   const [shopId, setShopId] = useState<number | null>(null);
@@ -66,7 +68,7 @@ export default function ShopDeliveryConfigScreen() {
 
     try {
       setLoading(true);
-      const res = await onboardingApi.updateDeliverySetup(shopId, { 
+      const res = await onboardingApi.updateDeliverySetup(shopId, {
         is_self_delivery: true,
         base_delivery_charge: parseFloat(baseCharge) || 0,
         delivery_charge_per_km: perKmCharge,
@@ -80,7 +82,7 @@ export default function ShopDeliveryConfigScreen() {
       }
     } catch (error: any) {
       if (error.response?.status === 404) return;
-      
+
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -92,14 +94,14 @@ export default function ShopDeliveryConfigScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} />
-            <Text style={styles.title}>Delivery Pricing</Text>
-            <Text style={styles.subtitle}>Set your delivery fees and service range. You can update these anytime later from your settings.</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Delivery Pricing</Text>
+            <Text style={[styles.subtitle, { color: colors.muted }]}>Set your delivery fees and service range. You can update these anytime later from your settings.</Text>
           </View>
 
           {fetchingShop ? (
@@ -110,14 +112,15 @@ export default function ShopDeliveryConfigScreen() {
                <View style={styles.inputGroup}>
                 <View style={styles.labelRow}>
                   <Ionicons name="cart-outline" size={16} color="#64748b" />
-                  <Text style={styles.inputLabel}>Minimum Order Amount</Text>
+                  <Text style={[styles.inputLabel, { color: colors.muted }]}>Minimum Order Amount</Text>
                 </View>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: colors.inputBg, borderColor: colors.border, color: colors.text }]}
                   value={minOrder}
                   onChangeText={setMinOrder}
                   keyboardType="numeric"
                   placeholder="0.00"
+                  placeholderTextColor={colors.placeholder}
                 />
                 <Text style={styles.hintText}>Orders below this amount will not be accepted. (₹)</Text>
               </View>
@@ -125,67 +128,72 @@ export default function ShopDeliveryConfigScreen() {
               <View style={styles.inputGroup}>
                 <View style={styles.labelRow}>
                   <Ionicons name="bicycle-outline" size={16} color="#64748b" />
-                  <Text style={styles.inputLabel}>Base Delivery Charge</Text>
+                  <Text style={[styles.inputLabel, { color: colors.muted }]}>Base Delivery Charge</Text>
                 </View>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: colors.inputBg, borderColor: colors.border, color: colors.text }]}
                   value={baseCharge}
                   onChangeText={setBaseCharge}
                   keyboardType="numeric"
                   placeholder="0.00"
+                  placeholderTextColor={colors.placeholder}
                 />
                 <Text style={styles.hintText}>Starting delivery fee added to every order. (₹)</Text>
               </View>
 
-              <View style={styles.divider} />
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
               {/* 2. Stepper for Per KM */}
-              <Stepper 
-                label="Delivery Charge per KM" 
-                value={perKmCharge} 
-                onUpdate={setPerKmCharge} 
-                unit="₹" 
+              <Stepper
+                label="Delivery Charge per KM"
+                value={perKmCharge}
+                onUpdate={setPerKmCharge}
+                unit="₹"
+                colors={colors}
               />
               <Text style={[styles.hintText, { marginTop: 4 }]}>Additional cost for every KM beyond the free limit.</Text>
 
-              <Stepper 
-                label="Floor Charge per Floor" 
-                value={floorCharge} 
-                onUpdate={setFloorCharge} 
-                unit="₹" 
+              <Stepper
+                label="Floor Charge per Floor"
+                value={floorCharge}
+                onUpdate={setFloorCharge}
+                unit="₹"
+                colors={colors}
               />
               <Text style={[styles.hintText, { marginTop: 4 }]}>Additional cost for carrying cans to higher floors (per floor).</Text>
 
               {/* 3. Slider for Free Range */}
               <View style={{ marginTop: 16 }}>
-                <DraggableSlider 
-                  label="Free Delivery threshold" 
-                  value={freeKm} 
-                  onUpdate={setFreeKm} 
-                  min={0} max={10} unit=" KM" step={0.5} 
+                <DraggableSlider
+                  label="Free Delivery threshold"
+                  value={freeKm}
+                  onUpdate={setFreeKm}
+                  min={0} max={10} unit=" KM" step={0.5}
+                  colors={colors}
                 />
                 <Text style={styles.hintText}>Orders within this distance only pay the base charge.</Text>
               </View>
 
               {/* 4. Dropdown for Max Range */}
               <View style={{ marginTop: 16 }}>
-                 <CustomDropdown 
-                  label="Max Support Range" 
-                  value={maxRange} 
-                  onUpdate={setMaxRange} 
-                  options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]} 
-                  unit=" KM" 
+                 <CustomDropdown
+                  label="Max Support Range"
+                  value={maxRange}
+                  onUpdate={setMaxRange}
+                  options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]}
+                  unit=" KM"
+                  colors={colors}
                 />
                 <Text style={styles.hintText}>The widest radius your shop can fulfill.</Text>
               </View>
 
-              <View style={styles.featureCard}>
-                <View style={styles.iconCircle}>
+              <View style={[styles.featureCard, { backgroundColor: isDark ? '#0A1929' : '#f0f9ff', borderColor: colors.border }]}>
+                <View style={[styles.iconCircle, { backgroundColor: colors.surface }]}>
                   <Ionicons name="bicycle" size={24} color="#006878" />
                 </View>
                 <View style={styles.cardText}>
-                  <Text style={styles.cardTitle}>Self-Managed Delivery</Text>
-                  <Text style={styles.cardSub}>You or your staff will deliver the orders. You have full control over the delivery experience.</Text>
+                  <Text style={[styles.cardTitle, { color: colors.text }]}>Self-Managed Delivery</Text>
+                  <Text style={[styles.cardSub, { color: colors.muted }]}>You or your staff will deliver the orders. You have full control over the delivery experience.</Text>
                 </View>
                 <Ionicons name="checkmark-circle" size={24} color="#10b981" />
               </View>
@@ -193,7 +201,7 @@ export default function ShopDeliveryConfigScreen() {
           )}
         </ScrollView>
 
-        <View style={styles.footer}>
+        <View style={[styles.footer, { backgroundColor: colors.surface }]}>
           <TouchableOpacity onPress={handleContinue} disabled={loading} activeOpacity={0.8}>
             <LinearGradient colors={['#006878', '#134e4a']} style={styles.cta} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               {loading ? <ActivityIndicator color="white" /> : (
@@ -212,7 +220,7 @@ export default function ShopDeliveryConfigScreen() {
 
 // --- SUB COMPONENTS (PORTED FROM OPERATIONAL SETTINGS) ---
 
-const Stepper = ({ label, value, onUpdate, unit = '' }: any) => {
+const Stepper = ({ label, value, onUpdate, unit = '', colors }: any) => {
   const increment = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onUpdate(Number(value) + 1);
@@ -226,14 +234,14 @@ const Stepper = ({ label, value, onUpdate, unit = '' }: any) => {
   return (
     <View style={styles.hybridRow}>
       <View style={{ flex: 1 }}>
-        <Text style={styles.inputLabel}>{label}</Text>
+        <Text style={[styles.inputLabel, { color: colors.muted }]}>{label}</Text>
       </View>
-      <View style={styles.stepperContainer}>
+      <View style={[styles.stepperContainer, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
         <TouchableOpacity onPress={decrement} style={styles.stepperBtn}>
           <Ionicons name="remove" size={20} color="#006878" />
         </TouchableOpacity>
         <TextInput
-          style={styles.stepperInput}
+          style={[styles.stepperInput, { color: colors.text }]}
           value={String(value)}
           onChangeText={(v) => onUpdate(parseFloat(v) || 0)}
           keyboardType="numeric"
@@ -247,7 +255,7 @@ const Stepper = ({ label, value, onUpdate, unit = '' }: any) => {
   );
 };
 
-const DraggableSlider = ({ label, value, onUpdate, min, max, unit = '', step = 1 }: any) => {
+const DraggableSlider = ({ label, value, onUpdate, min, max, unit = '', step = 1, colors }: any) => {
   const [sliderWidth, setSliderWidth] = useState(0);
   const sliderWidthRef = React.useRef(0);
   const animProgress = React.useRef(new Animated.Value((value - min) / (max - min))).current;
@@ -286,23 +294,23 @@ const DraggableSlider = ({ label, value, onUpdate, min, max, unit = '', step = 1
   return (
     <View style={styles.sliderGroup}>
       <View style={styles.sliderHeader}>
-        <Text style={styles.inputLabel}>{label}</Text>
-        <View style={styles.sliderValueBadge}>
+        <Text style={[styles.inputLabel, { color: colors.muted }]}>{label}</Text>
+        <View style={[styles.sliderValueBadge, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
             <Text style={styles.sliderValueText}>{value}{unit}</Text>
         </View>
       </View>
-      
-      <View 
+
+      <View
         {...panResponder.panHandlers}
-        onLayout={(e) => { 
+        onLayout={(e) => {
             sliderWidthRef.current = e.nativeEvent.layout.width;
             setSliderWidth(e.nativeEvent.layout.width);
         }}
         style={styles.sliderTrackContainer}
       >
-        <View style={styles.sliderTrack}>
+        <View style={[styles.sliderTrack, { backgroundColor: colors.border }]}>
           <Animated.View style={[styles.sliderFill, { width: fillWidth }]} />
-          <Animated.View style={[styles.sliderThumb, { left: fillWidth }]}>
+          <Animated.View style={[styles.sliderThumb, { backgroundColor: colors.surface }, { left: fillWidth }]}>
             <View style={styles.sliderThumbInner} />
           </Animated.View>
         </View>
@@ -315,21 +323,21 @@ const DraggableSlider = ({ label, value, onUpdate, min, max, unit = '', step = 1
   );
 };
 
-const CustomDropdown = ({ label, value, onUpdate, options, unit = '' }: any) => {
+const CustomDropdown = ({ label, value, onUpdate, options, unit = '', colors }: any) => {
   return (
     <View style={styles.hybridColumn}>
       <View style={styles.labelRowHybrid}>
-        <Text style={styles.inputLabel}>{label}</Text>
+        <Text style={[styles.inputLabel, { color: colors.muted }]}>{label}</Text>
         <Text style={styles.sliderValueHighlight}>{value}{unit}</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
         {options.map((opt: number) => (
-          <TouchableOpacity 
+          <TouchableOpacity
             key={opt}
             onPress={() => { Haptics.selectionAsync(); onUpdate(opt); }}
-            style={[styles.chip, value === opt && styles.activeChip]}
+            style={[styles.chip, { backgroundColor: colors.inputBg, borderColor: colors.border }, value === opt && styles.activeChip]}
           >
-            <Text style={[styles.chipText, value === opt && styles.activeChipText]}>{opt}{unit}</Text>
+            <Text style={[styles.chipText, { color: colors.muted }, value === opt && styles.activeChipText]}>{opt}{unit}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -338,43 +346,43 @@ const CustomDropdown = ({ label, value, onUpdate, options, unit = '' }: any) => 
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1 },
   safe: { flex: 1 },
   scrollContent: { paddingHorizontal: 32, paddingTop: 40, paddingBottom: 40 },
   header: { marginBottom: 32 },
-  title: { fontSize: 28, fontWeight: '900', color: '#134e4a', letterSpacing: -0.5 },
-  subtitle: { fontSize: 15, color: '#64748b', marginTop: 12, lineHeight: 22 },
+  title: { fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
+  subtitle: { fontSize: 15, marginTop: 12, lineHeight: 22 },
   content: { gap: 24, marginBottom: 40 },
-  
+
   inputGroup: { gap: 8 },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 4 },
-  inputLabel: { fontSize: 13, fontWeight: '800', color: '#475569', textTransform: 'uppercase' },
+  inputLabel: { fontSize: 13, fontWeight: '800', textTransform: 'uppercase' },
   input: {
-    backgroundColor: 'white', borderRadius: 18, height: 60, paddingHorizontal: 16,
-    fontSize: 18, fontWeight: '700', color: '#1e293b',
-    borderWidth: 1.5, borderColor: '#e2e8f0',
+    borderRadius: 18, height: 60, paddingHorizontal: 16,
+    fontSize: 18, fontWeight: '700',
+    borderWidth: 1.5,
   },
   hintText: { fontSize: 12, color: '#94a3b8', fontWeight: '500', marginLeft: 4 },
-  divider: { height: 1, backgroundColor: '#e2e8f0', marginVertical: 8 },
+  divider: { height: 1, marginVertical: 8 },
 
   hybridRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  stepperContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 14, borderWidth: 1.5, borderColor: '#e2e8f0', padding: 4 },
+  stepperContainer: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, borderWidth: 1.5, padding: 4 },
   stepperBtn: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  stepperInput: { width: 50, textAlign: 'center', fontSize: 16, fontWeight: '800', color: '#134e4a' },
+  stepperInput: { width: 50, textAlign: 'center', fontSize: 16, fontWeight: '800' },
   stepperUnit: { fontSize: 12, fontWeight: '700', color: '#64748b', marginRight: 10 },
 
   sliderGroup: { gap: 12 },
   sliderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sliderValueBadge: { backgroundColor: '#f0fdfa', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: '#ccfbf1' },
+  sliderValueBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1 },
   sliderValueText: { color: '#006878', fontWeight: '800', fontSize: 13 },
   sliderTrackContainer: { gap: 12, paddingVertical: 8 },
-  sliderTrack: { height: 8, backgroundColor: '#e2e8f0', borderRadius: 4, position: 'relative' },
+  sliderTrack: { height: 8, borderRadius: 4, position: 'relative' },
   sliderFill: { height: '100%', backgroundColor: '#006878', borderRadius: 4 },
-  sliderThumb: { 
-    position: 'absolute', top: -11, width: 30, height: 30, borderRadius: 15, 
-    backgroundColor: 'white', justifyContent: 'center', alignItems: 'center',
-    marginLeft: -15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: 0.1, shadowRadius: 4, elevation: 3, borderWidth: 2, borderColor: '#006878' 
+  sliderThumb: {
+    position: 'absolute', top: -11, width: 30, height: 30, borderRadius: 15,
+    justifyContent: 'center', alignItems: 'center',
+    marginLeft: -15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, shadowRadius: 4, elevation: 3, borderWidth: 2, borderColor: '#006878'
   },
   sliderThumbInner: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#006878' },
   rangeLabels: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -383,23 +391,21 @@ const styles = StyleSheet.create({
   hybridColumn: { gap: 12 },
   labelRowHybrid: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sliderValueHighlight: { fontSize: 16, fontWeight: '900', color: '#006878' },
-  chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: 'white', borderWidth: 1.5, borderColor: '#e2e8f0' },
+  chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5 },
   activeChip: { backgroundColor: '#006878', borderColor: '#006878' },
-  chipText: { fontSize: 14, fontWeight: '700', color: '#475569' },
+  chipText: { fontSize: 14, fontWeight: '700' },
   activeChipText: { color: 'white' },
 
   featureCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0f9ff', padding: 20,
-    borderRadius: 24, borderWidth: 1.5, borderColor: '#bae6fd', gap: 16, marginTop: 12
+    flexDirection: 'row', alignItems: 'center', padding: 20,
+    borderRadius: 24, borderWidth: 1.5, gap: 16, marginTop: 12
   },
-  iconCircle: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  iconCircle: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   cardText: { flex: 1 },
-  cardTitle: { fontSize: 16, fontWeight: '800', color: '#134e4a' },
-  cardSub: { fontSize: 12, color: '#64748b', marginTop: 2, lineHeight: 18 },
+  cardTitle: { fontSize: 16, fontWeight: '800' },
+  cardSub: { fontSize: 12, marginTop: 2, lineHeight: 18 },
 
-  footer: { padding: 32, backgroundColor: 'white' },
+  footer: { padding: 32 },
   cta: { height: 64, borderRadius: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
   ctaText: { color: 'white', fontSize: 17, fontWeight: '800' }
 });
-
-

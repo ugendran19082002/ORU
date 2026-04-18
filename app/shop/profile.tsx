@@ -147,6 +147,7 @@ function Field({
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function ShopProfileScreen() {
+  const router = useRouter();
   const { safeBack } = useAppNavigation();
   useAndroidBackHandler(() => safeBack("/shop/settings"));
 
@@ -449,13 +450,21 @@ export default function ShopProfileScreen() {
             <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSave} disabled={isSaving}>
-          {isSaving ? (
-            <ActivityIndicator size="small" color={SHOP_ACCENT} />
-          ) : (
-            <Text style={styles.saveHeaderBtnText}>Save</Text>
-          )}
-        </TouchableOpacity>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <TouchableOpacity 
+            style={styles.notifBtnSub} 
+            onPress={() => router.push('/notifications' as any)}
+          >
+            <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.saveHeaderBtn} onPress={handleSave} disabled={isSaving}>
+            {isSaving ? (
+              <ActivityIndicator size="small" color={SHOP_ACCENT} />
+            ) : (
+              <Text style={styles.saveHeaderBtnText}>Save</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       <KeyboardAvoidingView
@@ -687,6 +696,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveHeaderBtnText: { color: SHOP_ACCENT, fontWeight: "800", fontSize: 14 },
+  notifBtnSub: { width: 44, height: 44, borderRadius: 12, backgroundColor: SHOP_SURF, alignItems: "center", justifyContent: "center" },
 
   scrollContent: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40 },
   pageTitle: {

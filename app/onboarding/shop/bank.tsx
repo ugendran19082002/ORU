@@ -13,10 +13,12 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 export default function ShopBankDetailsScreen() {
   const router = useRouter();
   const { user, status } = useAppSession();
+  const { colors, isDark } = useAppTheme();
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
   const [shopId, setShopId] = useState<number | null>(null);
@@ -73,7 +75,7 @@ export default function ShopBankDetailsScreen() {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const file = result.assets[0];
-        
+
         // 5MB Client-side validation
         if (file.size && file.size > 5000000) {
           Toast.show({
@@ -93,7 +95,7 @@ export default function ShopBankDetailsScreen() {
 
   const handleSave = async () => {
     if (!shopId) return;
-    
+
     // Basic Validation
     if (!formData.bank_account_no || !formData.bank_ifsc || !formData.account_holder) {
       Toast.show({
@@ -108,7 +110,7 @@ export default function ShopBankDetailsScreen() {
       setLoading(true);
 
       let documentUrl = undefined;
-      
+
       // 1. Upload Statement if selected
       if (statementFile) {
         const uploadRes = await onboardingApi.uploadShopDocument('payment_setup', shopId, {
@@ -139,7 +141,7 @@ export default function ShopBankDetailsScreen() {
       }
     } catch (error: any) {
       if (error.response?.status === 404) return;
-      
+
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -155,19 +157,19 @@ export default function ShopBankDetailsScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={{ flex: 1 }}
         >
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
               <BackButton fallback="/onboarding/shop" />
               <View style={{ marginTop: 24 }}>
-                <Text style={styles.title}>Payout Settings</Text>
-                <Text style={styles.subtitle}>Where should we send your earnings? Please provide your business bank account or UPI details.</Text>
+                <Text style={[styles.title, { color: colors.text }]}>Payout Settings</Text>
+                <Text style={[styles.subtitle, { color: colors.muted }]}>Where should we send your earnings? Please provide your business bank account or UPI details.</Text>
               </View>
             </View>
 
@@ -176,12 +178,13 @@ export default function ShopBankDetailsScreen() {
             ) : (
               <View style={styles.form}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Account Holder Name</Text>
-                  <View style={styles.inputWrap}>
+                  <Text style={[styles.label, { color: colors.muted }]}>Account Holder Name</Text>
+                  <View style={[styles.inputWrap, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                     <Ionicons name="person-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="As per bank records"
+                      placeholderTextColor={colors.placeholder}
                       value={formData.account_holder}
                       onChangeText={(v: string) => setFormData(p => ({ ...p, account_holder: v }))}
                     />
@@ -189,12 +192,13 @@ export default function ShopBankDetailsScreen() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Bank Name</Text>
-                  <View style={styles.inputWrap}>
+                  <Text style={[styles.label, { color: colors.muted }]}>Bank Name</Text>
+                  <View style={[styles.inputWrap, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                     <Ionicons name="business-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="e.g. HDFC Bank"
+                      placeholderTextColor={colors.placeholder}
                       value={formData.bank_name}
                       onChangeText={(v: string) => setFormData(p => ({ ...p, bank_name: v }))}
                     />
@@ -202,12 +206,13 @@ export default function ShopBankDetailsScreen() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Account Number</Text>
-                  <View style={styles.inputWrap}>
+                  <Text style={[styles.label, { color: colors.muted }]}>Account Number</Text>
+                  <View style={[styles.inputWrap, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                     <Ionicons name="card-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="0000 0000 0000"
+                      placeholderTextColor={colors.placeholder}
                       value={formData.bank_account_no}
                       onChangeText={(v: string) => setFormData(p => ({ ...p, bank_account_no: v }))}
                       keyboardType="number-pad"
@@ -216,12 +221,13 @@ export default function ShopBankDetailsScreen() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>IFSC Code</Text>
-                  <View style={styles.inputWrap}>
+                  <Text style={[styles.label, { color: colors.muted }]}>IFSC Code</Text>
+                  <View style={[styles.inputWrap, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                     <Ionicons name="barcode-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="HDFC0000123"
+                      placeholderTextColor={colors.placeholder}
                       value={formData.bank_ifsc}
                       onChangeText={(v: string) => setFormData(p => ({ ...p, bank_ifsc: v.toUpperCase() }))}
                       autoCapitalize="characters"
@@ -230,12 +236,13 @@ export default function ShopBankDetailsScreen() {
                 </View>
 
                 <View style={[styles.inputGroup, { marginTop: 8 }]}>
-                  <Text style={styles.label}>UPI ID (Optional)</Text>
-                  <View style={styles.inputWrap}>
+                  <Text style={[styles.label, { color: colors.muted }]}>UPI ID (Optional)</Text>
+                  <View style={[styles.inputWrap, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                     <Ionicons name="at-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                     <TextInput
-                      style={styles.input}
+                      style={[styles.input, { color: colors.text }]}
                       placeholder="e.g. business@okaxis"
+                      placeholderTextColor={colors.placeholder}
                       value={formData.upi_id}
                       onChangeText={(v: string) => setFormData(p => ({ ...p, upi_id: v }))}
                       autoCapitalize="none"
@@ -243,12 +250,12 @@ export default function ShopBankDetailsScreen() {
                   </View>
                 </View>
 
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
                 <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Bank Statement (Last 3 Months)</Text>
-                    <TouchableOpacity 
-                        style={[styles.uploadBtn, statementFile && styles.uploadBtnActive]} 
+                    <Text style={[styles.label, { color: colors.muted }]}>Bank Statement (Last 3 Months)</Text>
+                    <TouchableOpacity
+                        style={[styles.uploadBtn, { backgroundColor: colors.inputBg, borderColor: colors.border }, statementFile && styles.uploadBtnActive]}
                         onPress={pickDocument}
                     >
                         {statementFile ? (
@@ -266,8 +273,8 @@ export default function ShopBankDetailsScreen() {
                                     <Ionicons name="cloud-upload-outline" size={24} color="#005d90" />
                                 </View>
                                 <View style={{ marginLeft: 12 }}>
-                                    <Text style={styles.uploadTitle}>Choose PDF File</Text>
-                                    <Text style={styles.uploadSub}>Recent 3 month history</Text>
+                                    <Text style={[styles.uploadTitle, { color: colors.text }]}>Choose PDF File</Text>
+                                    <Text style={[styles.uploadSub, { color: colors.muted }]}>Recent 3 month history</Text>
                                 </View>
                             </>
                         )}
@@ -276,12 +283,13 @@ export default function ShopBankDetailsScreen() {
 
                 {statementFile && (
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>PDF Password (If applicable)</Text>
-                        <View style={styles.inputWrap}>
+                        <Text style={[styles.label, { color: colors.muted }]}>PDF Password (If applicable)</Text>
+                        <View style={[styles.inputWrap, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                             <Ionicons name="lock-closed-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { color: colors.text }]}
                                 placeholder="Unlock code for statement"
+                                placeholderTextColor={colors.placeholder}
                                 value={formData.bank_statement_password}
                                 onChangeText={(v: string) => setFormData(p => ({ ...p, bank_statement_password: v }))}
                                 secureTextEntry={!showPassword}
@@ -293,7 +301,7 @@ export default function ShopBankDetailsScreen() {
                     </View>
                 )}
 
-                <View style={styles.infoBox}>
+                <View style={[styles.infoBox, { backgroundColor: isDark ? '#0A1929' : '#e0f0ff', borderColor: colors.border }]}>
                   <Ionicons name="shield-checkmark" size={20} color="#005d90" />
                   <Text style={styles.infoText}>Your bank details and statements are encrypted and stored securely for payout verification purposes.</Text>
                 </View>
@@ -301,7 +309,7 @@ export default function ShopBankDetailsScreen() {
             )}
           </ScrollView>
 
-          <View style={styles.footer}>
+          <View style={[styles.footer, { backgroundColor: colors.surface }]}>
             <TouchableOpacity onPress={handleSave} disabled={loading || fetchingShop} activeOpacity={0.8}>
               <LinearGradient
                 colors={['#005d90', '#003a5c']}
@@ -325,39 +333,35 @@ export default function ShopBankDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1 },
   safe: { flex: 1 },
   scrollContent: { paddingHorizontal: 32, paddingBottom: 40 },
-  
+
   header: { marginBottom: 30, paddingTop: 20 },
-  title: { fontSize: 32, fontWeight: '900', color: '#003a5c', letterSpacing: -1 },
-  subtitle: { fontSize: 15, color: '#64748b', marginTop: 12, lineHeight: 22 },
+  title: { fontSize: 32, fontWeight: '900', letterSpacing: -1 },
+  subtitle: { fontSize: 15, marginTop: 12, lineHeight: 22 },
 
   form: { gap: 24 },
   inputGroup: { gap: 8 },
-  label: { fontSize: 13, fontWeight: '800', color: '#475569', marginLeft: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
+  label: { fontSize: 13, fontWeight: '800', marginLeft: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
     borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
     paddingHorizontal: 16,
     height: 60,
   },
   inputIcon: { marginRight: 12 },
-  input: { flex: 1, fontSize: 16, color: '#1e293b', fontWeight: '700' },
+  input: { flex: 1, fontSize: 16, fontWeight: '700' },
 
-  divider: { height: 1, backgroundColor: '#f1f5f9', marginVertical: 8 },
+  divider: { height: 1, marginVertical: 8 },
 
   uploadBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#e2e8f0',
     borderStyle: 'dashed',
     padding: 20,
   },
@@ -374,23 +378,23 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       justifyContent: 'center'
   },
-  uploadTitle: { fontSize: 16, fontWeight: '800', color: '#1e293b' },
-  uploadSub: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  uploadTitle: { fontSize: 16, fontWeight: '800' },
+  uploadSub: { fontSize: 12, marginTop: 2 },
   fileName: { fontSize: 15, fontWeight: '700', color: '#005d90' },
   fileSize: { fontSize: 12, color: '#64748b', marginTop: 2 },
 
   infoBox: {
     flexDirection: 'row',
-    backgroundColor: '#e0f0ff',
     padding: 16,
     borderRadius: 20,
+    borderWidth: 1,
     gap: 12,
     marginTop: 10,
     alignItems: 'flex-start'
   },
   infoText: { flex: 1, fontSize: 12, color: '#005d90', lineHeight: 18, fontWeight: '600' },
 
-  footer: { paddingHorizontal: 32, paddingBottom: 32, paddingTop: 16, backgroundColor: 'white' },
+  footer: { paddingHorizontal: 32, paddingBottom: 32, paddingTop: 16 },
   cta: {
     height: 64,
     borderRadius: 22,
@@ -406,5 +410,3 @@ const styles = StyleSheet.create({
   },
   ctaText: { color: 'white', fontSize: 18, fontWeight: '800' }
 });
-
-

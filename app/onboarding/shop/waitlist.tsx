@@ -12,14 +12,16 @@ import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
 import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 export default function ShopWaitlistScreen() {
   const router = useRouter();
   const { user, signOut } = useAppSession();
+  const { colors, isDark } = useAppTheme();
   const [shop, setShop] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   const pulseAnim = React.useRef(new Animated.Value(1)).current;
 
   // 1. Fetch & Poll Status
@@ -28,7 +30,7 @@ export default function ShopWaitlistScreen() {
       if (isManual) setRefreshing(true);
       const res = await onboardingApi.getMerchantShop();
       setShop(res.data);
-      
+
       if (res.data) {
         // 2. Immediate redirection if active
         if (res.data.status === 'active') {
@@ -40,7 +42,7 @@ export default function ShopWaitlistScreen() {
         try {
           const stepsRes = await onboardingApi.getShopSteps(res.data.id);
           const hasRejectedStep = stepsRes.data?.steps.some(s => s.status === 'rejected');
-          
+
           if (hasRejectedStep) {
             router.replace('/onboarding/shop');
           }
@@ -58,7 +60,7 @@ export default function ShopWaitlistScreen() {
 
   useEffect(() => {
     checkStatus();
-    
+
     // Polling every 10 seconds as requested
     const interval = setInterval(() => {
         checkStatus();
@@ -138,39 +140,39 @@ export default function ShopWaitlistScreen() {
 
   if (loading && !shop) {
     return (
-      <View style={[styles.container, styles.centered]}>
+      <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color="#005d90" />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.safe}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.header}>
             <View style={{ position: 'absolute', left: 0, top: 0 }}>
-              <BackButton 
-                fallback="/onboarding/shop" 
-                variant="transparent" 
+              <BackButton
+                fallback="/onboarding/shop"
+                variant="transparent"
                 show={(shop?.status !== 'pending_review' && shop?.status !== 'under_review' && shop?.status !== 'active')}
               />
             </View>
             <Logo size="lg" />
-            <Text style={styles.brandName}>ThanniGo</Text>
+            <Text style={[styles.brandName, { color: colors.text }]}>ThanniGo</Text>
           </View>
 
-          <View style={styles.card}>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Animated.View style={[styles.statusIconWrap, { backgroundColor: content.bg, transform: [{ scale: shop?.status === 'active' ? 1 : pulseAnim }] }]}>
               <Ionicons name={content.icon as any} size={48} color={content.color} />
             </Animated.View>
 
             <Text style={[styles.statusTitle, { color: content.color }]}>{content.title}</Text>
-            <Text style={styles.statusMessage}>{content.message}</Text>
+            <Text style={[styles.statusMessage, { color: colors.muted }]}>{content.message}</Text>
 
             {content.showReason && (
-              <View style={styles.reasonBox}>
+              <View style={[styles.reasonBox, { backgroundColor: isDark ? '#2d0a0a' : '#fff5f5', borderColor: isDark ? '#7f1d1d' : '#feb2b2' }]}>
                 <Text style={styles.reasonLabel}>Feedback from Admin:</Text>
                 <Text style={styles.reasonText}>{shop?.admin_notes || 'Please verify your business documents and resubmit.'}</Text>
               </View>
@@ -179,7 +181,7 @@ export default function ShopWaitlistScreen() {
             {!content.showReason && shop?.status !== 'rejected' && (
               <View style={styles.timeBox}>
                 <Ionicons name="time-outline" size={16} color="#64748b" />
-                <Text style={styles.timeText}>Approval usually takes 24–48 hours</Text>
+                <Text style={[styles.timeText, { color: colors.muted }]}>Approval usually takes 24–48 hours</Text>
               </View>
             )}
 
@@ -202,7 +204,7 @@ export default function ShopWaitlistScreen() {
           <View style={styles.footer}>
             <TouchableOpacity style={styles.supportBtn}>
               <Ionicons name="help-circle-outline" size={20} color="#64748b" />
-              <Text style={styles.supportText}>Need Help? Contact Support</Text>
+              <Text style={[styles.supportText, { color: colors.muted }]}>Need Help? Contact Support</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
@@ -217,16 +219,15 @@ export default function ShopWaitlistScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9ff' },
+  container: { flex: 1 },
   safe: { flex: 1 },
   centered: { justifyContent: 'center', alignItems: 'center' },
   scrollContent: { padding: 32, flexGrow: 1, justifyContent: 'center' },
-  
+
   header: { alignItems: 'center', marginBottom: 40 },
-  brandName: { fontSize: 24, fontWeight: '900', color: '#003a5c', marginTop: 12, letterSpacing: -0.5 },
+  brandName: { fontSize: 24, fontWeight: '900', marginTop: 12, letterSpacing: -0.5 },
 
   card: {
-    backgroundColor: 'white',
     borderRadius: 32,
     padding: 32,
     alignItems: 'center',
@@ -236,9 +237,8 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
   },
-  
+
   statusIconWrap: {
     width: 96,
     height: 96,
@@ -247,24 +247,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 24,
   },
-  
+
   statusTitle: { fontSize: 28, fontWeight: '900', marginBottom: 12, textAlign: 'center' },
-  statusMessage: { fontSize: 16, color: '#64748b', textAlign: 'center', lineHeight: 24, marginBottom: 24 },
+  statusMessage: { fontSize: 16, textAlign: 'center', lineHeight: 24, marginBottom: 24 },
 
   reasonBox: {
     width: '100%',
-    backgroundColor: '#fff5f5',
     padding: 20,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#feb2b2',
     marginBottom: 24,
   },
   reasonLabel: { fontSize: 12, fontWeight: '800', color: '#ba1a1a', textTransform: 'uppercase', marginBottom: 8 },
   reasonText: { fontSize: 14, color: '#742a27', lineHeight: 20, fontWeight: '600' },
 
   timeBox: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 24 },
-  timeText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
+  timeText: { fontSize: 13, fontWeight: '700' },
 
   actionBtn: { width: '100%', height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   actionBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
@@ -274,9 +272,7 @@ const styles = StyleSheet.create({
 
   footer: { marginTop: 40, gap: 20 },
   supportBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  supportText: { fontSize: 14, fontWeight: '700', color: '#64748b' },
+  supportText: { fontSize: 14, fontWeight: '700' },
   logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   logoutText: { fontSize: 14, fontWeight: '800', color: '#ba1a1a' },
 });
-
-

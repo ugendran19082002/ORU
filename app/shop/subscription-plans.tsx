@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
@@ -138,8 +139,22 @@ export default function ShopSubscriptionPlansScreen() {
       <StatusBar style="dark" />
 
       <View style={styles.header}>
-        <BackButton fallback="/shop/settings" />
-        <Text style={styles.headerTitle}>Shop Subscription</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          <BackButton fallback="/shop/settings" />
+          <View>
+            <View style={styles.brandRow}>
+              <Logo size="md" />
+              <Text style={styles.brandName}>ThanniGo</Text>
+            </View>
+            <Text style={styles.roleLabel}>SHOP PANEL</Text>
+          </View>
+        </View>
+        <TouchableOpacity 
+          style={styles.notifBtnSub} 
+          onPress={() => router.push('/notifications' as any)}
+        >
+          <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
+        </TouchableOpacity>
       </View>
 
       {loading ? (
@@ -156,6 +171,7 @@ export default function ShopSubscriptionPlansScreen() {
         </View>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+          <Text style={styles.pageTitle}>Shop Subscription</Text>
 
           {/* STATUS HERO CARD */}
           <LinearGradient colors={heroGradient} style={styles.heroCard}>
@@ -254,13 +270,17 @@ export default function ShopSubscriptionPlansScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: thannigoPalette.background },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  notifBtnSub: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
   errorText: { fontSize: 14, color: thannigoPalette.neutral, textAlign: 'center', fontWeight: '500' },
   retryBtn: { paddingHorizontal: 20, paddingVertical: 10, backgroundColor: SHOP_ACCENT, borderRadius: 12 },
   retryText: { color: 'white', fontWeight: '700', fontSize: 14 },
   content: { padding: 20, gap: 14, paddingBottom: 40 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5, marginBottom: 8 },
   heroCard: { borderRadius: 24, padding: 24, overflow: 'hidden', shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8 },
   heroDecor: { position: 'absolute', right: -16, bottom: -16 },
   heroLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.7)', letterSpacing: 1, marginBottom: 8 },

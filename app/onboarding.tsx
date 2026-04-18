@@ -106,8 +106,9 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Gradient splash screen — keep StatusBar as "light", white text stays white */}
       <StatusBar style="light" />
-      
+
       <Animated.FlatList
         ref={flatListRef}
         data={SLIDES}
@@ -174,11 +175,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#005d90' },
   slide: { width, height },
   slideBg: { flex: 1, paddingHorizontal: 40, justifyContent: 'center', alignItems: 'center' },
-  
+
   illustrationWrap: { height: height * 0.45, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
   iconCircle: { width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' },
   iconRing: { position: 'absolute', width: 220, height: 220, borderRadius: 110, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', opacity: 0.2 },
-  
+
   textContainer: { width: '100%', alignItems: 'flex-start' },
   title: { color: 'white', fontSize: 36, fontWeight: '900', letterSpacing: -1, lineHeight: 42, marginBottom: 16 },
   description: { color: 'rgba(255,255,255,0.85)', fontSize: 16, lineHeight: 24, fontWeight: '500' },
@@ -193,5 +194,4 @@ const styles = StyleSheet.create({
   nextBtn: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 5 },
   nextBtnGrad: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
 });
-
 

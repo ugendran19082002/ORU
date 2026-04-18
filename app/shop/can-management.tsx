@@ -7,7 +7,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
+import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
@@ -48,6 +50,7 @@ const ACTIONS = [
 
 export default function CanManagementScreen() {
   const { safeBack } = useAppNavigation();
+  const router = useRouter();
 
   useAndroidBackHandler(() => {
     safeBack('/shop/settings');
@@ -136,13 +139,24 @@ export default function CanManagementScreen() {
         <View style={styles.headerLeft}>
           <BackButton fallback="/shop/settings" />
           <View>
-            <Text style={styles.headerTitle}>Can Management</Text>
-            <Text style={styles.headerSub}>{inventory.length} products tracked</Text>
+            <View style={styles.brandRow}>
+              <Logo size="md" />
+              <Text style={styles.brandName}>ThanniGo</Text>
+            </View>
+            <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.refreshBtn} onPress={() => { setRefreshing(true); fetchAll(); }}>
-           <Ionicons name="refresh" size={20} color={SHOP_ACCENT} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <TouchableOpacity 
+            style={styles.notifBtnSub} 
+            onPress={() => router.push('/notifications' as any)}
+          >
+            <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.notifBtnSub} onPress={() => { setRefreshing(true); fetchAll(); }}>
+             <Ionicons name="refresh" size={20} color={SHOP_ACCENT} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -150,6 +164,11 @@ export default function CanManagementScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchAll(); }} tintColor={SHOP_ACCENT} />}
       >
+        <View style={styles.titleRow}>
+          <Text style={styles.pageTitle}>Can Management</Text>
+          <Text style={styles.pageSub}>{inventory.length} products tracked</Text>
+        </View>
+
         {/* STATS TILES */}
         <View style={styles.statsRow}>
           {[
@@ -386,10 +405,14 @@ const styles = StyleSheet.create({
     ...Shadow.xs 
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  headerTitle: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
-  refreshBtn: { width: 44, height: 44, borderRadius: Radius.md, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
-
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
+  notifBtnSub: { width: 44, height: 44, borderRadius: Radius.md, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
+  
+  titleRow: { marginHorizontal: 20, marginBottom: 16 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  pageSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 4 },
   statsRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10 },
   statBox: { flex: 1, padding: 16, borderRadius: Radius.xl, alignItems: 'center', ...Shadow.xs },
   statIconBox: { width: 40, height: 40, borderRadius: Radius.md, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },

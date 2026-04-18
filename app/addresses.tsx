@@ -35,13 +35,13 @@ const SHOP_TEAL = thannigoPalette.shopTeal;
  */
 const isValidCoordinate = (lat: number, lng: number): boolean => {
   const valid = (
-    lat !== undefined && 
-    lat !== null && 
-    !isNaN(lat) && 
+    lat !== undefined &&
+    lat !== null &&
+    !isNaN(lat) &&
     !isNaN(lng) &&
-    lat >= -90 && 
+    lat >= -90 &&
     lat <= 90 &&
-    lng >= -180 && 
+    lng >= -180 &&
     lng <= 180
   );
   console.log('📍 [COORD VALIDATION]:', { lat, lng, valid });
@@ -67,6 +67,8 @@ type Address = {
   longitude: number;
   is_default: boolean;
   delivery_instructions?: string;
+  is_floor: boolean;
+  no_of_floor: number;
 };
 
 export default function AddressesScreen() {
@@ -91,7 +93,9 @@ export default function AddressesScreen() {
 
   const [formFlat, setFormFlat] = useState("");
   const [formLandmark, setFormLandmark] = useState("");
-  
+  const [isFloor, setIsFloor] = useState(false);
+  const [noOfFloor, setNoOfFloor] = useState(0);
+
   // Coordinate storage
   const [currentLat, setCurrentLat] = useState<number>(28.4595);
   const [currentLng, setCurrentLng] = useState<number>(77.0266);
@@ -171,6 +175,8 @@ export default function AddressesScreen() {
     setNewType("Home");
     setNewTitle("");
     setIsNewDefault(false);
+    setIsFloor(false);
+    setNoOfFloor(0);
     setSuggestions([]);
   };
 
@@ -214,7 +220,7 @@ export default function AddressesScreen() {
             setCurrentLat(loc.coords.latitude);
             setCurrentLng(loc.coords.longitude);
             setAccuracy(loc.coords.accuracy);
-            
+
             // Move map to the new "best" spot
             const newRegion = {
               latitude: loc.coords.latitude,
@@ -357,7 +363,7 @@ export default function AddressesScreen() {
       const photonRes = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`);
       const photonData = await photonRes.json();
       console.log('Photon source results:', photonData.features?.length || 0);
-      
+
       let results = [];
       if (photonData.features && photonData.features.length > 0) {
         results = photonData.features.map((f: any) => ({
@@ -384,7 +390,7 @@ export default function AddressesScreen() {
           lng: parseFloat(item.lon),
           source: 'nominatim'
         }));
-        
+
         // Simple deduplication
         const titles = results.map((r: any) => r.title.toLowerCase());
         results = [...results, ...nomResults.filter((r: any) => !titles.includes(r.title.toLowerCase()))];
@@ -428,6 +434,8 @@ export default function AddressesScreen() {
         longitude: currentLng,
         delivery_instructions: deliveryInstructions,
         is_default: isNewDefault,
+        is_floor: isFloor,
+        no_of_floor: noOfFloor,
       };
 
       if (editingId) {
@@ -437,7 +445,7 @@ export default function AddressesScreen() {
         await addressApi.addAddress(payload);
         Toast.show({ type: 'success', text1: 'Saved', text2: 'New address added' });
       }
-      
+
       clearForm();
       fetchAddresses();
     } catch (err: any) {
@@ -473,7 +481,7 @@ export default function AddressesScreen() {
     try {
       const mapUrl = `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`;
       const message = `📍 ThanniGo Delivery Address (${item.label}):\n${item.address_line1}\n\nView on Maps: ${mapUrl}`;
-      
+
       await Share.share({
         message,
         title: `Share Location - ${item.label}`,
@@ -504,7 +512,7 @@ export default function AddressesScreen() {
         </View>
         <Image
           source={{ uri: "https://i.pravatar.cc/150?img=32" }}
-          style={styles.avatar}
+          style={[styles.avatar, { borderColor: colors.border }]}
         />
       </View>
 
@@ -518,16 +526,16 @@ export default function AddressesScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Delivery Location</Text>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.cardTitle, { color: colors.text }]}>Delivery Location</Text>
 
           {/* 1. SEARCH */}
-          <View style={styles.searchBox}>
-            <Ionicons name="search" size={20} color="#64748b" />
+          <View style={[styles.searchBox, { backgroundColor: colors.inputBg }]}>
+            <Ionicons name="search" size={20} color={colors.muted} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: colors.text }]}
               placeholder="Search area, landmark..."
-              placeholderTextColor={colors.muted}
+              placeholderTextColor={colors.placeholder}
               value={searchQuery}
               onChangeText={(t) => {
                 setSearchQuery(t);
@@ -540,17 +548,17 @@ export default function AddressesScreen() {
 
           {/* SUGGESTIONS LIST */}
           {suggestions.length > 0 && (
-            <View style={styles.suggestionsContainer}>
+            <View style={[styles.suggestionsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               {suggestions.map((item, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={styles.suggestionItem}
+                  style={[styles.suggestionItem, { borderBottomColor: colors.border }]}
                   onPress={() => handleSelectSuggestion(item)}
                 >
                   <Ionicons name="location-outline" size={18} color={colors.muted} />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.suggestionTitle}>{item.title}</Text>
-                    <Text style={styles.suggestionSub} numberOfLines={1}>{item.subtitle}</Text>
+                    <Text style={[styles.suggestionTitle, { color: colors.text }]}>{item.title}</Text>
+                    <Text style={[styles.suggestionSub, { color: colors.muted }]} numberOfLines={1}>{item.subtitle}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -558,7 +566,7 @@ export default function AddressesScreen() {
           )}
 
           {/* 2. MAP PREVIEW INSIDE CARD */}
-          <View style={[styles.mapContainer, { borderRadius: 16, marginTop: 12, marginBottom: 16 }]}>
+          <View style={[styles.mapContainer, { borderRadius: 16, marginTop: 12, marginBottom: 16, borderColor: colors.border }]}>
             <ExpoMap
               ref={mapRef}
               style={styles.mapView}
@@ -581,7 +589,7 @@ export default function AddressesScreen() {
                 title="Deliver Here"
               />
             </ExpoMap>
-            
+
             {Platform.OS !== 'web' && accuracy !== null && (
               <View style={styles.accuracyOverlay}>
                 <View style={styles.accuracyTag}>
@@ -602,15 +610,15 @@ export default function AddressesScreen() {
                 const types: any[] = ['standard', 'satellite', 'terrain'];
                 const nextIdx = (types.indexOf(mapType) + 1) % 3;
                 setMapType(types[nextIdx]);
-              }} style={styles.mapActionBtnMini}>
-                <Ionicons 
+              }} style={[styles.mapActionBtnMini, { borderColor: colors.border }]}>
+                <Ionicons
                   name={mapType === 'satellite' ? 'images' : mapType === 'terrain' ? 'earth' : 'map'}
                   size={18}
-                  color={ACCENT} 
+                  color={ACCENT}
                 />
               </TouchableOpacity>
             </View>
-            
+
             <View style={styles.mapOverlayActions}>
               <TouchableOpacity
                 style={styles.mapActionBtn}
@@ -631,7 +639,7 @@ export default function AddressesScreen() {
           {/* 3. QUICK ACTIONS ROW (OUTSIDE MAP) */}
           <View style={styles.mapUtilityRow}>
             <TouchableOpacity
-              style={styles.utilityBtn}
+              style={[styles.utilityBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={handleUseCurrentLocation}
               disabled={isFetchingLocation}
             >
@@ -643,7 +651,7 @@ export default function AddressesScreen() {
               <Text style={styles.utilityBtnText}>Locate Me</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.utilityBtn} onPress={shareAddress as any}>
+            <TouchableOpacity style={[styles.utilityBtn, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={shareAddress as any}>
               <Ionicons name="share-social-outline" size={18} color={ACCENT} />
               <Text style={styles.utilityBtnText}>Share</Text>
             </TouchableOpacity>
@@ -651,16 +659,16 @@ export default function AddressesScreen() {
 
           {/* 4. FORM */}
           {isAdding && (
-            <View style={styles.addFormWrapper}>
-              <Text style={styles.formLabel}>Save address as</Text>
+            <View style={[styles.addFormWrapper, { borderTopColor: colors.border }]}>
+              <Text style={[styles.formLabel, { color: colors.muted }]}>Save address as</Text>
               <View style={styles.typeRow}>
                 {["Home", "Office", "Other"].map((t) => (
                   <TouchableOpacity
                     key={t}
-                    style={[styles.typePill, newType === t && styles.typePillActive]}
+                    style={[styles.typePill, { backgroundColor: colors.inputBg, borderColor: 'transparent' }, newType === t && { backgroundColor: thannigoPalette.infoSoft, borderColor: ACCENT }]}
                     onPress={() => setNewType(t)}
                   >
-                    <Text style={[styles.typePillText, newType === t && styles.typePillTextActive]}>
+                    <Text style={[styles.typePillText, { color: colors.muted }, newType === t && { color: ACCENT }]}>
                       {t}
                     </Text>
                   </TouchableOpacity>
@@ -669,63 +677,107 @@ export default function AddressesScreen() {
 
               {newType === "Other" && (
                 <>
-                  <Text style={styles.formInputLabel}>Custom Label Name</Text>
+                  <Text style={[styles.formInputLabel, { color: colors.muted }]}>Custom Label Name</Text>
                   <TextInput
-                    style={styles.detailInput}
+                    style={[styles.detailInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
                     placeholder="e.g. Grandma's Place, Gym"
+                    placeholderTextColor={colors.placeholder}
                     value={newTitle}
                     onChangeText={setNewTitle}
                   />
                 </>
               )}
 
-              <Text style={styles.formInputLabel}>Recipient Name</Text>
+              <Text style={[styles.formInputLabel, { color: colors.muted }]}>Recipient Name</Text>
               <TextInput
-                style={styles.detailInput}
+                style={[styles.detailInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
                 placeholder="e.g. Rahul Sharma"
+                placeholderTextColor={colors.placeholder}
                 value={recipientName}
                 onChangeText={setRecipientName}
               />
 
-              <Text style={styles.formInputLabel}>House / Flat / Block No.</Text>
+              <Text style={[styles.formInputLabel, { color: colors.muted }]}>House / Flat / Block No.</Text>
               <TextInput
-                style={styles.detailInput}
+                style={[styles.detailInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
                 placeholder="e.g. Flat 4B, Emerald Heights"
+                placeholderTextColor={colors.placeholder}
                 value={formFlat}
                 onChangeText={setFormFlat}
               />
 
-              <Text style={styles.formInputLabel}>Apartment / Road / Area</Text>
+              <Text style={[styles.formInputLabel, { color: colors.muted }]}>Apartment / Road / Area</Text>
               <TextInput
-                style={[styles.detailInput, { height: 60, textAlignVertical: "top" }]}
+                style={[styles.detailInput, { height: 60, textAlignVertical: "top", backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
                 placeholder="e.g. 5th Main Road, Sector 3"
+                placeholderTextColor={colors.placeholder}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 multiline
               />
 
-              <Text style={styles.formInputLabel}>Delivery Instructions (Optional)</Text>
+              <Text style={[styles.formInputLabel, { color: colors.muted }]}>Delivery Instructions (Optional)</Text>
               <TextInput
-                style={[styles.detailInput, { height: 60, textAlignVertical: "top" }]}
+                style={[styles.detailInput, { height: 60, textAlignVertical: "top", backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
                 placeholder="e.g. Please leave at the gate or ring the bell"
+                placeholderTextColor={colors.placeholder}
                 value={deliveryInstructions}
                 onChangeText={setDeliveryInstructions}
                 multiline
               />
+              
+              <View style={[styles.hybridRow, { paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.border, marginTop: 10 }]}>
+                 <View style={{ flex: 1 }}>
+                    <Text style={[styles.formInputLabel, { color: colors.text, marginBottom: 2 }]}>Deliver to a floor?</Text>
+                    <Text style={{ fontSize: 12, color: colors.muted }}>Turn on if you live in a multi-story building</Text>
+                 </View>
+                 <Switch 
+                   value={isFloor} 
+                   onValueChange={setIsFloor}
+                   trackColor={{ false: colors.border, true: ACCENT }}
+                   thumbColor={Platform.OS === 'ios' ? undefined : '#f4f3f4'}
+                 />
+              </View>
+
+              {isFloor && (
+                <View style={{ marginTop: 8, padding: 12, backgroundColor: colors.inputBg, borderRadius: 12 }}>
+                  <Text style={[styles.formInputLabel, { color: colors.muted, marginBottom: 12 }]}>Which floor are you on?</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <TouchableOpacity 
+                      onPress={() => setNoOfFloor(Math.max(0, noOfFloor - 1))}
+                      style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border }}
+                    >
+                      <Ionicons name="remove" size={24} color={ACCENT} />
+                    </TouchableOpacity>
+                    
+                    <View style={{ alignItems: 'center' }}>
+                      <Text style={{ fontSize: 28, fontWeight: '900', color: ACCENT }}>{noOfFloor}</Text>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: colors.muted }}>FLOOR</Text>
+                    </View>
+
+                    <TouchableOpacity 
+                      onPress={() => setNoOfFloor(noOfFloor + 1)}
+                      style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border }}
+                    >
+                      <Ionicons name="add" size={24} color={ACCENT} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
 
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.formInputLabel}>Latitude</Text>
+                  <Text style={[styles.formInputLabel, { color: colors.muted }]}>Latitude</Text>
                   <TextInput
-            style={[styles.detailInput, { backgroundColor: colors.background, color: colors.muted }]}
+                    style={[styles.detailInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.muted }]}
                     value={currentLat.toFixed(6)}
                     editable={false}
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.formInputLabel}>Longitude</Text>
+                  <Text style={[styles.formInputLabel, { color: colors.muted }]}>Longitude</Text>
                   <TextInput
-            style={[styles.detailInput, { backgroundColor: colors.background, color: colors.muted }]}
+                    style={[styles.detailInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.muted }]}
                     value={currentLng.toFixed(6)}
                     editable={false}
                   />
@@ -737,7 +789,7 @@ export default function AddressesScreen() {
                 <Text style={styles.saveActionText}>Confirm & Save Address</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.cancelActionBtn} onPress={clearForm}>
-                <Text style={styles.cancelActionText}>Cancel</Text>
+                <Text style={[styles.cancelActionText, { color: colors.muted }]}>Cancel</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -745,7 +797,7 @@ export default function AddressesScreen() {
 
         {/* SAVED & RECENT */}
         <View style={styles.listHeaderRow}>
-          <Text style={styles.listSectionTitle}>SAVED & RECENT</Text>
+          <Text style={[styles.listSectionTitle, { color: colors.muted }]}>SAVED & RECENT</Text>
           <TouchableOpacity onPress={() => {
             clearForm();
             setIsAdding(true);
@@ -759,15 +811,15 @@ export default function AddressesScreen() {
           <ActivityIndicator color="#005d90" style={{ marginVertical: 40 }} />
         ) : addresses.length === 0 ? (
           <View style={{ alignItems: 'center', padding: 40 }}>
-            <Ionicons name="location-outline" size={48} color="#cbd5e1" />
-            <Text style={{ color: '#64748b', marginTop: 12 }}>No saved addresses found.</Text>
+            <Ionicons name="location-outline" size={48} color={colors.muted} />
+            <Text style={{ color: colors.muted, marginTop: 12 }}>No saved addresses found.</Text>
           </View>
         ) : addresses.map((item) => {
           const uiOpts = getIconForType(item.label);
           return (
             <View
               key={item.id}
-              style={[styles.listItem, item.is_default && styles.listItemDefault]}
+              style={[styles.listItem, { backgroundColor: colors.surface }, item.is_default && { borderColor: ACCENT, borderWidth: 1, backgroundColor: thannigoPalette.infoSoft }]}
             >
               <TouchableOpacity onPress={() => toggleDefault(item.id)} style={{ marginRight: 8, justifyContent: 'center' }}>
                 <Ionicons
@@ -776,21 +828,21 @@ export default function AddressesScreen() {
                   color={item.is_default ? ACCENT : colors.muted}
                 />
               </TouchableOpacity>
-              
+
               <View style={[styles.iconWrap, { backgroundColor: uiOpts.bg }]}>
                 <Ionicons name={uiOpts.icon} size={22} color={uiOpts.color} />
               </View>
-              
-              <TouchableOpacity 
+
+              <TouchableOpacity
                 style={styles.listContent}
                 activeOpacity={0.6}
                 onPress={() => toggleDefault(item.id)}
               >
                 <View style={styles.listTitleRow}>
-                  <Text style={styles.listTitle}>{item.label}</Text>
+                  <Text style={[styles.listTitle, { color: colors.text }]}>{item.label}</Text>
                   {item.is_default && <View style={styles.defaultBadge}><Text style={styles.defaultBadgeText}>DEFAULT</Text></View>}
                 </View>
-                <Text style={styles.listSub} numberOfLines={2}>
+                <Text style={[styles.listSub, { color: colors.muted }]} numberOfLines={2}>
                   {item.address_line1}
                 </Text>
               </TouchableOpacity>
@@ -801,7 +853,7 @@ export default function AddressesScreen() {
                   safeNavigate("/map-preview", {
                     lat: item.latitude.toString(),
                     lng: item.longitude.toString(),
-                    title: item.label 
+                    title: item.label
                   });
                 }}>
                   <Ionicons name="map-outline" size={20} color={SHOP_TEAL} />
@@ -865,21 +917,19 @@ const styles = StyleSheet.create({
   },
   brandRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   brandName: { fontSize: 20, fontWeight: "800", color: ACCENT, letterSpacing: -0.3 },
-  avatar: { width: 36, height: 36, borderRadius: 18, borderWidth: 2, borderColor: thannigoPalette.borderSoft },
+  avatar: { width: 36, height: 36, borderRadius: 18, borderWidth: 2 },
 
   scrollContent: { padding: 20 },
 
   card: {
-    backgroundColor: thannigoPalette.surface,
     borderRadius: Radius.xl, padding: 20, marginBottom: 20, ...Shadow.sm,
   },
-  cardTitle: { fontSize: 18, fontWeight: "800", color: thannigoPalette.darkText, marginBottom: 16 },
+  cardTitle: { fontSize: 18, fontWeight: "800", marginBottom: 16 },
   searchBox: {
     flexDirection: "row", alignItems: "center", gap: 10,
-    backgroundColor: thannigoPalette.borderSoft,
     borderRadius: Radius.lg, paddingHorizontal: 16, height: 56, marginBottom: 16,
   },
-  searchInput: { flex: 1, fontSize: 15, color: thannigoPalette.darkText, fontWeight: "500" },
+  searchInput: { flex: 1, fontSize: 15, fontWeight: "500" },
   gpsBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
     backgroundColor: SHOP_TEAL, borderRadius: Radius.lg, height: 56,
@@ -887,28 +937,26 @@ const styles = StyleSheet.create({
   },
   gpsBtnText: { color: "#ffffff", fontSize: 15, fontWeight: "700" },
 
-  addFormWrapper: { marginTop: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft },
-  formInputLabel: { fontSize: 12, fontWeight: "700", color: thannigoPalette.neutral, marginBottom: 6, marginLeft: 2 },
+  addFormWrapper: { marginTop: 24, paddingTop: 16, borderTopWidth: 1 },
+  formInputLabel: { fontSize: 12, fontWeight: "700", marginBottom: 6, marginLeft: 2 },
   detailInput: {
-    backgroundColor: thannigoPalette.background, borderWidth: 1, borderColor: thannigoPalette.borderSoft,
+    borderWidth: 1,
     borderRadius: Radius.md, paddingHorizontal: 16, paddingVertical: 12,
-    fontSize: 15, color: thannigoPalette.darkText, marginBottom: 16,
+    fontSize: 15, marginBottom: 16,
   },
 
-  formLabel: { fontSize: 13, fontWeight: "700", color: thannigoPalette.neutral, marginBottom: 10, marginTop: 4 },
+  formLabel: { fontSize: 13, fontWeight: "700", marginBottom: 10, marginTop: 4 },
   typeRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
-  typePill: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, backgroundColor: thannigoPalette.borderSoft, borderWidth: 1, borderColor: "transparent" },
-  typePillActive: { backgroundColor: thannigoPalette.infoSoft, borderColor: ACCENT },
-  typePillText: { fontSize: 14, fontWeight: "600", color: thannigoPalette.neutral },
-  typePillTextActive: { color: ACCENT },
+  typePill: { paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, borderWidth: 1 },
+  typePillText: { fontSize: 14, fontWeight: "600" },
   saveActionBtn: { backgroundColor: SHOP_TEAL, paddingVertical: 14, borderRadius: Radius.lg, alignItems: "center", marginTop: 10 },
   saveActionText: { color: "white", fontSize: 15, fontWeight: "700" },
   cancelActionBtn: { paddingVertical: 14, alignItems: "center", marginTop: 4 },
-  cancelActionText: { color: thannigoPalette.neutral, fontSize: 14, fontWeight: "600" },
+  cancelActionText: { fontSize: 14, fontWeight: "600" },
 
   mapContainer: {
     height: 240, borderRadius: Radius.xl, overflow: "hidden", position: "relative",
-    marginBottom: 28, backgroundColor: "#1e293b", borderWidth: 1, borderColor: thannigoPalette.borderSoft,
+    marginBottom: 28, backgroundColor: "#1e293b", borderWidth: 1,
   },
   mapView: { flex: 1 },
   accuracyOverlay: { position: "absolute", top: 12, left: 12 },
@@ -921,7 +969,7 @@ const styles = StyleSheet.create({
   mapActionBtnMini: {
     backgroundColor: "rgba(255,255,255,0.95)", width: 36, height: 36, borderRadius: 18,
     alignItems: "center", justifyContent: "center", ...Shadow.xs,
-    borderWidth: 1, borderColor: thannigoPalette.borderSoft,
+    borderWidth: 1,
   },
   accuracyTag: {
     flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.95)",
@@ -937,29 +985,28 @@ const styles = StyleSheet.create({
   miniTypeBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: 'rgba(255,255,255,0.92)', paddingHorizontal: 10, paddingVertical: 6,
-    borderRadius: 10, ...Shadow.xs, borderWidth: 1, borderColor: thannigoPalette.borderSoft,
+    borderRadius: 10, ...Shadow.xs, borderWidth: 1,
   },
   miniTypeText: { fontSize: 9, fontWeight: '900', color: ACCENT, letterSpacing: 0.5 },
 
   listHeaderRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16, paddingHorizontal: 4 },
-  listSectionTitle: { fontSize: 13, fontWeight: "700", color: thannigoPalette.neutral, letterSpacing: 1 },
+  listSectionTitle: { fontSize: 13, fontWeight: "700", letterSpacing: 1 },
   manageText: { fontSize: 13, fontWeight: "700", color: SHOP_TEAL },
 
   listItem: {
-    flexDirection: "row", alignItems: "center", backgroundColor: thannigoPalette.surface,
+    flexDirection: "row", alignItems: "center",
     borderRadius: Radius.xl, padding: 16, marginBottom: 12, gap: 16, ...Shadow.xs,
   },
   iconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   listContent: { flex: 1 },
   listTitleRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
-  listTitle: { fontSize: 16, fontWeight: "800", color: thannigoPalette.darkText },
+  listTitle: { fontSize: 16, fontWeight: "800" },
   favBadge: { backgroundColor: thannigoPalette.success, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   favBadgeText: { color: "white", fontSize: 9, fontWeight: "800" },
   defaultBadge: { backgroundColor: ACCENT, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   defaultBadgeText: { color: "white", fontSize: 9, fontWeight: "800" },
   selectionIndicator: { paddingRight: 4 },
-  listItemDefault: { borderColor: ACCENT, borderWidth: 1, backgroundColor: thannigoPalette.infoSoft },
-  listSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: "500" },
+  listSub: { fontSize: 13, fontWeight: "500" },
 
   infoBox: {
     flexDirection: "row", gap: 12, backgroundColor: thannigoPalette.successSoft,
@@ -971,21 +1018,19 @@ const styles = StyleSheet.create({
   mapUtilityRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   utilityBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    backgroundColor: thannigoPalette.surface, paddingVertical: 14, borderRadius: Radius.lg,
-    borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, ...Shadow.xs,
+    paddingVertical: 14, borderRadius: Radius.lg,
+    borderWidth: 1.5, ...Shadow.xs,
   },
   utilityBtnText: { fontSize: 14, fontWeight: '800', color: ACCENT },
 
   suggestionsContainer: {
-    backgroundColor: thannigoPalette.surface, borderRadius: Radius.lg, marginTop: 8, marginBottom: 16,
-    padding: 4, borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.sm,
+    borderRadius: Radius.lg, marginTop: 8, marginBottom: 16,
+    padding: 4, borderWidth: 1, ...Shadow.sm,
   },
   suggestionItem: {
     flexDirection: "row", alignItems: "center", padding: 14,
-    borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft, gap: 12,
+    borderBottomWidth: 1, gap: 12,
   },
-  suggestionTitle: { fontSize: 14, fontWeight: "700", color: thannigoPalette.darkText },
-  suggestionSub: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 2, fontWeight: "500" },
+  suggestionTitle: { fontSize: 14, fontWeight: "700" },
+  suggestionSub: { fontSize: 12, marginTop: 2, fontWeight: "500" },
 });
-
-

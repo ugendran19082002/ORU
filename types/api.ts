@@ -148,6 +148,7 @@ export type ShopSettings = {
   free_delivery_upto_km: number;
   delivery_limit_per_km: number;
   floor_charge_per_floor: number;
+  free_delivery_upto_floor: number;
   invoice_prefix?: string;
   enable_instant_delivery?: boolean;
   allow_cod?: boolean;

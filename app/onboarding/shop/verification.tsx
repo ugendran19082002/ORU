@@ -13,10 +13,12 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 export default function ShopVerificationScreen() {
   const router = useRouter();
   const { user, status } = useAppSession();
+  const { colors, isDark } = useAppTheme();
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
   const [shopId, setShopId] = useState<number | null>(null);
@@ -61,7 +63,7 @@ export default function ShopVerificationScreen() {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
-        
+
         // 5MB Client-side validation
         if (asset.fileSize && asset.fileSize > 5000000) {
           Toast.show({
@@ -104,15 +106,15 @@ export default function ShopVerificationScreen() {
       }
 
       // Mark step as complete (even if no docs, since optional)
-      await onboardingApi.completeShopStep('verification', shopId, { 
-        id_provided: !!idProof, 
-        photo_provided: !!shopPhoto 
+      await onboardingApi.completeShopStep('verification', shopId, {
+        id_provided: !!idProof,
+        photo_provided: !!shopPhoto
       });
 
       router.replace('/onboarding/shop');
     } catch (error: any) {
       if (error.response?.status === 404) return;
-      
+
       Toast.show({
         type: 'error',
         text1: 'Upload Error',
@@ -124,15 +126,15 @@ export default function ShopVerificationScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <View style={styles.header}>
               <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} />
-              <Text style={styles.title}>Verification</Text>
-              <Text style={styles.subtitle}>Upload your ID proof or a photo of your shop. This helps us verify your account faster.</Text>
+              <Text style={[styles.title, { color: colors.text }]}>Verification</Text>
+              <Text style={[styles.subtitle, { color: colors.muted }]}>Upload your ID proof or a photo of your shop. This helps us verify your account faster.</Text>
             </View>
 
             {fetchingShop ? (
@@ -140,28 +142,28 @@ export default function ShopVerificationScreen() {
             ) : (
               <View style={styles.form}>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>ID Proof (Optional)</Text>
-                  <TouchableOpacity style={styles.uploadCard} onPress={() => pickImage('id')}>
+                  <Text style={[styles.label, { color: colors.muted }]}>ID Proof (Optional)</Text>
+                  <TouchableOpacity style={[styles.uploadCard, { backgroundColor: colors.inputBg, borderColor: colors.border }]} onPress={() => pickImage('id')}>
                     {idProof ? (
                       <Image source={{ uri: idProof }} style={styles.previewImage} />
                     ) : (
                       <View style={styles.uploadPlaceholder}>
                         <Ionicons name="card-outline" size={32} color="#94a3b8" />
-                        <Text style={styles.uploadText}>Aadhar, License or Voter ID</Text>
+                        <Text style={[styles.uploadText, { color: colors.muted }]}>Aadhar, License or Voter ID</Text>
                       </View>
                     )}
                   </TouchableOpacity>
                 </View>
 
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Shop Photo (Optional)</Text>
-                  <TouchableOpacity style={styles.uploadCard} onPress={() => pickImage('shop')}>
+                  <Text style={[styles.label, { color: colors.muted }]}>Shop Photo (Optional)</Text>
+                  <TouchableOpacity style={[styles.uploadCard, { backgroundColor: colors.inputBg, borderColor: colors.border }]} onPress={() => pickImage('shop')}>
                     {shopPhoto ? (
                       <Image source={{ uri: shopPhoto }} style={styles.previewImage} />
                     ) : (
                       <View style={styles.uploadPlaceholder}>
                         <Ionicons name="image-outline" size={32} color="#94a3b8" />
-                        <Text style={styles.uploadText}>Frontend view of your shop</Text>
+                        <Text style={[styles.uploadText, { color: colors.muted }]}>Frontend view of your shop</Text>
                       </View>
                     )}
                   </TouchableOpacity>
@@ -170,7 +172,7 @@ export default function ShopVerificationScreen() {
             )}
           </ScrollView>
 
-          <View style={styles.footer}>
+          <View style={[styles.footer, { backgroundColor: colors.surface }]}>
             <TouchableOpacity onPress={handleContinue} disabled={loading} activeOpacity={0.8}>
               <LinearGradient colors={['#006878', '#134e4a']} style={styles.cta} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                 {loading ? <ActivityIndicator color="white" /> : (
@@ -189,21 +191,19 @@ export default function ShopVerificationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1 },
   safe: { flex: 1 },
   scrollContent: { paddingHorizontal: 32, paddingTop: 40 },
   header: { marginBottom: 32 },
-  title: { fontSize: 28, fontWeight: '900', color: '#134e4a', letterSpacing: -0.5 },
-  subtitle: { fontSize: 15, color: '#64748b', marginTop: 12, lineHeight: 22 },
+  title: { fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
+  subtitle: { fontSize: 15, marginTop: 12, lineHeight: 22 },
   form: { gap: 32, marginBottom: 40 },
   inputGroup: { gap: 12 },
-  label: { fontSize: 13, fontWeight: '800', color: '#475569', marginLeft: 4, textTransform: 'uppercase' },
+  label: { fontSize: 13, fontWeight: '800', marginLeft: 4, textTransform: 'uppercase' },
   uploadCard: {
     height: 180,
-    backgroundColor: '#f8fafc',
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: '#e2e8f0',
     borderStyle: 'dashed',
     overflow: 'hidden',
     justifyContent: 'center',
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   },
   previewImage: { width: '100%', height: '100%', resizeMode: 'cover' },
   uploadPlaceholder: { alignItems: 'center', gap: 8 },
-  uploadText: { fontSize: 14, color: '#94a3b8', fontWeight: '600' },
+  uploadText: { fontSize: 14, fontWeight: '600' },
   footer: { padding: 32 },
   cta: {
     height: 60,
@@ -223,5 +223,3 @@ const styles = StyleSheet.create({
   },
   ctaText: { color: 'white', fontSize: 17, fontWeight: '800' }
 });
-
-

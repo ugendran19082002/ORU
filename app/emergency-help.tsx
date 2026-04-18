@@ -13,6 +13,7 @@ import { engagementApi } from '@/api/engagementApi';
 import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
 import { log } from '@/utils/logger';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 
 
@@ -31,6 +32,7 @@ import { BackButton } from '@/components/ui/BackButton';
 
 export default function EmergencyHelpScreen() {
   const router = useRouter();
+  const { colors, isDark } = useAppTheme();
   const { safeBack } = useAppNavigation();
 
   useAndroidBackHandler(() => {
@@ -67,7 +69,7 @@ export default function EmergencyHelpScreen() {
     try {
       setIsTriggering(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      
+
       await engagementApi.triggerSos({
         note: "User triggered SOS from Emergency Help Screen"
       });
@@ -81,10 +83,10 @@ export default function EmergencyHelpScreen() {
       });
     } catch (error) {
       log.error('[SOS] Trigger failed:', error);
-      Toast.show({ 
-        type: 'error', 
-        text1: 'SOS Trigger Failed', 
-        text2: 'Please call emergency services manually.' 
+      Toast.show({
+        type: 'error',
+        text1: 'SOS Trigger Failed',
+        text2: 'Please call emergency services manually.'
       });
     } finally {
       setIsTriggering(false);
@@ -107,14 +109,13 @@ export default function EmergencyHelpScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <StatusBar style="light" />
 
-      {/* URGENT HEADER */}
+      {/* URGENT HEADER — keeps red accent, always light status bar */}
       <LinearGradient colors={['#c62828', '#ef4444']} style={styles.urgentHeader}>
         <BackButton variant="transparent" fallback="/(tabs)/profile" />
         <View style={styles.urgentContent}>
-
           <View style={styles.alertIconWrap}>
             <Ionicons name="warning" size={36} color="white" />
           </View>
@@ -126,11 +127,11 @@ export default function EmergencyHelpScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
         {/* QUICK SOS */}
-        <TouchableOpacity 
-          style={[styles.sosBtn, isTrigering && { opacity: 0.7 }]} 
+        <TouchableOpacity
+          style={[styles.sosBtn, isTrigering && { opacity: 0.7 }]}
           onPress={() => {
             require('react-native').Alert.alert(
-              'Confirm SOS', 
+              'Confirm SOS',
               'This will alert authorities and ThanniGo support immediately. Are you sure?',
               [
                 { text: 'Cancel', style: 'cancel' },
@@ -153,43 +154,43 @@ export default function EmergencyHelpScreen() {
         </TouchableOpacity>
 
         {/* EMERGENCY TYPES */}
-        <Text style={styles.sectionTitle}>Emergency Services</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Emergency Services</Text>
         <View style={styles.emergencyGrid}>
           {EMERGENCY_TYPES.map((e) => (
             <TouchableOpacity
               key={e.id}
-              style={styles.emergencyCard}
+              style={[styles.emergencyCard, { backgroundColor: colors.surface }]}
               onPress={() => callNumber(e.phone)}
             >
               <View style={[styles.emergencyIcon, { backgroundColor: e.bg }]}>
                 <Ionicons name={e.icon as any} size={24} color={e.color} />
               </View>
-              <Text style={styles.emergencyLabel}>{e.label}</Text>
+              <Text style={[styles.emergencyLabel, { color: colors.text }]}>{e.label}</Text>
               <Text style={[styles.emergencyNum, { color: e.color }]}>{e.phone}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* THANNIGO SUPPORT */}
-        <Text style={styles.sectionTitle}>ThanniGo Support</Text>
-        <TouchableOpacity style={styles.supportCard} onPress={callSupport}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>ThanniGo Support</Text>
+        <TouchableOpacity style={[styles.supportCard, { backgroundColor: colors.surface, borderColor: isDark ? colors.border : '#bfdbf7' }]} onPress={callSupport}>
           <View style={styles.supportLeft}>
-            <View style={styles.supportIcon}>
+            <View style={[styles.supportIcon, { backgroundColor: isDark ? 'rgba(0,93,144,0.2)' : '#e0f0ff' }]}>
               <Ionicons name="headset-outline" size={24} color="#005d90" />
             </View>
             <View>
               <Text style={styles.supportTitle}>Call ThanniGo Support</Text>
-              <Text style={styles.supportSub}>24/7 emergency helpline · {supportInfo.phone}</Text>
+              <Text style={[styles.supportSub, { color: colors.muted }]}>24/7 emergency helpline · {supportInfo.phone}</Text>
             </View>
           </View>
-          <View style={styles.callBadge}>
+          <View style={[styles.callBadge, { backgroundColor: isDark ? 'rgba(0,93,144,0.2)' : '#e0f0ff' }]}>
             <Ionicons name="call" size={16} color="#005d90" />
           </View>
         </TouchableOpacity>
 
         {/* SAFE TIPS */}
-        <View style={styles.tipsCard}>
-          <Text style={styles.tipsTitle}>📋 Stay Safe Checklist</Text>
+        <View style={[styles.tipsCard, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.tipsTitle, { color: colors.text }]}>📋 Stay Safe Checklist</Text>
           {[
             'Move to a well-lit, public area',
             'Share your live location with someone you trust',
@@ -198,7 +199,7 @@ export default function EmergencyHelpScreen() {
           ].map((tip, i) => (
             <View key={i} style={styles.tipRow}>
               <View style={styles.tipBullet} />
-              <Text style={styles.tipText}>{tip}</Text>
+              <Text style={[styles.tipText, { color: colors.muted }]}>{tip}</Text>
             </View>
           ))}
         </View>
@@ -209,7 +210,7 @@ export default function EmergencyHelpScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1 },
   urgentHeader: { paddingTop: 8, paddingBottom: 24, paddingHorizontal: 20 },
   backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   urgentContent: { alignItems: 'center', gap: 8 },
@@ -222,23 +223,22 @@ const styles = StyleSheet.create({
   sosIconWrap: { width: 52, height: 52, borderRadius: 16, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
   sosBtnTitle: { fontSize: 20, fontWeight: '900', color: 'white' },
   sosBtnSub: { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: '#181c20', letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 15, fontWeight: '800', letterSpacing: -0.3 },
   emergencyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  emergencyCard: { width: '47%', backgroundColor: 'white', borderRadius: 18, padding: 16, alignItems: 'center', gap: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  emergencyCard: { width: '47%', borderRadius: 18, padding: 16, alignItems: 'center', gap: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
   emergencyIcon: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  emergencyLabel: { fontSize: 12, fontWeight: '700', color: '#181c20', textAlign: 'center' },
+  emergencyLabel: { fontSize: 12, fontWeight: '700', textAlign: 'center' },
   emergencyNum: { fontSize: 18, fontWeight: '900' },
-  supportCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2, borderWidth: 1.5, borderColor: '#bfdbf7' },
+  supportCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2, borderWidth: 1.5 },
   supportLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  supportIcon: { width: 48, height: 48, borderRadius: 14, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
+  supportIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   supportTitle: { fontSize: 15, fontWeight: '800', color: '#005d90' },
-  supportSub: { fontSize: 11, color: '#707881', fontWeight: '500', marginTop: 2 },
-  callBadge: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
-  tipsCard: { backgroundColor: 'white', borderRadius: 18, padding: 18, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
-  tipsTitle: { fontSize: 14, fontWeight: '800', color: '#181c20', marginBottom: 4 },
+  supportSub: { fontSize: 11, fontWeight: '500', marginTop: 2 },
+  callBadge: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  tipsCard: { borderRadius: 18, padding: 18, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  tipsTitle: { fontSize: 14, fontWeight: '800', marginBottom: 4 },
   tipRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   tipBullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#005d90', marginTop: 6 },
-  tipText: { flex: 1, fontSize: 13, color: '#64748b', lineHeight: 18, fontWeight: '500' },
+  tipText: { flex: 1, fontSize: 13, lineHeight: 18, fontWeight: '500' },
 });
-
 

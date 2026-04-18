@@ -8,9 +8,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { registerForPushNotificationsAsync, scheduleTestNotification } from '@/utils/notifications';
 import Toast from 'react-native-toast-message';
 import Constants from 'expo-constants';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 export default function EnableNotificationsScreen() {
   const router = useRouter();
+  const { colors, isDark } = useAppTheme();
   const { next = '/(tabs)' } = useLocalSearchParams<{ next: string }>();
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -79,18 +81,18 @@ export default function EnableNotificationsScreen() {
       setErrorMsg('Failed to enable notifications. Please try again.');
       setDenied(true);
     }
-    
+
     setLoading(false);
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
-      
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+
       <View style={styles.content}>
         <View style={styles.iconCircle}>
           <LinearGradient
-            colors={['#fdf4ff', '#f5f3ff']}
+            colors={isDark ? ['#2d1f4e', '#1e1535'] : ['#fdf4ff', '#f5f3ff']}
             style={styles.iconGradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -99,8 +101,8 @@ export default function EnableNotificationsScreen() {
           </LinearGradient>
         </View>
 
-        <Text style={styles.title}>Enable Notifications</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.title, { color: colors.text }]}>Enable Notifications</Text>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>
           Get real-time updates on your water delivery, exclusive offers, and important account alerts.
         </Text>
 
@@ -112,7 +114,7 @@ export default function EnableNotificationsScreen() {
         )}
       </View>
 
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.background }]}>
         {denied ? (
           <View style={{ gap: 12 }}>
             <TouchableOpacity
@@ -123,7 +125,7 @@ export default function EnableNotificationsScreen() {
               <Ionicons name="refresh" size={20} color="white" />
               <Text style={styles.buttonText}>Try Again</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               activeOpacity={0.8}
               style={[styles.button, { backgroundColor: '#475569', paddingVertical: 14 }]}
@@ -151,7 +153,7 @@ export default function EnableNotificationsScreen() {
           </TouchableOpacity>
         )}
         <TouchableOpacity style={styles.skipBtn} onPress={() => router.replace(next as any)}>
-          <Text style={styles.skipText}>Not Now, I'll do it later</Text>
+          <Text style={[styles.skipText, { color: colors.muted }]}>Not Now, I'll do it later</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -159,19 +161,18 @@ export default function EnableNotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#ffffff' },
+  container: { flex: 1 },
   content: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },
   iconCircle: { width: 160, height: 160, borderRadius: 80, marginBottom: 40, overflow: 'hidden' },
   iconGradient: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 28, fontWeight: '900', color: '#1a1c1e', marginBottom: 16, textAlign: 'center' },
-  subtitle: { fontSize: 16, color: '#44474e', textAlign: 'center', lineHeight: 24, marginBottom: 32 },
+  title: { fontSize: 28, fontWeight: '900', marginBottom: 16, textAlign: 'center' },
+  subtitle: { fontSize: 16, textAlign: 'center', lineHeight: 24, marginBottom: 32 },
   errorBox: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#ffdad6', padding: 16, borderRadius: 12, marginTop: 10 },
   errorText: { flex: 1, color: '#410002', fontSize: 14, fontWeight: '600' },
   bottomBar: { paddingHorizontal: 24, paddingBottom: 32 },
   button: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, backgroundColor: '#7c3aed', paddingVertical: 18, borderRadius: 20, shadowColor: '#7c3aed', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 15, elevation: 8 },
   buttonText: { color: 'white', fontSize: 17, fontWeight: '800' },
   skipBtn: { marginTop: 20, paddingVertical: 10, alignItems: 'center' },
-  skipText: { color: '#44474e', fontSize: 15, fontWeight: '600' },
+  skipText: { fontSize: 15, fontWeight: '600' },
 });
-
 

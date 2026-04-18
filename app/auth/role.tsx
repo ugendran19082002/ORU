@@ -19,8 +19,9 @@ import Toast from 'react-native-toast-message';
 
 import { userApi } from "@/api/userApi";
 import { Logo } from "@/components/ui/Logo";
-import { roleAccent, roleGradients, roleSurface, thannigoPalette } from "@/constants/theme";
+import { roleAccent, roleGradients, roleSurface } from "@/constants/theme";
 import { useAppSession } from "@/hooks/use-app-session";
+import { useAppTheme } from "@/providers/ThemeContext";
 import type { AppRole } from "@/types/session";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -61,6 +62,7 @@ export default function RoleSelectScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   const { signIn, signOut, user } = useAppSession();
+  const { colors, isDark } = useAppTheme();
   const [selected, setSelected] = useState<Role | null>(null);
   const [referralCode, setReferralCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -129,22 +131,22 @@ export default function RoleSelectScreen() {
   const selectedRole = ROLES.find((r) => r.id === selected);
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.safe}>
         {/* HEADER */}
         <View style={styles.header}>
           <BackButton variant="transparent" fallback="/auth" onPress={handleSignOut} />
           <View style={styles.brandRow}>
             <Logo size="sm" />
-            <Text style={styles.brandName}>ThanniGo</Text>
+            <Text style={[styles.brandName, { color: colors.text }]}>ThanniGo</Text>
           </View>
           <View style={{ width: 40 }} />
         </View>
 
         <View style={styles.titleBlock}>
-          <Text style={styles.title}>Who are you?</Text>
-          <Text style={styles.subtitle}>Choose your role to continue</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Who are you?</Text>
+          <Text style={[styles.subtitle, { color: colors.muted }]}>Choose your role to continue</Text>
         </View>
 
         {/* ROLE CARDS */}
@@ -162,7 +164,8 @@ export default function RoleSelectScreen() {
                   activeOpacity={0.88}
                   style={[
                     styles.roleCard,
-                    isSelected && { borderColor: role.accent, borderWidth: 2.5 },
+                    { backgroundColor: colors.surface, borderColor: isSelected ? role.accent : colors.border },
+                    isSelected && { borderWidth: 2.5 },
                   ]}
                   onPress={() => setSelected(role.id)}
                 >
@@ -170,7 +173,7 @@ export default function RoleSelectScreen() {
                   <View
                     style={[
                       styles.radioOuter,
-                      isSelected && { borderColor: role.accent },
+                      { borderColor: isSelected ? role.accent : colors.border },
                     ]}
                   >
                     {isSelected && (
@@ -193,12 +196,12 @@ export default function RoleSelectScreen() {
                     <Text
                       style={[
                         styles.roleTitle,
-                        isSelected && { color: role.accent },
+                        { color: isSelected ? role.accent : colors.text },
                       ]}
                     >
                       {role.title}
                     </Text>
-                    <Text style={styles.roleSubtitle}>{role.subtitle}</Text>
+                    <Text style={[styles.roleSubtitle, { color: colors.muted }]}>{role.subtitle}</Text>
                     {isSelected && (
                       <View style={styles.featureList}>
                         {role.features.map((f) => (
@@ -224,27 +227,26 @@ export default function RoleSelectScreen() {
           </View>
 
           {/* REFERRAL CODE */}
-          <View 
+          <View
             style={styles.referralSection}
             onLayout={(e) => setReferralY(e.nativeEvent.layout.y)}
           >
-            <View style={styles.referralInputWrap}>
+            <View style={[styles.referralInputWrap, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <Ionicons
                 name="gift-outline"
                 size={18}
-                color={selectedRole?.accent || "#334155"}
+                color={selectedRole?.accent || colors.muted}
                 style={styles.referralIcon}
               />
               <TextInput
-                style={styles.referralInput}
+                style={[styles.referralInput, { color: colors.text }]}
                 placeholder="Referral Code? (Optional)"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={colors.placeholder}
                 value={referralCode}
                 onChangeText={setReferralCode}
                 autoCapitalize="characters"
                 autoCorrect={false}
                 onFocus={() => {
-                  // Small delay to ensure keyboard has started opening
                   setTimeout(() => {
                       scrollRef.current?.scrollTo({ y: referralY - 10, animated: true });
                   }, 100);
@@ -275,7 +277,7 @@ export default function RoleSelectScreen() {
 
         {/* REGISTRATION FOOTER */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Logged in as {user?.phone}</Text>
+          <Text style={[styles.footerText, { color: colors.muted }]}>Logged in as {user?.phone}</Text>
           <TouchableOpacity onPress={handleSignOut}>
             <Text style={styles.footerLink}>Not you? Sign Out</Text>
           </TouchableOpacity>
@@ -286,7 +288,7 @@ export default function RoleSelectScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f7f9ff" },
+  container: { flex: 1 },
   safe: { flex: 1, paddingHorizontal: 24 },
 
   header: {
@@ -304,64 +306,24 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   brandRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  brandName: {
-    fontSize: 20,
-    fontWeight: "900",
-    color: "#003a5c",
-    letterSpacing: -0.5,
-  },
+  brandName: { fontSize: 20, fontWeight: "900", letterSpacing: -0.5 },
 
   titleBlock: { marginTop: 8, marginBottom: 16 },
-  title: {
-    fontSize: 32,
-    fontWeight: "900",
-    color: "#181c20",
-    letterSpacing: -0.5,
-    marginBottom: 6,
-  },
-  subtitle: { fontSize: 15, color: "#707881", fontWeight: "500" },
+  title: { fontSize: 32, fontWeight: "900", letterSpacing: -0.5, marginBottom: 6 },
+  subtitle: { fontSize: 15, fontWeight: "500" },
 
   roleList: { gap: 12, paddingBottom: 8 },
   roleCard: {
-    backgroundColor: "white",
-    borderRadius: 24,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 14,
+    borderRadius: 24, padding: 16,
+    flexDirection: "row", alignItems: "flex-start", gap: 14,
     borderWidth: 1.5,
-    borderColor: "#ebeef4",
-    shadowColor: "#003a5c",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowColor: "#003a5c", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
-  radioOuter: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: "#bfc7d1",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 3,
-  },
+  radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: "center", justifyContent: "center", marginTop: 3 },
   radioInner: { width: 10, height: 10, borderRadius: 5 },
-  roleIconWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  roleTitle: {
-    fontSize: 18,
-    fontWeight: "900",
-    color: "#181c20",
-    marginBottom: 3,
-  },
-  roleSubtitle: { fontSize: 12, color: "#707881", lineHeight: 17 },
+  roleIconWrap: { width: 52, height: 52, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  roleTitle: { fontSize: 18, fontWeight: "900", marginBottom: 3 },
+  roleSubtitle: { fontSize: 12, lineHeight: 17 },
   featureList: { marginTop: 10, gap: 5 },
   featureRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   featureText: { fontSize: 12, fontWeight: "600" },
@@ -390,7 +352,7 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
     marginTop: 10,
   },
-  footerText: { fontSize: 13, color: "#707881", fontWeight: "500" },
+  footerText: { fontSize: 13, fontWeight: "500" },
   footerLink: {
     fontSize: 13,
     color: "#005d90",
@@ -402,16 +364,7 @@ const styles = StyleSheet.create({
   referralSection: {
     paddingVertical: 12,
   },
-  referralInputWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "white",
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: "#ebeef4",
-    paddingHorizontal: 16,
-    height: 54,
-  },
+  referralInputWrap: { flexDirection: "row", alignItems: "center", borderRadius: 16, borderWidth: 1.5, paddingHorizontal: 16, height: 54 },
   referralIcon: {
     marginRight: 10,
   },

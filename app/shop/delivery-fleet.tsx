@@ -85,13 +85,23 @@ export default function DeliveryFleetScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <BackButton fallback="/shop/delivery" />
-        <Text style={styles.headerTitle}>Delivery Fleet</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+          <BackButton fallback="/shop/delivery" />
+          <Text style={styles.headerTitle}>Delivery Fleet</Text>
+        </View>
 
-        <TouchableOpacity style={styles.addBtn} onPress={() => setAddModalOpen(true)}>
-          <Ionicons name="person-add" size={16} color="white" />
-          <Text style={styles.addBtnText}>Add</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <TouchableOpacity 
+            style={styles.notifBtnSub} 
+            onPress={() => router.push('/notifications' as any)}
+          >
+            <Ionicons name="notifications-outline" size={20} color={thannigoPalette.darkText} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.addBtn} onPress={() => setAddModalOpen(true)}>
+            <Ionicons name="person-add" size={16} color="white" />
+            <Text style={styles.addBtnText}>Add</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -196,6 +206,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
   addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: SHOP_ACCENT, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14 },
   addBtnText: { color: 'white', fontWeight: '800', fontSize: 13 },
+  notifBtnSub: { width: 40, height: 40, borderRadius: 14, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
   
   content: { padding: 24, paddingBottom: 100 },
   titleArea: { marginBottom: 24 },

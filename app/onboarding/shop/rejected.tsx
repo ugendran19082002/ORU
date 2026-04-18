@@ -11,10 +11,12 @@ import { useRouter } from 'expo-router';
 import { useAppSession } from '@/hooks/use-app-session';
 import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 export default function ShopRejectedScreen() {
   const router = useRouter();
   const { user, signOut } = useAppSession();
+  const { colors, isDark } = useAppTheme();
 
   const handleEdit = () => {
     // Navigate back to the checklist to fix details
@@ -32,32 +34,32 @@ export default function ShopRejectedScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
+    <View style={[styles.container, { backgroundColor: isDark ? '#1a0a0a' : '#fff5f5' }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.safe}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          
+
           {/* HEADER */}
           <View style={styles.header}>
             <View style={{ position: 'absolute', left: 0, top: 0 }}>
               <BackButton fallback="/onboarding/shop" variant="transparent" />
             </View>
             <Logo size="lg" />
-            <Text style={styles.brandName}>ThanniGo</Text>
+            <Text style={[styles.brandName, { color: colors.text }]}>ThanniGo</Text>
           </View>
 
           {/* REJECTION CARD */}
-          <View style={styles.card}>
-            <View style={styles.iconCircle}>
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: isDark ? '#7f1d1d' : '#fed7d7' }]}>
+            <View style={[styles.iconCircle, { backgroundColor: isDark ? '#2d0a0a' : '#fff5f5' }]}>
               <Ionicons name="close-circle" size={48} color="#ba1a1a" />
             </View>
 
-            <Text style={styles.title}>Your Shop Application Was Not Approved</Text>
-            <Text style={styles.subtitle}>
-              We reviewed your shop details, but unfortunately, it didn’t meet our requirements at this time.
+            <Text style={[styles.title, { color: colors.text }]}>Your Shop Application Was Not Approved</Text>
+            <Text style={[styles.subtitle, { color: colors.muted }]}>
+              We reviewed your shop details, but unfortunately, it didn't meet our requirements at this time.
             </Text>
 
-            <View style={styles.reasonBox}>
+            <View style={[styles.reasonBox, { backgroundColor: isDark ? '#2d0a0a' : '#fff5f5', borderColor: isDark ? '#7f1d1d' : '#feb2b2' }]}>
               <View style={styles.reasonHeader}>
                 <Ionicons name="alert-circle-outline" size={18} color="#ba1a1a" />
                 <Text style={styles.reasonLabel}>Reason for Rejection</Text>
@@ -67,7 +69,7 @@ export default function ShopRejectedScreen() {
               </Text>
             </View>
 
-            <Text style={styles.guideText}>
+            <Text style={[styles.guideText, { color: colors.muted }]}>
               👉 You can update your details and resubmit for approval.
             </Text>
 
@@ -84,7 +86,7 @@ export default function ShopRejectedScreen() {
                 </LinearGradient>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.supportBtn} onPress={handleSupport} activeOpacity={0.7}>
+              <TouchableOpacity style={[styles.supportBtn, { backgroundColor: colors.surface, borderColor: '#005d90' }]} onPress={handleSupport} activeOpacity={0.7}>
                 <Ionicons name="help-circle-outline" size={20} color="#005d90" />
                 <Text style={styles.supportBtnText}>Contact Support</Text>
               </TouchableOpacity>
@@ -94,7 +96,7 @@ export default function ShopRejectedScreen() {
           <View style={styles.footer}>
             <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
               <Ionicons name="log-out-outline" size={18} color="#64748b" />
-              <Text style={styles.logoutText}>Switch Account</Text>
+              <Text style={[styles.logoutText, { color: colors.muted }]}>Switch Account</Text>
             </TouchableOpacity>
           </View>
 
@@ -105,15 +107,14 @@ export default function ShopRejectedScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff5f5' }, // Suble red tint for rejection background
+  container: { flex: 1 },
   safe: { flex: 1 },
   scrollContent: { padding: 32, flexGrow: 1, justifyContent: 'center' },
-  
+
   header: { alignItems: 'center', marginBottom: 32 },
-  brandName: { fontSize: 22, fontWeight: '900', color: '#003a5c', marginTop: 10, letterSpacing: -0.5 },
+  brandName: { fontSize: 22, fontWeight: '900', marginTop: 10, letterSpacing: -0.5 },
 
   card: {
-    backgroundColor: 'white',
     borderRadius: 32,
     padding: 32,
     alignItems: 'center',
@@ -123,37 +124,33 @@ const styles = StyleSheet.create({
     shadowRadius: 25,
     elevation: 8,
     borderWidth: 1,
-    borderColor: '#fed7d7',
   },
-  
+
   iconCircle: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#fff5f5',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
   },
-  
-  title: { fontSize: 24, fontWeight: '900', color: '#1e293b', textAlign: 'center', lineHeight: 32 },
-  subtitle: { fontSize: 16, color: '#64748b', textAlign: 'center', marginTop: 12, lineHeight: 24 },
+
+  title: { fontSize: 24, fontWeight: '900', textAlign: 'center', lineHeight: 32 },
+  subtitle: { fontSize: 16, textAlign: 'center', marginTop: 12, lineHeight: 24 },
 
   reasonBox: {
     width: '100%',
-    backgroundColor: '#fff5f5',
     padding: 20,
     borderRadius: 20,
     marginTop: 24,
     borderWidth: 1,
-    borderColor: '#feb2b2',
     borderStyle: 'dashed',
   },
   reasonHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   reasonLabel: { fontSize: 13, fontWeight: '800', color: '#ba1a1a', textTransform: 'uppercase', letterSpacing: 0.5 },
   reasonText: { fontSize: 15, color: '#742a27', lineHeight: 22, fontWeight: '600' },
 
-  guideText: { fontSize: 14, color: '#475569', textAlign: 'center', marginTop: 24, fontWeight: '700' },
+  guideText: { fontSize: 14, textAlign: 'center', marginTop: 24, fontWeight: '700' },
 
   actionGroup: { width: '100%', marginTop: 24, gap: 12 },
   primaryBtn: { width: '100%' },
@@ -171,18 +168,14 @@ const styles = StyleSheet.create({
     height: 54,
     borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: '#005d90',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: 'white',
   },
   supportBtnText: { color: '#005d90', fontSize: 15, fontWeight: '800' },
 
   footer: { marginTop: 32, alignItems: 'center' },
   logoutBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 8 },
-  logoutText: { fontSize: 14, fontWeight: '700', color: '#64748b' },
+  logoutText: { fontSize: 14, fontWeight: '700' },
 });
-
-

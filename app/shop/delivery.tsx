@@ -88,12 +88,10 @@ export default function ShopDeliveryManagementScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar style="dark" />
 
-      {/* HEADER */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
           <BackButton fallback="/shop/settings" />
           <View>
-
             <View style={styles.brandRow}>
               <Logo size="md" />
               <Text style={styles.brandName}>ThanniGo</Text>
@@ -101,17 +99,25 @@ export default function ShopDeliveryManagementScreen() {
             <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.dispatchBtn}
-          onPress={() => Toast.show({
-            type: 'info',
-            text1: 'Dispatch Center',
-            text2: 'Call the dispatch team for urgent redirects.'
-          })}
-        >
-          <Ionicons name="radio-outline" size={16} color={SHOP_ACCENT} />
-          <Text style={styles.dispatchBtnText}>Dispatch</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <TouchableOpacity
+            style={[styles.dispatchBtn, { backgroundColor: SHOP_SURF }]}
+            onPress={() => router.push('/notifications' as any)}
+          >
+            <Ionicons name="notifications-outline" size={18} color={SHOP_ACCENT} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.dispatchBtn}
+            onPress={() => Toast.show({
+              type: 'info',
+              text1: 'Dispatch Center',
+              text2: 'Call the dispatch team for urgent redirects.'
+            })}
+          >
+            <Ionicons name="radio-outline" size={16} color={SHOP_ACCENT} />
+            <Text style={styles.dispatchBtnText}>Dispatch</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView

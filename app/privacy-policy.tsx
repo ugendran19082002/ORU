@@ -47,9 +47,11 @@ const SECTIONS = [
 ];
 
 import { systemApi } from '@/api/systemApi';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 export default function PrivacyPolicyScreen() {
   const router = useRouter();
+  const { colors, isDark } = useAppTheme();
   const [sections, setSections] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -75,19 +77,19 @@ export default function PrivacyPolicyScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
-          style={styles.backBtn}
+          style={[styles.backBtn, { backgroundColor: isDark ? 'rgba(0,93,144,0.2)' : '#e0f0ff' }]}
           onPress={() => router.back()}
           activeOpacity={0.7}
         >
           <Ionicons name="arrow-back" size={22} color="#005d90" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Privacy Policy</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Privacy Policy</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -96,8 +98,8 @@ export default function PrivacyPolicyScreen() {
         contentContainerStyle={styles.content}
       >
         {/* INTRO */}
-        <View style={styles.introCard}>
-          <View style={styles.introIcon}>
+        <View style={[styles.introCard, { backgroundColor: isDark ? 'rgba(0,93,144,0.2)' : '#e0f0ff' }]}>
+          <View style={[styles.introIcon, { backgroundColor: colors.surface }]}>
             <Ionicons name="shield-checkmark" size={28} color="#005d90" />
           </View>
           <View style={{ flex: 1 }}>
@@ -106,7 +108,7 @@ export default function PrivacyPolicyScreen() {
           </View>
         </View>
 
-        <Text style={styles.introText}>
+        <Text style={[styles.introText, { backgroundColor: colors.surface, color: colors.text }]}>
           ThanniGo is committed to protecting your personal information. This policy explains what we collect, why we collect it, and how we keep it safe.
         </Text>
 
@@ -114,19 +116,19 @@ export default function PrivacyPolicyScreen() {
         {loading && (
           <View style={{ padding: 40 }}>
             <ActivityIndicator size="small" color="#005d90" />
-            <Text style={{ textAlign: 'center', marginTop: 12, color: '#707881', fontSize: 13 }}>Loading latest policy...</Text>
+            <Text style={{ textAlign: 'center', marginTop: 12, color: colors.muted, fontSize: 13 }}>Loading latest policy...</Text>
           </View>
         )}
 
         {/* SECTIONS */}
         {!loading && sections.map((section, index) => (
-          <View key={index} style={styles.sectionCard}>
+          <View key={index} style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
-            <Text style={styles.sectionContent}>{section.content.replace(/\\n/g, '\n')}</Text>
+            <Text style={[styles.sectionContent, { color: colors.text }]}>{section.content.replace(/\\n/g, '\n')}</Text>
           </View>
         ))}
 
-        <Text style={styles.footer}>
+        <Text style={[styles.footer, { color: colors.muted }]}>
           By using ThanniGo, you agree to this Privacy Policy. We may update this policy periodically. Continued use after updates means you accept the new terms.
         </Text>
       </ScrollView>
@@ -135,50 +137,48 @@ export default function PrivacyPolicyScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1 },
 
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 24, paddingVertical: 16,
-    backgroundColor: 'white',
-    borderBottomWidth: 1, borderBottomColor: '#f1f4f9',
+    borderBottomWidth: 1,
   },
   backBtn: {
     width: 40, height: 40, borderRadius: 14,
-    backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#181c20' },
+  headerTitle: { fontSize: 18, fontWeight: '800' },
 
   content: { paddingHorizontal: 20, paddingVertical: 20, gap: 12 },
 
   introCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: '#e0f0ff', borderRadius: 20, padding: 18,
+    borderRadius: 20, padding: 18,
   },
   introIcon: {
     width: 52, height: 52, borderRadius: 16,
-    backgroundColor: 'white', alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
   introTitle: { fontSize: 16, fontWeight: '800', color: '#005d90' },
   introSub: { fontSize: 12, color: '#0077b6', marginTop: 2 },
 
   introText: {
-    fontSize: 14, color: '#404850', lineHeight: 22,
-    backgroundColor: 'white', borderRadius: 16, padding: 16,
+    fontSize: 14, lineHeight: 22,
+    borderRadius: 16, padding: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
   },
 
   sectionCard: {
-    backgroundColor: 'white', borderRadius: 16, padding: 18,
+    borderRadius: 16, padding: 18,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
   },
   sectionTitle: { fontSize: 14, fontWeight: '800', color: '#005d90', marginBottom: 8 },
-  sectionContent: { fontSize: 13, color: '#404850', lineHeight: 22 },
+  sectionContent: { fontSize: 13, lineHeight: 22 },
 
   footer: {
-    fontSize: 12, color: '#707881', lineHeight: 18,
+    fontSize: 12, lineHeight: 18,
     textAlign: 'center', paddingTop: 8, paddingBottom: 20,
   },
 });
-
 

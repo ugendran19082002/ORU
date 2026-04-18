@@ -11,6 +11,7 @@ import * as Haptics from 'expo-haptics';
 import { useSecurityStore } from '@/stores/securityStore';
 import { PinEntryModal } from '@/components/security/PinEntryModal';
 import { useAppSession } from '@/providers/AppSessionProvider';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 /**
  * MANDATORY SECURITY SETUP SCREEN
@@ -18,6 +19,7 @@ import { useAppSession } from '@/providers/AppSessionProvider';
  */
 export default function SecuritySetupScreen() {
   const router = useRouter();
+  const { colors, isDark } = useAppTheme();
   const { setIsVerified, syncSession } = useAppSession();
   const { enablePinRemote, enableBiometricRemote, initialize } = useSecurityStore();
   const [showModal, setShowModal] = useState(false);
@@ -36,7 +38,7 @@ export default function SecuritySetupScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setComplete(true);
       setShowModal(false);
-      
+
       // Auto-prompt biometrics if supported
       handleEnableBiometric();
 
@@ -69,22 +71,22 @@ export default function SecuritySetupScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
-      
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+
       <ScrollView contentContainerStyle={styles.content} bounces={false}>
         {/* BRANDING */}
         <View style={styles.brandRow}>
            <View style={styles.logoCircle}>
               <Ionicons name="shield-checkmark" size={32} color="white" />
            </View>
-           <Text style={styles.brandTitle}>ThanniGo Security</Text>
+           <Text style={[styles.brandTitle, { color: colors.text }]}>ThanniGo Security</Text>
         </View>
 
         {/* HERO SECTION */}
         <View style={styles.hero}>
-           <Text style={styles.title}>Secure your{"\n"}Account</Text>
-           <Text style={styles.subtitle}>
+           <Text style={[styles.title, { color: colors.text }]}>Secure your{"\n"}Account</Text>
+           <Text style={[styles.subtitle, { color: colors.muted }]}>
              To protect your orders and wallet, we require a 4-digit PIN setup for every session.
            </Text>
         </View>
@@ -92,13 +94,13 @@ export default function SecuritySetupScreen() {
         {/* ILLUSTRATION/BADGE */}
         <View style={styles.illustrationWrap}>
            <LinearGradient
-             colors={complete ? ['#0ea5e9', '#0284c7'] : ['#f1f5f9', '#e2e8f0']}
+             colors={complete ? ['#0ea5e9', '#0284c7'] : isDark ? ['#1e293b', '#0f172a'] : ['#f1f5f9', '#e2e8f0']}
              style={styles.circle}
            >
-              <Ionicons 
-                name={complete ? "lock-closed" : "keypad-outline"} 
-                size={80} 
-                color={complete ? "white" : "#94a3b8"} 
+              <Ionicons
+                name={complete ? "lock-closed" : "keypad-outline"}
+                size={80}
+                color={complete ? "white" : "#94a3b8"}
               />
            </LinearGradient>
         </View>
@@ -107,8 +109,8 @@ export default function SecuritySetupScreen() {
         <View style={styles.actions}>
            {!complete ? (
              <>
-               <TouchableOpacity 
-                 style={styles.primaryBtn} 
+               <TouchableOpacity
+                 style={styles.primaryBtn}
                  onPress={handleStartSetup}
                  activeOpacity={0.8}
                >
@@ -122,14 +124,14 @@ export default function SecuritySetupScreen() {
                    <Ionicons name="arrow-forward" size={20} color="white" />
                  </LinearGradient>
                </TouchableOpacity>
-               
-               <Text style={styles.footerNote}>
+
+               <Text style={[styles.footerNote, { color: colors.muted }]}>
                  This PIN will be required whenever you reopen the app.
                </Text>
              </>
            ) : (
-             <TouchableOpacity 
-               style={styles.primaryBtn} 
+             <TouchableOpacity
+               style={styles.primaryBtn}
                onPress={handleFinish}
                activeOpacity={0.8}
              >
@@ -161,16 +163,16 @@ export default function SecuritySetupScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1 },
   content: { flexGrow: 1, padding: 24, alignItems: 'center', justifyContent: 'center' },
-  
+
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 40 },
   logoCircle: { width: 56, height: 56, borderRadius: 20, backgroundColor: '#0ea5e9', alignItems: 'center', justifyContent: 'center' },
-  brandTitle: { fontSize: 18, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 },
+  brandTitle: { fontSize: 18, fontWeight: '900', letterSpacing: -0.5 },
 
   hero: { alignItems: 'center', marginBottom: 40 },
-  title: { fontSize: 36, fontWeight: '900', color: '#0f172a', textAlign: 'center', lineHeight: 40, marginBottom: 16 },
-  subtitle: { fontSize: 15, color: '#64748b', textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 },
+  title: { fontSize: 36, fontWeight: '900', textAlign: 'center', lineHeight: 40, marginBottom: 16 },
+  subtitle: { fontSize: 15, textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 },
 
   illustrationWrap: { marginBottom: 50 },
   circle: { width: 180, height: 180, borderRadius: 90, alignItems: 'center', justifyContent: 'center', shadowColor: '#0ea5e9', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20 },
@@ -179,6 +181,6 @@ const styles = StyleSheet.create({
   primaryBtn: { width: '100%', height: 64, borderRadius: 20, overflow: 'hidden' },
   gradient: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
   primaryBtnText: { color: 'white', fontSize: 18, fontWeight: '900' },
-  
-  footerNote: { fontSize: 13, color: '#94a3b8', textAlign: 'center', marginTop: 8 },
+
+  footerNote: { fontSize: 13, textAlign: 'center', marginTop: 8 },
 });

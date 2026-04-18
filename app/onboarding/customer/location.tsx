@@ -14,11 +14,13 @@ import { ExpoMap } from '@/components/maps/ExpoMap';
 import { onboardingApi } from '@/api/onboardingApi';
 import { useAppSession } from '@/hooks/use-app-session';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 export default function CustomerLocationScreen() {
   const router = useRouter();
+  const { colors, isDark } = useAppTheme();
   const { user, updateUser, status, syncSession } = useAppSession();
   const mapRef = useRef<any>(null);
 
@@ -26,7 +28,7 @@ export default function CustomerLocationScreen() {
   if (status === 'authenticated' && user?.role !== 'customer') {
     return null;
   }
-  
+
   const [loading, setLoading] = useState(false);
   const [locating, setLocating] = useState(true);
   const [region, setRegion] = useState({
@@ -62,13 +64,13 @@ export default function CustomerLocationScreen() {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         };
-        
+
         setRegion(prev => ({ ...prev, ...newCoords }));
         setMarker(newCoords);
         reverseGeocode(newCoords.latitude, newCoords.longitude);
       } catch (error: any) {
         if (error.response?.status === 404) return;
-        // Silent error for location or show toast if critical? 
+        // Silent error for location or show toast if critical?
         // User said 404 is not error.
       } finally {
         setLocating(false);
@@ -120,13 +122,13 @@ export default function CustomerLocationScreen() {
   const handleConfirm = async () => {
     try {
       setLoading(true);
-      
+
       const res = await onboardingApi.completeCustomerStep('set_location', {
         latitude: marker.latitude,
         longitude: marker.longitude,
         address: address,
       });
-      
+
       if (res.status === 1) {
         // Refresh session to get updated onboarding_completed status
         await syncSession();
@@ -146,9 +148,9 @@ export default function CustomerLocationScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
-      
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+
       {/* MAP BACKGROUND */}
       <View style={styles.mapContainer}>
         {locating ? (
@@ -178,8 +180,8 @@ export default function CustomerLocationScreen() {
 
         {/* MAP CONTROLS */}
         <View style={styles.mapControls}>
-          <TouchableOpacity 
-            style={styles.mapActionBtn} 
+          <TouchableOpacity
+            style={[styles.mapActionBtn, { backgroundColor: colors.surface }]}
             onPress={() => {
               const types: any[] = ['standard', 'satellite', 'terrain'];
               setMapType(types[(types.indexOf(mapType) + 1) % 3]);
@@ -187,8 +189,8 @@ export default function CustomerLocationScreen() {
           >
             <Ionicons name={mapType === 'satellite' ? 'images' : 'map'} size={20} color="#005d90" />
           </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.mapActionBtn} onPress={handleLocate} disabled={locating}>
+
+          <TouchableOpacity style={[styles.mapActionBtn, { backgroundColor: colors.surface }]} onPress={handleLocate} disabled={locating}>
             {locating ? <ActivityIndicator size="small" color="#005d90" /> : <Ionicons name="locate" size={20} color="#005d90" />}
           </TouchableOpacity>
         </View>
@@ -196,28 +198,28 @@ export default function CustomerLocationScreen() {
 
       <SafeAreaView style={[styles.overlay, { pointerEvents: 'box-none' }]}>
         {/* TOP HEADER */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: isDark ? 'rgba(30,41,59,0.97)' : 'rgba(255,255,255,0.95)' }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 12 }}>
                 <BackButton fallback="/onboarding/customer" variant="transparent" />
                 <View style={[styles.stepContainer, { marginBottom: 0, flex: 1 }]}>
-                    <View style={styles.stepDot} />
-                    <View style={styles.stepLine} />
+                    <View style={[styles.stepDot, { backgroundColor: colors.border }]} />
+                    <View style={[styles.stepLine, { backgroundColor: colors.border }]} />
                     <View style={[styles.stepDot, styles.stepDotActive]} />
                 </View>
             </View>
-            <Text style={styles.title}>Delivery Address</Text>
-            <Text style={styles.subtitle}>Drag the pin to your exact building</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Delivery Address</Text>
+            <Text style={[styles.subtitle, { color: colors.muted }]}>Drag the pin to your exact building</Text>
         </View>
 
         {/* BOTTOM PANEL */}
         <View style={styles.footer}>
-          <View style={styles.addressCard}>
-            <View style={styles.addressIcon}>
+          <View style={[styles.addressCard, { backgroundColor: colors.surface }]}>
+            <View style={[styles.addressIcon, { backgroundColor: colors.inputBg }]}>
                 <Ionicons name="location" size={24} color="#005d90" />
             </View>
             <View style={styles.addressInfo}>
-                <Text style={styles.addressLabel}>Selected Location</Text>
-                <Text style={styles.addressText} numberOfLines={2}>{address}</Text>
+                <Text style={[styles.addressLabel, { color: colors.muted }]}>Selected Location</Text>
+                <Text style={[styles.addressText, { color: colors.text }]} numberOfLines={2}>{address}</Text>
             </View>
           </View>
 
@@ -242,18 +244,17 @@ export default function CustomerLocationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1 },
   mapContainer: { flex: 1 },
   loader: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255,255,255,0.8)', justifyContent: 'center', alignItems: 'center' },
   loaderText: { marginTop: 12, color: '#64748b', fontWeight: '600' },
-  
+
   overlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'space-between' },
-  
-  header: { 
-    padding: 24, 
-    backgroundColor: 'rgba(255,255,255,0.95)', 
-    marginHorizontal: 16, 
-    marginTop: 10, 
+
+  header: {
+    padding: 24,
+    marginHorizontal: 16,
+    marginTop: 10,
     borderRadius: 24,
     ...Platform.select({
       ios: {
@@ -267,16 +268,15 @@ const styles = StyleSheet.create({
     }),
   },
   stepContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  stepDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#e2e8f0' },
+  stepDot: { width: 8, height: 8, borderRadius: 4 },
   stepDotActive: { backgroundColor: '#005d90', width: 20 },
-  stepLine: { width: 20, height: 2, backgroundColor: '#f1f5f9', marginHorizontal: 6 },
-  title: { fontSize: 22, fontWeight: '900', color: '#0f172a' },
-  subtitle: { fontSize: 13, color: '#64748b', marginTop: 4 },
+  stepLine: { width: 20, height: 2, marginHorizontal: 6 },
+  title: { fontSize: 22, fontWeight: '900' },
+  subtitle: { fontSize: 13, marginTop: 4 },
 
   footer: { padding: 24, paddingBottom: 40, backgroundColor: 'transparent' },
   addressCard: {
     flexDirection: 'row',
-    backgroundColor: 'white',
     padding: 20,
     borderRadius: 20,
     marginBottom: 20,
@@ -287,10 +287,10 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
   },
-  addressIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#f0f9ff', alignItems: 'center', justifyContent: 'center', marginRight: 16 },
+  addressIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
   addressInfo: { flex: 1 },
-  addressLabel: { fontSize: 11, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 },
-  addressText: { fontSize: 15, color: '#1e293b', fontWeight: '700', marginTop: 2 },
+  addressLabel: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
+  addressText: { fontSize: 15, fontWeight: '700', marginTop: 2 },
 
   cta: {
     height: 60,
@@ -316,7 +316,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.95)',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -326,5 +325,4 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 });
-
 

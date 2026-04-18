@@ -13,11 +13,13 @@ import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
 import { BackButton } from '@/components/ui/BackButton';
 import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 export default function ShopProductsScreen() {
   const router = useRouter();
   const { user, status } = useAppSession();
   const { handleAuthBack } = useLogoutBackHandler();
+  const { colors, isDark } = useAppTheme();
 
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
@@ -127,15 +129,15 @@ export default function ShopProductsScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
               <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} onPress={handleAuthBack} />
-              <Text style={styles.title}>Inventory Setup</Text>
-              <Text style={styles.subtitle}>Select categories and add products. Admin-controlled price ranges ensure fair market rates.</Text>
+              <Text style={[styles.title, { color: colors.text }]}>Inventory Setup</Text>
+              <Text style={[styles.subtitle, { color: colors.muted }]}>Select categories and add products. Admin-controlled price ranges ensure fair market rates.</Text>
             </View>
 
             {fetchingShop ? (
@@ -143,16 +145,20 @@ export default function ShopProductsScreen() {
             ) : (
               <View style={styles.main}>
                 {/* Category Selection */}
-                <Text style={styles.sectionLabel}>1. Select Category</Text>
+                <Text style={[styles.sectionLabel, { color: colors.muted }]}>1. Select Category</Text>
                 <View style={styles.categoryGrid}>
                   {categories.map(cat => (
                     <TouchableOpacity
                       key={cat.id}
-                      style={[styles.catCard, selectedCategory?.id === cat.id && styles.catCardActive]}
+                      style={[
+                        styles.catCard,
+                        { backgroundColor: colors.inputBg, borderColor: colors.border },
+                        selectedCategory?.id === cat.id && styles.catCardActive
+                      ]}
                       onPress={() => setSelectedCategory(cat)}
                     >
                       <Ionicons name={cat.id === 1 ? "water" : "cafe"} size={20} color={selectedCategory?.id === cat.id ? "white" : "#64748b"} />
-                      <Text style={[styles.catName, selectedCategory?.id === cat.id && { color: 'white' }]}>{cat.name_en}</Text>
+                      <Text style={[styles.catName, { color: colors.text }, selectedCategory?.id === cat.id && { color: 'white' }]}>{cat.name_en}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -160,18 +166,22 @@ export default function ShopProductsScreen() {
                 {/* Subcategory Selection */}
                 {selectedCategory && (
                   <>
-                    <Text style={[styles.sectionLabel, { marginTop: 24 }]}>2. Add from {selectedCategory.name_en}</Text>
+                    <Text style={[styles.sectionLabel, { marginTop: 24, color: colors.muted }]}>2. Add from {selectedCategory.name_en}</Text>
                     <View style={styles.subcatList}>
                       {selectedCategory.Subcategories?.map((sub: any) => {
                         const isAdded = products.find(p => p.subcategory_id === sub.id);
                         return (
                           <TouchableOpacity
                             key={sub.id}
-                            style={[styles.subcatItem, isAdded && styles.subcatItemAdded]}
+                            style={[
+                              styles.subcatItem,
+                              { backgroundColor: colors.inputBg, borderColor: colors.border },
+                              isAdded && styles.subcatItemAdded
+                            ]}
                             onPress={() => addProductFromSubcat(sub)}
                           >
                             <View style={styles.subcatInfo}>
-                              <Text style={[styles.subcatName, isAdded && { color: '#006878' }]}>{sub.name_en}</Text>
+                              <Text style={[styles.subcatName, { color: colors.text }, isAdded && { color: '#006878' }]}>{sub.name_en}</Text>
                             </View>
                             <Ionicons name={isAdded ? "checkmark-circle" : "add-circle-outline"} size={26} color={isAdded ? "#006878" : "#cbd5e1"} />
                           </TouchableOpacity>
@@ -184,18 +194,19 @@ export default function ShopProductsScreen() {
                 {/* Added Products Logic */}
                 {products.length > 0 && (
                   <>
-                    <Text style={[styles.sectionLabel, { marginTop: 32 }]}>3. Your Selected Products</Text>
+                    <Text style={[styles.sectionLabel, { marginTop: 32, color: colors.muted }]}>3. Your Selected Products</Text>
                     <View style={styles.productList}>
                       {products.map(prod => (
-                        <View key={prod.subcategory_id} style={styles.prodCard}>
-                          <View style={styles.prodHeader}>
+                        <View key={prod.subcategory_id} style={[styles.prodCard, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+                          <View style={[styles.prodHeader, { borderBottomColor: colors.border }]}>
                             <View style={{ flex: 1 }}>
-                              <Text style={[styles.prodInputLabel, { marginBottom: 4 }]}>Product Display Name</Text>
+                              <Text style={[styles.prodInputLabel, { marginBottom: 4, color: colors.muted }]}>Product Display Name</Text>
                               <TextInput
                                 style={styles.nameInput}
                                 value={prod.name}
                                 onChangeText={(v) => updateProductData(prod.subcategory_id, 'name', v)}
                                 placeholder="Product Name"
+                                placeholderTextColor={colors.placeholder}
                               />
                             </View>
                             <TouchableOpacity onPress={() => removeProduct(prod.subcategory_id)} style={{ alignSelf: 'center', marginTop: 12 }}>
@@ -226,18 +237,18 @@ export default function ShopProductsScreen() {
 
                           <View style={styles.prodInputs}>
                             <View style={styles.prodInputWrap}>
-                              <Text style={styles.prodInputLabel}>Price (₹)</Text>
+                              <Text style={[styles.prodInputLabel, { color: colors.muted }]}>Price (₹)</Text>
                               <TextInput
-                                style={styles.prodInput}
+                                style={[styles.prodInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                                 keyboardType="number-pad"
                                 value={prod.price}
                                 onChangeText={(v) => updateProductData(prod.subcategory_id, 'price', v)}
                               />
                             </View>
                             <View style={styles.prodInputWrap}>
-                              <Text style={styles.prodInputLabel}>Stock</Text>
+                              <Text style={[styles.prodInputLabel, { color: colors.muted }]}>Stock</Text>
                               <TextInput
-                                style={styles.prodInput}
+                                style={[styles.prodInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                                 keyboardType="number-pad"
                                 value={prod.stock_quantity}
                                 onChangeText={(v) => updateProductData(prod.subcategory_id, 'stock_quantity', v)}
@@ -245,9 +256,9 @@ export default function ShopProductsScreen() {
                             </View>
                             {prod.is_water_can && (
                               <View style={styles.prodInputWrap}>
-                                <Text style={styles.prodInputLabel}>Container Charge (₹)</Text>
+                                <Text style={[styles.prodInputLabel, { color: colors.muted }]}>Container Charge (₹)</Text>
                                 <TextInput
-                                  style={styles.prodInput}
+                                  style={[styles.prodInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                                   keyboardType="number-pad"
                                   value={prod.deposit_amount}
                                   onChangeText={(v) => updateProductData(prod.subcategory_id, 'deposit_amount', v)}
@@ -256,10 +267,10 @@ export default function ShopProductsScreen() {
                             )}
                           </View>
 
-                          <View style={styles.taxSection}>
+                          <View style={[styles.taxSection, { borderTopColor: colors.border }]}>
                             <View style={styles.taxRow}>
                               <View style={{ flex: 1 }}>
-                                <Text style={styles.taxLabel}>GST Applicable</Text>
+                                <Text style={[styles.taxLabel, { color: colors.text }]}>GST Applicable</Text>
                                 <Text style={styles.taxHint}>Enable if item has GST</Text>
                               </View>
                               <Switch
@@ -274,15 +285,16 @@ export default function ShopProductsScreen() {
                               <View style={styles.taxInputGroup}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                                   <Ionicons name="calculator-outline" size={12} color="#64748b" />
-                                  <Text style={styles.prodInputLabel}>Applied Tax Rate (%)</Text>
+                                  <Text style={[styles.prodInputLabel, { color: colors.muted }]}>Applied Tax Rate (%)</Text>
                                 </View>
-                                <View style={styles.taxInputWrapMain}>
+                                <View style={[styles.taxInputWrapMain, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                                   <TextInput
-                                    style={styles.prodInput}
+                                    style={[styles.prodInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
                                     keyboardType="number-pad"
                                     value={prod.tax_percentage}
                                     onChangeText={(v) => updateProductData(prod.subcategory_id, 'tax_percentage', v)}
                                     placeholder="18"
+                                    placeholderTextColor={colors.placeholder}
                                   />
                                   <Text style={styles.taxUnitDisplay}>% GST</Text>
                                 </View>
@@ -291,8 +303,8 @@ export default function ShopProductsScreen() {
                           </View>
 
                           {(parseFloat(prod.deposit_amount) > 0) && (
-                            <View style={styles.depositSummary}>
-                              <Text style={styles.depositSummaryLabel}>Can Price Amount:</Text>
+                            <View style={[styles.depositSummary, { borderTopColor: colors.border }]}>
+                              <Text style={[styles.depositSummaryLabel, { color: colors.muted }]}>Can Price Amount:</Text>
                               <Text style={styles.depositSummaryValue}>₹{prod.deposit_amount}</Text>
                             </View>
                           )}
@@ -305,7 +317,7 @@ export default function ShopProductsScreen() {
             )}
           </ScrollView>
 
-          <View style={styles.footer}>
+          <View style={[styles.footer, { backgroundColor: colors.surface }]}>
             <TouchableOpacity onPress={handleContinue} disabled={loading} activeOpacity={0.8}>
               <LinearGradient colors={['#006878', '#134e4a']} style={styles.cta} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                 {loading ? <ActivityIndicator color="white" /> : (
@@ -324,67 +336,58 @@ export default function ShopProductsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1 },
   safe: { flex: 1 },
   scrollContent: { paddingHorizontal: 32, paddingTop: 40, paddingBottom: 40 },
   header: { marginBottom: 32 },
-  title: { fontSize: 28, fontWeight: '900', color: '#134e4a', letterSpacing: -0.5 },
-  subtitle: { fontSize: 15, color: '#64748b', marginTop: 12, lineHeight: 22 },
+  title: { fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
+  subtitle: { fontSize: 15, marginTop: 12, lineHeight: 22 },
   main: { marginBottom: 20 },
-  sectionLabel: { fontSize: 13, fontWeight: '800', color: '#475569', textTransform: 'uppercase', letterSpacing: 1 },
+  sectionLabel: { fontSize: 13, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 12 },
   catCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#e2e8f0',
     gap: 8
   },
   catCardActive: { backgroundColor: '#006878', borderColor: '#006878' },
-  catName: { fontSize: 15, fontWeight: '700', color: '#334155' },
+  catName: { fontSize: 15, fontWeight: '700' },
   subcatList: { marginTop: 12, gap: 10 },
   subcatItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
     padding: 16,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: '#f1f5f9',
     gap: 12
   },
   subcatItemAdded: { borderColor: '#006878', backgroundColor: '#f0f9ff' },
   subcatInfo: { flex: 1 },
-  subcatName: { fontSize: 16, fontWeight: '800', color: '#1e293b' },
+  subcatName: { fontSize: 16, fontWeight: '800' },
   subcatPriceBox: { fontSize: 12, fontWeight: '600', color: '#64748b', marginTop: 2 },
   productList: { marginTop: 16, gap: 16 },
   prodCard: {
-    backgroundColor: '#f8fafc',
     borderRadius: 22,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#e2e8f0'
   },
-  prodHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 12 },
+  prodHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16, borderBottomWidth: 1, paddingBottom: 12 },
   prodTitle: { fontSize: 16, fontWeight: '800', color: '#1e293b' },
   nameInput: { fontSize: 16, fontWeight: '800', color: '#006878', padding: 0 },
   prodInputs: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   prodInputWrap: { flex: 1, gap: 8 },
-  prodInputLabel: { fontSize: 12, fontWeight: '800', color: '#64748b', textTransform: 'uppercase' },
+  prodInputLabel: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
   prodInput: {
     height: 54,
-    backgroundColor: 'white',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
     paddingHorizontal: 16,
     fontSize: 16,
     fontWeight: '700',
-    color: '#1e293b'
   },
   depositSummary: {
     flexDirection: 'row',
@@ -393,13 +396,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
     borderStyle: 'dashed'
   },
-  depositSummaryLabel: { fontSize: 13, fontWeight: '700', color: '#64748b' },
+  depositSummaryLabel: { fontSize: 13, fontWeight: '700' },
   depositSummaryValue: { fontSize: 15, fontWeight: '800', color: '#006878' },
   rangeHint: { fontSize: 11, color: '#94a3b8', fontWeight: '600', marginTop: 8 },
-  footer: { padding: 32, backgroundColor: 'white' },
+  footer: { padding: 32 },
   cta: {
     height: 60,
     borderRadius: 20,
@@ -409,13 +411,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   ctaText: { color: 'white', fontSize: 17, fontWeight: '800' },
-  taxSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
+  taxSection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1 },
   taxRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  taxLabel: { fontSize: 14, fontWeight: '800', color: '#1e293b' },
+  taxLabel: { fontSize: 14, fontWeight: '800' },
   taxHint: { fontSize: 11, color: '#94a3b8', fontWeight: '500' },
   taxInputGroup: { marginTop: 12 },
-  taxInputWrapMain: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', borderRadius: 14, borderWidth: 1, borderColor: '#e2e8f0', paddingRight: 16 },
+  taxInputWrapMain: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, borderWidth: 1, paddingRight: 16 },
   taxUnitDisplay: { fontSize: 14, fontWeight: '700', color: '#94a3b8' },
 });
-
-

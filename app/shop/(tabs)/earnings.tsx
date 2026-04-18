@@ -137,9 +137,14 @@ export default function ShopEarningsScreen() {
             <Text style={styles.roleLabel}>WALLET & EARNINGS</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.settingsBtn} onPress={() => router.push('/shop/payout-settings' as any)}>
-          <Ionicons name="settings-outline" size={20} color={SHOP_ACCENT} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <TouchableOpacity style={styles.settingsBtn} onPress={() => router.push('/notifications' as any)}>
+            <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.settingsBtn} onPress={() => router.push('/shop/payout-settings' as any)}>
+            <Ionicons name="settings-outline" size={20} color={SHOP_ACCENT} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView

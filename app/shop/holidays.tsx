@@ -138,6 +138,12 @@ export default function ShopHolidaysScreen() {
             <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
         </View>
+        <TouchableOpacity 
+          style={styles.notifBtnSub} 
+          onPress={() => router.push('/notifications' as any)}
+        >
+          <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -278,6 +284,7 @@ const styles = StyleSheet.create({
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
+  notifBtnSub: { width: 40, height: 40, borderRadius: 12, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
 
   scrollContent: { paddingHorizontal: 24, paddingVertical: 10, paddingBottom: 120 },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },

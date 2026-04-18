@@ -133,13 +133,21 @@ export default function ShopScheduleScreen() {
             <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.headerActionBtn}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          {saving ? <ActivityIndicator size="small" color={SHOP_ACCENT} /> : <Text style={styles.saveHeaderBtnText}>Save</Text>}
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <TouchableOpacity 
+            style={styles.notifBtnSub} 
+            onPress={() => router.push('/notifications' as any)}
+          >
+            <Ionicons name="notifications-outline" size={20} color={SHOP_ACCENT} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerActionBtn}
+            onPress={handleSave}
+            disabled={saving}
+          >
+            {saving ? <ActivityIndicator size="small" color={SHOP_ACCENT} /> : <Text style={styles.saveHeaderBtnText}>Save</Text>}
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView 
@@ -236,6 +244,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   saveHeaderBtnText: { color: SHOP_ACCENT, fontWeight: '800', fontSize: 13 },
+  notifBtnSub: { width: 40, height: 40, borderRadius: 12, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
 
   scrollContent: { paddingVertical: 10, paddingBottom: 120 },
   pageTitle: { fontSize: 32, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5, marginBottom: 18 },

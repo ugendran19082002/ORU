@@ -7,8 +7,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { BackButton } from '@/components/ui/BackButton';
+import { Logo } from '@/components/ui/Logo';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { apiClient } from '@/api/client';
@@ -48,6 +50,7 @@ function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
 }
 
 export default function ShopReviewsScreen() {
+  const router = useRouter();
   const { safeBack } = useAppNavigation();
 
   useAndroidBackHandler(() => {
@@ -137,36 +140,50 @@ export default function ShopReviewsScreen() {
         <View style={styles.headerLeft}>
           <BackButton fallback="/shop/settings" />
           <View>
-            <Text style={styles.headerTitle}>Customer Reviews</Text>
-            <Text style={styles.headerSub}>{reviews.length} reviews · {pendingCount} need reply</Text>
+            <View style={styles.brandRow}>
+              <Logo size="md" />
+              <Text style={styles.brandName}>ThanniGo</Text>
+            </View>
+            <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
         </View>
+        <TouchableOpacity 
+          style={styles.notifBtnSub} 
+          onPress={() => router.push('/notifications' as any)}
+        >
+          <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
+        </TouchableOpacity>
       </View>
-
-      {/* SUMMARY BAR */}
-      <LinearGradient colors={[SHOP_ACCENT, SHOP_GRAD[1]]} style={styles.summaryBar}>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryVal}>{avgRating.toFixed(1)}</Text>
-          <StarRow rating={avgRating} size={12} />
-          <Text style={styles.summaryLabel}>Avg Rating</Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryVal}>{reviews.length}</Text>
-          <Text style={styles.summaryLabel}>Total Reviews</Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryItem}>
-          <Text style={[styles.summaryVal, pendingCount > 0 && { color: '#fde68a' }]}>{pendingCount}</Text>
-          <Text style={styles.summaryLabel}>Pending Reply</Text>
-        </View>
-      </LinearGradient>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchReviews(); }} />}
       >
+        <View style={styles.titleRow}>
+          <Text style={styles.pageTitle}>Customer Reviews</Text>
+          <Text style={styles.pageSub}>{reviews.length} reviews · {pendingCount} need reply</Text>
+        </View>
+
+        {/* SUMMARY BAR */}
+        <LinearGradient colors={[SHOP_ACCENT, SHOP_GRAD[1]]} style={styles.summaryBar}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryVal}>{avgRating.toFixed(1)}</Text>
+            <StarRow rating={avgRating} size={12} />
+            <Text style={styles.summaryLabel}>Avg Rating</Text>
+          </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryVal}>{reviews.length}</Text>
+            <Text style={styles.summaryLabel}>Total Reviews</Text>
+          </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryItem}>
+            <Text style={[styles.summaryVal, pendingCount > 0 && { color: '#fde68a' }]}>{pendingCount}</Text>
+            <Text style={styles.summaryLabel}>Pending Reply</Text>
+          </View>
+        </LinearGradient>
+
         {loading && <ActivityIndicator color={SHOP_ACCENT} style={{ marginTop: 40 }} />}
 
         {!loading && reviews.length === 0 && (
@@ -296,10 +313,16 @@ const styles = StyleSheet.create({
 
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
-  headerSub: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 1 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
+  notifBtnSub: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
 
-  summaryBar: { flexDirection: 'row', paddingVertical: 16, paddingHorizontal: 20 },
+  titleRow: { marginBottom: 16 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  pageSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 4 },
+
+  summaryBar: { flexDirection: 'row', paddingVertical: 16, paddingHorizontal: 20, borderRadius: 18, marginBottom: 20 },
   summaryItem: { flex: 1, alignItems: 'center', gap: 4 },
   summaryDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
   summaryVal: { fontSize: 22, fontWeight: '900', color: 'white' },

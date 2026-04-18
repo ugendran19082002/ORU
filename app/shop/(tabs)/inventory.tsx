@@ -11,7 +11,7 @@ import { useRouter } from 'expo-router';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 
 import { StitchScreenNote } from '@/components/stitch/StitchScreenNote';
-import { Logo } from '@/components/ui/Logo';
+import { RoleHeader } from '@/components/ui/RoleHeader';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
 import { apiClient } from '@/api/client';
@@ -373,18 +373,12 @@ export default function ShopInventoryScreen() {
       <StatusBar style="dark" />
 
       {/* HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => safeBack('/shop/settings')}>
-          <Ionicons name="chevron-back" size={24} color={thannigoPalette.darkText} />
-        </TouchableOpacity>
-        <View style={styles.brandRow}>
-          <Logo size="sm" />
-          <Text style={styles.brandName}>ThanniGo</Text>
-        </View>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/notifications' as any)}>
-          <Ionicons name="notifications-outline" size={20} color={thannigoPalette.darkText} />
-        </TouchableOpacity>
-      </View>
+      <RoleHeader
+        role="shop_owner"
+        title="Shop Panel"
+        hasNotif
+        onNotif={() => router.push("/notifications" as any)}
+      />
 
       <ScrollView 
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[SHOP_ACCENT]} tintColor={SHOP_ACCENT} />} 
@@ -872,15 +866,6 @@ export default function ShopInventoryScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: thannigoPalette.background },
-  header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 24, paddingVertical: 14, backgroundColor: thannigoPalette.surface,
-    borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
-    ...Shadow.xs,
-  },
-  backBtn: { width: 42, height: 42, borderRadius: Radius.md, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center', ...Shadow.xs },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.6 },
 
   scrollContent: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 100 },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 20 },

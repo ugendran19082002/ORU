@@ -19,6 +19,8 @@ export const addressApi = {
     latitude: number;
     longitude: number;
     floor_number?: number;
+    is_floor?: boolean;
+    no_of_floor?: number;
     gate_code?: string;
     delivery_instructions?: string;
     is_default?: boolean;
@@ -37,6 +39,8 @@ export const addressApi = {
     latitude: number;
     longitude: number;
     floor_number?: number;
+    is_floor?: boolean;
+    no_of_floor?: number;
     gate_code?: string;
     delivery_instructions?: string;
     is_default?: boolean;

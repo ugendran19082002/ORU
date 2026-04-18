@@ -8,6 +8,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
+import { useRouter } from 'expo-router';
+import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
@@ -37,6 +39,7 @@ interface StaffMember {
 const EMPTY_FORM = { name: '', phone: '', role: '' };
 
 export default function ShopStaffScreen() {
+  const router = useRouter();
   const { safeBack } = useAppNavigation();
 
   useAndroidBackHandler(() => {
@@ -145,17 +148,28 @@ export default function ShopStaffScreen() {
         <View style={styles.headerLeft}>
           <BackButton fallback="/shop/settings" />
           <View>
-            <Text style={styles.headerTitle}>Staff Management</Text>
-            <Text style={styles.headerSub}>{staff.length} members · {activeCount} active</Text>
+            <View style={styles.brandRow}>
+              <Logo size="md" />
+              <Text style={styles.brandName}>ThanniGo</Text>
+            </View>
+            <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.addBtn}
-          onPress={() => { setForm(EMPTY_FORM); setModalVisible(true); }}
-        >
-          <Ionicons name="person-add-outline" size={18} color="white" />
-          <Text style={styles.addBtnText}>Add</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <TouchableOpacity 
+            style={styles.notifBtnSub} 
+            onPress={() => router.push('/notifications' as any)}
+          >
+            <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.addBtn}
+            onPress={() => { setForm(EMPTY_FORM); setModalVisible(true); }}
+          >
+            <Ionicons name="person-add-outline" size={18} color="white" />
+            <Text style={styles.addBtnText}>Add</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* STATS */}
@@ -180,6 +194,11 @@ export default function ShopStaffScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchAll(); }} />}
       >
+        <View style={styles.titleRow}>
+          <Text style={styles.pageTitle}>Staff Management</Text>
+          <Text style={styles.pageSub}>{staff.length} members · {activeCount} active</Text>
+        </View>
+
         {loading && <ActivityIndicator color={SHOP_ACCENT} style={{ marginTop: 40 }} />}
 
         {!loading && staff.length === 0 && (
@@ -316,9 +335,11 @@ const styles = StyleSheet.create({
 
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
-  headerSub: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 1 },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: SHOP_ACCENT, paddingHorizontal: 16, paddingVertical: 9, borderRadius: 12 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
+  notifBtnSub: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
+  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: SHOP_ACCENT, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
   addBtnText: { color: 'white', fontSize: 13, fontWeight: '800' },
 
   statsRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingVertical: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
@@ -328,6 +349,10 @@ const styles = StyleSheet.create({
   statLabel: { fontSize: 10, color: thannigoPalette.neutral, fontWeight: '600' },
 
   content: { padding: 20, gap: 12, paddingBottom: 40 },
+  
+  titleRow: { marginBottom: 16 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  pageSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 4 },
 
   emptyState: { alignItems: 'center', paddingTop: 60, gap: 10 },
   emptyTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.neutral },

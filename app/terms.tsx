@@ -56,9 +56,11 @@ const SECTIONS = [
 
 import { systemApi } from '@/api/systemApi';
 import { ActivityIndicator } from 'react-native';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 export default function TermsConditionsScreen() {
   const router = useRouter();
+  const { colors, isDark } = useAppTheme();
   const [sections, setSections] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -84,19 +86,19 @@ export default function TermsConditionsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
-          style={styles.backBtn}
+          style={[styles.backBtn, { backgroundColor: isDark ? 'rgba(0,104,120,0.2)' : '#e0f7fa' }]}
           onPress={() => router.back()}
           activeOpacity={0.7}
         >
           <Ionicons name="arrow-back" size={22} color="#005d90" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Terms & Conditions</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Terms & Conditions</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -105,8 +107,8 @@ export default function TermsConditionsScreen() {
         contentContainerStyle={styles.content}
       >
         {/* INTRO */}
-        <View style={styles.introCard}>
-          <View style={styles.introIcon}>
+        <View style={[styles.introCard, { backgroundColor: isDark ? 'rgba(0,104,120,0.2)' : '#e0f7fa' }]}>
+          <View style={[styles.introIcon, { backgroundColor: colors.surface }]}>
             <Ionicons name="document-text" size={28} color="#006878" />
           </View>
           <View style={{ flex: 1 }}>
@@ -115,7 +117,7 @@ export default function TermsConditionsScreen() {
           </View>
         </View>
 
-        <Text style={styles.introText}>
+        <Text style={[styles.introText, { backgroundColor: colors.surface, color: colors.text }]}>
           These Terms and Conditions govern your use of ThanniGo — India's fastest water can delivery platform. Please read them carefully before using our service.
         </Text>
 
@@ -123,19 +125,19 @@ export default function TermsConditionsScreen() {
         {loading && (
           <View style={{ padding: 40 }}>
             <ActivityIndicator size="small" color="#006878" />
-            <Text style={{ textAlign: 'center', marginTop: 12, color: '#707881', fontSize: 13 }}>Loading latest terms...</Text>
+            <Text style={{ textAlign: 'center', marginTop: 12, color: colors.muted, fontSize: 13 }}>Loading latest terms...</Text>
           </View>
         )}
 
         {/* SECTIONS */}
         {!loading && sections.map((section, index) => (
-          <View key={index} style={styles.sectionCard}>
+          <View key={index} style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
-            <Text style={styles.sectionContent}>{section.content.replace(/\\n/g, '\n')}</Text>
+            <Text style={[styles.sectionContent, { color: colors.text }]}>{section.content.replace(/\\n/g, '\n')}</Text>
           </View>
         ))}
 
-        <Text style={styles.footer}>
+        <Text style={[styles.footer, { color: colors.muted }]}>
           These terms were last updated in April 2026. By continuing to use ThanniGo, you acknowledge that you have read, understood, and agreed to these terms.
         </Text>
       </ScrollView>
@@ -144,50 +146,48 @@ export default function TermsConditionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f7f9ff' },
+  container: { flex: 1 },
 
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 24, paddingVertical: 16,
-    backgroundColor: 'white',
-    borderBottomWidth: 1, borderBottomColor: '#f1f4f9',
+    borderBottomWidth: 1,
   },
   backBtn: {
     width: 40, height: 40, borderRadius: 14,
-    backgroundColor: '#e0f7fa', alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#181c20' },
+  headerTitle: { fontSize: 18, fontWeight: '800' },
 
   content: { paddingHorizontal: 20, paddingVertical: 20, gap: 12 },
 
   introCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: '#e0f7fa', borderRadius: 20, padding: 18,
+    borderRadius: 20, padding: 18,
   },
   introIcon: {
     width: 52, height: 52, borderRadius: 16,
-    backgroundColor: 'white', alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
   introTitle: { fontSize: 16, fontWeight: '800', color: '#006878' },
   introSub: { fontSize: 12, color: '#0097a7', marginTop: 2 },
 
   introText: {
-    fontSize: 14, color: '#404850', lineHeight: 22,
-    backgroundColor: 'white', borderRadius: 16, padding: 16,
+    fontSize: 14, lineHeight: 22,
+    borderRadius: 16, padding: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
   },
 
   sectionCard: {
-    backgroundColor: 'white', borderRadius: 16, padding: 18,
+    borderRadius: 16, padding: 18,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
   },
   sectionTitle: { fontSize: 14, fontWeight: '800', color: '#006878', marginBottom: 8 },
-  sectionContent: { fontSize: 13, color: '#404850', lineHeight: 22 },
+  sectionContent: { fontSize: 13, lineHeight: 22 },
 
   footer: {
-    fontSize: 12, color: '#707881', lineHeight: 18,
+    fontSize: 12, lineHeight: 18,
     textAlign: 'center', paddingTop: 8, paddingBottom: 20,
   },
 });
-
 

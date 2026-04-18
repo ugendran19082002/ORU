@@ -25,7 +25,7 @@ export default function RewardsScreen() {
   const { colors, isDark } = useAppTheme();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // Dynamic State
   const [history, setHistory] = useState<any[]>([]);
   const [tiers, setTiers] = useState<any[]>([]);
@@ -102,11 +102,11 @@ export default function RewardsScreen() {
 
       <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <BackButton fallback="/(tabs)/profile" />
-        <Text style={styles.headerTitle}>Rewards & Referrals</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Rewards & Referrals</Text>
       </View>
 
-      <ScrollView 
-        showsVerticalScrollIndicator={false} 
+      <ScrollView
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchRewardsData(); }} />}
       >
@@ -164,30 +164,30 @@ export default function RewardsScreen() {
         </LinearGradient>
 
         {/* REFERRAL CARD */}
-        <View style={styles.referralCard}>
+        <View style={[styles.referralCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.referralTop}>
-            <View style={styles.referralIconWrap}>
+            <View style={[styles.referralIconWrap, { backgroundColor: thannigoPalette.infoSoft }]}>
               <Ionicons name="people" size={24} color={ACCENT} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.referralTitle}>Invite & Earn Points</Text>
-              <Text style={styles.referralSub}>Share your code and earn points on their first signup and order.</Text>
+              <Text style={[styles.referralTitle, { color: colors.text }]}>Invite & Earn Points</Text>
+              <Text style={[styles.referralSub, { color: colors.muted }]}>Share your code and earn points on their first signup and order.</Text>
             </View>
           </View>
           {referralCode ? (
             <>
-              <View style={styles.codeBox}>
-                <Text style={styles.codeLabel}>YOUR REFERRAL CODE</Text>
+              <View style={[styles.codeBox, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+                <Text style={[styles.codeLabel, { color: colors.muted }]}>YOUR REFERRAL CODE</Text>
                 <Text style={styles.codeValue}>{referralCode}</Text>
                 {referralData && (
-                  <Text style={styles.referralStats}>
+                  <Text style={[styles.referralStats, { color: colors.muted }]}>
                     {referralData.total_referred} referred · ₹{referralData.total_earned} earned
                   </Text>
                 )}
               </View>
               <View style={styles.referralActions}>
                 <TouchableOpacity
-                  style={styles.copyBtn}
+                  style={[styles.copyBtn, { borderColor: colors.border }]}
                   onPress={async () => {
                     await Clipboard.setStringAsync(referralCode);
                     Toast.show({ type: 'success', text1: 'Copied!', text2: `${referralCode} copied to clipboard.` });
@@ -206,7 +206,7 @@ export default function RewardsScreen() {
             </>
           ) : (
             <TouchableOpacity
-              style={styles.generateBtn}
+              style={[styles.generateBtn, { backgroundColor: thannigoPalette.infoSoft, borderColor: colors.border }]}
               onPress={generateReferralCode}
               disabled={generatingCode}
             >
@@ -225,15 +225,15 @@ export default function RewardsScreen() {
         {/* VOUCHERS */}
         {(coupons || []).length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>Available Coupons</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Available Coupons</Text>
             {coupons.map((v) => (
-              <TouchableOpacity key={v.id} style={styles.voucherCard} activeOpacity={0.8}>
+              <TouchableOpacity key={v.id} style={[styles.voucherCard, { backgroundColor: colors.surface }]} activeOpacity={0.8}>
                 <View style={styles.voucherLeft}>
                   <Text style={styles.voucherValue}>{v.type === 'percentage' ? `${v.discount_value}%` : `₹${v.discount_value}`} OFF</Text>
-                  <Text style={styles.voucherMeta}>Min order ₹{v.min_order_value} · Expires {new Date(v.valid_until).toLocaleDateString()}</Text>
+                  <Text style={[styles.voucherMeta, { color: colors.muted }]}>Min order ₹{v.min_order_value} · Expires {new Date(v.valid_until).toLocaleDateString()}</Text>
                 </View>
                 <View style={styles.voucherCode}>
-                  <Text style={styles.voucherCodeText}>{v.code}</Text>
+                  <Text style={[styles.voucherCodeText, { color: colors.text }]}>{v.code}</Text>
                   <Text style={styles.voucherApply}>Use at checkout →</Text>
                 </View>
               </TouchableOpacity>
@@ -242,16 +242,16 @@ export default function RewardsScreen() {
         )}
 
         {/* LOYALTY TIERS */}
-        <Text style={styles.sectionTitle}>Loyalty Tiers</Text>
-        <View style={styles.tiersList}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Loyalty Tiers</Text>
+        <View style={[styles.tiersList, { backgroundColor: colors.surface }]}>
           {(tiers || []).map((tier) => (
-            <View key={tier.id} style={[styles.tierRow, tier.id === currentTier.id && styles.tierRowActive]}>
+            <View key={tier.id} style={[styles.tierRow, { borderBottomColor: colors.border }, tier.id === currentTier.id && { backgroundColor: colors.background, borderRadius: 14, paddingHorizontal: 8, marginHorizontal: -8 }]}>
               <View style={[styles.tierIcon, { backgroundColor: thannigoPalette.infoSoft }]}>
                 <Ionicons name="medal-outline" size={18} color={ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.tierName, { color: thannigoPalette.darkText }]}>{tier.name}</Text>
-                <Text style={styles.tierRange}>{tier.min_points}+ lifetime points</Text>
+                <Text style={[styles.tierName, { color: colors.text }]}>{tier.name}</Text>
+                <Text style={[styles.tierRange, { color: colors.muted }]}>{tier.min_points}+ lifetime points</Text>
               </View>
               <Text style={[styles.tierDiscount, { color: ACCENT }]}>{tier.discount_percent}% off</Text>
               {tier.id === currentTier.id && (
@@ -264,19 +264,19 @@ export default function RewardsScreen() {
         </View>
 
         {/* POINTS HISTORY */}
-        <Text style={styles.sectionTitle}>Points History</Text>
-        <View style={styles.historyCard}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Points History</Text>
+        <View style={[styles.historyCard, { backgroundColor: colors.surface }]}>
           {(history || []).length === 0 && (
             <Text style={{ textAlign: 'center', color: colors.muted, padding: 20 }}>No transactions yet</Text>
           )}
           {(history || []).map((h, i) => (
-            <View key={h.id} style={[styles.historyRow, i < history.length - 1 && styles.historyDivider]}>
+            <View key={h.id} style={[styles.historyRow, i < history.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
               <View style={[styles.historyIcon, { backgroundColor: h.points > 0 ? thannigoPalette.successSoft : thannigoPalette.dangerSoft }]}>
                 <Ionicons name={h.points > 0 ? 'arrow-up' : 'arrow-down'} size={14} color={h.points > 0 ? thannigoPalette.success : thannigoPalette.error} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.historyEvent}>{h.description || h.source}</Text>
-                <Text style={styles.historyDate}>{new Date(h.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</Text>
+                <Text style={[styles.historyEvent, { color: colors.text }]}>{h.description || h.source}</Text>
+                <Text style={[styles.historyDate, { color: colors.muted }]}>{new Date(h.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</Text>
               </View>
               <Text style={[styles.historyPoints, { color: h.points > 0 ? thannigoPalette.success : thannigoPalette.error }]}>
                 {h.points > 0 ? '+' : ''}{h.points}
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 14,
     borderBottomWidth: 1,
   },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
+  headerTitle: { fontSize: 20, fontWeight: '900' },
   content: { padding: 20, gap: 16, paddingBottom: 120 },
 
   heroCard: {
@@ -327,69 +327,60 @@ const styles = StyleSheet.create({
   heroStatDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
 
   referralCard: {
-    backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 18,
-    borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.xs,
+    borderRadius: Radius.xl, padding: 18,
+    borderWidth: 1, ...Shadow.xs,
   },
   referralTop: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 16 },
-  referralIconWrap: { width: 48, height: 48, borderRadius: 14, backgroundColor: thannigoPalette.infoSoft, alignItems: 'center', justifyContent: 'center' },
-  referralTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
-  referralSub: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 2, lineHeight: 16 },
-  codeBox: { backgroundColor: thannigoPalette.borderSoft, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: thannigoPalette.borderSoft, borderStyle: 'dashed', marginBottom: 14 },
-  codeLabel: { fontSize: 10, color: thannigoPalette.neutral, fontWeight: '700', letterSpacing: 1, marginBottom: 4 },
+  referralIconWrap: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  referralTitle: { fontSize: 16, fontWeight: '800' },
+  referralSub: { fontSize: 12, marginTop: 2, lineHeight: 16 },
+  codeBox: { borderRadius: 14, padding: 14, borderWidth: 1, borderStyle: 'dashed', marginBottom: 14 },
+  codeLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 1, marginBottom: 4 },
   codeValue: { fontSize: 18, fontWeight: '900', color: ACCENT, letterSpacing: 1 },
   referralActions: { flexDirection: 'row', gap: 10 },
-  copyBtn: { flex: 0.4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 14, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft },
+  copyBtn: { flex: 0.4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 14, borderWidth: 1.5 },
   copyBtnText: { color: ACCENT, fontWeight: '700', fontSize: 13 },
   shareBtn: { flex: 0.6, borderRadius: 14, overflow: 'hidden' },
   shareBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12 },
   shareBtnText: { color: 'white', fontWeight: '800', fontSize: 13 },
-  referralStats: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 4 },
-  generateBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, backgroundColor: thannigoPalette.infoSoft },
+  referralStats: { fontSize: 11, fontWeight: '600', marginTop: 4 },
+  generateBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, borderWidth: 1.5 },
   generateBtnText: { color: ACCENT, fontWeight: '700', fontSize: 14 },
 
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', letterSpacing: -0.3 },
 
   voucherCard: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: thannigoPalette.surface, borderRadius: Radius.lg, padding: 16,
+    borderRadius: Radius.lg, padding: 16,
     borderLeftWidth: 4, borderLeftColor: ACCENT,
     ...Shadow.xs,
   },
   voucherLeft: { flex: 1 },
   voucherValue: { fontSize: 18, fontWeight: '900', color: ACCENT, marginBottom: 3 },
-  voucherMeta: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '600' },
+  voucherMeta: { fontSize: 11, fontWeight: '600' },
   voucherCode: { alignItems: 'flex-end' },
-  voucherCodeText: { fontSize: 13, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
+  voucherCodeText: { fontSize: 13, fontWeight: '800', marginBottom: 2 },
   voucherApply: { fontSize: 11, color: ACCENT, fontWeight: '700' },
 
   tiersList: {
-    backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, paddingHorizontal: 16, paddingVertical: 8,
+    borderRadius: Radius.xl, paddingHorizontal: 16, paddingVertical: 8,
     ...Shadow.xs,
   },
-  tierRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
-  tierRowActive: { backgroundColor: thannigoPalette.background, borderRadius: 14, paddingHorizontal: 8, marginHorizontal: -8 },
+  tierRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 15, borderBottomWidth: 1 },
   tierIcon: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   tierName: { fontSize: 15, fontWeight: '800', marginBottom: 2 },
-  tierRange: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '600' },
+  tierRange: { fontSize: 11, fontWeight: '600' },
   tierDiscount: { fontSize: 14, fontWeight: '900' },
   currentChip: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, marginLeft: 10 },
   currentChipText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
 
   historyCard: {
-    backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, paddingHorizontal: 16, paddingVertical: 8, marginBottom: 40,
+    borderRadius: Radius.xl, paddingHorizontal: 16, paddingVertical: 8, marginBottom: 40,
     ...Shadow.xs,
   },
   historyRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
-  historyDivider: { borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
   historyIcon: { width: 32, height: 32, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  historyEvent: { fontSize: 13, fontWeight: '700', color: thannigoPalette.darkText, marginBottom: 2 },
-  historyDate: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500' },
+  historyEvent: { fontSize: 13, fontWeight: '700', marginBottom: 2 },
+  historyDate: { fontSize: 11, fontWeight: '500' },
   historyPoints: { fontSize: 15, fontWeight: '800' },
 });
-
-
-
-
-
-
-

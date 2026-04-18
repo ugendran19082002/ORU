@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
 import { StatCard } from '@/components/ui/StatCard';
 import { SkeletonCard, SkeletonStatRow, SkeletonLine } from '@/components/ui/Skeleton';
@@ -41,6 +42,7 @@ const fmt = (n: number) =>
   n >= 1000 ? `₹${(n / 1000).toFixed(1)}K` : `₹${n}`;
 
 export default function ShopAnalyticsScreen() {
+  const router = useRouter();
   const { safeBack } = useAppNavigation();
   const [period, setPeriod] = useState('week');
   const [refreshing, setRefreshing] = useState(false);
@@ -97,14 +99,23 @@ export default function ShopAnalyticsScreen() {
           <BackButton fallback="/shop/settings" />
           <View>
             <View style={styles.brandRow}>
+              <Logo size="md" />
               <Text style={styles.brandName}>ThanniGo</Text>
             </View>
-            <Text style={styles.roleLabel}>ANALYTICS & INSIGHTS</Text>
+            <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.filterBtn} onPress={() => Toast.show({ type: 'info', text1: 'Custom range coming soon' })}>
-          <Ionicons name="options-outline" size={20} color={SHOP_ACCENT} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <TouchableOpacity 
+            style={styles.notifBtnSub} 
+            onPress={() => router.push('/notifications' as any)}
+          >
+            <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.filterBtn} onPress={() => Toast.show({ type: 'info', text1: 'Custom range coming soon' })}>
+            <Ionicons name="options-outline" size={20} color={SHOP_ACCENT} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -359,6 +370,7 @@ const styles = StyleSheet.create({
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.8 },
   roleLabel: { fontSize: 9, fontWeight: '800', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
+  notifBtnSub: { width: 42, height: 42, borderRadius: 12, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: thannigoPalette.borderSoft },
   filterBtn: { width: 42, height: 42, borderRadius: 12, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: thannigoPalette.borderSoft },
   
   pageTitle: { fontSize: 36, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -1.2, marginTop: 12, marginBottom: 20 },

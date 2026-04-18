@@ -139,6 +139,26 @@ export const adminApi = {
     });
     return response.data;
   },
+
+  /** List all pending shop bank change requests */
+  listBankRequests: async (): Promise<ApiResponse<any[]>> => {
+    const response = await apiClient.get<ApiResponse<any[]>>('/admin/bank-requests');
+    return response.data;
+  },
+
+  /** Approve a bank change request */
+  approveBankRequest: async (requestId: number): Promise<ApiResponse<any>> => {
+    const response = await apiClient.patch<ApiResponse<any>>(`/admin/bank-requests/${requestId}/approve`);
+    return response.data;
+  },
+
+  /** Reject a bank change request */
+  rejectBankRequest: async (requestId: number, reason: string): Promise<ApiResponse<any>> => {
+    const response = await apiClient.patch<ApiResponse<any>>(`/admin/bank-requests/${requestId}/reject`, {
+      reason,
+    });
+    return response.data;
+  },
 };
 
 // Keep ApiError accessible for callers that need to catch it

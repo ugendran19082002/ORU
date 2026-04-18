@@ -129,10 +129,6 @@ export const payoutApi = {
       throw ApiError.from(error, 'Failed to request UPI verification');
     }
   },
-  /**
-   * Update payout settings (mode, cycle, UPI ID).
-   * PATCH /shop-owner/payouts/settings
-   */
   async updatePayoutSettings(data: {
     payout_mode: ShopWallet['payout_mode'];
     payout_cycle: ShopWallet['payout_cycle'];
@@ -145,6 +141,38 @@ export const payoutApi = {
     } catch (error) {
       log.error('[payoutApi] updatePayoutSettings failed:', error);
       throw ApiError.from(error, 'Failed to update payout settings');
+    }
+  },
+
+  /**
+   * Submit a new bank change request.
+   * POST /shop-owner/bank-request
+   */
+  async requestBankChange(details: {
+    account_number: string;
+    ifsc: string;
+    holder_name: string;
+  }): Promise<ApiResponse<any>> {
+    try {
+      const response = await apiClient.post<ApiResponse<any>>('/shop-owner/bank-request', details);
+      return response.data;
+    } catch (error) {
+      log.error('[payoutApi] requestBankChange failed:', error);
+      throw ApiError.from(error, 'Failed to submit bank change request');
+    }
+  },
+
+  /**
+   * Get current bank request status.
+   * GET /shop-owner/bank-request/status
+   */
+  async getBankRequestStatus(): Promise<ApiResponse<any>> {
+    try {
+      const response = await apiClient.get<ApiResponse<any>>('/shop-owner/bank-request/status');
+      return response.data;
+    } catch (error) {
+      log.error('[payoutApi] getBankRequestStatus failed:', error);
+      throw ApiError.from(error, 'Failed to fetch bank request status');
     }
   },
 };

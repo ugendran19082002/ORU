@@ -273,6 +273,7 @@ export default function AdminOverviewScreen() {
         <View style={styles.toolsGrid}>
           {[
             { label: 'Complaints', icon: 'alert-circle', color: thannigoPalette.error, bg: thannigoPalette.dangerSoft, path: '/admin/complaints', badge: dashboardData?.complaints?.open },
+            { label: 'Bank Audit', icon: 'business',     color: '#6366f1',              bg: '#eef2ff',               path: '/admin/bank-requests' },
             { label: 'Payouts',    icon: 'card',        color: thannigoPalette.success, bg: thannigoPalette.successSoft, path: '/admin/payouts' },
             { label: 'Growth',    icon: 'rocket',      color: '#d946ef',              bg: '#fdf4ff',               path: '/admin/growth' },
             { label: 'Coupons',   icon: 'pricetag',    color: thannigoPalette.primary, bg: thannigoPalette.infoSoft,    path: '/admin/coupons' },

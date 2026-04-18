@@ -17,8 +17,8 @@ const ACCENT = roleAccent.customer;
 export default function PrivacySecurityScreen() {
   const router = useRouter();
   const { colors, isDark } = useAppTheme();
-  const { 
-    isPinEnabled, isBiometricsEnabled, togglePin, toggleBiometrics, enablePinRemote, initialize 
+  const {
+    isPinEnabled, isBiometricsEnabled, togglePin, toggleBiometrics, enablePinRemote, initialize
   } = useSecurityStore();
 
   const [showPinModal, setShowPinModal] = useState(false);
@@ -38,14 +38,14 @@ export default function PrivacySecurityScreen() {
 
   const handleToggleBiometrics = async (val: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
+
     if (val) {
       // Immediate verification to 'lock in' the setting
       const { authenticateBiometrics } = useSecurityStore.getState();
       const success = await authenticateBiometrics();
       if (!success) {
-        Toast.show({ 
-          type: 'error', 
+        Toast.show({
+          type: 'error',
           text1: 'Biometrics Failed',
           text2: 'Could not verify identity. Please try again.'
         });
@@ -54,8 +54,8 @@ export default function PrivacySecurityScreen() {
     }
 
     await toggleBiometrics(val);
-    Toast.show({ 
-      type: 'success', 
+    Toast.show({
+      type: 'success',
       text1: val ? 'Biometrics Enabled' : 'Biometrics Disabled',
       text2: val ? 'Use FaceID/Fingerprint for quick unlock' : 'Reverted to PIN only access'
     });
@@ -69,41 +69,41 @@ export default function PrivacySecurityScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
-      
+
       {/* HEADER */}
       <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <BackButton fallback="/(tabs)/profile" />
-        <Text style={styles.headerTitle}>Privacy & Security</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Privacy & Security</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        
+
         {/* SECURITY SETTINGS SECTION */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>App Security</Text>
-          <Text style={styles.sectionDesc}>Protect your account with additional layers of security.</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>App Security</Text>
+          <Text style={[styles.sectionDesc, { color: colors.muted }]}>Protect your account with additional layers of security.</Text>
 
             <View style={styles.menuRow}>
               <View style={[styles.menuIcon, { backgroundColor: colors.background }]}>
                 <Ionicons name="lock-closed-outline" size={20} color={ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.menuLabel}>App PIN Lock</Text>
-                <Text style={styles.menuSub}>Protect app when minimized</Text>
+                <Text style={[styles.menuLabel, { color: colors.text }]}>App PIN Lock</Text>
+                <Text style={[styles.menuSub, { color: colors.muted }]}>Protect app when minimized</Text>
               </View>
               <Switch
                 value={isPinEnabled}
                 onValueChange={handleTogglePin}
-                trackColor={{ false: thannigoPalette.borderSoft, true: thannigoPalette.deliveryGreenLight }}
-                thumbColor={isPinEnabled ? thannigoPalette.shopTeal : thannigoPalette.neutral}
+                trackColor={{ false: colors.border, true: ACCENT }}
+                thumbColor={isPinEnabled ? 'white' : colors.muted}
               />
             </View>
 
             {isPinEnabled && (
               <>
-                <View style={styles.divider} />
-                <TouchableOpacity 
+                <View style={[styles.divider, { backgroundColor: colors.border }]} />
+                <TouchableOpacity
                   style={styles.menuRow}
                   onPress={() => {
                     setPinMode('set');
@@ -119,66 +119,66 @@ export default function PrivacySecurityScreen() {
               </>
             )}
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <View style={styles.menuRow}>
               <View style={[styles.menuIcon, { backgroundColor: colors.background }]}>
                 <Ionicons name="finger-print-outline" size={20} color={ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.menuLabel}>Biometric Unlock</Text>
-                <Text style={styles.menuSub}>Use FaceID or Fingerprint</Text>
+                <Text style={[styles.menuLabel, { color: colors.text }]}>Biometric Unlock</Text>
+                <Text style={[styles.menuSub, { color: colors.muted }]}>Use FaceID or Fingerprint</Text>
               </View>
               <Switch
                 value={isBiometricsEnabled}
                 onValueChange={handleToggleBiometrics}
                 disabled={!isPinEnabled}
-                trackColor={{ false: thannigoPalette.borderSoft, true: thannigoPalette.deliveryGreenLight }}
-                thumbColor={isBiometricsEnabled ? thannigoPalette.shopTeal : thannigoPalette.neutral}
+                trackColor={{ false: colors.border, true: ACCENT }}
+                thumbColor={isBiometricsEnabled ? 'white' : colors.muted}
               />
             </View>
         </View>
 
         {/* DATA PRIVACY SECTION */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Data & Privacy</Text>
-          
-          <View style={styles.card}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Data & Privacy</Text>
+
+          <View style={[styles.card, { backgroundColor: colors.surface }]}>
             <TouchableOpacity style={styles.actionRow} onPress={() => router.push('/privacy-policy' as any)}>
-              <View style={styles.actionIconWrap}>
+              <View style={[styles.actionIconWrap, { backgroundColor: thannigoPalette.infoSoft }]}>
               <Ionicons name="document-text-outline" size={20} color={ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.actionLabel}>Privacy Policy</Text>
-                <Text style={styles.actionSub}>How we handle your data</Text>
+                <Text style={[styles.actionLabel, { color: colors.text }]}>Privacy Policy</Text>
+                <Text style={[styles.actionSub, { color: colors.muted }]}>How we handle your data</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colors.muted} />
             </TouchableOpacity>
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <TouchableOpacity style={styles.actionRow} onPress={() => router.push('/terms' as any)}>
-              <View style={styles.actionIconWrap}>
+              <View style={[styles.actionIconWrap, { backgroundColor: thannigoPalette.infoSoft }]}>
               <Ionicons name="shield-outline" size={20} color={ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.actionLabel}>Terms of Service</Text>
-                <Text style={styles.actionSub}>App usage rules</Text>
+                <Text style={[styles.actionLabel, { color: colors.text }]}>Terms of Service</Text>
+                <Text style={[styles.actionSub, { color: colors.muted }]}>App usage rules</Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colors.muted} />
             </TouchableOpacity>
           </View>
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.deleteBtn}
           onPress={() => require('react-native').Alert.alert(
-            'Request Account Deletion', 
-            'This action is irreversible and will delete all your data. Are you sure?', 
+            'Request Account Deletion',
+            'This action is irreversible and will delete all your data. Are you sure?',
             [
-              { text: 'Cancel', style: 'cancel' }, 
-              { 
-                text: 'Delete Account', 
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Delete Account',
                 style: 'destructive',
                 onPress: async () => {
                   try {
@@ -217,31 +217,26 @@ export default function PrivacySecurityScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
+  headerTitle: { fontSize: 18, fontWeight: '900' },
 
   scrollContent: { padding: 24 },
   section: { marginBottom: 32 },
-  sectionTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 4 },
-  sectionDesc: { fontSize: 13, color: thannigoPalette.neutral, marginBottom: 16 },
+  sectionTitle: { fontSize: 20, fontWeight: '900', marginBottom: 4 },
+  sectionDesc: { fontSize: 13, marginBottom: 16 },
 
-  card: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 20, ...Shadow.xs },
-  divider: { height: 1, backgroundColor: thannigoPalette.borderSoft, marginVertical: 18 },
+  card: { borderRadius: Radius.xl, padding: 20, ...Shadow.xs },
+  divider: { height: 1, marginVertical: 18 },
 
   menuRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 4 },
   menuIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  menuLabel: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText },
-  menuSub: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 1, fontWeight: '500' },
+  menuLabel: { fontSize: 15, fontWeight: '800' },
+  menuSub: { fontSize: 12, marginTop: 1, fontWeight: '500' },
 
   actionRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  actionIconWrap: { width: 40, height: 40, borderRadius: 12, backgroundColor: thannigoPalette.infoSoft, alignItems: 'center', justifyContent: 'center' },
-  actionLabel: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText },
-  actionSub: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 1 },
+  actionIconWrap: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  actionLabel: { fontSize: 15, fontWeight: '800' },
+  actionSub: { fontSize: 12, marginTop: 1 },
 
   deleteBtn: { paddingVertical: 18, alignItems: 'center' },
   deleteBtnText: { color: thannigoPalette.error, fontWeight: '700', fontSize: 14 },
 });
-
-
-
-
-

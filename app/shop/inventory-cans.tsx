@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
@@ -48,6 +49,7 @@ const ACTIONS = [
 
 export default function InventoryCansScreen() {
   const { safeBack } = useAppNavigation();
+  const router = useRouter();
 
   useAndroidBackHandler(() => {
     safeBack('/shop/settings');
@@ -140,9 +142,14 @@ export default function InventoryCansScreen() {
             <Text style={styles.headerSub}>{inventory.length} products tracked</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.refreshBtn} onPress={() => { setRefreshing(true); fetchAll(); }}>
-           <Ionicons name="refresh" size={20} color={SHOP_ACCENT} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <TouchableOpacity style={styles.notifBtnSub} onPress={() => router.push('/notifications' as any)}>
+            <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.notifBtnSub} onPress={() => { setRefreshing(true); fetchAll(); }}>
+             <Ionicons name="refresh" size={20} color={SHOP_ACCENT} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
@@ -388,7 +395,14 @@ const styles = StyleSheet.create({
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   headerTitle: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
   headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
-  refreshBtn: { width: 44, height: 44, borderRadius: Radius.md, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
+  notifBtnSub: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.md,
+    backgroundColor: SHOP_SURF,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   statsRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10 },
   statBox: { flex: 1, padding: 16, borderRadius: Radius.xl, alignItems: 'center', ...Shadow.xs },

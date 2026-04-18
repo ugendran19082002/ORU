@@ -6,13 +6,15 @@ import React, { useEffect, useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, Linking } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 
 import { useDeliveryStore } from '@/stores/deliveryStore';
 import { apiClient } from '@/api/client';
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { roleAccent, roleSurface, roleGradients, makeShadow } from '@/constants/theme';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 const DELIVERY_ACCENT = roleAccent.delivery;
 const DELIVERY_SURF = roleSurface.delivery;
@@ -22,10 +24,10 @@ export default function DeliveryNavigationScreen() {
   const router = useRouter();
   const { tasks, currentTaskId, updateTaskStatus } = useDeliveryStore();
   const task = tasks.find((item) => item.id === currentTaskId) ?? tasks[0];
+  const { colors, isDark } = useAppTheme();
   const locationSubRef = useRef<Location.LocationSubscription | null>(null);
   const lastUpdateRef = useRef<number>(0);
 
-  // Start streaming GPS location to backend
   useEffect(() => {
     let mounted = true;
 
@@ -41,7 +43,6 @@ export default function DeliveryNavigationScreen() {
         async (loc) => {
           if (!mounted) return;
           const now = Date.now();
-          // Throttle: only send if 8s passed since last update
           if (now - lastUpdateRef.current < 7500) return;
           lastUpdateRef.current = now;
 
@@ -53,7 +54,7 @@ export default function DeliveryNavigationScreen() {
               speed: loc.coords.speed ?? null,
             });
           } catch {
-            // Silent — location update failure is non-critical
+            // silent — non-critical
           }
         }
       );
@@ -67,148 +68,198 @@ export default function DeliveryNavigationScreen() {
     };
   }, []);
 
+  const surf = colors.surface;
+  const border = colors.border;
+  const text = colors.text;
+  const muted = colors.muted;
+  const bg = colors.background;
+  const inputBg = colors.inputBg;
+  const shadow = makeShadow(isDark);
+
+  const floatBg = isDark ? 'rgba(17,24,39,0.97)' : 'rgba(255,255,255,0.97)';
+
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      {/* Real Interactive Map */}
-      <View style={styles.mapContainer}>
-        <ExpoMap
-          hideControls={true}
-          style={StyleSheet.absoluteFillObject}
-          initialRegion={{
+    <View style={[styles.container, { backgroundColor: bg }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+
+      {/* Full-screen map */}
+      <ExpoMap
+        hideControls={true}
+        style={StyleSheet.absoluteFillObject}
+        initialRegion={{
+          latitude: task?.lat ?? 12.9716,
+          longitude: task?.lng ?? 80.2210,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}
+        showRoute={true}
+        markers={[
+          {
             latitude: task?.lat ?? 12.9716,
             longitude: task?.lng ?? 80.2210,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }}
-          showRoute={true}
-          markers={[
-            {
-              latitude: task?.lat ?? 12.9716,
-              longitude: task?.lng ?? 80.2210,
-              title: 'Customer Location',
-              color: '#ba1a1a',
-              iconType: 'home' as const,
-            }
-          ]}
-          onMarkerDragEnd={(coords) => {
-            Toast.show({ type: 'info', text1: 'Location Tapped', text2: `${coords.latitude}, ${coords.longitude}` });
-          }}
-        />
-      </View>
+            title: 'Customer Location',
+            color: '#ba1a1a',
+            iconType: 'home' as const,
+          },
+        ]}
+        onMarkerDragEnd={(coords) => {
+          Toast.show({ type: 'info', text1: 'Location Tapped', text2: `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}` });
+        }}
+      />
 
       {/* Floating Header */}
-      <View style={styles.header}>
-        <BackButton fallback="/delivery" />
-        <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/notifications' as any)}>
-          <Ionicons name="help-buoy-outline" size={24} color="#181c20" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Navigation Card */}
-      <View style={styles.sheetContent}>
-        <View style={styles.sheetPill} />
-
-        <View style={styles.tripHeaderRow}>
-          <View>
-            <Text style={styles.tripTime}>12 min</Text>
-            <Text style={styles.tripDistance}>4.2 km • Dropoff</Text>
-          </View>
-          <View style={styles.etaBadge}>
-            <Text style={styles.etaBadgeText}>ON TIME</Text>
-          </View>
-        </View>
-
-        <View style={styles.customerCard}>
-          <View style={styles.customerTop}>
-            <View style={styles.avatar}>
-              <Ionicons name="person" size={20} color={DELIVERY_ACCENT} />
-            </View>
+      <SafeAreaView edges={['top']} style={styles.headerSafe} pointerEvents="box-none">
+        <View style={styles.headerRow}>
+          <View style={[styles.headerPill, { backgroundColor: floatBg, borderColor: border }]}>
+            <BackButton fallback="/delivery" />
             <View style={{ flex: 1 }}>
-              <Text style={styles.custName}>{task?.customerName ?? 'Customer'}</Text>
-              <Text style={styles.custOrder}>Order #{task?.id ?? '—'}</Text>
+              <Text style={[styles.headerTitle, { color: text }]} numberOfLines={1}>
+                {task?.customerName ?? 'Navigation'}
+              </Text>
+              <Text style={[styles.headerSub, { color: muted }]}>Order #{task?.id ?? '—'}</Text>
             </View>
             <TouchableOpacity
-              style={styles.callBtn}
-              onPress={() => {
-                const phone = task?.customerPhone ?? null;
-                if (!phone) return;
-                Linking.openURL(`tel:${phone}`).catch(() =>
-                  Toast.show({ type: 'error', text1: 'Error', text2: `Unable to call. Dial ${phone} manually.` })
-                );
-              }}
+              style={[styles.iconBtn, { backgroundColor: inputBg }]}
+              onPress={() => router.push('/notifications' as any)}
             >
-              <Ionicons name="call" size={18} color="white" />
+              <Ionicons name="help-buoy-outline" size={20} color={text} />
             </TouchableOpacity>
           </View>
+        </View>
+      </SafeAreaView>
 
-          <View style={styles.addressRow}>
-            <Ionicons name="location-sharp" size={18} color="#ba1a1a" />
-            <Text style={styles.addressText}>{task?.address ?? 'Customer address not available'}</Text>
+      {/* Navigation Bottom Sheet */}
+      <SafeAreaView edges={['bottom']} style={styles.sheetSafe} pointerEvents="box-none">
+        <View style={[styles.sheetContent, { backgroundColor: surf, borderTopColor: border }, shadow.lg]}>
+          <View style={[styles.sheetPill, { backgroundColor: border }]} />
+
+          {/* Trip summary row */}
+          <View style={styles.tripHeaderRow}>
+            <View>
+              <Text style={[styles.tripTime, { color: DELIVERY_ACCENT }]}>12 min</Text>
+              <Text style={[styles.tripDistance, { color: muted }]}>4.2 km · Dropoff</Text>
+            </View>
+            <View style={[styles.etaBadge, { backgroundColor: isDark ? '#071A0A' : DELIVERY_SURF }]}>
+              <Ionicons name="checkmark-circle-outline" size={12} color={DELIVERY_ACCENT} />
+              <Text style={[styles.etaBadgeText, { color: DELIVERY_ACCENT }]}>ON TIME</Text>
+            </View>
+          </View>
+
+          {/* Customer card */}
+          <View style={[styles.customerCard, { backgroundColor: bg, borderColor: border }]}>
+            <View style={styles.customerTop}>
+              <View style={[styles.avatar, { backgroundColor: isDark ? '#071A0A' : DELIVERY_SURF }]}>
+                <Ionicons name="person" size={19} color={DELIVERY_ACCENT} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.custName, { color: text }]}>{task?.customerName ?? 'Customer'}</Text>
+                <Text style={[styles.custOrder, { color: muted }]}>Order #{task?.id ?? '—'}</Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.callBtn, { backgroundColor: DELIVERY_ACCENT }]}
+                onPress={() => {
+                  const phone = task?.customerPhone ?? null;
+                  if (!phone) return;
+                  Linking.openURL(`tel:${phone}`).catch(() =>
+                    Toast.show({ type: 'error', text1: 'Error', text2: `Unable to call. Dial ${phone} manually.` })
+                  );
+                }}
+              >
+                <Ionicons name="call" size={17} color="white" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.addressRow, { borderTopColor: border }]}>
+              <Ionicons name="location-sharp" size={17} color="#ba1a1a" />
+              <Text style={[styles.addressText, { color: text }]}>{task?.address ?? 'Customer address not available'}</Text>
+            </View>
+          </View>
+
+          {/* Action buttons */}
+          <View style={styles.actionGrid}>
+            <TouchableOpacity
+              style={[styles.btnDanger, { backgroundColor: isDark ? '#2d0a0a' : '#ffdad6' }]}
+              onPress={() => require('react-native').Alert.alert('Cancel Trip', 'Are you sure you want to cancel this trip?')}
+            >
+              <Ionicons name="close" size={20} color="#ba1a1a" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={{ flex: 1 }}
+              onPress={() => {
+                if (task?.status === 'accepted') {
+                  updateTaskStatus(task.id, 'picked');
+                  Toast.show({ type: 'success', text1: 'Picked up', text2: 'Order items successfully picked up from shop.' });
+                } else if (task?.status === 'picked') {
+                  updateTaskStatus(task.id, 'delivered');
+                  router.push('/delivery/complete' as any);
+                }
+              }}
+            >
+              <LinearGradient
+                colors={DELIVERY_GRAD}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.arriveBtn}
+              >
+                <Text style={styles.arriveBtnText}>
+                  {task?.status === 'accepted' ? 'Confirm Pickup' : 'Slide When Arrived'}
+                </Text>
+                <Ionicons name="arrow-forward" size={18} color="white" />
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         </View>
-
-        {/* ACTIONS */}
-        <View style={styles.actionGrid}>
-          <TouchableOpacity
-            style={styles.btnDanger}
-            onPress={() => require('react-native').Alert.alert('Cancel Trip', 'Are you sure you want to cancel this trip?')}
-          >
-            <Ionicons name="close" size={20} color="#ba1a1a" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={{ flex: 1 }}
-            onPress={() => {
-              if (task?.status === 'accepted') {
-                updateTaskStatus(task.id, 'picked');
-                Toast.show({ type: 'success', text1: 'Picked up', text2: 'Order items successfully picked up from shop.' });
-              } else if (task?.status === 'picked') {
-                updateTaskStatus(task.id, 'delivered');
-                router.push('/delivery/complete' as any);
-              }
-            }}
-          >
-            <LinearGradient
-              colors={DELIVERY_GRAD}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.arriveBtn}
-            >
-              <Text style={styles.arriveBtnText}>
-                {task?.status === 'accepted' ? 'Confirm Pickup' : 'Slide When Arrived'}
-              </Text>
-              <Ionicons name="arrow-forward" size={18} color="white" />
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background, position: 'relative' },
-  mapContainer: { ...StyleSheet.absoluteFillObject, backgroundColor: thannigoPalette.surface },
-  header: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 60, position: 'absolute', top: 0, left: 0, right: 0 },
-  iconBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: thannigoPalette.surface, alignItems: 'center', justifyContent: 'center', ...Shadow.md },
-  sheetContent: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: thannigoPalette.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40, ...Shadow.lg },
-  sheetPill: { width: 40, height: 4, borderRadius: 2, backgroundColor: thannigoPalette.borderSoft, alignSelf: 'center', marginBottom: 20 },
-  tripHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
-  tripTime: { fontSize: 28, fontWeight: '900', color: DELIVERY_ACCENT, letterSpacing: -0.5 },
-  tripDistance: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
-  etaBadge: { backgroundColor: DELIVERY_SURF, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  etaBadgeText: { color: DELIVERY_ACCENT, fontWeight: '800', fontSize: 11 },
-  customerCard: { backgroundColor: thannigoPalette.background, borderRadius: 20, padding: 16, marginBottom: 20 },
+  container: { flex: 1 },
+
+  headerSafe: { position: 'absolute', top: 0, left: 0, right: 0 },
+  headerRow: { paddingHorizontal: 16, paddingBottom: 8 },
+  headerPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderRadius: 28, paddingHorizontal: 12, paddingVertical: 10,
+    borderWidth: 1,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 6,
+  },
+  headerTitle: { fontSize: 15, fontWeight: '800' },
+  headerSub: { fontSize: 11, fontWeight: '500', marginTop: 1 },
+  iconBtn: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
+
+  sheetSafe: { position: 'absolute', bottom: 0, left: 0, right: 0 },
+  sheetContent: {
+    borderTopLeftRadius: 32, borderTopRightRadius: 32,
+    padding: 24, paddingBottom: 16,
+    borderTopWidth: 1,
+  },
+  sheetPill: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 20 },
+
+  tripHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 },
+  tripTime: { fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
+  tripDistance: { fontSize: 13, fontWeight: '600', marginTop: 2 },
+  etaBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
+  etaBadgeText: { fontWeight: '800', fontSize: 11 },
+
+  customerCard: { borderRadius: 20, padding: 16, marginBottom: 18, borderWidth: 1 },
   customerTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  avatar: { width: 40, height: 40, borderRadius: 14, backgroundColor: DELIVERY_SURF, alignItems: 'center', justifyContent: 'center' },
-  custName: { fontSize: 16, fontWeight: '900', color: thannigoPalette.darkText },
-  custOrder: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
-  callBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: DELIVERY_ACCENT, alignItems: 'center', justifyContent: 'center' },
-  addressRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft, paddingTop: 12 },
-  addressText: { flex: 1, fontSize: 13, color: thannigoPalette.darkText, lineHeight: 18, fontWeight: '500' },
+  avatar: { width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  custName: { fontSize: 15, fontWeight: '900' },
+  custOrder: { fontSize: 12, fontWeight: '500' },
+  callBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  addressRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderTopWidth: 1, paddingTop: 12 },
+  addressText: { flex: 1, fontSize: 13, lineHeight: 18, fontWeight: '500' },
+
   actionGrid: { flexDirection: 'row', gap: 12 },
-  btnDanger: { width: 56, height: 56, borderRadius: 20, backgroundColor: '#ffdad6', alignItems: 'center', justifyContent: 'center' },
-  arriveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderRadius: 20, height: 56, shadowColor: DELIVERY_ACCENT, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 },
+  btnDanger: { width: 56, height: 56, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  arriveBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 10, borderRadius: 20, height: 56,
+    shadowColor: DELIVERY_ACCENT, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4,
+  },
   arriveBtnText: { color: 'white', fontWeight: '900', fontSize: 16 },
 });

@@ -40,6 +40,7 @@ export default function ShopOperationalSettingsScreen() {
   const [freeKm, setFreeKm] = useState(0);
   const [maxRange, setMaxRange] = useState(5);
   const [floorCharge, setFloorCharge] = useState(0);
+  const [freeFloor, setFreeFloor] = useState(0);
 
   useAndroidBackHandler(() => {
     safeBack('/shop/settings');
@@ -63,6 +64,7 @@ export default function ShopOperationalSettingsScreen() {
         setFreeKm(Number(settings.free_delivery_upto_km || 0));
         setMaxRange(Number(settings.delivery_limit_per_km || 5));
         setFloorCharge(Number(settings.floor_charge_per_floor || 0));
+        setFreeFloor(Number(settings.free_delivery_upto_floor || 0));
       }
     } catch (error) {
       console.error('[OperationalSettings] Fetch failed:', error);
@@ -86,6 +88,7 @@ export default function ShopOperationalSettingsScreen() {
         free_delivery_upto_km: freeKm,
         delivery_limit_per_km: maxRange,
         floor_charge_per_floor: floorCharge,
+        free_delivery_upto_floor: freeFloor,
       });
       
       Toast.show({ type: 'success', text1: 'Settings Saved', text2: 'Your operational rules have been updated.' });
@@ -116,6 +119,12 @@ export default function ShopOperationalSettingsScreen() {
             <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
         </View>
+        <TouchableOpacity 
+          style={styles.notifBtnSub} 
+          onPress={() => router.push('/notifications' as any)}
+        >
+          <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
+        </TouchableOpacity>
       </View>
 
       <KeyboardAvoidingView 
@@ -218,6 +227,15 @@ export default function ShopOperationalSettingsScreen() {
                 unit="₹" 
               />
               <Text style={styles.hintText}>Additional cost for carrying cans to higher floors (per floor).</Text>
+              
+              <View style={{ marginTop: 16 }}>
+                <Stepper 
+                  label="Free Delivery Upto Floor" 
+                  value={freeFloor} 
+                  onUpdate={setFreeFloor} 
+                />
+                <Text style={styles.hintText}>Floors up to this limit will not incur any floor charges.</Text>
+              </View>
 
 
               <View style={styles.divider} />
@@ -508,6 +526,7 @@ const styles = StyleSheet.create({
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
+  notifBtnSub: { width: 40, height: 40, borderRadius: 12, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 24, paddingVertical: 20, paddingBottom: 120 },
   titleRow: { marginBottom: 18 },
   pageTitle: { fontSize: 32, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },

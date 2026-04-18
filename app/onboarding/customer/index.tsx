@@ -15,9 +15,11 @@ import type { OnboardingStatus } from '@/types/onboarding';
 import { useAppSession } from '@/hooks/use-app-session';
 import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 export default function CustomerOnboardingScreen() {
   const router = useRouter();
+  const { colors, isDark } = useAppTheme();
   const { user, updateUser, status, syncSession } = useAppSession();
   const { handleAuthBack } = useLogoutBackHandler();
   const [loading, setLoading] = useState(true);
@@ -30,7 +32,7 @@ export default function CustomerOnboardingScreen() {
       const res = await onboardingApi.getCustomerSteps();
       if (res.status === 1) {
         setData(res.data);
-        
+
         if (res.data.onboarding_completed && user && !user.onboarding_completed) {
           await updateUser({ onboarding_completed: true });
           setTimeout(() => {
@@ -42,7 +44,7 @@ export default function CustomerOnboardingScreen() {
       }
     } catch (error: any) {
       if (error.response?.status === 404) return;
-      
+
       Toast.show({
         type: 'error',
         text1: 'Fetch Error',
@@ -59,7 +61,7 @@ export default function CustomerOnboardingScreen() {
 
   const handleStepPress = (step: any) => {
     if (step.status === 'completed') return;
-    
+
     // Navigate to the step's specific route
     if (step.screen_route) {
       router.push(step.screen_route as any);
@@ -78,8 +80,8 @@ export default function CustomerOnboardingScreen() {
       "Are you sure you want to switch to a Partner account? This will reset your current progress as a customer.",
       [
         { text: "Cancel", style: "cancel" },
-        { 
-          text: "Yes, Reset & Switch", 
+        {
+          text: "Yes, Reset & Switch",
           style: "destructive",
           onPress: async () => {
             try {
@@ -126,24 +128,24 @@ export default function CustomerOnboardingScreen() {
   const progressPercent = data ? (data.completed_steps / data.total_steps) * 100 : 0;
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.safe} edges={['top']}>
         {/* HEADER */}
         <View style={styles.header}>
           <BackButton fallback="/auth/role"  onPress={handleRoleReset}/>
           <View style={{ marginLeft: 16, flex: 1 }}>
-            <Text style={styles.welcome}>Welcome, {user?.name || 'Guest'}</Text>
-            <Text style={styles.subtitle}>Complete these steps to get started</Text>
+            <Text style={[styles.welcome, { color: colors.text }]}>Welcome, {user?.name || 'Guest'}</Text>
+            <Text style={[styles.subtitle, { color: colors.muted }]}>Complete these steps to get started</Text>
           </View>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{user?.name?.charAt(0) || 'U'}</Text>
+          <View style={[styles.avatar, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <Text style={[styles.avatarText, { color: colors.text }]}>{user?.name?.charAt(0) || 'U'}</Text>
           </View>
         </View>
-        
-        <View style={styles.roleSwitchTip}>
-            <Ionicons name="help-circle-outline" size={16} color="#64748b" />
-            <Text style={styles.roleSwitchText}>Wrong role?</Text>
+
+        <View style={[styles.roleSwitchTip, { backgroundColor: colors.inputBg }]}>
+            <Ionicons name="help-circle-outline" size={16} color={colors.muted} />
+            <Text style={[styles.roleSwitchText, { color: colors.muted }]}>Wrong role?</Text>
             <TouchableOpacity onPress={handleRoleReset} disabled={resetLoading}>
                 <Text style={styles.roleSwitchLink}>Switch to Partner</Text>
             </TouchableOpacity>
@@ -173,13 +175,14 @@ export default function CustomerOnboardingScreen() {
           contentContainerStyle={styles.scrollContent}
           refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchStatus} />}
         >
-          <Text style={styles.sectionTitle}>Required Steps</Text>
-          
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Required Steps</Text>
+
           {data?.steps.map((step, index) => (
             <TouchableOpacity
               key={step.id}
               style={[
                 styles.stepCard,
+                { backgroundColor: colors.inputBg, borderColor: colors.border },
                 step.status === 'completed' && styles.stepCardCompleted
               ]}
               onPress={() => handleStepPress(step)}
@@ -187,7 +190,7 @@ export default function CustomerOnboardingScreen() {
             >
               <View style={[
                 styles.iconWrap,
-                { backgroundColor: step.status === 'completed' ? '#e0f7fa' : '#f0f4f8' }
+                { backgroundColor: step.status === 'completed' ? '#e0f7fa' : colors.background }
               ]}>
                 <Ionicons
                   name={(step.icon_name || 'document-text') as any}
@@ -195,12 +198,12 @@ export default function CustomerOnboardingScreen() {
                   color={step.status === 'completed' ? '#006878' : '#64748b'}
                 />
               </View>
-              
+
               <View style={styles.stepInfo}>
-                <Text style={[styles.stepTitle, step.status === 'completed' && styles.stepTitleDone]}>
+                <Text style={[styles.stepTitle, { color: colors.text }, step.status === 'completed' && styles.stepTitleDone]}>
                   {step.title}
                 </Text>
-                <Text style={styles.stepDesc} numberOfLines={1}>{step.description}</Text>
+                <Text style={[styles.stepDesc, { color: colors.muted }]} numberOfLines={1}>{step.description}</Text>
               </View>
 
               <View style={styles.stepAction}>
@@ -212,10 +215,10 @@ export default function CustomerOnboardingScreen() {
               </View>
             </TouchableOpacity>
           ))}
-          
+
           <View style={styles.footer}>
             <Ionicons name="shield-checkmark-outline" size={16} color="#94a3b8" />
-            <Text style={styles.footerText}>Your data is secure and encrypted</Text>
+            <Text style={[styles.footerText, { color: colors.muted }]}>Your data is secure and encrypted</Text>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -224,10 +227,10 @@ export default function CustomerOnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   safe: { flex: 1 },
-  
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -235,10 +238,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 20,
   },
-  welcome: { fontSize: 24, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 },
-  subtitle: { fontSize: 14, color: '#64748b', marginTop: 2 },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'white' },
-  avatarText: { fontSize: 18, fontWeight: '800', color: '#475569' },
+  welcome: { fontSize: 24, fontWeight: '900', letterSpacing: -0.5 },
+  subtitle: { fontSize: 14, marginTop: 2 },
+  avatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 2 },
+  avatarText: { fontSize: 18, fontWeight: '800' },
 
   progressCard: {
     marginHorizontal: 24,
@@ -259,43 +262,39 @@ const styles = StyleSheet.create({
 
   scroll: { flex: 1, marginTop: 12 },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 40 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#1e293b', marginTop: 20, marginBottom: 16 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', marginTop: 20, marginBottom: 16 },
 
   stepCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
     borderRadius: 20,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
   },
-  stepCardCompleted: { backgroundColor: '#f8fafc', borderColor: '#e2e8f0' },
+  stepCardCompleted: { opacity: 0.75 },
   iconWrap: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   stepInfo: { flex: 1, marginLeft: 16 },
-  stepTitle: { fontSize: 16, fontWeight: '700', color: '#334155' },
+  stepTitle: { fontSize: 16, fontWeight: '700' },
   stepTitleDone: { color: '#94a3b8', textDecorationLine: 'none' },
-  stepDesc: { fontSize: 13, color: '#64748b', marginTop: 2 },
+  stepDesc: { fontSize: 13, marginTop: 2 },
   stepAction: { marginLeft: 8 },
 
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 20 },
-  footerText: { fontSize: 12, color: '#94a3b8', fontWeight: '500' },
+  footerText: { fontSize: 12, fontWeight: '500' },
 
-  roleSwitchTip: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    gap: 6, 
-    marginHorizontal: 24, 
-    marginBottom: 16, 
-    backgroundColor: '#f1f5f9', 
-    paddingHorizontal: 16, 
-    paddingVertical: 10, 
-    borderRadius: 14 
+  roleSwitchTip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginHorizontal: 24,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14
   },
-  roleSwitchText: { fontSize: 13, color: '#64748b', fontWeight: '500' },
+  roleSwitchText: { fontSize: 13, fontWeight: '500' },
   roleSwitchLink: { fontSize: 13, color: '#005d90', fontWeight: '800', textDecorationLine: 'underline' }
 });
-
 
 

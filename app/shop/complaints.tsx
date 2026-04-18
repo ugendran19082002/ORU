@@ -6,7 +6,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
+import { Logo } from '@/components/ui/Logo';
 import { complaintApi, Complaint } from '@/api/complaintApi';
 import Toast from 'react-native-toast-message';
 
@@ -17,6 +19,7 @@ const SHOP_SURF = roleSurface.shop_owner;
 const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
 
 export default function ShopComplaintsScreen() {
+  const router = useRouter();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -53,13 +56,22 @@ export default function ShopComplaintsScreen() {
 
       {/* HEADER */}
       <View style={styles.header}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 14 }}>
           <BackButton fallback="/shop/settings" />
-          <View>
-            <Text style={styles.headerTitle}>Customer Complaints</Text>
-            <Text style={styles.headerSub}>Viewing & Responding to Issues</Text>
+          <View style={{ flex: 1 }}>
+            <View style={styles.brandRow}>
+              <Logo size="md" />
+              <Text style={styles.brandName}>ThanniGo</Text>
+            </View>
+            <Text style={styles.roleLabel}>SHOP PANEL</Text>
           </View>
         </View>
+        <TouchableOpacity 
+          style={styles.notifBtnSub} 
+          onPress={() => router.push('/notifications' as any)}
+        >
+          <Ionicons name="notifications-outline" size={22} color={SHOP_ACCENT} />
+        </TouchableOpacity>
       </View>
 
       {/* TABS */}
@@ -83,6 +95,11 @@ export default function ShopComplaintsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.titleRow}>
+          <Text style={styles.pageTitle}>Customer Complaints</Text>
+          <Text style={styles.pageSub}>Viewing & Responding to Issues</Text>
+        </View>
+
         {isLoading ? (
           <ActivityIndicator size="large" color={SHOP_ACCENT} style={{ marginTop: 40 }} />
         ) : filteredComplaints.length === 0 ? (
@@ -135,13 +152,15 @@ export default function ShopComplaintsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: thannigoPalette.background },
-  header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 14, backgroundColor: 'white',
-    borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft
-  },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
-  headerSub: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
+  notifBtnSub: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
+
+  titleRow: { marginBottom: 16 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  pageSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 4 },
 
   tabContainer: { flexDirection: 'row', backgroundColor: 'white', paddingHorizontal: 16, paddingBottom: 10 },
   tab: { flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
