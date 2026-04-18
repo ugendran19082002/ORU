@@ -1,4 +1,4 @@
-﻿import type { ColorSchemeColors } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { ExpoMap, ExpoMarker } from "@/components/maps/ExpoMap";
 import { BackButton } from "@/components/ui/BackButton";
 import { Logo } from "@/components/ui/Logo";
@@ -58,99 +58,76 @@ type Suggestion = {
   lng: number;
 };
 
-// ─── Collapsible Section ────────────────────────────────────────────────────
-function Section({
-  title,
-  icon,
-  children,
-  defaultOpen = true,
-}: {
-  title: string;
-  icon: string;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
+// Sub-components moved inside Main Screen
 
-  const toggle = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setOpen((v) => !v);
-  };
-
-  return (
-    <View style={styles.sectionWrap}>
-      <TouchableOpacity style={styles.sectionHeader} onPress={toggle} activeOpacity={0.7}>
-        <View style={styles.sectionHeaderLeft}>
-          <View style={styles.sectionIconWrap}>
-            <Ionicons name={icon as any} size={18} color={SHOP_ACCENT} />
-          </View>
-          <Text style={styles.sectionTitle}>{title}</Text>
-        </View>
-        <Ionicons
-          name={open ? "chevron-up" : "chevron-down"}
-          size={18}
-          color={colors.muted}
-        />
-      </TouchableOpacity>
-      {open && <View style={styles.card}>{children}</View>}
-    </View>
-  );
-}
-
-// ─── Input Field ─────────────────────────────────────────────────────────────
-function Field({
-  label,
-  value,
-  onChangeText,
-  placeholder,
-  keyboardType,
-  autoCapitalize,
-  multiline,
-  editable = true,
-  suffix,
-  flex,
-}: {
-  label: string;
-  value: string;
-  onChangeText?: (t: string) => void;
-  placeholder?: string;
-  keyboardType?: any;
-  autoCapitalize?: any;
-  multiline?: boolean;
-  editable?: boolean;
-  suffix?: React.ReactNode;
-  flex?: number;
-}) {
-  return (
-    <View style={[styles.fieldWrap, flex !== undefined && { flex }]}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={styles.inputRow}>
-        <TextInput
-          style={[
-            styles.input,
-            !editable && styles.inputDisabled,
-            multiline && { minHeight: 56, textAlignVertical: "top" },
-            suffix ? { flex: 1, marginBottom: 0 } : {},
-          ]}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor={colors.muted}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
-          multiline={multiline}
-          editable={editable}
-        />
-        {suffix}
-      </View>
-    </View>
-  );
-}
+// Sub-components moved inside Main Screen
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function ShopProfileScreen() {
   const { colors, isDark } = useAppTheme();
   const styles = makeStyles(colors);
+
+  // ─── Inner Components ───────────────────────────────────────────────────────
+
+  const Section = ({ title, icon, children, defaultOpen = true }: {
+    title: string;
+    icon: string;
+    children: React.ReactNode;
+    defaultOpen?: boolean;
+  }) => {
+    const [open, setOpen] = useState(defaultOpen);
+    const toggle = () => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setOpen((v) => !v);
+    };
+    return (
+      <View style={styles.sectionWrap}>
+        <TouchableOpacity style={styles.sectionHeader} onPress={toggle} activeOpacity={0.7}>
+          <View style={styles.sectionHeaderLeft}>
+            <View style={styles.sectionIconWrap}>
+              <Ionicons name={icon as any} size={18} color={SHOP_ACCENT} />
+            </View>
+            <Text style={styles.sectionTitle}>{title}</Text>
+          </View>
+          <Ionicons name={open ? "chevron-up" : "chevron-down"} size={18} color={colors.muted} />
+        </TouchableOpacity>
+        {open && <View style={styles.card}>{children}</View>}
+      </View>
+    );
+  };
+
+  const Field = ({
+    label, value, onChangeText, placeholder, keyboardType, autoCapitalize, multiline, editable = true, suffix, flex
+  }: {
+    label: string; value: string; onChangeText?: (t: string) => void; placeholder?: string;
+    keyboardType?: any; autoCapitalize?: any; multiline?: boolean; editable?: boolean;
+    suffix?: React.ReactNode; flex?: number;
+  }) => {
+    return (
+      <View style={[styles.fieldWrap, flex !== undefined && { flex }]}>
+        <Text style={styles.label}>{label}</Text>
+        <View style={styles.inputRow}>
+          <TextInput
+            style={[
+              styles.input,
+              !editable && styles.inputDisabled,
+              multiline && { minHeight: 56, textAlignVertical: "top" },
+              suffix ? { flex: 1, marginBottom: 0 } : {},
+            ]}
+            value={value}
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor={colors.muted}
+            keyboardType={keyboardType}
+            autoCapitalize={autoCapitalize}
+            multiline={multiline}
+            editable={editable}
+          />
+          {suffix}
+        </View>
+      </View>
+    );
+  };
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   useAndroidBackHandler(() => safeBack("/shop/settings"));

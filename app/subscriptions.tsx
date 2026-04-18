@@ -87,7 +87,6 @@ export default function SubscriptionsScreen() {
   const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();
-  const { colors, isDark } = useAppTheme();
 
   useAndroidBackHandler(() => { safeBack('/(tabs)/profile'); });
 

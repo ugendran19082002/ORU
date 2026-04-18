@@ -25,7 +25,6 @@ export default function RewardsScreen() {
   const styles = makeStyles(colors);
   const router = useRouter();
   const { user } = useAppSession();
-  const { colors, isDark } = useAppTheme();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 

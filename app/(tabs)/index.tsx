@@ -204,7 +204,6 @@ export default function HomeScreen() {
     })
     .sort((a,b) => a.distanceKm - b.distanceKm);
 
-  const { colors, isDark } = useAppTheme();
 
   if (loadingLoc) {
     return (

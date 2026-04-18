@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -64,7 +64,7 @@ function formatDate(iso?: string | null): string {
   }
 }
 
-function getRoleBadgeTheme(role: AppRole | string) {
+function getRoleBadgeTheme(role: AppRole | string, colors: ColorSchemeColors) {
   switch (role) {
     case 'admin':
       return { bg: ADMIN_SURF, text: ADMIN_ACCENT };
@@ -86,282 +86,6 @@ function getRoleLabel(role: AppRole | string): string {
     case 'customer': return 'Customer';
     default: return role;
   }
-}
-
-// ─── User Card ────────────────────────────────────────────────────────────────
-
-interface UserCardProps {
-  user: AdminUser;
-  onPress: (user: AdminUser) => void;
-}
-
-function UserCard({ user, onPress }: UserCardProps) {
-  const roleBadge = getRoleBadgeTheme(user.role);
-  const isActive = user.status === 'active';
-
-  return (
-    <TouchableOpacity style={styles.card} onPress={() => onPress(user)} activeOpacity={0.75}>
-      {/* Avatar + info */}
-      <View style={styles.cardRow}>
-        <View style={styles.avatarBox}>
-          <Text style={styles.avatarText}>
-            {(user.name || user.phone || '?').charAt(0).toUpperCase()}
-          </Text>
-        </View>
-
-        <View style={styles.cardInfo}>
-          <Text style={styles.cardName} numberOfLines={1}>
-            {user?.name || '—'}
-          </Text>
-          <Text style={styles.cardPhone}>{user?.phone || 'No Phone'}</Text>
-          {user?.email ? (
-            <Text style={styles.cardEmail} numberOfLines={1}>{user.email}</Text>
-          ) : null}
-        </View>
-
-        <View style={styles.cardBadges}>
-          {/* Role badge */}
-          <View style={[styles.badge, { backgroundColor: roleBadge.bg }]}>
-            <Text style={[styles.badgeText, { color: roleBadge.text }]}>
-              {getRoleLabel(user?.role || 'customer')}
-            </Text>
-          </View>
-          {/* Status badge */}
-          <View style={[styles.badge, { backgroundColor: isActive ? '#e8f5e9' : '#f5f5f5', marginTop: 4 }]}>
-            <View style={[styles.statusDot, { backgroundColor: isActive ? colors.success : '#9e9e9e' }]} />
-            <Text style={[styles.badgeText, { color: isActive ? colors.success : '#757575' }]}>
-              {isActive ? 'Active' : (user?.status || 'inactive').charAt(0).toUpperCase() + (user?.status || 'inactive').slice(1)}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Join date footer */}
-      <View style={styles.cardFooter}>
-        <Ionicons name="calendar-outline" size={11} color="#94a3b8" />
-        <Text style={styles.cardFooterText}>Joined {formatDate(user.created_at)}</Text>
-        <Ionicons name="chevron-forward" size={14} color="#c8d6e0" style={{ marginLeft: 'auto' }} />
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-// ─── Detail Modal ─────────────────────────────────────────────────────────────
-
-interface UserDetailModalProps {
-  user: AdminUser | null;
-  visible: boolean;
-  onClose: () => void;
-  onUpdated: (updated: AdminUser) => void;
-}
-
-function UserDetailModal({ user, visible, onClose, onUpdated }: UserDetailModalProps) {
-  const [actionLoading, setActionLoading] = useState(false);
-  const [roleLoading, setRoleLoading] = useState(false);
-  const [showRolePicker, setShowRolePicker] = useState(false);
-
-  if (!user) return null;
-
-  const isActive = user.status === 'active';
-  const roleBadge = getRoleBadgeTheme(user.role);
-
-  const handleToggleSuspend = () => {
-    const nextStatus = isActive ? 'suspended' : 'active';
-    const actionLabel = isActive ? 'Suspend' : 'Unsuspend';
-
-    Alert.alert(
-      `${actionLabel} User`,
-      `Are you sure you want to ${actionLabel.toLowerCase()} ${user.name || user.phone}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: actionLabel,
-          style: isActive ? 'destructive' : 'default',
-          onPress: async () => {
-            setActionLoading(true);
-            try {
-              const res = await adminUsersApi.updateUser(user.id, { status: nextStatus });
-              if (res.status === 1 && res.data) {
-                onUpdated(res.data);
-                Toast.show({ type: 'success', text1: 'Done', text2: `User ${actionLabel.toLowerCase()}ed.` });
-                onClose();
-              } else {
-                throw new Error(res.message || 'Update failed');
-              }
-            } catch (err: any) {
-              Toast.show({ type: 'error', text1: 'Error', text2: err?.message ?? 'Action failed.' });
-            } finally {
-              setActionLoading(false);
-            }
-          },
-        },
-      ],
-    );
-  };
-
-  const handleChangeRole = async (newRole: AppRole) => {
-    if (newRole === user.role) {
-      setShowRolePicker(false);
-      return;
-    }
-    Alert.alert(
-      'Change Role',
-      `Change ${user.name || user.phone}'s role to ${getRoleLabel(newRole)}?`,
-      [
-        { text: 'Cancel', style: 'cancel', onPress: () => setShowRolePicker(false) },
-        {
-          text: 'Confirm',
-          onPress: async () => {
-            setShowRolePicker(false);
-            setRoleLoading(true);
-            try {
-              const res = await adminUsersApi.updateUser(user.id, { role: newRole });
-              if (res.status === 1 && res.data) {
-                onUpdated(res.data);
-                Toast.show({ type: 'success', text1: 'Role Updated', text2: `Role changed to ${getRoleLabel(newRole)}.` });
-                onClose();
-              } else {
-                throw new Error(res.message || 'Update failed');
-              }
-            } catch (err: any) {
-              Toast.show({ type: 'error', text1: 'Error', text2: err?.message ?? 'Role change failed.' });
-            } finally {
-              setRoleLoading(false);
-            }
-          },
-        },
-      ],
-    );
-  };
-
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent
-      onRequestClose={onClose}
-    >
-      <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
-        <TouchableOpacity activeOpacity={1} style={styles.modalSheet}>
-          {/* Handle */}
-          <View style={styles.modalHandle} />
-
-          {/* Header row */}
-          <View style={styles.modalHeader}>
-            <View style={styles.modalAvatar}>
-              <Text style={styles.modalAvatarText}>
-                {(user.name || user.phone || '?').charAt(0).toUpperCase()}
-              </Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.modalName} numberOfLines={1}>{user.name || '—'}</Text>
-              <Text style={styles.modalPhone}>{user.phone}</Text>
-            </View>
-            <TouchableOpacity style={styles.modalCloseBtn} onPress={onClose}>
-              <Ionicons name="close" size={20} color={colors.muted} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Info rows */}
-          <View style={styles.modalInfo}>
-            {user.email ? (
-              <View style={styles.modalInfoRow}>
-                <Ionicons name="mail-outline" size={15} color={colors.muted} />
-                <Text style={styles.modalInfoText}>{user.email}</Text>
-              </View>
-            ) : null}
-            <View style={styles.modalInfoRow}>
-              <Ionicons name="person-outline" size={15} color={colors.muted} />
-              <View style={[styles.badge, { backgroundColor: roleBadge.bg }]}>
-                <Text style={[styles.badgeText, { color: roleBadge.text }]}>
-                  {getRoleLabel(user.role)}
-                </Text>
-              </View>
-            </View>
-            <View style={styles.modalInfoRow}>
-              <Ionicons name="calendar-outline" size={15} color={colors.muted} />
-              <Text style={styles.modalInfoText}>Joined {formatDate(user.created_at)}</Text>
-            </View>
-            <View style={styles.modalInfoRow}>
-              <Ionicons name="ellipse" size={10} color={user.status === 'active' ? '#2e7d32' : '#9e9e9e'} />
-              <Text style={[styles.modalInfoText, { fontWeight: '700', color: user.status === 'active' ? '#2e7d32' : '#757575' }]}>
-                {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.modalDivider} />
-
-          {/* Role picker */}
-          {showRolePicker ? (
-            <View style={styles.rolePicker}>
-              <Text style={styles.rolePickerTitle}>Select New Role</Text>
-              {ROLE_OPTIONS.map((opt) => (
-                <TouchableOpacity
-                  key={opt.key}
-                  style={[styles.roleOption, user.role === opt.key && styles.roleOptionActive]}
-                  onPress={() => handleChangeRole(opt.key)}
-                  disabled={roleLoading}
-                >
-                  <Text style={[styles.roleOptionText, user.role === opt.key && styles.roleOptionTextActive]}>
-                    {opt.label}
-                  </Text>
-                  {user.role === opt.key && (
-                    <Ionicons name="checkmark" size={16} color={ADMIN_ACCENT} />
-                  )}
-                </TouchableOpacity>
-              ))}
-              <TouchableOpacity style={styles.rolePickerCancel} onPress={() => setShowRolePicker(false)}>
-                <Text style={styles.rolePickerCancelText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            /* Action buttons */
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={[styles.modalActionBtn, styles.modalActionBtnOutline]}
-                onPress={() => setShowRolePicker(true)}
-                disabled={roleLoading || actionLoading}
-              >
-                {roleLoading ? (
-                  <ActivityIndicator size="small" color={ADMIN_ACCENT} />
-                ) : (
-                  <>
-                    <Ionicons name="swap-horizontal-outline" size={16} color={ADMIN_ACCENT} />
-                    <Text style={[styles.modalActionBtnText, { color: ADMIN_ACCENT }]}>Change Role</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.modalActionBtn,
-                  isActive ? styles.modalActionBtnDanger : styles.modalActionBtnSuccess,
-                ]}
-                onPress={handleToggleSuspend}
-                disabled={actionLoading || roleLoading}
-              >
-                {actionLoading ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <>
-                    <Ionicons
-                      name={isActive ? 'ban-outline' : 'checkmark-circle-outline'}
-                      size={16}
-                      color="white"
-                    />
-                    <Text style={[styles.modalActionBtnText, { color: 'white' }]}>
-                      {isActive ? 'Suspend' : 'Unsuspend'}
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
-        </TouchableOpacity>
-      </TouchableOpacity>
-    </Modal>
-  );
 }
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
@@ -395,6 +119,258 @@ export default function AdminUsersScreen() {
       if (searchTimer.current) clearTimeout(searchTimer.current);
     };
   }, [search]);
+
+  // ─── Sub-components inside closure ──────────────────────────────────────────
+
+  const UserCard = ({ user, onPress }: { user: AdminUser; onPress: (user: AdminUser) => void }) => {
+    const roleBadge = getRoleBadgeTheme(user.role, colors);
+    const isActive = user.status === 'active';
+
+    return (
+      <TouchableOpacity style={styles.card} onPress={() => onPress(user)} activeOpacity={0.75}>
+        <View style={styles.cardRow}>
+          <View style={styles.avatarBox}>
+            <Text style={styles.avatarText}>
+              {(user.name || user.phone || '?').charAt(0).toUpperCase()}
+            </Text>
+          </View>
+
+          <View style={styles.cardInfo}>
+            <Text style={styles.cardName} numberOfLines={1}>
+              {user?.name || '—'}
+            </Text>
+            <Text style={styles.cardPhone}>{user?.phone || 'No Phone'}</Text>
+            {user?.email ? (
+              <Text style={styles.cardEmail} numberOfLines={1}>{user.email}</Text>
+            ) : null}
+          </View>
+
+          <View style={styles.cardBadges}>
+            <View style={[styles.badge, { backgroundColor: roleBadge.bg }]}>
+              <Text style={[styles.badgeText, { color: roleBadge.text }]}>
+                {getRoleLabel(user?.role || 'customer')}
+              </Text>
+            </View>
+            <View style={[styles.badge, { backgroundColor: isActive ? '#e8f5e9' : '#f5f5f5', marginTop: 4 }]}>
+              <View style={[styles.statusDot, { backgroundColor: isActive ? colors.success : '#9e9e9e' }]} />
+              <Text style={[styles.badgeText, { color: isActive ? colors.success : '#757575' }]}>
+                {isActive ? 'Active' : (user?.status || 'inactive').charAt(0).toUpperCase() + (user?.status || 'inactive').slice(1)}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.cardFooter}>
+          <Ionicons name="calendar-outline" size={11} color="#94a3b8" />
+          <Text style={styles.cardFooterText}>Joined {formatDate(user.created_at)}</Text>
+          <Ionicons name="chevron-forward" size={14} color="#c8d6e0" style={{ marginLeft: 'auto' }} />
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const UserDetailModal = ({ user, visible, onClose, onUpdated }: {
+    user: AdminUser | null;
+    visible: boolean;
+    onClose: () => void;
+    onUpdated: (updated: AdminUser) => void;
+  }) => {
+    const [actionLoading, setActionLoading] = useState(false);
+    const [roleLoading, setRoleLoading] = useState(false);
+    const [showRolePicker, setShowRolePicker] = useState(false);
+
+    if (!user) return null;
+
+    const isActive = user.status === 'active';
+    const roleBadge = getRoleBadgeTheme(user.role, colors);
+
+    const handleToggleSuspend = () => {
+      const nextStatus = isActive ? 'suspended' : 'active';
+      const actionLabel = isActive ? 'Suspend' : 'Unsuspend';
+
+      Alert.alert(
+        `${actionLabel} User`,
+        `Are you sure you want to ${actionLabel.toLowerCase()} ${user.name || user.phone}?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: actionLabel,
+            style: isActive ? 'destructive' : 'default',
+            onPress: async () => {
+              setActionLoading(true);
+              try {
+                const res = await adminUsersApi.updateUser(user.id, { status: nextStatus });
+                if (res.status === 1 && res.data) {
+                  onUpdated(res.data);
+                  Toast.show({ type: 'success', text1: 'Done', text2: `User ${actionLabel.toLowerCase()}ed.` });
+                  onClose();
+                } else {
+                  throw new Error(res.message || 'Update failed');
+                }
+              } catch (err: any) {
+                Toast.show({ type: 'error', text1: 'Error', text2: err?.message ?? 'Action failed.' });
+              } finally {
+                setActionLoading(false);
+              }
+            },
+          },
+        ],
+      );
+    };
+
+    const handleChangeRole = async (newRole: AppRole) => {
+      if (newRole === user.role) {
+        setShowRolePicker(false);
+        return;
+      }
+      Alert.alert(
+        'Change Role',
+        `Change ${user.name || user.phone}'s role to ${getRoleLabel(newRole)}?`,
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => setShowRolePicker(false) },
+          {
+            text: 'Confirm',
+            onPress: async () => {
+              setShowRolePicker(false);
+              setRoleLoading(true);
+              try {
+                const res = await adminUsersApi.updateUser(user.id, { role: newRole });
+                if (res.status === 1 && res.data) {
+                  onUpdated(res.data);
+                  Toast.show({ type: 'success', text1: 'Role Updated', text2: `Role changed to ${getRoleLabel(newRole)}.` });
+                  onClose();
+                } else {
+                  throw new Error(res.message || 'Update failed');
+                }
+              } catch (err: any) {
+                Toast.show({ type: 'error', text1: 'Error', text2: err?.message ?? 'Role change failed.' });
+              } finally {
+                setRoleLoading(false);
+              }
+            },
+          },
+        ],
+      );
+    };
+
+    return (
+      <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
+          <TouchableOpacity activeOpacity={1} style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            <View style={styles.modalHeader}>
+              <View style={styles.modalAvatar}>
+                <Text style={styles.modalAvatarText}>
+                  {(user.name || user.phone || '?').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.modalName} numberOfLines={1}>{user.name || '—'}</Text>
+                <Text style={styles.modalPhone}>{user.phone}</Text>
+              </View>
+              <TouchableOpacity style={styles.modalCloseBtn} onPress={onClose}>
+                <Ionicons name="close" size={20} color={colors.muted} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalInfo}>
+              {user.email ? (
+                <View style={styles.modalInfoRow}>
+                  <Ionicons name="mail-outline" size={15} color={colors.muted} />
+                  <Text style={styles.modalInfoText}>{user.email}</Text>
+                </View>
+              ) : null}
+              <View style={styles.modalInfoRow}>
+                <Ionicons name="person-outline" size={15} color={colors.muted} />
+                <View style={[styles.badge, { backgroundColor: roleBadge.bg }]}>
+                  <Text style={[styles.badgeText, { color: roleBadge.text }]}>
+                    {getRoleLabel(user.role)}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.modalInfoRow}>
+                <Ionicons name="calendar-outline" size={15} color={colors.muted} />
+                <Text style={styles.modalInfoText}>Joined {formatDate(user.created_at)}</Text>
+              </View>
+              <View style={styles.modalInfoRow}>
+                <Ionicons name="ellipse" size={10} color={user.status === 'active' ? '#2e7d32' : '#9e9e9e'} />
+                <Text style={[styles.modalInfoText, { fontWeight: '700', color: user.status === 'active' ? '#2e7d32' : '#757575' }]}>
+                  {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.modalDivider} />
+
+            {showRolePicker ? (
+              <View style={styles.rolePicker}>
+                <Text style={styles.rolePickerTitle}>Select New Role</Text>
+                {ROLE_OPTIONS.map((opt) => (
+                  <TouchableOpacity
+                    key={opt.key}
+                    style={[styles.roleOption, user.role === opt.key && styles.roleOptionActive]}
+                    onPress={() => handleChangeRole(opt.key)}
+                    disabled={roleLoading}
+                  >
+                    <Text style={[styles.roleOptionText, user.role === opt.key && styles.roleOptionTextActive]}>
+                      {opt.label}
+                    </Text>
+                    {user.role === opt.key && (
+                      <Ionicons name="checkmark" size={16} color={ADMIN_ACCENT} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity style={styles.rolePickerCancel} onPress={() => setShowRolePicker(false)}>
+                  <Text style={styles.rolePickerCancelText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.modalActionBtn, styles.modalActionBtnOutline]}
+                  onPress={() => setShowRolePicker(true)}
+                  disabled={roleLoading || actionLoading}
+                >
+                  {roleLoading ? (
+                    <ActivityIndicator size="small" color={ADMIN_ACCENT} />
+                  ) : (
+                    <>
+                      <Ionicons name="swap-horizontal-outline" size={16} color={ADMIN_ACCENT} />
+                      <Text style={[styles.modalActionBtnText, { color: ADMIN_ACCENT }]}>Change Role</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.modalActionBtn,
+                    isActive ? styles.modalActionBtnDanger : styles.modalActionBtnSuccess,
+                  ]}
+                  onPress={handleToggleSuspend}
+                  disabled={actionLoading || roleLoading}
+                >
+                  {actionLoading ? (
+                    <ActivityIndicator size="small" color="white" />
+                  ) : (
+                    <>
+                      <Ionicons
+                        name={isActive ? 'ban-outline' : 'checkmark-circle-outline'}
+                        size={16}
+                        color="white"
+                      />
+                      <Text style={[styles.modalActionBtnText, { color: 'white' }]}>
+                        {isActive ? 'Suspend' : 'Unsuspend'}
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+    );
+  };
 
   const fetchUsers = useCallback(async (pageNum: number, reset: boolean) => {
     if (reset) {

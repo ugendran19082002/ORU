@@ -25,7 +25,6 @@ export default function EditProfileScreen() {
   const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();
-  const { colors, isDark } = useAppTheme();
 
   const { user, updateUser } = useAppSession();
   const [isLoading, setIsLoading] = useState(false);

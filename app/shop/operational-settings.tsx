@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, TextInput, ActivityIndicator,
@@ -196,6 +196,7 @@ export default function ShopOperationalSettingsScreen() {
                 value={perKmCharge} 
                 onUpdate={setPerKmCharge} 
                 unit="₹" 
+                styles={styles}
               />
               <Text style={styles.hintText}>Additional cost for every KM beyond the free limit.</Text>
 
@@ -205,6 +206,7 @@ export default function ShopOperationalSettingsScreen() {
                   value={freeKm} 
                   onUpdate={setFreeKm} 
                   min={0} max={10} unit=" KM" step={0.5} 
+                  styles={styles}
                 />
                 <Text style={styles.hintText}>Orders within this distance only pay the base charge.</Text>
               </View>
@@ -216,6 +218,7 @@ export default function ShopOperationalSettingsScreen() {
                   onUpdate={setMaxRange} 
                   options={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 25, 30, 40, 50]} 
                   unit=" KM" 
+                  styles={styles}
                 />
                 <Text style={styles.hintText}>The widest radius your shop can fulfill.</Text>
               </View>
@@ -229,6 +232,7 @@ export default function ShopOperationalSettingsScreen() {
                 value={floorCharge} 
                 onUpdate={setFloorCharge} 
                 unit="₹" 
+                styles={styles}
               />
               <Text style={styles.hintText}>Additional cost for carrying cans to higher floors (per floor).</Text>
               
@@ -237,6 +241,7 @@ export default function ShopOperationalSettingsScreen() {
                   label="Free Delivery Upto Floor" 
                   value={freeFloor} 
                   onUpdate={setFreeFloor} 
+                  styles={styles}
                 />
                 <Text style={styles.hintText}>Floors up to this limit will not incur any floor charges.</Text>
               </View>
@@ -287,9 +292,10 @@ interface StepperProps {
   value: number;
   onUpdate: (value: number) => void;
   unit?: string;
+  styles: any;
 }
 
-const Stepper = ({ label, value, onUpdate, unit = '' }: StepperProps) => {
+const Stepper = ({ label, value, onUpdate, unit = '', styles }: StepperProps) => {
   const increment = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onUpdate(Number(value) + 1);
@@ -331,9 +337,10 @@ interface DropdownProps {
   onUpdate: (value: number) => void;
   options: number[];
   unit?: string;
+  styles: any;
 }
 
-const CustomDropdown = ({ label, value, onUpdate, options: initialOptions, unit = '' }: DropdownProps) => {
+const CustomDropdown = ({ label, value, onUpdate, options: initialOptions, unit = '', styles }: DropdownProps) => {
   // Ensure the current value is in the options list so it always shows as selected
   const options = React.useMemo(() => {
     const list = [...initialOptions];
@@ -389,9 +396,10 @@ interface SliderProps {
   max: number;
   unit?: string;
   step?: number;
+  styles: any;
 }
 
-const DraggableSlider = ({ label, value, onUpdate, min, max, unit = '', step = 1 }: SliderProps) => {
+const DraggableSlider = ({ label, value, onUpdate, min, max, unit = '', step = 1, styles }: SliderProps) => {
   const [sliderWidth, setSliderWidth] = useState(0);
   const sliderWidthRef = React.useRef(0);
   const isDragging = React.useRef(false);

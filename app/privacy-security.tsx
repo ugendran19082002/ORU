@@ -19,7 +19,6 @@ export default function PrivacySecurityScreen() {
   const { colors, isDark } = useAppTheme();
   const styles = makeStyles(colors);
   const router = useRouter();
-  const { colors, isDark } = useAppTheme();
   const {
     isPinEnabled, isBiometricsEnabled, togglePin, toggleBiometrics, enablePinRemote, initialize
   } = useSecurityStore();

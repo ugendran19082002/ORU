@@ -51,7 +51,6 @@ export default function CustomerPaymentHistoryScreen() {
   const { colors, isDark } = useAppTheme();
   const styles = makeStyles(colors);
   const { safeBack } = useAppNavigation();
-  const { colors, isDark } = useAppTheme();
 
   useAndroidBackHandler(() => {
     safeBack('/(tabs)/profile');

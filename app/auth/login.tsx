@@ -55,7 +55,6 @@ export default function LoginScreen() {
   const { safeBack } = useAppNavigation();
   const { preferredRole, user, setPreferredRole } = useAppSession();
   const { isBiometricsEnabled: biometricEnabled } = useSecurityStore();
-  const { colors, isDark } = useAppTheme();
 
   // Screen fade-in animation
   const fadeAnim = useRef(new Animated.Value(0)).current;

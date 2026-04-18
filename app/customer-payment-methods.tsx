@@ -30,7 +30,6 @@ export default function CustomerPaymentMethodsScreen() {
   const { colors, isDark } = useAppTheme();
   const styles = makeStyles(colors);
   const { safeBack } = useAppNavigation();
-  const { colors, isDark } = useAppTheme();
   useAndroidBackHandler(() => { safeBack('/(tabs)/profile'); });
 
   const [loading, setLoading] = useState(true);

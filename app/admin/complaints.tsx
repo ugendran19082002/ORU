@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -52,7 +52,7 @@ function formatTime(iso: string): string {
   }
 }
 
-function getStatusTheme(status: Complaint['status']) {
+function getStatusTheme(status: Complaint['status'], colors: ColorSchemeColors) {
   switch (status) {
     case 'open':
       return { bg: ADMIN_SURF, text: ADMIN_ACCENT, label: 'Open' };
@@ -65,189 +65,6 @@ function getStatusTheme(status: Complaint['status']) {
     default:
       return { bg: colors.border, text: colors.muted, label: status };
   }
-}
-
-/* ---- Complaint Card ---- */
-interface ComplaintCardProps {
-  complaint: Complaint;
-  expanded: boolean;
-  onToggle: () => void;
-  onAction: (id: number, action: 'refund' | 'replacement' | 'reject') => void;
-  actionLoading: boolean;
-}
-
-function ComplaintCard({ complaint, expanded, onToggle, onAction, actionLoading }: ComplaintCardProps) {
-  const statusTheme = getStatusTheme(complaint.status);
-  const canAction = complaint.admin_action === 'pending_review' || complaint.admin_action === null;
-
-  return (
-    <View style={[styles.card, complaint.is_sos && styles.cardSos]}>
-      <TouchableOpacity onPress={onToggle} activeOpacity={0.75}>
-        {/* Top row: badges + status */}
-        <View style={styles.cardTopRow}>
-          <View style={styles.cardBadgeRow}>
-            {complaint.is_sos && (
-              <View style={styles.sosBadge}>
-                <Ionicons name="warning" size={10} color="white" />
-                <Text style={styles.sosBadgeText}>SOS</Text>
-              </View>
-            )}
-            <View style={[
-              styles.priorityBadge,
-              { backgroundColor: complaint.priority === 'urgent' ? ADMIN_SURF : colors.border },
-            ]}>
-              <Text style={[
-                styles.priorityText,
-                { color: complaint.priority === 'urgent' ? ADMIN_ACCENT : colors.muted },
-              ]}>
-                {complaint.priority.toUpperCase()}
-              </Text>
-            </View>
-          </View>
-          <View style={[styles.statusBadge, { backgroundColor: statusTheme.bg }]}>
-            <Text style={[styles.statusBadgeText, { color: statusTheme.text }]}>
-              {statusTheme.label}
-            </Text>
-          </View>
-        </View>
-
-        {/* Order + Customer meta */}
-        <View style={styles.cardMeta}>
-          <View style={styles.cardMetaRow}>
-            <Ionicons name="receipt-outline" size={13} color="#707881" />
-            <Text style={styles.cardMetaText}>
-              {complaint.Order?.order_number
-                ? `Order #${complaint.Order.order_number}`
-                : `Order ID: ${complaint.order_id}`}
-              {complaint.Order?.total_amount
-                ? `  •  ₹${complaint.Order.total_amount}`
-                : ''}
-            </Text>
-          </View>
-          {complaint.Shop && (
-            <View style={styles.cardMetaRow}>
-              <Ionicons name="water-outline" size={13} color="#707881" />
-              <Text style={styles.cardMetaText} numberOfLines={1}>
-                {complaint.Shop.name}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Issue type + description */}
-        <Text style={styles.issueType}>
-          {complaint.issue_type ?? complaint.type}
-        </Text>
-        <Text style={styles.issueDesc} numberOfLines={expanded ? undefined : 2}>
-          {complaint.description}
-        </Text>
-
-        {/* Card footer: timestamp + expand toggle */}
-        <View style={styles.cardFooter}>
-          <View style={styles.cardMetaRow}>
-            <Ionicons name="time-outline" size={12} color="#94a3b8" />
-            <Text style={styles.timeText}>{formatTime(complaint.created_at)}</Text>
-          </View>
-          <Ionicons
-            name={expanded ? 'chevron-up' : 'chevron-down'}
-            size={16}
-            color="#94a3b8"
-          />
-        </View>
-      </TouchableOpacity>
-
-      {/* Expanded section */}
-      {expanded && (
-        <View style={styles.expandedSection}>
-          <View style={styles.expandedDivider} />
-
-          {complaint.admin_notes ? (
-            <View style={styles.expandedRow}>
-              <Ionicons name="document-text-outline" size={14} color="#707881" />
-              <Text style={styles.expandedLabel}>Admin Notes:</Text>
-              <Text style={styles.expandedValue}>{complaint.admin_notes}</Text>
-            </View>
-          ) : null}
-
-          {complaint.resolution_type ? (
-            <View style={styles.expandedRow}>
-              <Ionicons name="checkmark-circle-outline" size={14} color="#2e7d32" />
-              <Text style={styles.expandedLabel}>Resolution:</Text>
-              <Text style={[styles.expandedValue, { color: colors.success, fontWeight: '700' }]}>
-                {complaint.resolution_type.charAt(0).toUpperCase() + complaint.resolution_type.slice(1)}
-              </Text>
-            </View>
-          ) : null}
-
-          {complaint.resolution_notes ? (
-            <View style={styles.expandedRow}>
-              <Ionicons name="chatbubble-outline" size={14} color="#707881" />
-              <Text style={styles.expandedLabel}>Notes:</Text>
-              <Text style={styles.expandedValue}>{complaint.resolution_notes}</Text>
-            </View>
-          ) : null}
-
-          {complaint.admin_action && complaint.admin_action !== 'pending_review' && (
-            <View style={styles.expandedRow}>
-              <Ionicons
-                name={complaint.admin_action === 'approved' ? 'checkmark-circle' : 'close-circle'}
-                size={14}
-                color={complaint.admin_action === 'approved' ? colors.success : ADMIN_ACCENT}
-              />
-              <Text style={styles.expandedLabel}>Admin Action:</Text>
-              <Text style={[
-                styles.expandedValue,
-                { fontWeight: '700', color: complaint.admin_action === 'approved' ? colors.success : ADMIN_ACCENT },
-              ]}>
-                {complaint.admin_action.charAt(0).toUpperCase() + complaint.admin_action.slice(1)}
-              </Text>
-            </View>
-          )}
-
-          {/* Action buttons — only for unreviewed complaints */}
-          {canAction && (
-            <View style={styles.actionRow}>
-              {actionLoading ? (
-                <ActivityIndicator size="small" color={ADMIN_ACCENT} style={{ marginVertical: 8 }} />
-              ) : (
-                <>
-                  <TouchableOpacity
-                    style={[styles.actionBtn, { flex: 1, minWidth: 120 }]}
-                    onPress={() => onAction(complaint.id, 'refund')}
-                  >
-                    <LinearGradient colors={[ADMIN_ACCENT, ADMIN_ACCENT]} style={styles.actionBtnGrad}>
-                      <Ionicons name="cash-outline" size={14} color="white" />
-                      <Text style={styles.actionBtnText}>Approve + Refund</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.actionBtn, { flex: 1, minWidth: 120 }]}
-                    onPress={() => onAction(complaint.id, 'replacement')}
-                  >
-                    <LinearGradient colors={['#006878', '#00838f']} style={styles.actionBtnGrad}>
-                      <Ionicons name="swap-horizontal-outline" size={14} color="white" />
-                      <Text style={styles.actionBtnText}>Approve + Replace</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.actionBtn, styles.actionBtnReject]}
-                    onPress={() => onAction(complaint.id, 'reject')}
-                  >
-                    <View style={styles.actionBtnRejectInner}>
-                      <Ionicons name="close-outline" size={14} color={ADMIN_ACCENT} />
-                      <Text style={styles.actionBtnRejectText}>Reject</Text>
-                    </View>
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
-          )}
-        </View>
-      )}
-    </View>
-  );
 }
 
 /* ---- Screen ---- */
@@ -267,6 +84,187 @@ export default function AdminComplaintsScreen() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
 
+  /* ---- Sub-components inside closure ---- */
+  const ComplaintCard = ({ complaint, expanded, onToggle, onAction, actionLoading }: {
+    complaint: Complaint;
+    expanded: boolean;
+    onToggle: () => void;
+    onAction: (id: number, action: 'refund' | 'replacement' | 'reject') => void;
+    actionLoading: boolean;
+  }) => {
+    const statusTheme = getStatusTheme(complaint.status, colors);
+    const canAction = complaint.admin_action === 'pending_review' || complaint.admin_action === null;
+
+    return (
+      <View style={[styles.card, complaint.is_sos && styles.cardSos]}>
+        <TouchableOpacity onPress={onToggle} activeOpacity={0.75}>
+          {/* Top row: badges + status */}
+          <View style={styles.cardTopRow}>
+            <View style={styles.cardBadgeRow}>
+              {complaint.is_sos && (
+                <View style={styles.sosBadge}>
+                  <Ionicons name="warning" size={10} color="white" />
+                  <Text style={styles.sosBadgeText}>SOS</Text>
+                </View>
+              )}
+              <View style={[
+                styles.priorityBadge,
+                { backgroundColor: complaint.priority === 'urgent' ? ADMIN_SURF : colors.border },
+              ]}>
+                <Text style={[
+                  styles.priorityText,
+                  { color: complaint.priority === 'urgent' ? ADMIN_ACCENT : colors.muted },
+                ]}>
+                  {complaint.priority.toUpperCase()}
+                </Text>
+              </View>
+            </View>
+            <View style={[styles.statusBadge, { backgroundColor: statusTheme.bg }]}>
+              <Text style={[styles.statusBadgeText, { color: statusTheme.text }]}>
+                {statusTheme.label}
+              </Text>
+            </View>
+          </View>
+
+          {/* Order + Customer meta */}
+          <View style={styles.cardMeta}>
+            <View style={styles.cardMetaRow}>
+              <Ionicons name="receipt-outline" size={13} color="#707881" />
+              <Text style={styles.cardMetaText}>
+                {complaint.Order?.order_number
+                  ? `Order #${complaint.Order.order_number}`
+                  : `Order ID: ${complaint.order_id}`}
+                {complaint.Order?.total_amount
+                  ? `  •  ₹${complaint.Order.total_amount}`
+                  : ''}
+              </Text>
+            </View>
+            {complaint.Shop && (
+              <View style={styles.cardMetaRow}>
+                <Ionicons name="water-outline" size={13} color="#707881" />
+                <Text style={styles.cardMetaText} numberOfLines={1}>
+                  {complaint.Shop.name}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Issue type + description */}
+          <Text style={styles.issueType}>
+            {complaint.issue_type ?? complaint.type}
+          </Text>
+          <Text style={styles.issueDesc} numberOfLines={expanded ? undefined : 2}>
+            {complaint.description}
+          </Text>
+
+          {/* Card footer: timestamp + expand toggle */}
+          <View style={styles.cardFooter}>
+            <View style={styles.cardMetaRow}>
+              <Ionicons name="time-outline" size={12} color="#94a3b8" />
+              <Text style={styles.timeText}>{formatTime(complaint.created_at)}</Text>
+            </View>
+            <Ionicons
+              name={expanded ? 'chevron-up' : 'chevron-down'}
+              size={16}
+              color="#94a3b8"
+            />
+          </View>
+        </TouchableOpacity>
+
+        {/* Expanded section */}
+        {expanded && (
+          <View style={styles.expandedSection}>
+            <View style={styles.expandedDivider} />
+
+            {complaint.admin_notes ? (
+              <View style={styles.expandedRow}>
+                <Ionicons name="document-text-outline" size={14} color="#707881" />
+                <Text style={styles.expandedLabel}>Admin Notes:</Text>
+                <Text style={styles.expandedValue}>{complaint.admin_notes}</Text>
+              </View>
+            ) : null}
+
+            {complaint.resolution_type ? (
+              <View style={styles.expandedRow}>
+                <Ionicons name="checkmark-circle-outline" size={14} color="#2e7d32" />
+                <Text style={styles.expandedLabel}>Resolution:</Text>
+                <Text style={[styles.expandedValue, { color: colors.success, fontWeight: '700' }]}>
+                  {complaint.resolution_type.charAt(0).toUpperCase() + complaint.resolution_type.slice(1)}
+                </Text>
+              </View>
+            ) : null}
+
+            {complaint.resolution_notes ? (
+              <View style={styles.expandedRow}>
+                <Ionicons name="chatbubble-outline" size={14} color="#707881" />
+                <Text style={styles.expandedLabel}>Notes:</Text>
+                <Text style={styles.expandedValue}>{complaint.resolution_notes}</Text>
+              </View>
+            ) : null}
+
+            {complaint.admin_action && complaint.admin_action !== 'pending_review' && (
+              <View style={styles.expandedRow}>
+                <Ionicons
+                  name={complaint.admin_action === 'approved' ? 'checkmark-circle' : 'close-circle'}
+                  size={14}
+                  color={complaint.admin_action === 'approved' ? colors.success : ADMIN_ACCENT}
+                />
+                <Text style={styles.expandedLabel}>Admin Action:</Text>
+                <Text style={[
+                  styles.expandedValue,
+                  { fontWeight: '700', color: complaint.admin_action === 'approved' ? colors.success : ADMIN_ACCENT },
+                ]}>
+                  {complaint.admin_action.charAt(0).toUpperCase() + complaint.admin_action.slice(1)}
+                </Text>
+              </View>
+            )}
+
+            {/* Action buttons — only for unreviewed complaints */}
+            {canAction && (
+              <View style={styles.actionRow}>
+                {actionLoading ? (
+                  <ActivityIndicator size="small" color={ADMIN_ACCENT} style={{ marginVertical: 8 }} />
+                ) : (
+                  <>
+                    <TouchableOpacity
+                      style={[styles.actionBtn, { flex: 1, minWidth: 120 }]}
+                      onPress={() => onAction(complaint.id, 'refund')}
+                    >
+                      <LinearGradient colors={[ADMIN_ACCENT, ADMIN_ACCENT]} style={styles.actionBtnGrad}>
+                        <Ionicons name="cash-outline" size={14} color="white" />
+                        <Text style={styles.actionBtnText}>Approve + Refund</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.actionBtn, { flex: 1, minWidth: 120 }]}
+                      onPress={() => onAction(complaint.id, 'replacement')}
+                    >
+                      <LinearGradient colors={['#006878', '#00838f']} style={styles.actionBtnGrad}>
+                        <Ionicons name="swap-horizontal-outline" size={14} color="white" />
+                        <Text style={styles.actionBtnText}>Approve + Replace</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.actionBtn, styles.actionBtnReject]}
+                      onPress={() => onAction(complaint.id, 'reject')}
+                    >
+                      <View style={styles.actionBtnRejectInner}>
+                        <Ionicons name="close-outline" size={14} color={ADMIN_ACCENT} />
+                        <Text style={styles.actionBtnRejectText}>Reject</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            )}
+          </View>
+        )}
+      </View>
+    );
+  };
+
   const fetchComplaints = useCallback(async () => {
     try {
       const params: Parameters<typeof complaintApi.adminListComplaints>[0] = {
@@ -278,7 +276,6 @@ export default function AdminComplaintsScreen() {
       }
 
       const result = await complaintApi.adminListComplaints(params);
-      // result is PaginatedData<Complaint>: { data, total, page, per_page }
       let list = result.data ?? [];
 
       if (showSosOnly) {
@@ -287,7 +284,6 @@ export default function AdminComplaintsScreen() {
 
       setComplaints(list);
 
-      // Tally SOS in the full unfiltered fetch (cheap approximation from returned data)
       const allRes = await complaintApi.adminListComplaints({ page: 1, limit: 100 });
       setTotalSos((allRes.data ?? []).filter((c) => c.is_sos).length);
     } catch (err: any) {
@@ -384,7 +380,6 @@ export default function AdminComplaintsScreen() {
               </View>
               <Text style={styles.headerSub}>{complaints.length} active complaints</Text>
             </View>
-            {/* SOS toggle */}
             <TouchableOpacity
               style={[styles.sosToggle, showSosOnly && styles.sosToggleActive]}
               onPress={() => setShowSosOnly((v) => !v)}
@@ -473,10 +468,8 @@ export default function AdminComplaintsScreen() {
   );
 }
 
-/* ---- Styles ---- */
 const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-
   headerSafe: { 
     backgroundColor: colors.surface, 
     borderBottomWidth: 1, 
@@ -501,7 +494,6 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   },
   pageTitle: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
   headerSub: { fontSize: 13, color: colors.muted, fontWeight: '600', marginTop: 2 },
-  
   sosHeaderBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -512,7 +504,6 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
     paddingVertical: 5,
   },
   sosHeaderBadgeText: { color: 'white', fontWeight: '800', fontSize: 11 },
-
   sosToggle: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -526,7 +517,6 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   },
   sosToggleActive: { backgroundColor: ADMIN_ACCENT, borderColor: ADMIN_ACCENT },
   sosToggleText: { fontSize: 13, fontWeight: '800', color: ADMIN_ACCENT },
-
   filterBar: {
     paddingVertical: 14,
     backgroundColor: colors.surface,
@@ -545,10 +535,7 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   tabActive: { backgroundColor: ADMIN_ACCENT },
   tabText: { fontSize: 12, fontWeight: '800', color: colors.muted },
   tabTextActive: { color: 'white' },
-
   scrollContent: { padding: 20, paddingBottom: 100 },
-
-  /* Card */
   card: {
     backgroundColor: colors.surface,
     borderRadius: 20,
@@ -568,7 +555,6 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: ADMIN_ACCENT,
   },
-
   cardTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -576,7 +562,6 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
     marginBottom: 10,
   },
   cardBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-
   sosBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -587,17 +572,13 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
     paddingVertical: 3,
   },
   sosBadgeText: { color: 'white', fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
-
   priorityBadge: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
   priorityText: { fontSize: 10, fontWeight: '700' },
-
   statusBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   statusBadgeText: { fontSize: 11, fontWeight: '800' },
-
   cardMeta: { gap: 4, marginBottom: 8 },
   cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   cardMetaText: { fontSize: 12, color: colors.muted, fontWeight: '500' },
-
   issueType: {
     fontSize: 15,
     fontWeight: '800',
@@ -606,7 +587,6 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
     letterSpacing: -0.2,
   },
   issueDesc: { fontSize: 13, color: colors.muted, lineHeight: 19, marginBottom: 10 },
-
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -614,8 +594,6 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
     marginTop: 4,
   },
   timeText: { fontSize: 11, color: '#94a3b8', fontWeight: '500' },
-
-  /* Expanded */
   expandedSection: { marginTop: 4 },
   expandedDivider: { height: 1, backgroundColor: colors.border, marginVertical: 12 },
   expandedRow: {
@@ -626,8 +604,6 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   },
   expandedLabel: { fontSize: 12, color: colors.muted, fontWeight: '700', minWidth: 96 },
   expandedValue: { fontSize: 12, color: colors.text, fontWeight: '500', flex: 1 },
-
-  /* Action buttons */
   actionRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -659,8 +635,6 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
     paddingHorizontal: 16,
   },
   actionBtnRejectText: { color: ADMIN_ACCENT, fontWeight: '800', fontSize: 12 },
-
-  /* Empty */
   emptyWrap: { alignItems: 'center', marginTop: 100, gap: 12 },
   emptyTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
   emptySubtitle: {

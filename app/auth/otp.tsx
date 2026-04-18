@@ -43,7 +43,6 @@ export default function OTPScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   const { signIn, setPreferredRole } = useAppSession();
-  const { colors, isDark } = useAppTheme();
 
   useAndroidBackHandler(() => {
     safeBack("/auth/login");

@@ -76,7 +76,6 @@ export default function AddressesScreen() {
   const { colors, isDark } = useAppTheme();
   const styles = makeStyles(colors);
   const router = useRouter();
-  const { colors, isDark } = useAppTheme();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 

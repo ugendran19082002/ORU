@@ -72,7 +72,6 @@ export default function AdminOverviewScreen() {
   const styles = makeStyles(colors);
   const router = useRouter();
   const { user, status } = useAppSession();
-  const { colors, isDark } = useAppTheme();
 
   const [refreshing, setRefreshing] = useState(false);
   const [pendingShops, setPendingShops] = useState<AdminShop[]>([]);

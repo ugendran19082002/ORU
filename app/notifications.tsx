@@ -68,7 +68,6 @@ export default function NotificationsScreen() {
   const { colors, isDark } = useAppTheme();
   const styles = makeStyles(colors);
   const router = useRouter();
-  const { colors, isDark } = useAppTheme();
   const { safeBack } = useAppNavigation();
   useAndroidBackHandler(() => { safeBack('/(tabs)'); });
 

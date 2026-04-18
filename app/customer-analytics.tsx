@@ -22,7 +22,6 @@ export default function CustomerAnalyticsScreen() {
   const { colors, isDark } = useAppTheme();
   const styles = makeStyles(colors);
   const { safeBack } = useAppNavigation();
-  const { colors, isDark } = useAppTheme();
   const [activeTab, setActiveTab] = useState<'spending' | 'usage'>('spending');
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<CustomerAnalytics | null>(null);

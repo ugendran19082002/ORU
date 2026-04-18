@@ -6,6 +6,7 @@ import React, {
 } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { WebView } from "react-native-webview";
+import { useAppTheme } from "@/providers/ThemeContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -64,6 +65,16 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
     ref,
   ) => {
     const webviewRef = useRef<any>(null);
+    const { isDark, colors } = useAppTheme();
+
+    // Theme-aware colours injected into the HTML
+    const mapBg     = isDark ? '#0f172a' : '#f8fafc';
+    const layerBg   = isDark ? '#1e293b' : '#ffffff';
+    const layerBdr  = isDark ? '#334155' : '#e2e8f0';
+    const layerText = isDark ? '#94a3b8' : '#64748b';
+    const layerActive= isDark ? '#38bdf8' : '#005d90';
+    const layerActText = '#ffffff';
+    const dragHintBg= isDark ? 'rgba(14,165,233,0.85)' : 'rgba(0,93,144,0.88)';
 
     useImperativeHandle(ref, () => ({
       panTo: (lat: number, lng: number) => {
@@ -76,7 +87,6 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
       let internalMode = 'std';
       if (mapType === 'satellite' || mapType === 'hybrid') internalMode = 'sat';
       if (mapType === 'terrain') internalMode = 'ter';
-      
       webviewRef.current?.injectJavaScript(`if(typeof switchLayer === 'function') switchLayer('${internalMode}'); true;`);
     }, [mapType]);
 
@@ -116,24 +126,63 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;width:100%;overflow:hidden;background:#f8fafc}
+    html,body{height:100%;width:100%;overflow:hidden;background:${mapBg}}
     #map{height:100vh;width:100vw}
     .leaflet-control-attribution{display:none!important}
-    /* ThanniGo Zoom Controls */
-    /* Layer Toggle */
-    .layer-ctrl { position: absolute; bottom: 24px; right: 16px; background: white; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; z-index: 1000; border: 1.5px solid #e2e8f0; }
-    .layer-btn { padding: 10px 14px; font-size: 11px; font-weight: 800; color: #64748b; text-align: center; border: none; background: white; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; }
-    .layer-btn.active { background: #005d90; color: white; }
-    .layer-btn:not(:last-child) { border-bottom: 1.5px solid #f1f4f9; }
-    /* Pin marker */
-    .cpw{display:flex;flex-direction:column;align-items:center}
-    .cpc{width:38px;height:38px;border-radius:50%;border:3px solid white;box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center}
-    .cpa{width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:10px solid white;margin-top:-2px}
-    /* Driver marker */
-    .drv{width:36px;height:36px;border-radius:50%;border:3px solid white;box-shadow:0 4px 12px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:16px}
+    /* ── Dark mode map tiles overlay ── */
+    ${isDark ? '.leaflet-tile-pane { filter: brightness(0.75) saturate(0.9) hue-rotate(180deg) invert(1); }' : ''}
+    /* ── Layer Toggle ── */
+    .layer-ctrl {
+      position: absolute; bottom: 32px; right: 16px;
+      background: ${layerBg}; border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,${isDark ? '0.5' : '0.18'});
+      display: flex; flex-direction: column; overflow: hidden; z-index: 1000;
+      border: 1.5px solid ${layerBdr};
+    }
+    .layer-btn {
+      padding: 10px 16px; font-size: 11px; font-weight: 800;
+      color: ${layerText}; text-align: center; border: none;
+      background: ${layerBg}; cursor: pointer;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      transition: background 0.2s, color 0.2s;
+    }
+    .layer-btn.active { background: ${layerActive}; color: ${layerActText}; }
+    .layer-btn:not(:last-child) { border-bottom: 1.5px solid ${layerBdr}; }
+    /* ── Zoom Controls ── */
+    .leaflet-control-zoom {
+      border: none !important;
+      box-shadow: 0 4px 16px rgba(0,0,0,${isDark ? '0.5' : '0.15'}) !important;
+      border-radius: 14px !important;
+      overflow: hidden;
+    }
+    .leaflet-control-zoom a {
+      background: ${layerBg} !important;
+      color: ${layerText} !important;
+      border-bottom: 1px solid ${layerBdr} !important;
+      font-size: 18px !important;
+      width: 36px !important; height: 36px !important;
+      line-height: 36px !important;
+    }
+    .leaflet-control-zoom a:hover { background: ${layerActive} !important; color: white !important; }
+    /* ── Custom Markers ── */
+    .cpw{display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.35))}
+    .cpc{width:40px;height:40px;border-radius:50%;border:3px solid white;display:flex;align-items:center;justify-content:center}
+    .cpa{width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-top:11px solid white;margin-top:-2px}
+    /* Driver / home / shop icons */
+    .drv{width:38px;height:38px;border-radius:50%;border:3px solid white;box-shadow:0 4px 12px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:18px}
     /* Drag hint */
-    .drag-label{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,93,144,.88);color:white;padding:7px 16px;border-radius:20px;font-size:12px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;white-space:nowrap;pointer-events:none;z-index:9999;animation:fadeit 4s ease forwards}
+    .drag-label{
+      position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+      background:${dragHintBg};color:white;
+      padding:8px 20px;border-radius:24px;font-size:12px;font-weight:700;
+      font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+      white-space:nowrap;pointer-events:none;z-index:9999;
+      letter-spacing:0.3px;
+      animation:fadeit 4.5s ease forwards
+    }
     @keyframes fadeit{0%,60%{opacity:1}100%{opacity:0}}
+    /* Attribution removed — using OSM data */
   </style>
 </head>
 <body>
@@ -141,7 +190,7 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
 <div class="layer-ctrl" style="\${HIDE_CONTROLS ? 'display:none' : ''}">
   <button id="btn-std" class="layer-btn \${INITIAL_MODE === 'std' ? 'active' : ''}" onclick="switchLayer('std')">Map</button>
   <button id="btn-sat" class="layer-btn \${INITIAL_MODE === 'sat' ? 'active' : ''}" onclick="switchLayer('sat')">Sat</button>
-  <button id="btn-ter" class="layer-btn \${INITIAL_MODE === 'ter' ? 'active' : ''}" onclick="switchLayer('ter')">Terr</button>
+  <button id="btn-ter" class="layer-btn \${INITIAL_MODE === 'ter' ? 'active' : ''}" onclick="switchLayer('ter')">Topo</button>
 </div>
 <script>
   var MARKERS = ${markersJs};
@@ -160,69 +209,48 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
     L.control.zoom({ position: 'topleft' }).addTo(map);
   }
 
-  var standardLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,subdomains:['a','b','c']});
-  var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 19,
-    attribution: 'Tiles &copy; Esri'
-  });
-  var terrainLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-    maxZoom: 19,
-    attribution: 'Tiles &copy; Esri'
-  });
+  var standardLayer  = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,subdomains:['a','b','c']});
+  var satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19});
+  var terrainLayer   = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19});
 
-  if (INITIAL_MODE === 'sat') {
-    satelliteLayer.addTo(map);
-  } else if (INITIAL_MODE === 'ter') {
-    terrainLayer.addTo(map);
-  } else {
-    standardLayer.addTo(map);
-  }
+  if (INITIAL_MODE === 'sat') { satelliteLayer.addTo(map); }
+  else if (INITIAL_MODE === 'ter') { terrainLayer.addTo(map); }
+  else { standardLayer.addTo(map); }
 
   function switchLayer(type) {
     map.removeLayer(standardLayer);
     map.removeLayer(satelliteLayer);
     map.removeLayer(terrainLayer);
-    
-    document.getElementById('btn-std').classList.remove('active');
-    document.getElementById('btn-sat').classList.remove('active');
-    document.getElementById('btn-ter').classList.remove('active');
-
-    if (type === 'sat') {
-      satelliteLayer.addTo(map);
-      document.getElementById('btn-sat').classList.add('active');
-    } else if (type === 'ter') {
-      terrainLayer.addTo(map);
-      document.getElementById('btn-ter').classList.add('active');
-    } else {
-      standardLayer.addTo(map);
-      document.getElementById('btn-std').classList.add('active');
-    }
+    ['btn-std','btn-sat','btn-ter'].forEach(function(id){ document.getElementById(id).classList.remove('active'); });
+    if (type === 'sat') { satelliteLayer.addTo(map); document.getElementById('btn-sat').classList.add('active'); }
+    else if (type === 'ter') { terrainLayer.addTo(map); document.getElementById('btn-ter').classList.add('active'); }
+    else { standardLayer.addTo(map); document.getElementById('btn-std').classList.add('active'); }
   }
 
   function makeIcon(m) {
-    var color = m.color || '#005d90';
+    var color = m.color || '${colors.primary}';
     var type = m.iconType || 'pin';
     var html = '';
     if (type === 'bicycle') {
       html = '<div class="drv" style="background:'+color+'">🚲</div>';
-      return L.divIcon({className:'',iconSize:[36,36],iconAnchor:[18,18],popupAnchor:[0,-18],html:html});
+      return L.divIcon({className:'',iconSize:[38,38],iconAnchor:[19,19],popupAnchor:[0,-22],html:html});
     }
     if (type === 'home') {
       html = '<div class="drv" style="background:'+color+'">🏠</div>';
-      return L.divIcon({className:'',iconSize:[36,36],iconAnchor:[18,18],popupAnchor:[0,-18],html:html});
+      return L.divIcon({className:'',iconSize:[38,38],iconAnchor:[19,19],popupAnchor:[0,-22],html:html});
     }
     if (type === 'shop') {
       html = '<div class="drv" style="background:'+color+'">🏪</div>';
-      return L.divIcon({className:'',iconSize:[36,36],iconAnchor:[18,18],popupAnchor:[0,-18],html:html});
+      return L.divIcon({className:'',iconSize:[38,38],iconAnchor:[19,19],popupAnchor:[0,-22],html:html});
     }
-    // default: custom pin
+    // default: precision pin
     html = '<div class="cpw">'
       +'<div class="cpc" style="background:'+color+'">'
-      +'<svg viewBox="0 0 24 24" width="18" height="18" fill="white" xmlns="http://www.w3.org/2000/svg">'
+      +'<svg viewBox="0 0 24 24" width="20" height="20" fill="white" xmlns="http://www.w3.org/2000/svg">'
       +'<path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5 14.5 7.62 14.5 9 13.38 11.5 12 11.5z"/>'
       +'</svg></div>'
-      +'<div class="cpa"></div></div>';
-    return L.divIcon({className:'',iconSize:[38,48],iconAnchor:[19,48],popupAnchor:[0,-48],html:html});
+      +'<div class="cpa" style="border-top-color:'+color+'"></div></div>';
+    return L.divIcon({className:'',iconSize:[40,52],iconAnchor:[20,52],popupAnchor:[0,-52],html:html});
   }
 
   var mainMarker = null;
@@ -235,33 +263,28 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
       draggable: DRAGGABLE && idx === 0,
       autoPan: true
     }).addTo(map);
-    if (m.title) lm.bindPopup('<b style="font-family:-apple-system,sans-serif;font-size:13px">'+m.title+'</b>');
-    
-    lm.on("click", function(e) {
-      send("markerPress", m);
-    });
+    if (m.title) lm.bindPopup('<b style="font-family:-apple-system,sans-serif;font-size:13px;color:#1e293b">'+m.title+'</b>');
 
+    lm.on("click", function(e) { send("markerPress", m); });
     if (idx === 0) mainMarker = lm;
     latLngs.push([m.latitude, m.longitude]);
   });
 
   if (SHOW_ROUTE && latLngs.length > 1) {
     L.polyline(latLngs, {
-      color: '#005d90',
-      weight: 4,
-      opacity: 0.7,
-      dashArray: '8, 6'
+      color: '${colors.primary}',
+      weight: 5, opacity: 0.8, dashArray: '10, 8',
+      lineCap: 'round', lineJoin: 'round'
     }).addTo(map);
-    // Fit map to show all markers
-    map.fitBounds(latLngs, {padding:[40,40]});
+    map.fitBounds(latLngs, {padding:[52,52]});
   }
 
   if (DRAGGABLE && mainMarker) {
     var hint = document.createElement('div');
     hint.className = 'drag-label';
-    hint.textContent = 'Drag pin or tap to move';
+    hint.textContent = '📍 Drag pin or tap map to move';
     document.body.appendChild(hint);
-    setTimeout(function(){if(hint.parentNode)hint.parentNode.removeChild(hint);},4500);
+    setTimeout(function(){if(hint.parentNode)hint.parentNode.removeChild(hint);},5000);
 
     mainMarker.on('dragend', function(e){
       var ll = e.target.getLatLng();
@@ -279,7 +302,7 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
   }
 
   function panTo(lat,lng){
-    map.setView([lat,lng],map.getZoom(),{animate:true});
+    map.setView([lat,lng],map.getZoom(),{animate:true,duration:0.6});
     if(mainMarker) mainMarker.setLatLng([lat,lng]);
   }
 
@@ -295,7 +318,7 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
           ref={webviewRef}
           originWhitelist={["*"]}
           source={{ html: mapHtml }}
-          style={styles.webview}
+          style={[styles.webview, { backgroundColor: mapBg }]}
           startInLoadingState
           onMessage={handleMessage}
           javaScriptEnabled
@@ -303,8 +326,8 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
           allowFileAccess
           mixedContentMode="always"
           renderLoading={() => (
-            <View style={styles.loading}>
-              <ActivityIndicator size="large" color="#005d90" />
+            <View style={[styles.loading, { backgroundColor: mapBg }]}>
+              <ActivityIndicator size="large" color={colors.primary} />
             </View>
           )}
           onError={(e) => console.warn("[LEAFLET] error:", e.nativeEvent)}
@@ -316,10 +339,9 @@ export const LeafletMap = forwardRef<LeafletMapRef, LeafletMapProps>(
 
 const styles = StyleSheet.create({
   container: { flex: 1, overflow: "hidden" },
-  webview: { flex: 1, backgroundColor: "#f8fafc" },
+  webview: { flex: 1 },
   loading: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "#f8fafc",
     alignItems: "center",
     justifyContent: "center",
   },

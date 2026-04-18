@@ -94,7 +94,6 @@ export default function OrdersScreen() {
   const { colors, isDark } = useAppTheme();
   const styles = makeStyles(colors);
   const router = useRouter();
-  const { colors, isDark } = useAppTheme();
   const { accent } = useRoleTheme();
   const [tab, setTab] = useState<'active' | 'past'>('active');
   const [refreshing, setRefreshing] = useState(false);

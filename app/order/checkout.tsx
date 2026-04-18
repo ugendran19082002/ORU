@@ -1,4 +1,4 @@
-﻿import type { ColorSchemeColors } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { useAppNavigation } from "@/hooks/use-app-navigation";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -41,125 +41,9 @@ import { platformSubscriptionApi, CheckoutBenefits } from "@/api/platformSubscri
 
 type PaymentType = "upi" | "cod";
 
-function CouponBlock({ subtotal, onApply }: { subtotal: number; onApply?: (discount: number, code: string) => void }) {
-  const [coupon, setCoupon] = useState("");
-  const [discount, setDiscount] = useState(0);
-  const [couponError, setCouponError] = useState("");
-  const [isValidating, setIsValidating] = useState(false);
-
-  const applyCoupon = async () => {
-    const targetCode = coupon.trim().toUpperCase();
-    if (!targetCode) return;
-
-    setIsValidating(true);
-    setCouponError("");
-    try {
-      const result = await promotionApi.validateCoupon(targetCode, subtotal);
-      setDiscount(result.discount_amount);
-      setCoupon(targetCode);
-      onApply?.(result.discount_amount, targetCode);
-    } catch (err) {
-      setDiscount(0);
-      onApply?.(0, "");
-      if (err instanceof ApiError) {
-        setCouponError(err.message || "Invalid or expired coupon code.");
-      } else {
-        setCouponError("Could not validate coupon. Please try again.");
-      }
-    } finally {
-      setIsValidating(false);
-    }
-  };
-
-  return (
-    <View style={{ marginTop: 8 }}>
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        <View style={{ flex: 1, position: 'relative' }}>
-          <TextInput
-            value={coupon}
-            onChangeText={(t) => {
-              setCoupon(t);
-              setCouponError("");
-              if (discount > 0) {
-                setDiscount(0);
-                onApply?.(0, "");
-              }
-            }}
-            placeholder="Enter promo code"
-            placeholderTextColor="#bfc7d1"
-            autoCapitalize="characters"
-            style={{
-              backgroundColor: colors.surface,
-              borderRadius: 14,
-              paddingHorizontal: 14,
-              paddingVertical: 12,
-              paddingRight: 40,
-              borderWidth: 1.5,
-              borderColor: discount > 0 ? colors.success : couponError ? colors.error : colors.border,
-              fontSize: 15,
-              fontWeight: "700",
-              color: "#181c20",
-            }}
-          />
-          {discount > 0 && (
-            <View style={{ position: 'absolute', right: 12, top: 14 }}>
-              <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-            </View>
-          )}
-        </View>
-        <TouchableOpacity
-          onPress={applyCoupon}
-          disabled={!coupon.trim() || isValidating}
-          style={{
-            backgroundColor: colors.primary,
-            borderRadius: 14,
-            paddingHorizontal: 20,
-            justifyContent: "center",
-            opacity: !coupon.trim() || isValidating ? 0.6 : 1,
-          }}
-        >
-          {isValidating ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text style={{ color: "white", fontWeight: "800", fontSize: 14 }}>Apply</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-      {couponError ? (
-        <Text style={{ color: colors.error, fontSize: 12, marginTop: 8, fontWeight: "600", marginLeft: 4 }}>
-          {couponError}
-        </Text>
-      ) : null}
-      {discount > 0 ? (
-        <Text style={{ color: colors.success, fontSize: 13, marginTop: 8, fontWeight: "800", marginLeft: 4 }}>
-          Extra ₹{discount} off applied!
-        </Text>
-      ) : null}
-    </View>
-  );
-}
+// Sub-components moved inside Main Screen
  
-function LoyaltyBlock({ points, onToggle, isEnabled }: { points: number; onToggle: (val: boolean) => void; isEnabled: boolean }) {
-  return (
-    <View style={styles.loyaltyCard}>
-      <View style={{ flex: 1, gap: 4 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Ionicons name="gift" size={18} color={CUSTOMER_ACCENT} />
-          <Text style={{ fontSize: 13, fontWeight: '800', color: colors.text }}>Thanni Points</Text>
-        </View>
-        <Text style={{ fontSize: 11, color: colors.muted, fontWeight: '500' }}>
-          You have {points} points available. Use them to get a discount on this order.
-        </Text>
-      </View>
-      <TouchableOpacity 
-        onPress={() => onToggle(!isEnabled)}
-        style={[styles.loyaltyToggle, isEnabled && styles.loyaltyToggleActive]}
-      >
-        <View style={[styles.loyaltyThumb, isEnabled && styles.loyaltyThumbActive]} />
-      </TouchableOpacity>
-    </View>
-  );
-}
+// Sub-components moved inside Main Screen
 
 
 // Real address type based on API response
@@ -176,6 +60,127 @@ interface Address {
 export default function OrderCheckoutScreen() {
   const { colors, isDark } = useAppTheme();
   const styles = makeStyles(colors);
+
+  // ─── Inner Components ───────────────────────────────────────────────────────
+
+  const CouponBlock = ({ subtotal, onApply }: { subtotal: number; onApply?: (discount: number, code: string) => void }) => {
+    const [coupon, setCoupon] = useState("");
+    const [discount, setDiscount] = useState(0);
+    const [couponError, setCouponError] = useState("");
+    const [isValidating, setIsValidating] = useState(false);
+
+    const applyCoupon = async () => {
+      const targetCode = coupon.trim().toUpperCase();
+      if (!targetCode) return;
+      setIsValidating(true);
+      setCouponError("");
+      try {
+        const result = await promotionApi.validateCoupon(targetCode, subtotal);
+        setDiscount(result.discount_amount);
+        setCoupon(targetCode);
+        onApply?.(result.discount_amount, targetCode);
+      } catch (err) {
+        setDiscount(0);
+        onApply?.(0, "");
+        if (err instanceof ApiError) {
+          setCouponError(err.message || "Invalid or expired coupon code.");
+        } else {
+          setCouponError("Could not validate coupon. Please try again.");
+        }
+      } finally {
+        setIsValidating(false);
+      }
+    };
+
+    return (
+      <View style={{ marginTop: 8 }}>
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <View style={{ flex: 1, position: 'relative' }}>
+            <TextInput
+              value={coupon}
+              onChangeText={(t) => {
+                setCoupon(t);
+                setCouponError("");
+                if (discount > 0) {
+                  setDiscount(0);
+                  onApply?.(0, "");
+                }
+              }}
+              placeholder="Enter promo code"
+              placeholderTextColor="#bfc7d1"
+              autoCapitalize="characters"
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 14,
+                paddingHorizontal: 14,
+                paddingVertical: 12,
+                paddingRight: 40,
+                borderWidth: 1.5,
+                borderColor: discount > 0 ? colors.success : couponError ? colors.error : colors.border,
+                fontSize: 15,
+                fontWeight: "700",
+                color: colors.text,
+              }}
+            />
+            {discount > 0 && (
+              <View style={{ position: 'absolute', right: 12, top: 14 }}>
+                <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+              </View>
+            )}
+          </View>
+          <TouchableOpacity
+            onPress={applyCoupon}
+            disabled={!coupon.trim() || isValidating}
+            style={{
+              backgroundColor: colors.primary,
+              borderRadius: 14,
+              paddingHorizontal: 20,
+              justifyContent: "center",
+              opacity: !coupon.trim() || isValidating ? 0.6 : 1,
+            }}
+          >
+            {isValidating ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text style={{ color: "white", fontWeight: "800", fontSize: 14 }}>Apply</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+        {couponError ? (
+          <Text style={{ color: colors.error, fontSize: 12, marginTop: 8, fontWeight: "600", marginLeft: 4 }}>
+            {couponError}
+          </Text>
+        ) : null}
+        {discount > 0 ? (
+          <Text style={{ color: colors.success, fontSize: 13, marginTop: 8, fontWeight: "800", marginLeft: 4 }}>
+            Extra ₹{discount} off applied!
+          </Text>
+        ) : null}
+      </View>
+    );
+  };
+
+  const LoyaltyBlock = ({ points, onToggle, isEnabled }: { points: number; onToggle: (val: boolean) => void; isEnabled: boolean }) => {
+    return (
+      <View style={styles.loyaltyCard}>
+        <View style={{ flex: 1, gap: 4 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="gift" size={18} color={CUSTOMER_ACCENT} />
+            <Text style={{ fontSize: 13, fontWeight: '800', color: colors.text }}>Thanni Points</Text>
+          </View>
+          <Text style={{ fontSize: 11, color: colors.muted, fontWeight: '500' }}>
+            You have {points} points available. Use them to get a discount on this order.
+          </Text>
+        </View>
+        <TouchableOpacity 
+          onPress={() => onToggle(!isEnabled)}
+          style={[styles.loyaltyToggle, isEnabled && styles.loyaltyToggleActive]}
+        >
+          <View style={[styles.loyaltyThumb, isEnabled && styles.loyaltyThumbActive]} />
+        </TouchableOpacity>
+      </View>
+    );
+  };
   const [refreshing, setRefreshing] = React.useState(false);
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);

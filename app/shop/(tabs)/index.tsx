@@ -1,4 +1,4 @@
-﻿import type { ColorSchemeColors } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -95,234 +95,166 @@ const REJECT_REASONS = [
   "Customer unreachable",
 ];
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: colors.warning,
-  accepted: SHOP_ACCENT,
-  out_for_delivery: colors.primary,
-  completed: colors.success,
-  cancelled: '#ba1a1a',
-  delivered: colors.success,
-};
-
-// ─── Order Card ───────────────────────────────────────────────────────────────
-function OrderCard({
-  order,
-  shop,
-  colors,
-  onAccept,
-  onReject,
-  onDelivered,
-  onPress,
-}: {
-  order: any;
-  shop: any;
-  colors: any;
-  onAccept: () => void;
-  onReject: () => void;
-  onDelivered: () => void;
-  onPress: () => void;
-}) {
-  const [acting, setActing] = useState<
-    "accept" | "reject" | "delivered" | null
-  >(null);
-  const router = useRouter();
-
-  const totalQty =
-    order.items?.reduce((s: number, i: any) => s + i.quantity, 0) ?? 0;
-  const totalAmt = order.total_amount ?? order.totalAmount ?? 0;
-  const isPending = order.status === "pending";
-  const isAccepted = order.status === "accepted";
-
-  const doAction = async (type: "accept" | "reject" | "delivered") => {
-    setActing(type);
-    try {
-      if (type === "accept") await onAccept();
-      else if (type === "reject") onReject();
-      else await onDelivered();
-    } finally {
-      setTimeout(() => setActing(null), 1200);
-    }
-  };
-
-  return (
-    <TouchableOpacity
-      activeOpacity={0.92}
-      style={[styles.orderCard, { backgroundColor: colors.surface }, Shadow.sm]}
-      onPress={onPress}
-    >
-      {/* Top row */}
-      <View style={styles.orderTop}>
-        <View
-          style={[
-            styles.orderIconWrap,
-            { backgroundColor: colors.deliverySoft },
-          ]}
-        >
-          <Ionicons name="water" size={20} color={SHOP_ACCENT} />
-        </View>
-        <View style={{ flex: 1 }}>
-          {isPending && <Text style={styles.priorityLabel}>NEW ORDER</Text>}
-          <Text
-            style={[styles.customerName, { color: colors.text }]}
-            numberOfLines={1}
-          >
-            {order.customerName ?? order.customer_name ?? "Customer"}
-          </Text>
-        </View>
-        <View
-          style={[
-            styles.statusBadge,
-            {
-              backgroundColor:
-                (STATUS_COLORS[order.status] ?? SHOP_ACCENT) + "20",
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.statusBadgeText,
-              { color: STATUS_COLORS[order.status] ?? SHOP_ACCENT },
-            ]}
-          >
-            {order.status?.replace(/_/g, " ") ?? "—"}
-          </Text>
-        </View>
-      </View>
-
-      {/* Details row */}
-      <View style={styles.orderMetaRow}>
-        <View style={styles.orderMetaItem}>
-          <Ionicons name="layers-outline" size={14} color={colors.muted} />
-          <Text style={[styles.orderMetaText, { color: colors.text }]}>
-            {totalQty} can{totalQty !== 1 ? "s" : ""}
-          </Text>
-        </View>
-        <View style={styles.orderMetaItem}>
-          <Ionicons name="cash-outline" size={14} color={colors.muted} />
-          <Text style={[styles.orderMetaText, { color: colors.text }]}>
-            ₹{Number(totalAmt).toFixed(0)}
-          </Text>
-        </View>
-        <View style={styles.orderMetaItem}>
-          <Ionicons name="pricetag-outline" size={14} color={colors.muted} />
-          <Text style={[styles.orderMetaText, { color: colors.text }]}>
-            #{String(order.id).slice(-6)}
-          </Text>
-        </View>
-      </View>
-
-      {/* Address */}
-      <TouchableOpacity
-        style={styles.addressRow}
-        activeOpacity={0.7}
-        onPress={() =>
-          router.push({
-            pathname: "/map-preview",
-            params: {
-              lat: order.delivery_lat ?? "12.9716",
-              lng: order.delivery_lng ?? "80.221",
-              title: order.customerName ?? "Delivery",
-            },
-          })
-        }
-      >
-        <Ionicons name="location-outline" size={14} color={colors.muted} />
-        <Text
-          style={[styles.addressText, { color: colors.muted }]}
-          numberOfLines={2}
-        >
-          {order.address ?? order.delivery_address ?? "Address not available"}
-        </Text>
-        <Ionicons name="chevron-forward" size={12} color={colors.muted} />
-      </TouchableOpacity>
-
-      {/* Action Buttons — only for pending/accepted */}
-      {(isPending || isAccepted) && (
-        <View style={styles.actionArea}>
-          {isPending && (
-            <View style={styles.actionRow}>
-              <TouchableOpacity
-                style={{ flex: 1 }}
-                activeOpacity={0.9}
-                onPress={() => doAction("accept")}
-                disabled={acting !== null}
-              >
-                <LinearGradient
-                  colors={SHOP_GRAD}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={[
-                    styles.acceptBtn,
-                    acting === "accept" && { opacity: 0.7 },
-                  ]}
-                >
-                  <Ionicons name="checkmark-circle" size={18} color="white" />
-                  <Text style={styles.acceptBtnText}>
-                    {acting === "accept" ? "Accepting…" : "Accept"}
-                  </Text>
-                </LinearGradient>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.rejectBtn,
-                  {
-                    borderColor: colors.adminSoft,
-                    backgroundColor: colors.surface,
-                  },
-                ]}
-                onPress={() => doAction("reject")}
-                disabled={acting !== null}
-              >
-                <Ionicons
-                  name="close"
-                  size={16}
-                  color={'#ba1a1a'}
-                />
-                <Text
-                  style={[
-                    styles.rejectBtnText,
-                    { color: '#ba1a1a' },
-                  ]}
-                >
-                  Reject
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          {isAccepted && (
-            <TouchableOpacity
-              style={[
-                styles.deliveredBtn,
-                { backgroundColor: SHOP_ACCENT },
-                acting === "delivered" && { opacity: 0.7 },
-              ]}
-              onPress={() => doAction("delivered")}
-              disabled={acting !== null}
-            >
-              <Ionicons name="bicycle" size={16} color="white" />
-              <Text style={styles.deliveredBtnText}>
-                {acting === "delivered" ? "Updating…" : "Mark as Delivered"}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-    </TouchableOpacity>
-  );
+function getStatusColor(status: string | undefined, colors: ColorSchemeColors) {
+  const s = status || 'pending';
+  switch (s) {
+    case 'pending': return colors.warning;
+    case 'accepted': return SHOP_ACCENT;
+    case 'out_for_delivery': return colors.primary;
+    case 'completed':
+    case 'delivered': return colors.success;
+    case 'cancelled': return '#ba1a1a';
+    default: return SHOP_ACCENT;
+  }
 }
+
+// Sub-component moved inside Main Screen
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function ShopOrdersScreen() {
   const { colors, isDark } = useAppTheme();
   const styles = makeStyles(colors);
-  const { colors, isDark } = useAppTheme();
+
+  // ─── Order Card (Inner) ───────────────────────────────────────────────────
+  const OrderCard = ({
+    order,
+    onAccept,
+    onReject,
+    onDelivered,
+    onPress,
+  }: {
+    order: any;
+    onAccept: () => void;
+    onReject: () => void;
+    onDelivered: () => void;
+    onPress: () => void;
+  }) => {
+    const [acting, setActing] = useState<"accept" | "reject" | "delivered" | null>(null);
+    const router = useRouter();
+
+    const totalQty = order.items?.reduce((s: number, i: any) => s + i.quantity, 0) ?? 0;
+    const totalAmt = order.total_amount ?? order.totalAmount ?? 0;
+    const isPending = order.status === "pending";
+    const isAccepted = order.status === "accepted";
+    const statusColor = getStatusColor(order.status, colors);
+
+    const doAction = async (type: "accept" | "reject" | "delivered") => {
+      setActing(type);
+      try {
+        if (type === "accept") await onAccept();
+        else if (type === "reject") onReject();
+        else await onDelivered();
+      } finally {
+        setTimeout(() => setActing(null), 1200);
+      }
+    };
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.92}
+        style={[styles.orderCard, { backgroundColor: colors.surface }, Shadow.sm]}
+        onPress={onPress}
+      >
+        <View style={styles.orderTop}>
+          <View style={[styles.orderIconWrap, { backgroundColor: colors.deliverySoft }]}>
+            <Ionicons name="water" size={20} color={SHOP_ACCENT} />
+          </View>
+          <View style={{ flex: 1 }}>
+            {isPending && <Text style={styles.priorityLabel}>NEW ORDER</Text>}
+            <Text style={[styles.customerName, { color: colors.text }]} numberOfLines={1}>
+              {order.customerName ?? order.customer_name ?? "Customer"}
+            </Text>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: statusColor + "20" }]}>
+            <Text style={[styles.statusBadgeText, { color: statusColor }]}>
+              {order.status?.replace(/_/g, " ") ?? "—"}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.orderMetaRow}>
+          <View style={styles.orderMetaItem}>
+            <Ionicons name="layers-outline" size={14} color={colors.muted} />
+            <Text style={[styles.orderMetaText, { color: colors.text }]}>
+              {totalQty} can{totalQty !== 1 ? "s" : ""}
+            </Text>
+          </View>
+          <View style={styles.orderMetaItem}>
+            <Ionicons name="cash-outline" size={14} color={colors.muted} />
+            <Text style={[styles.orderMetaText, { color: colors.text }]}>
+              ₹{Number(totalAmt).toFixed(0)}
+            </Text>
+          </View>
+          <View style={styles.orderMetaItem}>
+            <Ionicons name="pricetag-outline" size={14} color={colors.muted} />
+            <Text style={[styles.orderMetaText, { color: colors.text }]}>
+              #{String(order.id).slice(-6)}
+            </Text>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={styles.addressRow}
+          activeOpacity={0.7}
+          onPress={() =>
+            router.push({
+              pathname: "/map-preview",
+              params: {
+                lat: order.delivery_lat ?? "12.9716",
+                lng: order.delivery_lng ?? "80.221",
+                title: order.customerName ?? "Delivery",
+              },
+            })
+          }
+        >
+          <Ionicons name="location-outline" size={14} color={colors.muted} />
+          <Text style={[styles.addressText, { color: colors.muted }]} numberOfLines={2}>
+            {order.address ?? order.delivery_address ?? "Address not available"}
+          </Text>
+          <Ionicons name="chevron-forward" size={12} color={colors.muted} />
+        </TouchableOpacity>
+
+        {(isPending || isAccepted) && (
+          <View style={styles.actionArea}>
+            {isPending && (
+              <View style={styles.actionRow}>
+                <TouchableOpacity style={{ flex: 1 }} activeOpacity={0.9} onPress={() => doAction("accept")} disabled={acting !== null}>
+                  <LinearGradient colors={SHOP_GRAD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.acceptBtn, acting === "accept" && { opacity: 0.7 }]}>
+                    <Ionicons name="checkmark-circle" size={18} color="white" />
+                    <Text style={styles.acceptBtnText}>{acting === "accept" ? "Accepting…" : "Accept"}</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.rejectBtn, { borderColor: colors.adminSoft, backgroundColor: colors.surface }]}
+                  onPress={() => doAction("reject")}
+                  disabled={acting !== null}
+                >
+                  <Ionicons name="close" size={16} color={'#ba1a1a'} />
+                  <Text style={[styles.rejectBtnText, { color: '#ba1a1a' }]}>Reject</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            {isAccepted && (
+              <TouchableOpacity
+                style={[styles.deliveredBtn, { backgroundColor: SHOP_ACCENT }, acting === "delivered" && { opacity: 0.7 }]}
+                onPress={() => doAction("delivered")}
+                disabled={acting !== null}
+              >
+                <Ionicons name="bicycle" size={16} color="white" />
+                <Text style={styles.deliveredBtnText}>{acting === "delivered" ? "Updating…" : "Mark as Delivered"}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabState>("active");
   const [acceptingOrders, setAcceptingOrders] = useState(true);
   const [busyMode, setBusyMode] = useState(false);
-  const [rejectModalOrderId, setRejectModalOrderId] = useState<string | null>(
-    null,
-  );
+  const [rejectModalOrderId, setRejectModalOrderId] = useState<string | null>(null);
   const [selectedRejectReason, setSelectedRejectReason] = useState<
     string | null
   >(null);
@@ -608,8 +540,6 @@ export default function ShopOrdersScreen() {
               <OrderCard
                 key={order.id}
                 order={order}
-                shop={shop}
-                colors={colors}
                 onAccept={async () => {
                   try {
                     await handleAccept(order.id);
@@ -703,15 +633,14 @@ export default function ShopOrdersScreen() {
                       style={[
                         styles.statusBadge,
                         {
-                          backgroundColor:
-                            (STATUS_COLORS[order.status] ?? SHOP_ACCENT) + "20",
+                          backgroundColor: getStatusColor(order.status, colors) + "20",
                         },
                       ]}
                     >
                       <Text
                         style={[
                           styles.statusBadgeText,
-                          { color: STATUS_COLORS[order.status] ?? SHOP_ACCENT },
+                          { color: getStatusColor(order.status, colors) },
                         ]}
                       >
                         {order.status?.replace(/_/g, " ")}

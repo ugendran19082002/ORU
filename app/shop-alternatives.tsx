@@ -27,7 +27,6 @@ export default function ShopAlternativesScreen() {
   const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();
-  const { colors, isDark } = useAppTheme();
   const { setSelectedShop, userLat, userLng } = useShopStore() as any;
   const [sort, setSort]         = useState<SortKey>('price');
   const [compareIds, setCompareIds] = useState<string[]>([]);
