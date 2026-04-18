@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, RefreshControl, Alert
@@ -6,6 +6,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -17,6 +18,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 
 export default function ShopOnboardingDashboard() {
+  const { colors, isDark } = useAppTheme();
   const router = useRouter();
   const { user, updateUser, status, refreshShopStatus, syncSession } = useAppSession();
   const { handleAuthBack } = useLogoutBackHandler();
@@ -198,7 +200,7 @@ export default function ShopOnboardingDashboard() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.safe} edges={['top']}>
         <View style={styles.header}>
           <BackButton
@@ -413,7 +415,7 @@ const styles = StyleSheet.create({
   stepCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,

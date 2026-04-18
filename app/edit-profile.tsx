@@ -1,9 +1,10 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Modal } from 'react-native';
+﻿import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Modal } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import Toast from 'react-native-toast-message';
 import * as SecureStore from 'expo-secure-store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
@@ -14,12 +15,14 @@ import { BackButton } from '@/components/ui/BackButton';
 import { useAppSession } from '@/hooks/use-app-session';
 import { userApi } from '@/api/userApi';
 import { ActivityIndicator } from 'react-native';
-import { Shadow, thannigoPalette, roleAccent, Radius } from '@/constants/theme';
+import { Shadow, roleAccent, Radius } from '@/constants/theme';
 import { useAppTheme } from '@/providers/ThemeContext';
 
-const PRIMARY = thannigoPalette.primary;
+const PRIMARY = colors.primary;
 
 export default function EditProfileScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   const { colors, isDark } = useAppTheme();
@@ -188,8 +191,8 @@ export default function EditProfileScreen() {
 
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: colors.muted }]}>Email Address</Text>
-                <View style={[styles.inputWrap, { backgroundColor: colors.inputBg, borderColor: colors.border }, isEmailVerified && { borderColor: thannigoPalette.success, backgroundColor: thannigoPalette.successSoft }]}>
-                <Ionicons name="mail-outline" size={20} color={isEmailVerified ? thannigoPalette.success : colors.muted} style={styles.inputIcon} />
+                <View style={[styles.inputWrap, { backgroundColor: colors.inputBg, borderColor: colors.border }, isEmailVerified && { borderColor: colors.success, backgroundColor: colors.successSoft }]}>
+                <Ionicons name="mail-outline" size={20} color={isEmailVerified ? colors.success : colors.muted} style={styles.inputIcon} />
                   <TextInput
                     style={[styles.input, { paddingRight: 80, color: colors.text }]}
                     value={email}
@@ -208,7 +211,7 @@ export default function EditProfileScreen() {
                     </TouchableOpacity>
                   ) : (
                     <View style={styles.verifiedBadge}>
-                    <Ionicons name="checkmark-circle" size={18} color={thannigoPalette.success} />
+                    <Ionicons name="checkmark-circle" size={18} color={colors.success} />
                     </View>
                   )}
                 </View>
@@ -306,7 +309,7 @@ export default function EditProfileScreen() {
 }
 
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
 
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1 },
@@ -331,7 +334,7 @@ const styles = StyleSheet.create({
   inputIcon: { paddingLeft: 18, paddingRight: 10 },
   input: { flex: 1, paddingVertical: 18, paddingRight: 16, fontSize: 16, fontWeight: '600' },
 
-  verifyBtn: { position: 'absolute', right: 8, top: 10, bottom: 10, backgroundColor: thannigoPalette.infoSoft, paddingHorizontal: 16, borderRadius: 10, justifyContent: 'center' },
+  verifyBtn: { position: 'absolute', right: 8, top: 10, bottom: 10, backgroundColor: colors.inputBg, paddingHorizontal: 16, borderRadius: 10, justifyContent: 'center' },
   verifyText: { color: PRIMARY, fontSize: 13, fontWeight: '800' },
   verifiedBadge: { position: 'absolute', right: 16, justifyContent: 'center' },
 
@@ -340,7 +343,7 @@ const styles = StyleSheet.create({
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.65)', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: Radius.xl, borderTopRightRadius: Radius.xl, padding: 32, alignItems: 'center', ...Shadow.lg },
-  modalIconWrap: { width: 76, height: 76, borderRadius: 38, backgroundColor: thannigoPalette.infoSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  modalIconWrap: { width: 76, height: 76, borderRadius: 38, backgroundColor: colors.inputBg, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   modalTitle: { fontSize: 26, fontWeight: '900', marginBottom: 8, letterSpacing: -0.5 },
   modalSub: { fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 30 },
   otpInput: { width: '80%', borderWidth: 2, borderRadius: 20, fontSize: 36, fontWeight: '900', textAlign: 'center', paddingVertical: 16, letterSpacing: 16, marginBottom: 36 },
@@ -355,7 +358,7 @@ const styles = StyleSheet.create({
   securityToggleTitle: { fontSize: 15, fontWeight: '800' },
   securityToggleSub: { fontSize: 12, marginTop: 2, fontWeight: '500' },
   toggleSwitch: { width: 44, height: 26, borderRadius: 13, padding: 2, justifyContent: 'center' },
-  toggleThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: 'white', ...Shadow.xs },
+  toggleThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.surface, ...Shadow.xs },
   toggleThumbActive: { transform: [{ translateX: 18 }] },
 });
 

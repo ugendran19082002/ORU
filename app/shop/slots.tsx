@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, ActivityIndicator, Alert, TextInput,
@@ -7,6 +7,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
@@ -16,7 +18,7 @@ import * as Haptics from 'expo-haptics';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
 
 const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_SURF = roleSurface.shop_owner;
@@ -36,6 +38,8 @@ interface DeliverySlot {
 }
 
 export default function ShopSlotsScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { width, height } = useWindowDimensions();
   const [loading, setLoading] = useState(true);
@@ -147,7 +151,7 @@ export default function ShopSlotsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* CUSTOM HEADER */}
@@ -211,7 +215,7 @@ export default function ShopSlotsScreen() {
                     <Text style={[styles.slotTime, { fontSize: isSmallScreen ? 14 : 15 }, !slot.is_active && { color: '#94a3b8' }]}>
                       {moment(slot.start_time, 'HH:mm:ss').format('hh:mm A')} - {moment(slot.end_time, 'HH:mm:ss').format('hh:mm A')}
                     </Text>
-                    <View style={[styles.capacityBadge, !slot.is_active && { backgroundColor: thannigoPalette.borderSoft }]}>
+                    <View style={[styles.capacityBadge, !slot.is_active && { backgroundColor: colors.border }]}>
                       <Ionicons name="cube-outline" size={10} color={slot.is_active ? SHOP_ACCENT : "#94a3b8"} style={{ marginRight: 4 }} />
                       <Text style={[styles.capacityText, !slot.is_active && { color: '#94a3b8' }]}>{slot.max_orders} Max Orders</Text>
                     </View>
@@ -224,8 +228,8 @@ export default function ShopSlotsScreen() {
                     <Switch
                       value={slot.is_active}
                       onValueChange={() => handleToggleSlot(slot.originalIndex)}
-                      trackColor={{ false: thannigoPalette.borderSoft, true: '#a7edff' }}
-                      thumbColor={slot.is_active ? SHOP_ACCENT : thannigoPalette.neutral}
+                      trackColor={{ false: colors.border, true: '#a7edff' }}
+                      thumbColor={slot.is_active ? SHOP_ACCENT : colors.muted}
                       style={{ transform: [{ scale: 0.8 }] }}
                     />
                   </View>
@@ -245,7 +249,7 @@ export default function ShopSlotsScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{isEditing ? 'Edit Slot' : 'Add Delivery Slot'}</Text>
               <TouchableOpacity onPress={() => setShowAddModal(false)} style={styles.closeBtn}>
-                <Ionicons name="close" size={20} color={thannigoPalette.neutral} />
+                <Ionicons name="close" size={20} color={colors.muted} />
               </TouchableOpacity>
             </View>
             
@@ -319,8 +323,8 @@ export default function ShopSlotsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { 
     flexDirection: 'row', 
@@ -331,13 +335,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.92)' 
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  brandName: { fontSize: 22, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
   notifBtnSub: { width: 40, height: 40, borderRadius: 12, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
   
   scrollContent: { paddingVertical: 10, paddingBottom: 120 },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, gap: 12 },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5, flex: 1 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -0.5, flex: 1 },
   actionGroup: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   addBtnSmall: { 
     flexDirection: 'row', alignItems: 'center', gap: 4, 
@@ -354,14 +358,14 @@ const styles = StyleSheet.create({
 
   infoCard: {
     flexDirection: 'row',
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
     padding: 16,
     borderRadius: 16,
     marginBottom: 24,
     alignItems: 'center',
     gap: 12,
   },
-  infoText: { flex: 1, fontSize: 13, color: thannigoPalette.neutral, lineHeight: 18, fontWeight: '500' },
+  infoText: { flex: 1, fontSize: 13, color: colors.muted, lineHeight: 18, fontWeight: '500' },
 
   dayGroup: { marginBottom: 20 },
   sectionHeader: { fontSize: 12, fontWeight: '800', color: '#94a3b8', marginBottom: 12, letterSpacing: 0.5 },
@@ -370,7 +374,7 @@ const styles = StyleSheet.create({
   slotCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     padding: 18,
     borderRadius: 20,
     marginBottom: 12,
@@ -382,10 +386,10 @@ const styles = StyleSheet.create({
   },
   slotCardDisabled: {
     opacity: 0.6,
-    backgroundColor: thannigoPalette.background
+    backgroundColor: colors.background
   },
   slotInfo: { flex: 1 },
-  slotTime: { fontWeight: '700', color: thannigoPalette.darkText, marginBottom: 6 },
+  slotTime: { fontWeight: '700', color: colors.text, marginBottom: 6 },
   capacityBadge: { 
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#e0f7fa', 
@@ -394,29 +398,29 @@ const styles = StyleSheet.create({
   },
   capacityText: { fontSize: 11, fontWeight: '800', color: SHOP_ACCENT },
   slotActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  iconActionBtn: { padding: 6, backgroundColor: thannigoPalette.borderSoft, borderRadius: 8 },
+  iconActionBtn: { padding: 6, backgroundColor: colors.border, borderRadius: 8 },
 
   modalOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(15,23,42,0.6)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: 'white' },
+  modalContent: { backgroundColor: colors.surface },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
-  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: colors.text },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   
   label: { fontSize: 11, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8, marginTop: 12 },
   dayPicker: { flexDirection: 'row', marginBottom: 8 },
-  dayItem: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: thannigoPalette.borderSoft, marginRight: 10 },
+  dayItem: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: colors.border, marginRight: 10 },
   dayItemActive: { backgroundColor: SHOP_ACCENT },
-  dayItemText: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral },
+  dayItemText: { fontSize: 13, fontWeight: '700', color: colors.muted },
   dayItemTextActive: { color: 'white' },
   
   row: { flexDirection: 'row', gap: 16 },
-  timeInputBox: { flex: 1, backgroundColor: thannigoPalette.borderSoft, padding: 14, borderRadius: 14 },
-  timeVal: { fontWeight: '700', color: thannigoPalette.darkText },
-  input: { backgroundColor: thannigoPalette.borderSoft, padding: 14, borderRadius: 14, fontSize: 16, fontWeight: '700', color: thannigoPalette.darkText, marginTop: 8 },
+  timeInputBox: { flex: 1, backgroundColor: colors.border, padding: 14, borderRadius: 14 },
+  timeVal: { fontWeight: '700', color: colors.text },
+  input: { backgroundColor: colors.border, padding: 14, borderRadius: 14, fontSize: 16, fontWeight: '700', color: colors.text, marginTop: 8 },
   
   modalActions: { flexDirection: 'row', gap: 12, marginTop: 30 },
-  cancelBtn: { flex: 1, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: thannigoPalette.borderSoft },
-  cancelText: { fontWeight: '800', color: thannigoPalette.neutral },
+  cancelBtn: { flex: 1, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.border },
+  cancelText: { fontWeight: '800', color: colors.muted },
   confirmBtn: { flex: 1, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: SHOP_ACCENT },
   confirmText: { fontWeight: '800', color: 'white' },
 });

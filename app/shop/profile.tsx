@@ -1,3 +1,4 @@
+﻿import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { ExpoMap, ExpoMarker } from "@/components/maps/ExpoMap";
 import { BackButton } from "@/components/ui/BackButton";
 import { Logo } from "@/components/ui/Logo";
@@ -10,10 +11,11 @@ import {
 import { safeNavigate } from "@/utils/safeNavigation";
 import { shopApi } from "@/api/shopApi";
 import { Ionicons } from "@expo/vector-icons";
-import { Shadow, thannigoPalette, roleAccent, roleSurface } from "@/constants/theme";
+import { Shadow, roleAccent, roleSurface } from "@/constants/theme";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useAppTheme } from '@/providers/ThemeContext';
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   TouchableOpacity,
@@ -87,7 +89,7 @@ function Section({
         <Ionicons
           name={open ? "chevron-up" : "chevron-down"}
           size={18}
-          color={thannigoPalette.neutral}
+          color={colors.muted}
         />
       </TouchableOpacity>
       {open && <View style={styles.card}>{children}</View>}
@@ -133,7 +135,7 @@ function Field({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={thannigoPalette.neutral}
+          placeholderTextColor={colors.muted}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           multiline={multiline}
@@ -147,6 +149,8 @@ function Field({
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function ShopProfileScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   useAndroidBackHandler(() => safeBack("/shop/settings"));
@@ -427,7 +431,7 @@ export default function ShopProfileScreen() {
     return (
       <SafeAreaView style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
         <ActivityIndicator size="large" color={SHOP_ACCENT} />
-        <Text style={{ marginTop: 12, color: thannigoPalette.neutral, fontWeight: "600" }}>
+        <Text style={{ marginTop: 12, color: colors.muted, fontWeight: "600" }}>
           Loading profile…
         </Text>
       </SafeAreaView>
@@ -436,7 +440,7 @@ export default function ShopProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -508,19 +512,19 @@ export default function ShopProfileScreen() {
               <Text style={styles.locationStepLabel}>Search your area or locality</Text>
             </View>
             <View style={styles.searchInputWrap}>
-              <Ionicons name="search-outline" size={18} color={thannigoPalette.neutral} style={{ marginLeft: 14 }} />
+              <Ionicons name="search-outline" size={18} color={colors.muted} style={{ marginLeft: 14 }} />
               <TextInput
                 style={styles.searchInput}
                 value={searchQuery}
                 onChangeText={handleSearchChange}
                 placeholder="Search street, area, landmark…"
-                placeholderTextColor={thannigoPalette.neutral}
+                placeholderTextColor={colors.muted}
                 returnKeyType="search"
               />
               {isSearching && <ActivityIndicator size="small" color={SHOP_ACCENT} style={{ marginRight: 14 }} />}
               {searchQuery.length > 0 && !isSearching && (
                 <TouchableOpacity onPress={() => { setSearchQuery(""); setSuggestions([]); }} style={{ marginRight: 14 }}>
-                  <Ionicons name="close-circle" size={18} color={thannigoPalette.neutral} />
+                  <Ionicons name="close-circle" size={18} color={colors.muted} />
                 </TouchableOpacity>
               )}
             </View>
@@ -606,7 +610,7 @@ export default function ShopProfileScreen() {
 
             {addressArea.length > 0 && (
               <View style={styles.addressPreviewCard}>
-                <Ionicons name="checkmark-circle" size={18} color={thannigoPalette.success} />
+                <Ionicons name="checkmark-circle" size={18} color={colors.success} />
                 <Text style={styles.addressPreviewText} numberOfLines={2}>{addressArea}</Text>
               </View>
             )}
@@ -670,8 +674,8 @@ export default function ShopProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
 
   header: {
     flexDirection: "row",
@@ -681,10 +685,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     backgroundColor: "rgba(255,255,255,0.95)",
     borderBottomWidth: 1,
-    borderBottomColor: thannigoPalette.borderSoft,
+    borderBottomColor: colors.border,
   },
   brandRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  brandName: { fontSize: 22, fontWeight: "900", color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  brandName: { fontSize: 22, fontWeight: "900", color: colors.text, letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: "700", color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
 
   saveHeaderBtn: {
@@ -702,7 +706,7 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 28,
     fontWeight: "900",
-    color: thannigoPalette.darkText,
+    color: colors.text,
     letterSpacing: -0.5,
     marginTop: 10,
     marginBottom: 20,
@@ -728,9 +732,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  sectionTitle: { fontSize: 16, fontWeight: "800", color: thannigoPalette.darkText },
+  sectionTitle: { fontSize: 16, fontWeight: "800", color: colors.text },
   card: {
-    backgroundColor: thannigoPalette.surface,
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 18,
     ...Shadow.sm,
@@ -738,28 +742,28 @@ const styles = StyleSheet.create({
 
   // Field
   fieldWrap: { marginBottom: 14 },
-  label: { fontSize: 12, fontWeight: "700", color: thannigoPalette.neutral, marginBottom: 6, marginLeft: 2 },
+  label: { fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 6, marginLeft: 2 },
   inputRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   input: {
     flex: 1,
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 13,
     fontSize: 15,
     fontWeight: "600",
-    color: thannigoPalette.darkText,
+    color: colors.text,
     borderWidth: 1,
-    borderColor: thannigoPalette.borderSoft,
+    borderColor: colors.border,
   },
-  inputDisabled: { color: thannigoPalette.neutral },
+  inputDisabled: { color: colors.muted },
   row: { flexDirection: "row", gap: 12 },
 
   verifiedBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: thannigoPalette.success,
+    backgroundColor: colors.success,
     paddingHorizontal: 12,
     height: 48,
     borderRadius: 12,
@@ -777,16 +781,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   locationStepNum: { color: "white", fontSize: 12, fontWeight: "800" },
-  locationStepLabel: { fontSize: 13, fontWeight: "600", color: thannigoPalette.darkText, flex: 1 },
+  locationStepLabel: { fontSize: 13, fontWeight: "600", color: colors.text, flex: 1 },
 
   // Search
   searchInputWrap: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: thannigoPalette.borderSoft,
+    borderColor: colors.border,
     marginBottom: 4,
   },
   searchInput: {
@@ -795,16 +799,16 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     fontSize: 15,
     fontWeight: "600",
-    color: thannigoPalette.darkText,
+    color: colors.text,
   },
 
   suggestionsContainer: {
-    backgroundColor: thannigoPalette.surface,
+    backgroundColor: colors.surface,
     borderRadius: 14,
     marginTop: 4,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: thannigoPalette.borderSoft,
+    borderColor: colors.border,
     overflow: "hidden",
     ...Shadow.md,
     zIndex: 1000,
@@ -814,18 +818,18 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 14,
     borderBottomWidth: 1,
-    borderBottomColor: thannigoPalette.borderSoft,
+    borderBottomColor: colors.border,
     alignItems: "flex-start",
   },
-  suggestionTitle: { fontSize: 14, fontWeight: "700", color: thannigoPalette.darkText },
-  suggestionSubtitle: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 2 },
+  suggestionTitle: { fontSize: 14, fontWeight: "700", color: colors.text },
+  suggestionSubtitle: { fontSize: 12, color: colors.muted, marginTop: 2 },
 
   // Map
   mapContainer: {
     borderRadius: 18,
     overflow: "hidden",
     height: 240,
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
     marginBottom: 12,
     ...Shadow.sm,
   },
@@ -834,7 +838,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 12,
     right: 12,
-    backgroundColor: thannigoPalette.surface,
+    backgroundColor: colors.surface,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -854,7 +858,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: thannigoPalette.borderSoft,
+    borderColor: colors.border,
   },
   mapActionText: { fontSize: 13, fontWeight: "700", color: SHOP_ACCENT },
 
@@ -869,7 +873,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#bbf7d0",
   },
-  addressPreviewText: { flex: 1, fontSize: 13, fontWeight: "600", color: thannigoPalette.darkText },
+  addressPreviewText: { flex: 1, fontSize: 13, fontWeight: "600", color: colors.text },
 
   // Save button
   saveBtn: {

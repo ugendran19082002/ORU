@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
@@ -17,7 +18,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
 import { useRoleTheme } from '@/hooks/use-role-theme';
-import { Shadow, Typography, thannigoPalette, roleSurface, roleAccent, Radius } from '@/constants/theme';
+import { Shadow, Typography, roleSurface, roleAccent, Radius } from '@/constants/theme';
 import { useAppTheme } from '@/providers/ThemeContext';
 
 const CUSTOMER_ACCENT = roleAccent.customer;
@@ -54,7 +55,7 @@ function OrderCard({ order, onTrack, onReorder, onSupport, onPress, accent }: {
       <View style={styles.orderDetails}>
         <Text style={styles.orderItems}>{order.items}</Text>
         <View style={styles.orderMeta}>
-          <Ionicons name="time-outline" size={12} color={thannigoPalette.neutral} />
+          <Ionicons name="time-outline" size={12} color={colors.muted} />
           <Text style={styles.orderDate}>{order.date}</Text>
           <Text style={styles.orderAmount}>{order.amount}</Text>
         </View>
@@ -81,7 +82,7 @@ function OrderCard({ order, onTrack, onReorder, onSupport, onPress, accent }: {
           </TouchableOpacity>
         ) : null}
         <TouchableOpacity style={styles.supportBtn} onPress={(e) => { e.stopPropagation(); onSupport(); }}>
-          <Ionicons name="chatbubble-outline" size={15} color={thannigoPalette.neutral} />
+          <Ionicons name="chatbubble-outline" size={15} color={colors.muted} />
           <Text style={styles.supportBtnText}>Support</Text>
         </TouchableOpacity>
       </View>
@@ -90,6 +91,8 @@ function OrderCard({ order, onTrack, onReorder, onSupport, onPress, accent }: {
 }
 
 export default function OrdersScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { colors, isDark } = useAppTheme();
   const { accent } = useRoleTheme();
@@ -114,17 +117,17 @@ export default function OrdersScreen() {
     const quantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
     const isActive = !['delivered', 'completed', 'cancelled'].includes(order.status);
     const statusMap = {
-      pending:    { label: 'Pending',    color: CUSTOMER_ACCENT,          bg: thannigoPalette.infoSoft,            progress: 0.1 },
-      assigned:   { label: 'Assigned',   color: thannigoPalette.primary,   bg: thannigoPalette.infoSoft,            progress: 0.3 },
-      accepted:   { label: 'Accepted',   color: SHOP_ACCENT,               bg: thannigoPalette.deliveryGreenLight,  progress: 0.5 },
-      picked:     { label: 'Picked',     color: CUSTOMER_ACCENT,          bg: thannigoPalette.infoSoft,            progress: 0.75 },
-      delivered:  { label: 'Delivered',  color: CUSTOMER_ACCENT,          bg: thannigoPalette.infoSoft,            progress: 0.9 },
-      completed:  { label: 'Completed',  color: thannigoPalette.success,  bg: thannigoPalette.successSoft,         progress: 1 },
-      cancelled:  { label: 'Cancelled',  color: thannigoPalette.error,    bg: thannigoPalette.dangerSoft,          progress: 0 },
-      placed:     { label: 'Placed',     color: CUSTOMER_ACCENT,          bg: thannigoPalette.infoSoft,            progress: 0.1 },
-      preparing:  { label: 'Preparing',  color: thannigoPalette.primary,  bg: thannigoPalette.infoSoft,            progress: 0.4 },
-      dispatched: { label: 'Dispatched', color: SHOP_ACCENT,               bg: thannigoPalette.deliveryGreenLight,  progress: 0.75 },
-      failed:     { label: 'Failed',     color: thannigoPalette.error,    bg: thannigoPalette.dangerSoft,          progress: 0 },
+      pending:    { label: 'Pending',    color: CUSTOMER_ACCENT,          bg: colors.inputBg,            progress: 0.1 },
+      assigned:   { label: 'Assigned',   color: colors.primary,   bg: colors.inputBg,            progress: 0.3 },
+      accepted:   { label: 'Accepted',   color: SHOP_ACCENT,               bg: colors.deliverySoft,  progress: 0.5 },
+      picked:     { label: 'Picked',     color: CUSTOMER_ACCENT,          bg: colors.inputBg,            progress: 0.75 },
+      delivered:  { label: 'Delivered',  color: CUSTOMER_ACCENT,          bg: colors.inputBg,            progress: 0.9 },
+      completed:  { label: 'Completed',  color: colors.success,  bg: colors.successSoft,         progress: 1 },
+      cancelled:  { label: 'Cancelled',  color: colors.error,    bg: colors.adminSoft,          progress: 0 },
+      placed:     { label: 'Placed',     color: CUSTOMER_ACCENT,          bg: colors.inputBg,            progress: 0.1 },
+      preparing:  { label: 'Preparing',  color: colors.primary,  bg: colors.inputBg,            progress: 0.4 },
+      dispatched: { label: 'Dispatched', color: SHOP_ACCENT,               bg: colors.deliverySoft,  progress: 0.75 },
+      failed:     { label: 'Failed',     color: colors.error,    bg: colors.adminSoft,          progress: 0 },
     } as const;
     const statusInfo = statusMap[order.status];
 
@@ -204,7 +207,7 @@ export default function OrdersScreen() {
           </View>
         ) : filtered.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="receipt-outline" size={56} color={thannigoPalette.borderSoft} />
+            <Ionicons name="receipt-outline" size={56} color={colors.border} />
             <Text style={styles.emptyTitle}>No orders here</Text>
             <Text style={styles.emptySubtitle}>Your {tab} orders will appear here</Text>
           </View>
@@ -241,8 +244,8 @@ export default function OrdersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
 
   header: {
     flexDirection: 'row',
@@ -253,21 +256,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.95)',
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { ...Typography.h4, color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  brandName: { ...Typography.h4, color: colors.text, letterSpacing: -0.5 },
   iconBtn: {
     width: 40, height: 40, borderRadius: 12,
-    backgroundColor: thannigoPalette.surface,
+    backgroundColor: colors.surface,
     alignItems: 'center', justifyContent: 'center',
   },
   titleRow: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 8 },
   screenTitle: { ...Typography.h1, letterSpacing: -0.5 },
-  screenSubtitle: { ...Typography.caption, color: thannigoPalette.neutral, marginTop: 4 },
+  screenSubtitle: { ...Typography.caption, color: colors.muted, marginTop: 4 },
 
   toggle: {
     flexDirection: 'row',
     marginHorizontal: 24,
     marginBottom: 20,
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
     borderRadius: Radius.lg,
     padding: 4,
   },
@@ -276,11 +279,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     alignItems: 'center',
   },
-  toggleBtnActive: { backgroundColor: thannigoPalette.surface },
-  toggleText: { ...Typography.label, color: thannigoPalette.neutral },
+  toggleBtnActive: { backgroundColor: colors.surface },
+  toggleText: { ...Typography.label, color: colors.muted },
 
   orderCard: {
-    backgroundColor: thannigoPalette.surface,
+    backgroundColor: colors.surface,
     borderRadius: Radius.xl,
     padding: 20,
     marginBottom: 16,
@@ -291,22 +294,22 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   orderId: { ...Typography.overline, textTransform: 'uppercase' },
-  orderShop: { ...Typography.bodyMedium, color: thannigoPalette.darkText, marginTop: 1 },
+  orderShop: { ...Typography.bodyMedium, color: colors.text, marginTop: 1 },
   statusBadge: { borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' },
   statusText: { ...Typography.overline },
 
   orderDetails: { marginBottom: 12 },
-  orderItems: { ...Typography.label, color: thannigoPalette.neutral, marginBottom: 6 },
+  orderItems: { ...Typography.label, color: colors.muted, marginBottom: 6 },
   orderMeta: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  orderDate: { ...Typography.caption, color: thannigoPalette.neutral, flex: 1 },
-  orderAmount: { ...Typography.bodyMedium, fontWeight: '900', color: thannigoPalette.darkText },
+  orderDate: { ...Typography.caption, color: colors.muted, flex: 1 },
+  orderAmount: { ...Typography.bodyMedium, fontWeight: '900', color: colors.text },
 
   progressTrack: {
-    height: 6, backgroundColor: thannigoPalette.borderSoft, borderRadius: 3, overflow: 'hidden', marginBottom: 14,
+    height: 6, backgroundColor: colors.border, borderRadius: 3, overflow: 'hidden', marginBottom: 14,
   },
   progressFill: { height: '100%', borderRadius: 3 },
 
-  orderActions: { flexDirection: 'row', gap: 10, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft, paddingTop: 14 },
+  orderActions: { flexDirection: 'row', gap: 10, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 14 },
   trackBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     borderRadius: 12, paddingVertical: 11,
@@ -314,13 +317,13 @@ const styles = StyleSheet.create({
   trackBtnText: { ...Typography.label },
   supportBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: thannigoPalette.borderSoft, borderRadius: Radius.md, paddingVertical: 11, paddingHorizontal: 16,
+    backgroundColor: colors.border, borderRadius: Radius.md, paddingVertical: 11, paddingHorizontal: 16,
   },
-  supportBtnText: { ...Typography.label, color: thannigoPalette.neutral },
+  supportBtnText: { ...Typography.label, color: colors.muted },
 
   emptyState: { alignItems: 'center', paddingTop: 60, gap: 10 },
-  emptyTitle: { ...Typography.h4, color: thannigoPalette.darkText },
-  emptySubtitle: { ...Typography.caption, color: thannigoPalette.neutral },
+  emptyTitle: { ...Typography.h4, color: colors.text },
+  emptySubtitle: { ...Typography.caption, color: colors.muted },
 });
 
 

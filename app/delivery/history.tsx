@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { deliveryApi, type DeliveryTripEntry } from '@/api/deliveryApi';
-import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface } from '@/constants/theme';
 
 const DELIVERY_ACCENT = roleAccent.delivery;
 const DELIVERY_SURF = roleSurface.delivery;
@@ -14,9 +16,9 @@ const DELIVERY_SURF = roleSurface.delivery;
 type Period = 'today' | 'week' | 'month' | undefined;
 
 const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
-  delivered: { label: 'Delivered', color: thannigoPalette.deliveryGreen, bg: thannigoPalette.deliveryGreenLight },
-  failed:    { label: 'Failed',    color: thannigoPalette.error, bg: thannigoPalette.dangerSoft },
-  picked_up: { label: 'Picked Up', color: thannigoPalette.warning, bg: '#FFF8E1' },
+  delivered: { label: 'Delivered', color: '#2e7d32', bg: colors.deliverySoft },
+  failed:    { label: 'Failed',    color: colors.error, bg: colors.adminSoft },
+  picked_up: { label: 'Picked Up', color: colors.warning, bg: '#FFF8E1' },
   assigned:  { label: 'Assigned',  color: DELIVERY_ACCENT, bg: DELIVERY_SURF },
 };
 
@@ -30,6 +32,8 @@ function formatDateTime(iso: string | null): string {
 }
 
 export default function DeliveryHistoryScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const [filter, setFilter] = useState<Period>(undefined);
   const [trips, setTrips] = useState<DeliveryTripEntry[]>([]);
@@ -94,12 +98,12 @@ export default function DeliveryHistoryScreen() {
 
         <View style={styles.cardFooter}>
           <View style={styles.metaBadge}>
-            <Ionicons name="cash" size={14} color={thannigoPalette.deliveryGreen} />
-            <Text style={[styles.metaText, { color: thannigoPalette.deliveryGreen }]}>₹{item.earnings.toFixed(2)}</Text>
+            <Ionicons name="cash" size={14} color={'#2e7d32'} />
+            <Text style={[styles.metaText, { color: '#2e7d32' }]}>₹{item.earnings.toFixed(2)}</Text>
           </View>
           {item.delivery_time_min != null && (
             <View style={styles.metaBadge}>
-              <Ionicons name="time-outline" size={14} color={thannigoPalette.neutral} />
+              <Ionicons name="time-outline" size={14} color={colors.muted} />
               <Text style={styles.metaText}>{item.delivery_time_min} min</Text>
             </View>
           )}
@@ -110,7 +114,7 @@ export default function DeliveryHistoryScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* HEADER */}
       <View style={styles.header}>
@@ -158,7 +162,7 @@ export default function DeliveryHistoryScreen() {
           }
           ListEmptyComponent={
             <View style={styles.emptyCard}>
-              <Ionicons name="bicycle-outline" size={40} color={thannigoPalette.borderSoft} />
+              <Ionicons name="bicycle-outline" size={40} color={colors.border} />
               <Text style={styles.emptyText}>No trips found for this period</Text>
             </View>
           }
@@ -168,35 +172,35 @@ export default function DeliveryHistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14, backgroundColor: thannigoPalette.surface,
-    borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
+    paddingHorizontal: 20, paddingVertical: 14, backgroundColor: colors.surface,
+    borderBottomWidth: 1, borderBottomColor: colors.border,
   },
-  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center', ...Shadow.xs },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
-  headerSubtitle: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
+  backBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', ...Shadow.xs },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
+  headerSubtitle: { fontSize: 12, color: colors.muted, fontWeight: '500' },
 
-  filterWrap: { flexDirection: 'row', padding: 14, gap: 8, backgroundColor: thannigoPalette.surface, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
-  filterBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 12, backgroundColor: thannigoPalette.background },
+  filterWrap: { flexDirection: 'row', padding: 14, gap: 8, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  filterBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 12, backgroundColor: colors.background },
   filterBtnActive: { backgroundColor: DELIVERY_ACCENT },
-  filterText: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
+  filterText: { fontSize: 12, fontWeight: '700', color: colors.muted },
   filterTextActive: { color: 'white' },
 
   listContent: { padding: 16, paddingBottom: 100 },
-  card: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.xs },
+  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: colors.border, ...Shadow.xs },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   cardIdBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: DELIVERY_SURF, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   cardId: { fontSize: 13, fontWeight: '800', color: DELIVERY_ACCENT },
-  shopName: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 4 },
-  dateText: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500', marginBottom: 14 },
-  cardFooter: { flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft, paddingTop: 12 },
-  metaBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: thannigoPalette.background, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-  metaText: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
+  shopName: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 4 },
+  dateText: { fontSize: 12, color: colors.muted, fontWeight: '500', marginBottom: 14 },
+  cardFooter: { flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12 },
+  metaBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.background, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  metaText: { fontSize: 12, fontWeight: '700', color: colors.muted },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   statusText: { fontSize: 11, fontWeight: '700' },
-  emptyCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 40, alignItems: 'center', gap: 10, margin: 16 },
-  emptyText: { fontSize: 14, color: thannigoPalette.neutral, fontWeight: '600' },
+  emptyCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 40, alignItems: 'center', gap: 10, margin: 16 },
+  emptyText: { fontSize: 14, color: colors.muted, fontWeight: '600' },
 });

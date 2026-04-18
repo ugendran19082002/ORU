@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
@@ -31,6 +32,7 @@ function mapReview(r: any): Review {
 }
 
 export default function CustomerReviewsScreen() {
+  const { colors, isDark } = useAppTheme();
   const { safeBack } = useAppNavigation();
   useAndroidBackHandler(() => { safeBack('/(tabs)/profile'); });
 
@@ -60,7 +62,7 @@ export default function CustomerReviewsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={styles.header}>
         <BackButton fallback="/(tabs)/profile" />
         <View style={{ flex: 1 }}>
@@ -122,7 +124,7 @@ export default function CustomerReviewsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f7f9ff' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
   headerTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a' },
   headerSub: { fontSize: 12, color: '#64748b', fontWeight: '500' },
   content: { padding: 20, gap: 16, paddingBottom: 60 },
@@ -131,7 +133,7 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: 13, color: '#707881', textAlign: 'center', paddingHorizontal: 32 },
   retryBtn: { backgroundColor: '#005d90', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14 },
   retryBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
-  reviewCard: { backgroundColor: 'white', borderRadius: 20, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  reviewCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
   shopRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   shopIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f0f7ff', alignItems: 'center', justifyContent: 'center' },
   shopName: { fontSize: 15, fontWeight: '800', color: '#181c20', marginBottom: 2 },

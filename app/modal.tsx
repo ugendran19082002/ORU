@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
@@ -7,11 +7,13 @@ import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 
 export default function ModalScreen() {
+  const { colors, isDark } = useAppTheme();
   const router = useRouter();
   const { safeBack } = useAppNavigation();
 
@@ -23,7 +25,7 @@ export default function ModalScreen() {
 
   return (
     <View className="flex-1 items-center justify-center bg-white/90 p-6">
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <Card variant="elevated" className="w-full max-w-sm p-8 items-center bg-white">
         <View className="w-20 h-20 bg-blue-100 rounded-full items-center justify-center mb-6">
           <Ionicons name="notifications" size={40} color="#005d90" />

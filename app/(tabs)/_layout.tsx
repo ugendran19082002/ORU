@@ -2,11 +2,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
-import { roleAccent, roleSurface, thannigoPalette } from "@/constants/theme";
+import { roleAccent, roleSurface } from "@/constants/theme";
+import { useAppTheme } from "@/providers/ThemeContext";
 
 const CUSTOMER_ACCENT = roleAccent.customer;
 const CUSTOMER_SURF = roleSurface.customer;
-const TAB_INACTIVE = thannigoPalette.neutral;
 
 // Custom tab bar icon with active pill style
 function TabIcon({
@@ -20,6 +20,7 @@ function TabIcon({
   color: string;
   label: string;
 }) {
+  const { colors } = useAppTheme();
   return (
     <View
       style={{
@@ -29,16 +30,16 @@ function TabIcon({
         paddingVertical: 10,
         borderRadius: 22,
         backgroundColor: focused ? CUSTOMER_SURF : "transparent",
-        minWidth: 80, // Increased for more prominent pill
+        minWidth: 80,
         minHeight: 45,
       }}
     >
-      <Ionicons name={name} size={22} color={focused ? CUSTOMER_ACCENT : TAB_INACTIVE} />
+      <Ionicons name={name} size={22} color={focused ? CUSTOMER_ACCENT : colors.muted} />
       <Text
         style={{
           fontSize: 10,
           fontWeight: "700",
-          color: focused ? CUSTOMER_ACCENT : TAB_INACTIVE,
+          color: focused ? CUSTOMER_ACCENT : colors.muted,
           marginTop: 2,
           textAlign: "center",
         }}
@@ -50,12 +51,13 @@ function TabIcon({
 }
 
 export default function TabLayout() {
+  const { colors } = useAppTheme();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: thannigoPalette.surface,
+          backgroundColor: colors.surface,
           borderTopWidth: 0,
           elevation: 0,
           shadowColor: "#000",
@@ -71,7 +73,7 @@ export default function TabLayout() {
         },
         tabBarShowLabel: false,
         tabBarActiveTintColor: CUSTOMER_ACCENT,
-        tabBarInactiveTintColor: TAB_INACTIVE,
+        tabBarInactiveTintColor: colors.muted,
         tabBarItemStyle: {
           flex: 1,
           justifyContent: "center",
@@ -84,12 +86,7 @@ export default function TabLayout() {
         name="index"
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon
-              name={focused ? "water" : "water-outline"}
-              focused={focused}
-              color={color}
-              label="Home"
-            />
+            <TabIcon name={focused ? "water" : "water-outline"} focused={focused} color={color} label="Home" />
           ),
         }}
       />
@@ -97,12 +94,7 @@ export default function TabLayout() {
         name="search"
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon
-              name={focused ? "search" : "search-outline"}
-              focused={focused}
-              color={color}
-              label="Search"
-            />
+            <TabIcon name={focused ? "search" : "search-outline"} focused={focused} color={color} label="Search" />
           ),
         }}
       />
@@ -110,12 +102,7 @@ export default function TabLayout() {
         name="orders"
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon
-              name={focused ? "receipt" : "receipt-outline"}
-              focused={focused}
-              color={color}
-              label="Orders"
-            />
+            <TabIcon name={focused ? "receipt" : "receipt-outline"} focused={focused} color={color} label="Orders" />
           ),
         }}
       />
@@ -123,12 +110,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon
-              name={focused ? "person" : "person-outline"}
-              focused={focused}
-              color={color}
-              label="Profile"
-            />
+            <TabIcon name={focused ? "person" : "person-outline"} focused={focused} color={color} label="Profile" />
           ),
         }}
       />

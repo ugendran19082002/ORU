@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { StatusBar } from 'expo-status-bar';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, Href } from 'expo-router';
@@ -18,7 +19,7 @@ import { SkeletonLine, SkeletonCard, SkeletonStatRow } from '@/components/ui/Ske
 import { RoleHeader } from '@/components/ui/RoleHeader';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Shadow, roleAccent, roleGradients, thannigoPalette, Radius, Spacing, Typography } from '@/constants/theme';
+import { Shadow, roleAccent, roleGradients, Radius, Spacing, Typography } from '@/constants/theme';
 import { useAppTheme } from '@/providers/ThemeContext';
 import { adminApi, AdminShop } from '@/api/adminApi';
 import { analyticsApi } from '@/api/analyticsApi';
@@ -30,9 +31,9 @@ const ADMIN_GRAD: [string, string] = [roleGradients.admin.start, roleGradients.a
 /* ---- DATA (fallback skeleton while loading) ---- */
 const STATS_CONFIG = [
   { label: 'Total Orders',  icon: 'bag-handle-outline' as const, color: ADMIN_ACCENT,               bg: '#FFF5F5' },
-  { label: 'Active Users',  icon: 'people-outline' as const,     color: thannigoPalette.shopTeal,   bg: thannigoPalette.deliveryGreenLight },
+  { label: 'Active Users',  icon: 'people-outline' as const,     color: '#006878',   bg: colors.deliverySoft },
   { label: 'Revenue',       icon: 'cash-outline' as const,       color: '#B45309',                  bg: '#FEF3C7' },
-  { label: 'Active Shops',  icon: 'water-outline' as const,      color: thannigoPalette.neutral,    bg: thannigoPalette.borderSoft },
+  { label: 'Active Shops',  icon: 'water-outline' as const,      color: colors.muted,    bg: colors.border },
 ];
 
 /* ---- COMPONENTS ---- */
@@ -53,8 +54,8 @@ function AdminStatCard({ stat, colors }: { stat: StatCardData; colors: any }) {
         <View style={[styles.statIcon, { backgroundColor: stat.bg }]}>
           <Ionicons name={stat.icon} size={20} color={stat.color} />
         </View>
-        <View style={[styles.deltaBadge, { backgroundColor: stat.deltaPos ? '#ECFDF5' : thannigoPalette.dangerSoft }]}>
-          <Text style={[styles.deltaText, { color: stat.deltaPos ? '#059669' : thannigoPalette.error }]}>
+        <View style={[styles.deltaBadge, { backgroundColor: stat.deltaPos ? '#ECFDF5' : colors.adminSoft }]}>
+          <Text style={[styles.deltaText, { color: stat.deltaPos ? '#059669' : colors.error }]}>
             {stat.delta}
           </Text>
         </View>
@@ -67,6 +68,8 @@ function AdminStatCard({ stat, colors }: { stat: StatCardData; colors: any }) {
 
 /* ---- SCREEN ---- */
 export default function AdminOverviewScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { user, status } = useAppSession();
   const { colors, isDark } = useAppTheme();
@@ -239,7 +242,7 @@ export default function AdminOverviewScreen() {
 
               const statusTag = isReady ? 'READY' : isPartial ? 'FIX' : 'REVIEW';
               const tagColor = isReady ? '#059669' : isPartial ? '#d97706' : ADMIN_ACCENT;
-              const tagBg = isReady ? '#ecfdf5' : isPartial ? '#fff7ed' : thannigoPalette.adminRedLight;
+              const tagBg = isReady ? '#ecfdf5' : isPartial ? '#fff7ed' : colors.adminSoft;
 
               return (
                 <TouchableOpacity
@@ -272,11 +275,11 @@ export default function AdminOverviewScreen() {
         <SectionHeader title="Platform Tools" style={{ marginTop: 24 }} accentColor={ADMIN_ACCENT} />
         <View style={styles.toolsGrid}>
           {[
-            { label: 'Complaints', icon: 'alert-circle', color: thannigoPalette.error, bg: thannigoPalette.dangerSoft, path: '/admin/complaints', badge: dashboardData?.complaints?.open },
+            { label: 'Complaints', icon: 'alert-circle', color: colors.error, bg: colors.adminSoft, path: '/admin/complaints', badge: dashboardData?.complaints?.open },
             { label: 'Bank Audit', icon: 'business',     color: '#6366f1',              bg: '#eef2ff',               path: '/admin/bank-requests' },
-            { label: 'Payouts',    icon: 'card',        color: thannigoPalette.success, bg: thannigoPalette.successSoft, path: '/admin/payouts' },
+            { label: 'Payouts',    icon: 'card',        color: colors.success, bg: colors.successSoft, path: '/admin/payouts' },
             { label: 'Growth',    icon: 'rocket',      color: '#d946ef',              bg: '#fdf4ff',               path: '/admin/growth' },
-            { label: 'Coupons',   icon: 'pricetag',    color: thannigoPalette.primary, bg: thannigoPalette.infoSoft,    path: '/admin/coupons' },
+            { label: 'Coupons',   icon: 'pricetag',    color: colors.primary, bg: colors.inputBg,    path: '/admin/coupons' },
           ].map((tool) => (
             <TouchableOpacity
               key={tool.label}
@@ -310,7 +313,7 @@ export default function AdminOverviewScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
@@ -327,7 +330,7 @@ const styles = StyleSheet.create({
   heroLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 16 },
   heroIconBackground: {
     width: 52, height: 52, borderRadius: 16,
-    backgroundColor: 'white', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center',
   },
   heroTitle: { fontSize: 20, fontWeight: '900', color: 'white' },
   heroSub: { fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 2 },

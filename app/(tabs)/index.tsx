@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { ExpoMap } from '@/components/maps/ExpoMap';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -22,7 +23,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { addressApi } from '@/api/addressApi';
 import { apiClient } from '@/api/client';
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients, Radius } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients, Radius } from '@/constants/theme';
 import { SkeletonShopCard } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useAppTheme } from '@/providers/ThemeContext';
@@ -45,6 +46,8 @@ const getShopImage = (hero: string) => {
 
 
 export default function HomeScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { setSelectedShop, loadShops, searchShops, fetchPersonalized, shops } = useShopStore();
   const { items: cartItems } = useCartStore();
@@ -248,7 +251,7 @@ export default function HomeScreen() {
             activeOpacity={0.8}
           >
             <Ionicons name="notifications-outline" size={22} color={CUSTOMER_ACCENT} />
-            <View style={[styles.notifDot, { backgroundColor: thannigoPalette.error, borderColor: colors.surface }]} />
+            <View style={[styles.notifDot, { backgroundColor: colors.error, borderColor: colors.surface }]} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -258,7 +261,7 @@ export default function HomeScreen() {
           >
             <Ionicons name="cart-outline" size={22} color={CUSTOMER_ACCENT} />
             {cartCount > 0 && (
-              <View style={[styles.cartBadge, { backgroundColor: thannigoPalette.error, borderColor: colors.background }]}>
+              <View style={[styles.cartBadge, { backgroundColor: colors.error, borderColor: colors.background }]}>
                 <Text style={styles.cartBadgeText}>{cartCount}</Text>
               </View>
             )}
@@ -506,11 +509,11 @@ export default function HomeScreen() {
                   style={[styles.addressItem, { backgroundColor: colors.background, borderColor: colors.border }]}
                   onPress={() => confirmConnectionRequest(addr.id)}
                 >
-                  <View style={[styles.addrIcon, { backgroundColor: addr.label?.toLowerCase() === 'home' ? thannigoPalette.infoSoft : thannigoPalette.deliveryGreenLight }]}>
+                  <View style={[styles.addrIcon, { backgroundColor: addr.label?.toLowerCase() === 'home' ? colors.inputBg : colors.deliverySoft }]}>
                     <Ionicons 
                       name={addr.label?.toLowerCase() === 'home' ? 'home' : 'briefcase'} 
                       size={18} 
-                      color={addr.label?.toLowerCase() === 'home' ? CUSTOMER_ACCENT : thannigoPalette.deliveryGreen} 
+                      color={addr.label?.toLowerCase() === 'home' ? CUSTOMER_ACCENT : '#2e7d32'} 
                     />
                   </View>
                   <View style={{ flex: 1 }}>
@@ -539,7 +542,7 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
 
   header: {
@@ -555,7 +558,7 @@ const styles = StyleSheet.create({
   pointsChip: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: CUSTOMER_SURF, paddingHorizontal: 10, paddingVertical: 6,
-    borderRadius: 20, borderWidth: 1, borderColor: thannigoPalette.borderSoft,
+    borderRadius: 20, borderWidth: 1, borderColor: colors.border,
   },
   pointsText: { fontSize: 13, fontWeight: '800', color: CUSTOMER_ACCENT },
   iconBtn: {
@@ -584,20 +587,20 @@ const styles = StyleSheet.create({
   heroPillText: { color: 'white', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
   heroTitle: { color: 'white', fontSize: 28, fontWeight: '900', marginBottom: 8, letterSpacing: -0.5 },
   heroSubtitle: { color: 'rgba(255,255,255,0.85)', fontSize: 14, lineHeight: 20, marginBottom: 20, maxWidth: 240 },
-  reorderBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'white', alignSelf: 'flex-start', borderRadius: 14, paddingHorizontal: 20, paddingVertical: 12, ...Shadow.md },
+  reorderBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.surface, alignSelf: 'flex-start', borderRadius: 14, paddingHorizontal: 20, paddingVertical: 12, ...Shadow.md },
   reorderBtnText: { color: CUSTOMER_ACCENT, fontWeight: '800', fontSize: 15 },
   heroDecor: { position: 'absolute', right: -40, bottom: -40, zIndex: 0 },
 
-  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.surface, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 24, ...Shadow.xs, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 24, ...Shadow.xs, borderWidth: 1, borderColor: colors.border },
   searchIcon: { marginRight: 10 },
-  searchInput: { flex: 1, fontSize: 15, color: thannigoPalette.darkText, fontWeight: '500' },
+  searchInput: { flex: 1, fontSize: 15, color: colors.text, fontWeight: '500' },
 
   sectionHeader: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 16 },
-  sectionTitle: { fontSize: 22, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3, marginBottom: 4 },
-  sectionSubtitle: { fontSize: 13, color: thannigoPalette.neutral },
+  sectionTitle: { fontSize: 22, fontWeight: '800', color: colors.text, letterSpacing: -0.3, marginBottom: 4 },
+  sectionSubtitle: { fontSize: 13, color: colors.muted },
 
   shopCard: { borderRadius: Radius.xl, marginBottom: 20, overflow: 'hidden', ...Shadow.sm },
-  shopImageContainer: { height: 160, width: '100%', position: 'relative', backgroundColor: thannigoPalette.borderSoft },
+  shopImageContainer: { height: 160, width: '100%', position: 'relative', backgroundColor: colors.border },
   shopImage: { width: '100%', height: '100%' },
   favBtn: { position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.3)', width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   distBadge: { position: 'absolute', bottom: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
@@ -609,9 +612,9 @@ const styles = StyleSheet.create({
   shopMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   shopRating: { fontSize: 13, fontWeight: '700' },
   shopPrice: { fontSize: 22, fontWeight: '900', color: CUSTOMER_ACCENT },
-  shopPriceLabel: { fontSize: 9, color: thannigoPalette.neutral, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
+  shopPriceLabel: { fontSize: 9, color: colors.muted, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
 
-  orderBtn: { alignItems: 'center', borderRadius: Radius.md, paddingVertical: 12, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  orderBtn: { alignItems: 'center', borderRadius: Radius.md, paddingVertical: 12, borderWidth: 1, borderColor: colors.border },
   orderBtnText: { color: CUSTOMER_ACCENT, fontWeight: '800', fontSize: 14 },
 
   // MODAL STYLES

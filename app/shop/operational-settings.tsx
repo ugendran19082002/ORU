@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, TextInput, ActivityIndicator,
@@ -7,6 +7,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
@@ -18,7 +20,7 @@ import Toast from 'react-native-toast-message';
 import * as Haptics from 'expo-haptics';
 import { PanResponder } from 'react-native';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
 
 const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_SURF = roleSurface.shop_owner;
@@ -26,6 +28,8 @@ const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradien
 
 
 export default function ShopOperationalSettingsScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   const [loading, setLoading] = useState(true);
@@ -105,7 +109,7 @@ export default function ShopOperationalSettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* HEADER */}
       <View style={styles.header}>
@@ -517,19 +521,19 @@ const DraggableSlider = ({ label, value, onUpdate, min, max, unit = '', step = 1
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 24, paddingVertical: 14, backgroundColor: 'rgba(255,255,255,0.92)',
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  brandName: { fontSize: 22, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
   notifBtnSub: { width: 40, height: 40, borderRadius: 12, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 24, paddingVertical: 20, paddingBottom: 120 },
   titleRow: { marginBottom: 18 },
-  pageTitle: { fontSize: 32, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  pageTitle: { fontSize: 32, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
   infoCard: {
     flexDirection: 'row', backgroundColor: '#e0f0ff', padding: 16, borderRadius: 16,
     marginBottom: 24, alignItems: 'center', gap: 12,
@@ -540,16 +544,16 @@ const styles = StyleSheet.create({
   form: { gap: 24 },
   inputGroup: { gap: 8 },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 4 },
-  inputLabel: { fontSize: 13, fontWeight: '800', color: thannigoPalette.neutral },
+  inputLabel: { fontSize: 13, fontWeight: '800', color: colors.muted },
   input: {
-    backgroundColor: 'white', borderRadius: 14, height: 56, paddingHorizontal: 16,
-    fontSize: 18, fontWeight: '700', color: thannigoPalette.darkText,
+    backgroundColor: colors.surface, borderRadius: 14, height: 56, paddingHorizontal: 16,
+    fontSize: 18, fontWeight: '700', color: colors.text,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
     borderWidth: 1, borderColor: '#e2e8f0',
   },
   hintText: { fontSize: 12, color: '#94a3b8', fontWeight: '500', marginLeft: 4, marginTop: -4 },
   divider: { height: 1, backgroundColor: '#e2e8f0', marginVertical: 8 },
-  sectionHeader: { fontSize: 16, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 4 },
+  sectionHeader: { fontSize: 16, fontWeight: '900', color: colors.text, marginBottom: 4 },
   
   sliderGroup: { gap: 12, marginTop: 8 },
   sliderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
@@ -564,7 +568,7 @@ const styles = StyleSheet.create({
     fontSize: 16, fontWeight: '900', color: SHOP_ACCENT, 
     padding: 0, textAlign: 'right', minWidth: 40
   },
-  sliderUnitDisplay: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral, marginLeft: 4 },
+  sliderUnitDisplay: { fontSize: 13, fontWeight: '700', color: colors.muted, marginLeft: 4 },
   sliderTrackContainer: { gap: 12, paddingVertical: 12 },
 
   hybridRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 },
@@ -583,23 +587,23 @@ const styles = StyleSheet.create({
     width: 50, textAlign: 'center', fontSize: 16, 
     fontWeight: '800', color: SHOP_ACCENT 
   },
-  stepperUnit: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral, marginRight: 10 },
+  stepperUnit: { fontSize: 12, fontWeight: '700', color: colors.muted, marginRight: 10 },
   
   dropdownContainer: { flex: 2, marginLeft: 12 },
   dropdownContainerHybrid: { marginTop: 4 },
   chip: { 
     paddingHorizontal: 14, paddingVertical: 8, 
-    borderRadius: 10, backgroundColor: thannigoPalette.borderSoft,
+    borderRadius: 10, backgroundColor: colors.border,
     borderWidth: 1, borderColor: '#e2e8f0'
   },
   activeChip: { backgroundColor: SHOP_ACCENT, borderColor: SHOP_ACCENT },
-  chipText: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral },
+  chipText: { fontSize: 13, fontWeight: '700', color: colors.muted },
   activeChipText: { color: 'white' },
   sliderTrack: { height: 10, backgroundColor: '#e0f0ff', borderRadius: 5, position: 'relative' },
   sliderFill: { height: '100%', backgroundColor: SHOP_ACCENT, borderRadius: 5 },
   sliderThumb: { 
     position: 'absolute', top: -10, width: 30, height: 30, 
-    borderRadius: 15, backgroundColor: 'white', 
+    borderRadius: 15, backgroundColor: colors.surface, 
     justifyContent: 'center', alignItems: 'center',
     marginLeft: -15, // Center the thumb on the point
     shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 5, elevation: 5,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Platform,
 } from 'react-native';
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   content: { padding: 20, gap: 16, paddingBottom: 40 },
   sosBtn: { borderRadius: 20, overflow: 'hidden', shadowColor: '#c62828', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 14, elevation: 6 },
   sosBtnGrad: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 18 },
-  sosIconWrap: { width: 52, height: 52, borderRadius: 16, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  sosIconWrap: { width: 52, height: 52, borderRadius: 16, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   sosBtnTitle: { fontSize: 20, fontWeight: '900', color: 'white' },
   sosBtnSub: { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 2 },
   sectionTitle: { fontSize: 15, fontWeight: '800', letterSpacing: -0.3 },

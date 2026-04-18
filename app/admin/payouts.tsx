@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,13 +13,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { adminPayoutsApi, type AdminPayout, type AdminPayoutSummary } from '@/api/adminUsersApi';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface } from '@/constants/theme';
 
 const ADMIN_ACCENT = roleAccent.admin;
 const ADMIN_SURF = roleSurface.admin;
@@ -133,7 +135,7 @@ function PayoutCard({ payout, onProcess, actionLoadingId }: PayoutCardProps) {
         ]}>
           <Text style={[
             styles.statusBadgeText,
-            { color: isPending ? '#e65100' : thannigoPalette.success },
+            { color: isPending ? '#e65100' : colors.success },
           ]}>
             {isPending ? 'Pending' : 'Processed'}
           </Text>
@@ -182,6 +184,8 @@ function PayoutCard({ payout, onProcess, actionLoadingId }: PayoutCardProps) {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function AdminPayoutsScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
@@ -315,7 +319,7 @@ export default function AdminPayoutsScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.headerSafe} edges={['top']}>
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
@@ -392,13 +396,13 @@ export default function AdminPayoutsScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
 
   headerSafe: { 
-    backgroundColor: 'white', 
+    backgroundColor: colors.surface, 
     borderBottomWidth: 1, 
-    borderBottomColor: thannigoPalette.borderSoft,
+    borderBottomColor: colors.border,
     alignItems: 'center',
   },
   headerContent: {
@@ -412,23 +416,23 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: colors.muted, fontWeight: '600', marginTop: 2 },
 
-  filterBarWrap: { paddingVertical: 18, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  filterBarWrap: { paddingVertical: 18, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
   tabContent: { gap: 10, paddingHorizontal: 24 },
   tab: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 14,
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
   },
   tabActive: { backgroundColor: ADMIN_ACCENT },
-  tabText: { fontSize: 13, fontWeight: '800', color: thannigoPalette.neutral },
+  tabText: { fontSize: 13, fontWeight: '800', color: colors.muted },
   tabTextActive: { color: 'white' },
 
   listContent: { padding: 20, paddingBottom: 100 },
@@ -482,7 +486,7 @@ const styles = StyleSheet.create({
 
   // Payout card
   card: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 16,
     marginBottom: 14,
@@ -492,7 +496,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     borderWidth: 1,
-    borderColor: thannigoPalette.borderSoft,
+    borderColor: colors.border,
   },
   cardPending: {
     borderLeftWidth: 4,
@@ -512,14 +516,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardShopName: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
-  cardPeriod: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
+  cardShopName: { fontSize: 15, fontWeight: '800', color: colors.text, marginBottom: 2 },
+  cardPeriod: { fontSize: 12, color: colors.muted, fontWeight: '500' },
   statusBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   statusBadgeText: { fontSize: 11, fontWeight: '800' },
   cardAmount: {
     fontSize: 28,
     fontWeight: '900',
-    color: thannigoPalette.darkText,
+    color: colors.text,
     letterSpacing: -0.5,
     marginBottom: 8,
   },
@@ -529,7 +533,7 @@ const styles = StyleSheet.create({
     gap: 5,
     marginBottom: 8,
   },
-  processedText: { fontSize: 12, color: thannigoPalette.success, fontWeight: '600' },
+  processedText: { fontSize: 12, color: colors.success, fontWeight: '600' },
   cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   cardFooter: {
     flexDirection: 'row',
@@ -538,7 +542,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: thannigoPalette.borderSoft,
+    borderTopColor: colors.border,
   },
   cardFooterText: { fontSize: 11, color: '#94a3b8', fontWeight: '500' },
 
@@ -558,7 +562,7 @@ const styles = StyleSheet.create({
 
   // Empty / error
   emptyWrap: { alignItems: 'center', marginTop: 80, gap: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
   emptySubtitle: {
     fontSize: 14,
     color: '#94a3b8',

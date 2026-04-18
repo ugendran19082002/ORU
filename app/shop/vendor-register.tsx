@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -13,7 +15,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
 
 const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_SURF = roleSurface.shop_owner;
@@ -25,6 +27,8 @@ const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradien
 const STEPS = ['Business Info', 'Location & Documents'];
 
 export default function VendorRegisterScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();
 
@@ -91,7 +95,7 @@ export default function VendorRegisterScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       <View style={styles.header}>
         <BackButton fallback="/auth/role" onPress={handleBack} />
@@ -231,12 +235,12 @@ export default function VendorRegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
-  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  backBtn: { width: 40, height: 40, borderRadius: 14, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoText: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
+  logoText: { fontSize: 20, fontWeight: '900', color: colors.text },
   content: { padding: 20, gap: 16, paddingBottom: 40 },
   heroCard: { borderRadius: 24, padding: 24, overflow: 'hidden', shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8 },
   heroDecor: { position: 'absolute', right: -16, bottom: -16 },
@@ -245,20 +249,20 @@ const styles = StyleSheet.create({
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 8, position: 'relative' },
   stepItem: { flex: 1, alignItems: 'center', gap: 6 },
   stepCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  stepCircleActive: { backgroundColor: 'white' },
+  stepCircleActive: { backgroundColor: colors.surface },
   stepNum: { fontSize: 14, fontWeight: '800', color: 'rgba(255,255,255,0.7)' },
   stepNumActive: { color: SHOP_ACCENT },
   stepLabel: { fontSize: 10, color: 'rgba(255,255,255,0.6)', fontWeight: '600', textAlign: 'center' },
   stepLabelActive: { color: 'white' },
   stepConnector: { position: 'absolute', top: 16, left: '25%', right: '25%', height: 1, backgroundColor: 'rgba(255,255,255,0.2)' },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: colors.text, letterSpacing: -0.3 },
   inputGroup: { gap: 6 },
-  inputLabel: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
-  input: { backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, fontWeight: '600', color: thannigoPalette.darkText, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  inputLabel: { fontSize: 12, fontWeight: '700', color: colors.muted },
+  input: { backgroundColor: colors.surface, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, fontSize: 15, fontWeight: '600', color: colors.text, borderWidth: 1, borderColor: colors.border },
   termsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  checkbox: { width: 22, height: 22, borderRadius: 7, borderWidth: 2, borderColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  checkbox: { width: 22, height: 22, borderRadius: 7, borderWidth: 2, borderColor: colors.border, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   checkboxActive: { backgroundColor: SHOP_ACCENT, borderColor: SHOP_ACCENT },
-  termsText: { flex: 1, fontSize: 13, color: thannigoPalette.neutral, lineHeight: 19 },
+  termsText: { flex: 1, fontSize: 13, color: colors.muted, lineHeight: 19 },
   termsLink: { color: SHOP_ACCENT, fontWeight: '700' },
   infoCard: { flexDirection: 'row', gap: 10, backgroundColor: '#e0f0ff', borderRadius: 14, padding: 14, alignItems: 'flex-start' },
   infoText: { flex: 1, fontSize: 12, color: SHOP_ACCENT, lineHeight: 17, fontWeight: '600' },

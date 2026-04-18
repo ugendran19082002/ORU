@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+﻿import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,7 +25,7 @@ import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { orderApi } from '@/api/orderApi';
 import { useCartStore } from '@/stores/cartStore';
 import { useShopStore } from '@/stores/shopStore';
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
 
 const CUSTOMER_ACCENT = roleAccent.customer;
 const CUSTOMER_SURF = roleSurface.customer;
@@ -31,8 +33,8 @@ const CUSTOMER_GRAD: [string, string] = [roleGradients.customer.start, roleGradi
 
 const WARNING_BG     = '#FFF8E1';
 const WARNING_BORDER = '#FFE082';
-const WARNING_TEXT   = thannigoPalette.warning;
-const WARNING_DARK   = thannigoPalette.warning;
+const WARNING_TEXT   = colors.warning;
+const WARNING_DARK   = colors.warning;
 
 interface OrderItem {
   id: number;
@@ -65,6 +67,8 @@ interface OrderDetail {
 }
 
 export default function OrderDetailScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { safeBack } = useAppNavigation();
@@ -135,7 +139,7 @@ export default function OrderDetailScreen() {
   if (!order) {
     return (
       <View style={styles.center}>
-        <Ionicons name="receipt-outline" size={64} color={thannigoPalette.neutral} />
+        <Ionicons name="receipt-outline" size={64} color={colors.muted} />
         <Text style={styles.errorText}>Order not found</Text>
         <BackButton fallback="/(tabs)/orders" />
       </View>
@@ -146,7 +150,7 @@ export default function OrderDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* HEADER */}
       <View style={styles.header}>
@@ -216,7 +220,7 @@ export default function OrderDetailScreen() {
           <Text style={styles.sectionTitle}>Delivery Address</Text>
           <View style={styles.infoRow}>
             <View style={styles.addressIcon}>
-              <Ionicons name="location-outline" size={20} color={thannigoPalette.adminRed} />
+              <Ionicons name="location-outline" size={20} color={'#ba1a1a'} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.infoDetail}>{order.delivery_address}</Text>
@@ -260,8 +264,8 @@ export default function OrderDetailScreen() {
           )}
           {order.discount_amount > 0 && (
             <View style={styles.billRow}>
-              <Text style={[styles.billLabel, { color: thannigoPalette.success }]}>Discount</Text>
-              <Text style={[styles.billValue, { color: thannigoPalette.success }]}>-Rs. {order.discount_amount}</Text>
+              <Text style={[styles.billLabel, { color: colors.success }]}>Discount</Text>
+              <Text style={[styles.billValue, { color: colors.success }]}>-Rs. {order.discount_amount}</Text>
             </View>
           )}
           <View style={[styles.billRow, styles.totalRow]}>
@@ -320,20 +324,20 @@ export default function OrderDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
-  errorText: { fontSize: 18, color: thannigoPalette.neutral, fontWeight: '600' },
+  errorText: { fontSize: 18, color: colors.muted, fontWeight: '600' },
   scrollContent: { paddingBottom: 60 },
 
   header: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: thannigoPalette.surface, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border,
   },
   headerCenter: { flex: 1, marginLeft: 12 },
-  headerTitle: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  headerSubtitle: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
-  supportIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 18, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  headerSubtitle: { fontSize: 12, color: colors.muted, fontWeight: '500' },
+  supportIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center' },
 
   statusCard: {
     margin: 20, borderRadius: 24, padding: 24,
@@ -345,7 +349,7 @@ const styles = StyleSheet.create({
   statusLabel: { fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
   statusValue: { fontSize: 24, color: 'white', fontWeight: '900', letterSpacing: -0.5 },
   trackBtn: {
-    backgroundColor: 'white', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: colors.surface, borderRadius: 14, paddingHorizontal: 16, paddingVertical: 10,
     flexDirection: 'row', alignItems: 'center', gap: 6,
   },
   trackBtnText: { color: CUSTOMER_ACCENT, fontWeight: '800', fontSize: 13 },
@@ -360,51 +364,51 @@ const styles = StyleSheet.create({
   otpHint: { fontSize: 10, color: WARNING_DARK, opacity: 0.7, position: 'absolute', bottom: 8, right: 16 },
 
   section: { marginHorizontal: 20, marginBottom: 24 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 12, letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 12, letterSpacing: -0.3 },
   infoRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: thannigoPalette.surface,
+    flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.surface,
     borderRadius: 20, padding: 16, ...Shadow.xs,
   },
   shopIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: CUSTOMER_SURF, alignItems: 'center', justifyContent: 'center' },
-  addressIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: thannigoPalette.adminRedLight, alignItems: 'center', justifyContent: 'center' },
-  infoName: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
-  infoDetail: { fontSize: 13, color: thannigoPalette.neutral, lineHeight: 18, marginTop: 2 },
-  callBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  addressIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.adminSoft, alignItems: 'center', justifyContent: 'center' },
+  infoName: { fontSize: 16, fontWeight: '800', color: colors.text },
+  infoDetail: { fontSize: 13, color: colors.muted, lineHeight: 18, marginTop: 2 },
+  callBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center' },
 
   itemRow: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border,
   },
-  itemQty: { width: 32, height: 32, borderRadius: 8, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  itemQty: { width: 32, height: 32, borderRadius: 8, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   itemQtyText: { fontSize: 12, fontWeight: '800', color: CUSTOMER_ACCENT },
-  itemName: { flex: 1, fontSize: 14, fontWeight: '600', color: thannigoPalette.neutral },
-  itemPrice: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText },
+  itemName: { flex: 1, fontSize: 14, fontWeight: '600', color: colors.muted },
+  itemPrice: { fontSize: 14, fontWeight: '800', color: colors.text },
 
   billingSection: {
-    marginHorizontal: 20, padding: 20, backgroundColor: thannigoPalette.surface, borderRadius: 24, gap: 12,
+    marginHorizontal: 20, padding: 20, backgroundColor: colors.surface, borderRadius: 24, gap: 12,
     marginBottom: 24, ...Shadow.sm,
   },
   billRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  billLabel: { fontSize: 14, color: thannigoPalette.neutral, fontWeight: '500' },
-  billValue: { fontSize: 14, color: thannigoPalette.darkText, fontWeight: '700' },
-  totalRow: { borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft, paddingTop: 12, marginTop: 4 },
-  totalLabel: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
+  billLabel: { fontSize: 14, color: colors.muted, fontWeight: '500' },
+  billValue: { fontSize: 14, color: colors.text, fontWeight: '700' },
+  totalRow: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, marginTop: 4 },
+  totalLabel: { fontSize: 18, fontWeight: '900', color: colors.text },
   totalValue: { fontSize: 18, fontWeight: '900', color: CUSTOMER_ACCENT },
-  paymentBadge: { alignSelf: 'center', backgroundColor: thannigoPalette.borderSoft, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, marginTop: 8 },
-  paymentText: { fontSize: 11, fontWeight: '700', color: thannigoPalette.neutral, textTransform: 'uppercase', letterSpacing: 0.5 },
+  paymentBadge: { alignSelf: 'center', backgroundColor: colors.border, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, marginTop: 8 },
+  paymentText: { fontSize: 11, fontWeight: '700', color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5 },
 
-  timelineCard: { backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 16, ...Shadow.xs },
+  timelineCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, ...Shadow.xs },
   timelineRow: { flexDirection: 'row', gap: 12, minHeight: 44 },
   timelineDotCol: { alignItems: 'center', width: 16 },
-  timelineDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: thannigoPalette.borderSoft, marginTop: 4 },
+  timelineDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.border, marginTop: 4 },
   timelineDotActive: { backgroundColor: CUSTOMER_ACCENT, width: 14, height: 14, borderRadius: 7 },
-  timelineLine: { flex: 1, width: 2, backgroundColor: thannigoPalette.borderSoft, marginVertical: 2 },
+  timelineLine: { flex: 1, width: 2, backgroundColor: colors.border, marginVertical: 2 },
   timelineContent: { flex: 1, paddingBottom: 12 },
-  timelineStatus: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral, letterSpacing: 0.3 },
+  timelineStatus: { fontSize: 12, fontWeight: '700', color: colors.muted, letterSpacing: 0.3 },
   timelineStatusActive: { color: CUSTOMER_ACCENT, fontSize: 13 },
-  timelineDate: { fontSize: 11, color: thannigoPalette.neutral, marginTop: 2 },
+  timelineDate: { fontSize: 11, color: colors.muted, marginTop: 2 },
 
   cancelLink: { alignSelf: 'center', padding: 12 },
-  cancelLinkText: { color: thannigoPalette.adminRed, fontSize: 14, fontWeight: '700', textDecorationLine: 'underline' },
+  cancelLinkText: { color: '#ba1a1a', fontSize: 14, fontWeight: '700', textDecorationLine: 'underline' },
 
   reorderBtn: {
     marginHorizontal: 20, marginBottom: 40, backgroundColor: CUSTOMER_ACCENT, borderRadius: 20,

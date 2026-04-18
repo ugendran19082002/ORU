@@ -1,3 +1,4 @@
+﻿import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
@@ -24,11 +25,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ExpoMap, ExpoMarker } from "@/components/maps/ExpoMap";
 import { safeNavigate } from "@/utils/safeNavigation";
 import { addressApi } from "@/api/addressApi";
-import { Shadow, thannigoPalette, roleAccent, Radius } from "@/constants/theme";
+import { Shadow, roleAccent, Radius } from "@/constants/theme";
 import { useAppTheme } from "@/providers/ThemeContext";
 
 const ACCENT = roleAccent.customer;
-const SHOP_TEAL = thannigoPalette.shopTeal;
+const SHOP_TEAL = '#006878';
 
 /**
  * PRODUCTION DEBUG HELPER: Validate coordinates before use
@@ -72,6 +73,8 @@ type Address = {
 };
 
 export default function AddressesScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { colors, isDark } = useAppTheme();
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -594,7 +597,7 @@ export default function AddressesScreen() {
               <View style={styles.accuracyOverlay}>
                 <View style={styles.accuracyTag}>
                   <View style={[styles.accuracyDot, {
-                  backgroundColor: accuracy < 15 ? thannigoPalette.success : thannigoPalette.warning
+                  backgroundColor: accuracy < 15 ? colors.success : colors.warning
                   }]} />
                   <Text style={styles.accuracyLabel}>
                     {accuracy < 15 ? `High Precision` : `GPS: ±${Math.round(accuracy)}m`}
@@ -665,7 +668,7 @@ export default function AddressesScreen() {
                 {["Home", "Office", "Other"].map((t) => (
                   <TouchableOpacity
                     key={t}
-                    style={[styles.typePill, { backgroundColor: colors.inputBg, borderColor: 'transparent' }, newType === t && { backgroundColor: thannigoPalette.infoSoft, borderColor: ACCENT }]}
+                    style={[styles.typePill, { backgroundColor: colors.inputBg, borderColor: 'transparent' }, newType === t && { backgroundColor: colors.inputBg, borderColor: ACCENT }]}
                     onPress={() => setNewType(t)}
                   >
                     <Text style={[styles.typePillText, { color: colors.muted }, newType === t && { color: ACCENT }]}>
@@ -819,7 +822,7 @@ export default function AddressesScreen() {
           return (
             <View
               key={item.id}
-              style={[styles.listItem, { backgroundColor: colors.surface }, item.is_default && { borderColor: ACCENT, borderWidth: 1, backgroundColor: thannigoPalette.infoSoft }]}
+              style={[styles.listItem, { backgroundColor: colors.surface }, item.is_default && { borderColor: ACCENT, borderWidth: 1, backgroundColor: colors.inputBg }]}
             >
               <TouchableOpacity onPress={() => toggleDefault(item.id)} style={{ marginRight: 8, justifyContent: 'center' }}>
                 <Ionicons
@@ -859,7 +862,7 @@ export default function AddressesScreen() {
                   <Ionicons name="map-outline" size={20} color={SHOP_TEAL} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => shareAddress(item)}>
-                  <Ionicons name="share-social-outline" size={20} color={thannigoPalette.primary} />
+                  <Ionicons name="share-social-outline" size={20} color={colors.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
@@ -877,7 +880,7 @@ export default function AddressesScreen() {
                   <Ionicons name="pencil" size={20} color={colors.muted} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => removeAddress(item.id)}>
-                  <Ionicons name="trash" size={20} color={thannigoPalette.error} />
+                  <Ionicons name="trash" size={20} color={colors.error} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -904,7 +907,7 @@ export default function AddressesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
 
   header: {
@@ -963,7 +966,7 @@ const styles = StyleSheet.create({
   typeSelectorOverlay: { position: "absolute", top: 12, right: 12 },
   mapOverlayActions: { position: "absolute", bottom: 12, right: 12, gap: 8 },
   mapActionBtn: {
-    backgroundColor: "white", width: 44, height: 44, borderRadius: 22,
+    backgroundColor: colors.surface, width: 44, height: 44, borderRadius: 22,
     alignItems: "center", justifyContent: "center", ...Shadow.sm,
   },
   mapActionBtnMini: {
@@ -976,11 +979,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10, gap: 6, ...Shadow.xs,
   },
   accuracyDot: { width: 6, height: 6, borderRadius: 3 },
-  accuracyLabel: { fontSize: 10, fontWeight: "800", color: thannigoPalette.neutral, letterSpacing: 0.5 },
+  accuracyLabel: { fontSize: 10, fontWeight: "800", color: colors.muted, letterSpacing: 0.5 },
   mapPinContainer: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center" },
   deliverHerePill: { backgroundColor: SHOP_TEAL, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 12, marginBottom: 60 },
   deliverHereText: { color: "white", fontSize: 12, fontWeight: "800" },
-  liveMapText: { position: "absolute", bottom: 16, left: 16, color: thannigoPalette.neutral, fontSize: 10, fontWeight: "700", letterSpacing: 1 },
+  liveMapText: { position: "absolute", bottom: 16, left: 16, color: colors.muted, fontSize: 10, fontWeight: "700", letterSpacing: 1 },
   miniTypeSelector: { position: 'absolute', top: 12, left: 12, zIndex: 10 },
   miniTypeBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -1001,7 +1004,7 @@ const styles = StyleSheet.create({
   listContent: { flex: 1 },
   listTitleRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
   listTitle: { fontSize: 16, fontWeight: "800" },
-  favBadge: { backgroundColor: thannigoPalette.success, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  favBadge: { backgroundColor: colors.success, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   favBadgeText: { color: "white", fontSize: 9, fontWeight: "800" },
   defaultBadge: { backgroundColor: ACCENT, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   defaultBadgeText: { color: "white", fontSize: 9, fontWeight: "800" },
@@ -1009,12 +1012,12 @@ const styles = StyleSheet.create({
   listSub: { fontSize: 13, fontWeight: "500" },
 
   infoBox: {
-    flexDirection: "row", gap: 12, backgroundColor: thannigoPalette.successSoft,
+    flexDirection: "row", gap: 12, backgroundColor: colors.successSoft,
     borderRadius: Radius.xl, padding: 18, marginTop: 12,
-    borderWidth: 1, borderColor: thannigoPalette.success + '30',
+    borderWidth: 1, borderColor: colors.success + '30',
   },
-  infoTitle: { fontSize: 14, fontWeight: "800", color: thannigoPalette.shopTeal, marginBottom: 4 },
-  infoText: { fontSize: 13, color: thannigoPalette.shopTeal, lineHeight: 20, fontWeight: "500" },
+  infoTitle: { fontSize: 14, fontWeight: "800", color: '#006878', marginBottom: 4 },
+  infoText: { fontSize: 13, color: '#006878', lineHeight: 20, fontWeight: "500" },
   mapUtilityRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   utilityBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,

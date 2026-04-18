@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -13,7 +14,7 @@ import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { useShopStore } from '@/stores/shopStore';
 import { shopApi } from '@/api/shopApi';
 import type { Shop } from '@/types/domain';
-import { Shadow, thannigoPalette, roleAccent, Radius } from '@/constants/theme';
+import { Shadow, roleAccent, Radius } from '@/constants/theme';
 import { useAppTheme } from '@/providers/ThemeContext';
 
 const ACCENT = roleAccent.customer;
@@ -22,6 +23,8 @@ const GRAD: [string, string] = [ACCENT, '#0077b6'];
 type SortKey = 'price' | 'rating' | 'distance';
 
 export default function ShopAlternativesScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   const { colors, isDark } = useAppTheme();
@@ -154,7 +157,7 @@ export default function ShopAlternativesScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.shopName}>{shop.name}</Text>
                   <View style={styles.shopMeta}>
-                    <Ionicons name="star" size={12} color={thannigoPalette.warning} />
+                    <Ionicons name="star" size={12} color={colors.warning} />
                     <Text style={styles.shopRating}>{shop.rating?.toFixed(1) ?? '—'}</Text>
                     <Text style={styles.shopDot}>·</Text>
                     <Text style={styles.shopDist}>{shop.distanceKm?.toFixed(1) ?? '—'} km</Text>
@@ -168,8 +171,8 @@ export default function ShopAlternativesScreen() {
 
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <TouchableOpacity style={[styles.compareBtn, compareIds.includes(shop.id) && styles.compareBtnActive]} onPress={() => toggleCompare(shop.id)}>
-                  <Ionicons name="git-compare-outline" size={14} color={compareIds.includes(shop.id) ? ACCENT : thannigoPalette.neutral} />
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: compareIds.includes(shop.id) ? ACCENT : thannigoPalette.neutral }}>
+                  <Ionicons name="git-compare-outline" size={14} color={compareIds.includes(shop.id) ? ACCENT : colors.muted} />
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: compareIds.includes(shop.id) ? ACCENT : colors.muted }}>
                     {compareIds.includes(shop.id) ? 'Selected' : 'Compare'}
                   </Text>
                 </TouchableOpacity>
@@ -194,42 +197,42 @@ export default function ShopAlternativesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
-  headerSub: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 1 },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: colors.text },
+  headerSub: { fontSize: 12, color: colors.muted, fontWeight: '600', marginTop: 1 },
   content: { padding: 20, gap: 14, paddingBottom: 40 },
   emptyWrap: { alignItems: 'center', paddingTop: 60, gap: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
-  emptySub: { fontSize: 13, color: thannigoPalette.neutral, textAlign: 'center', paddingHorizontal: 32 },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
+  emptySub: { fontSize: 13, color: colors.muted, textAlign: 'center', paddingHorizontal: 32 },
   retryBtn: { backgroundColor: ACCENT, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14 },
   retryBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
   sortRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  sortLabel: { fontSize: 13, fontWeight: '600', color: thannigoPalette.neutral },
-  sortChip: { backgroundColor: thannigoPalette.borderSoft, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14 },
+  sortLabel: { fontSize: 13, fontWeight: '600', color: colors.muted },
+  sortChip: { backgroundColor: colors.border, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 14 },
   sortChipActive: { backgroundColor: ACCENT },
-  sortChipText: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
-  comparePanel: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 16, borderWidth: 1.5, borderColor: ACCENT },
-  comparePanelTitle: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 12 },
+  sortChipText: { fontSize: 12, fontWeight: '700', color: colors.muted },
+  comparePanel: { backgroundColor: colors.surface, borderRadius: Radius.xl, padding: 16, borderWidth: 1.5, borderColor: ACCENT },
+  comparePanelTitle: { fontSize: 14, fontWeight: '800', color: colors.text, marginBottom: 12 },
   compareTable: { flexDirection: 'row', gap: 8 },
   compareCol: { flex: 1, gap: 8 },
-  compareHeader: { fontSize: 12, fontWeight: '800', color: ACCENT, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft, paddingBottom: 6 },
-  compareKey: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '600' },
-  compareVal: { fontSize: 13, color: thannigoPalette.darkText, fontWeight: '700' },
-  compareTip: { flexDirection: 'row', gap: 8, backgroundColor: thannigoPalette.infoSoft, borderRadius: 14, padding: 12, alignItems: 'center' },
-  shopCard: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 18, gap: 12, ...Shadow.xs },
+  compareHeader: { fontSize: 12, fontWeight: '800', color: ACCENT, borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: 6 },
+  compareKey: { fontSize: 12, color: colors.muted, fontWeight: '600' },
+  compareVal: { fontSize: 13, color: colors.text, fontWeight: '700' },
+  compareTip: { flexDirection: 'row', gap: 8, backgroundColor: colors.inputBg, borderRadius: 14, padding: 12, alignItems: 'center' },
+  shopCard: { backgroundColor: colors.surface, borderRadius: Radius.xl, padding: 18, gap: 12, ...Shadow.xs },
   shopTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   shopIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  shopName: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 4 },
+  shopName: { fontSize: 15, fontWeight: '800', color: colors.text, marginBottom: 4 },
   shopMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  shopRating: { fontSize: 12, fontWeight: '700', color: thannigoPalette.darkText },
-  shopDot: { fontSize: 12, color: thannigoPalette.neutral },
-  shopDist: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
+  shopRating: { fontSize: 12, fontWeight: '700', color: colors.text },
+  shopDot: { fontSize: 12, color: colors.muted },
+  shopDist: { fontSize: 12, color: colors.muted, fontWeight: '500' },
   shopPrice: { fontSize: 18, fontWeight: '900', color: ACCENT },
-  shopEta: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
-  compareBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft },
-  compareBtnActive: { borderColor: ACCENT, backgroundColor: thannigoPalette.infoSoft },
+  shopEta: { fontSize: 11, color: colors.muted, fontWeight: '600', marginTop: 2 },
+  compareBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: colors.border },
+  compareBtnActive: { borderColor: ACCENT, backgroundColor: colors.inputBg },
   selectBtn: { flex: 1, borderRadius: 14, overflow: 'hidden' },
   selectBtnGrad: { paddingVertical: 13, alignItems: 'center' },
   selectBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },

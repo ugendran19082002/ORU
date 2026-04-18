@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,13 +15,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { adminRefundsApi, type AdminRefund } from '@/api/adminUsersApi';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface } from '@/constants/theme';
 
 const ADMIN_ACCENT = roleAccent.admin;
 const ADMIN_SURF = roleSurface.admin;
@@ -55,11 +57,11 @@ function getStatusTheme(status: AdminRefund['status']) {
     case 'pending':
       return { bg: '#fff3e0', text: '#e65100', label: 'Pending' };
     case 'approved':
-      return { bg: '#e8f5e9', text: thannigoPalette.success, label: 'Approved' };
+      return { bg: '#e8f5e9', text: colors.success, label: 'Approved' };
     case 'denied':
       return { bg: ADMIN_SURF, text: ADMIN_ACCENT, label: 'Denied' };
     default:
-      return { bg: thannigoPalette.borderSoft, text: thannigoPalette.neutral, label: status };
+      return { bg: colors.border, text: colors.muted, label: status };
   }
 }
 
@@ -193,7 +195,7 @@ function RefundCard({ refund, onApprove, onDeny, actionLoadingId }: RefundCardPr
                 style={[styles.actionBtn, { flex: 1 }]}
                 onPress={() => onApprove(refund.id)}
               >
-                <LinearGradient colors={[thannigoPalette.success, thannigoPalette.success]} style={styles.actionBtnGrad}>
+                <LinearGradient colors={[colors.success, colors.success]} style={styles.actionBtnGrad}>
                   <Ionicons name="checkmark-outline" size={15} color="white" />
                   <Text style={styles.actionBtnText}>Approve</Text>
                 </LinearGradient>
@@ -219,6 +221,8 @@ function RefundCard({ refund, onApprove, onDeny, actionLoadingId }: RefundCardPr
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function AdminRefundsScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
@@ -358,7 +362,7 @@ export default function AdminRefundsScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.headerSafe} edges={['top']}>
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
@@ -440,13 +444,13 @@ export default function AdminRefundsScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
 
   headerSafe: { 
-    backgroundColor: 'white', 
+    backgroundColor: colors.surface, 
     borderBottomWidth: 1, 
-    borderBottomColor: thannigoPalette.borderSoft,
+    borderBottomColor: colors.border,
     alignItems: 'center',
   },
   headerContent: {
@@ -460,30 +464,30 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: colors.muted, fontWeight: '600', marginTop: 2 },
 
-  filterBarWrap: { paddingVertical: 18, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  filterBarWrap: { paddingVertical: 18, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
   tabContent: { gap: 10, paddingHorizontal: 24 },
   tab: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 14,
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
   },
   tabActive: { backgroundColor: ADMIN_ACCENT },
-  tabText: { fontSize: 13, fontWeight: '800', color: thannigoPalette.neutral },
+  tabText: { fontSize: 13, fontWeight: '800', color: colors.muted },
   tabTextActive: { color: 'white' },
 
   listContent: { padding: 20, paddingBottom: 100 },
 
   // Refund card
   card: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 16,
     marginBottom: 14,
@@ -493,7 +497,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     borderWidth: 1,
-    borderColor: thannigoPalette.borderSoft,
+    borderColor: colors.border,
   },
   cardTopRow: {
     flexDirection: 'row',
@@ -504,8 +508,8 @@ const styles = StyleSheet.create({
   cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   cardOrderId: { fontSize: 13, fontWeight: '700', color: '#505860' },
   cardAmountRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 8 },
-  cardCustomer: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 4 },
-  cardReason: { fontSize: 13, color: thannigoPalette.neutral, lineHeight: 19 },
+  cardCustomer: { fontSize: 15, fontWeight: '800', color: colors.text, marginBottom: 4 },
+  cardReason: { fontSize: 13, color: colors.muted, lineHeight: 19 },
   cardAmount: { fontSize: 22, fontWeight: '900', color: ADMIN_ACCENT, letterSpacing: -0.5 },
   denyReasonRow: {
     flexDirection: 'row',
@@ -526,7 +530,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: thannigoPalette.borderSoft,
+    borderTopColor: colors.border,
   },
   cardFooterText: { fontSize: 11, color: '#94a3b8', fontWeight: '500' },
 
@@ -564,7 +568,7 @@ const styles = StyleSheet.create({
 
   // Empty / error
   emptyWrap: { alignItems: 'center', marginTop: 100, gap: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
   emptySubtitle: {
     fontSize: 14,
     color: '#94a3b8',
@@ -590,22 +594,22 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   denySheet: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     borderRadius: 24,
     padding: 24,
     width: '100%',
     maxWidth: 400,
   },
-  denyTitle: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 6 },
-  denySubtitle: { fontSize: 13, color: thannigoPalette.neutral, marginBottom: 16 },
+  denyTitle: { fontSize: 18, fontWeight: '900', color: colors.text, marginBottom: 6 },
+  denySubtitle: { fontSize: 13, color: colors.muted, marginBottom: 16 },
   denyInput: {
-    backgroundColor: thannigoPalette.background,
+    backgroundColor: colors.background,
     borderRadius: 14,
     padding: 14,
     fontSize: 14,
-    color: thannigoPalette.darkText,
+    color: colors.text,
     borderWidth: 1,
-    borderColor: thannigoPalette.borderSoft,
+    borderColor: colors.border,
     textAlignVertical: 'top',
     minHeight: 80,
     marginBottom: 20,
@@ -616,10 +620,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: thannigoPalette.borderSoft,
+    borderColor: colors.border,
     alignItems: 'center',
   },
-  denyCancelText: { fontSize: 14, fontWeight: '800', color: thannigoPalette.neutral },
+  denyCancelText: { fontSize: 14, fontWeight: '800', color: colors.muted },
   denyConfirmBtn: {
     flex: 1,
     paddingVertical: 14,

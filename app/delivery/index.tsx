@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Switch, Linking,
@@ -6,6 +6,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -15,7 +16,7 @@ import { useAppSession } from '@/hooks/use-app-session';
 import { connectSocket, disconnectSocket, getSocket } from '@/utils/socket';
 import * as ImagePicker from 'expo-image-picker';
 import * as TaskManager from 'expo-task-manager';
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients, Radius } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients, Radius } from '@/constants/theme';
 import { useAppTheme, ThemePreference } from '@/providers/ThemeContext';
 
 const DELIVERY_ACCENT = roleAccent.delivery;
@@ -44,6 +45,8 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
 });
 
 export default function DeliveryDashboardScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { user, signOut } = useAppSession();
   const { tasks, online, toggleOnline, assignCurrentTask, updateTaskStatus, removeTask } = useDeliveryStore();
@@ -141,10 +144,10 @@ export default function DeliveryDashboardScreen() {
   const headerColors: [string, string] = online ? DELIVERY_GRAD : DELIVERY_OFFLINE;
 
   const QUICK_ACTIONS = [
-    { label: 'Security',    icon: 'shield-checkmark-outline', color: thannigoPalette.primary,        bg: colors.deliverySoft ?? colors.background, path: '/privacy-security' },
-    { label: 'My Earnings', icon: 'cash-outline',             color: thannigoPalette.deliveryGreen,  bg: colors.deliverySoft ?? colors.background, path: '/delivery/earnings' },
+    { label: 'Security',    icon: 'shield-checkmark-outline', color: colors.primary,        bg: colors.deliverySoft ?? colors.background, path: '/privacy-security' },
+    { label: 'My Earnings', icon: 'cash-outline',             color: '#2e7d32',  bg: colors.deliverySoft ?? colors.background, path: '/delivery/earnings' },
     { label: 'Trip History',icon: 'time-outline',             color: '#b45309',                      bg: isDark ? '#1a1000' : '#fef3c7',            path: '/delivery/history' },
-    { label: 'Emergency',   icon: 'warning-outline',          color: thannigoPalette.error,          bg: isDark ? '#2D0A0A' : thannigoPalette.dangerSoft, path: '/emergency-help' },
+    { label: 'Emergency',   icon: 'warning-outline',          color: colors.error,          bg: isDark ? '#2D0A0A' : colors.adminSoft, path: '/emergency-help' },
     { label: isDark ? 'Light' : 'Dark', icon: isDark ? 'sunny-outline' : 'moon-outline', color: DELIVERY_ACCENT, bg: colors.surface, path: null as any },
   ];
 
@@ -158,7 +161,7 @@ export default function DeliveryDashboardScreen() {
           <View>
             <Text style={styles.greeting}>Good morning, {user?.name ?? 'Agent'} 👋</Text>
             <View style={styles.onlineRow}>
-              <View style={[styles.onlineDot, { backgroundColor: online ? thannigoPalette.success : thannigoPalette.error }]} />
+              <View style={[styles.onlineDot, { backgroundColor: online ? colors.success : colors.error }]} />
               <Text style={styles.onlineStatus}>{online ? 'Online — ready for trips' : 'Offline'}</Text>
             </View>
           </View>
@@ -268,13 +271,13 @@ export default function DeliveryDashboardScreen() {
               <View style={[
                 styles.priorityChip,
                 { backgroundColor: colors.background },
-                trip.priority === 'Urgent' && { backgroundColor: thannigoPalette.dangerSoft },
+                trip.priority === 'Urgent' && { backgroundColor: colors.adminSoft },
               ]}>
-                {trip.priority === 'Urgent' && <Ionicons name="flash" size={11} color={thannigoPalette.error} />}
+                {trip.priority === 'Urgent' && <Ionicons name="flash" size={11} color={colors.error} />}
                 <Text style={[
                   styles.priorityText,
                   { color: colors.muted },
-                  trip.priority === 'Urgent' && { color: thannigoPalette.error },
+                  trip.priority === 'Urgent' && { color: colors.error },
                 ]}>
                   {trip.priority}
                 </Text>
@@ -292,7 +295,7 @@ export default function DeliveryDashboardScreen() {
                 { icon: 'speedometer-outline', text: trip.distance, color: DELIVERY_ACCENT },
                 { icon: 'time-outline',        text: `ETA ${trip.eta}`, color: DELIVERY_ACCENT },
                 { icon: 'water-outline',       text: `${trip.cans} can${trip.cans > 1 ? 's' : ''}`, color: DELIVERY_ACCENT },
-                { icon: 'cash-outline',        text: trip.amount, color: thannigoPalette.deliveryGreen },
+                { icon: 'cash-outline',        text: trip.amount, color: '#2e7d32' },
               ].map((m) => (
                 <View key={m.text} style={styles.metaItem}>
                   <Ionicons name={m.icon as any} size={13} color={m.color} />
@@ -309,7 +312,7 @@ export default function DeliveryDashboardScreen() {
                     style={[styles.startBtn, { backgroundColor: colors.background, flex: 1 }]}
                     onPress={() => handleReject(trip.id)}
                   >
-                    <Text style={[styles.startBtnText, { color: thannigoPalette.error }]}>Reject</Text>
+                    <Text style={[styles.startBtnText, { color: colors.error }]}>Reject</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.startBtn, { backgroundColor: DELIVERY_ACCENT, flex: 1 }]}
@@ -373,8 +376,8 @@ export default function DeliveryDashboardScreen() {
                 <Text style={[styles.shiftTitle, { color: colors.text }]}>Shift Active</Text>
                 <Text style={[styles.shiftSub, { color: colors.muted }]}>Started at 9:00 AM · 4h 22m elapsed</Text>
               </View>
-              <TouchableOpacity style={[styles.endShiftBtn, { backgroundColor: thannigoPalette.dangerSoft }]}>
-                <Text style={[styles.endShiftText, { color: thannigoPalette.error }]}>End Shift</Text>
+              <TouchableOpacity style={[styles.endShiftBtn, { backgroundColor: colors.adminSoft }]}>
+                <Text style={[styles.endShiftText, { color: colors.error }]}>End Shift</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -384,7 +387,7 @@ export default function DeliveryDashboardScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
 
   header: { paddingTop: 8, paddingBottom: 24, paddingHorizontal: 24 },

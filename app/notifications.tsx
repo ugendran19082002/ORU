@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -13,7 +14,7 @@ import { SkeletonCard, SkeletonLine } from '@/components/ui/Skeleton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { notificationApi } from '@/api/engagementApi';
-import { Shadow, thannigoPalette, roleAccent, Radius } from '@/constants/theme';
+import { Shadow, roleAccent, Radius } from '@/constants/theme';
 import { useAppTheme } from '@/providers/ThemeContext';
 
 const CUSTOMER_ACCENT = roleAccent.customer;
@@ -31,9 +32,9 @@ interface Notif {
 }
 
 const TYPE_CONFIG: Record<NotifType, { label: string; color: string; bg: string }> = {
-  order:     { label: 'ORDER',   color: thannigoPalette.primary,    bg: thannigoPalette.infoSoft },
-  promo:     { label: 'OFFER',   color: thannigoPalette.warning,    bg: '#FFF8E1' },
-  system:    { label: 'SYSTEM',  color: thannigoPalette.neutral,    bg: thannigoPalette.borderSoft },
+  order:     { label: 'ORDER',   color: colors.primary,    bg: colors.inputBg },
+  promo:     { label: 'OFFER',   color: colors.warning,    bg: '#FFF8E1' },
+  system:    { label: 'SYSTEM',  color: colors.muted,    bg: colors.border },
   complaint: { label: 'SUPPORT', color: '#7c3aed',                  bg: '#ede9fe' },
 };
 
@@ -64,6 +65,8 @@ function mapNotif(n: any): Notif {
 }
 
 export default function NotificationsScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { colors, isDark } = useAppTheme();
   const { safeBack } = useAppNavigation();
@@ -131,7 +134,7 @@ export default function NotificationsScreen() {
         </View>
         {unreadCount > 0 && (
           <TouchableOpacity
-            style={[styles.markAllBtn, { borderColor: CUSTOMER_ACCENT + '50', backgroundColor: thannigoPalette.infoSoft }]}
+            style={[styles.markAllBtn, { borderColor: CUSTOMER_ACCENT + '50', backgroundColor: colors.inputBg }]}
             onPress={markAllRead}
           >
             <Text style={[styles.markAllText, { color: CUSTOMER_ACCENT }]}>Mark all read</Text>
@@ -232,7 +235,7 @@ export default function NotificationsScreen() {
                   !notif.read && {
                     borderWidth: 1,
                     borderColor: CUSTOMER_ACCENT + '35',
-                    backgroundColor: thannigoPalette.infoSoft,
+                    backgroundColor: colors.inputBg,
                   },
                 ]}
                 activeOpacity={0.75}
@@ -300,7 +303,7 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
 
   header: {
@@ -355,6 +358,6 @@ const styles = StyleSheet.create({
   complaintDecor: { position: 'absolute', right: 12, top: 0, opacity: 0.2 },
   complaintTitle: { fontSize: 15, fontWeight: '800', color: 'white', marginBottom: 4 },
   complaintSub: { fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 17 },
-  complaintBtn: { backgroundColor: 'white', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, marginLeft: 'auto' },
+  complaintBtn: { backgroundColor: colors.surface, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, marginLeft: 'auto' },
   complaintBtnText: { color: '#7c3aed', fontWeight: '800', fontSize: 12 },
 });

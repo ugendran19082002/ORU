@@ -2,11 +2,11 @@ import React from "react";
 import { Text, View } from "react-native";
 import { Tabs, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { roleAccent, roleSurface, thannigoPalette } from "@/constants/theme";
+import { roleAccent, roleSurface } from "@/constants/theme";
+import { useAppTheme } from "@/providers/ThemeContext";
 
 const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_SURF = roleSurface.shop_owner;
-const TAB_INACTIVE = thannigoPalette.neutral;
 
 function TabIcon({
   name,
@@ -19,6 +19,7 @@ function TabIcon({
   color: string;
   label: string;
 }) {
+  const { colors } = useAppTheme();
   return (
     <View
       style={{
@@ -32,12 +33,12 @@ function TabIcon({
         minHeight: 45,
       }}
     >
-      <Ionicons name={name} size={22} color={focused ? SHOP_ACCENT : TAB_INACTIVE} />
+      <Ionicons name={name} size={22} color={focused ? SHOP_ACCENT : colors.muted} />
       <Text
         style={{
           fontSize: 9,
           fontWeight: "700",
-          color: focused ? SHOP_ACCENT : TAB_INACTIVE,
+          color: focused ? SHOP_ACCENT : colors.muted,
           marginTop: 2,
           textAlign: "center",
         }}
@@ -49,13 +50,14 @@ function TabIcon({
 }
 
 export default function ShopTabsLayout() {
+  const { colors } = useAppTheme();
   return (
     <Tabs
       initialRouteName="index"
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: thannigoPalette.surface,
+          backgroundColor: colors.surface,
           borderTopWidth: 0,
           elevation: 0,
           shadowColor: "#000",
@@ -71,7 +73,7 @@ export default function ShopTabsLayout() {
         },
         tabBarShowLabel: false,
         tabBarActiveTintColor: SHOP_ACCENT,
-        tabBarInactiveTintColor: TAB_INACTIVE,
+        tabBarInactiveTintColor: colors.muted,
         tabBarItemStyle: {
           flex: 1,
           justifyContent: "center",
@@ -85,12 +87,7 @@ export default function ShopTabsLayout() {
         name="index"
         options={{
           tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
-            <TabIcon
-              name={focused ? "receipt" : "receipt-outline"}
-              focused={focused}
-              color={color}
-              label="Orders"
-            />
+            <TabIcon name={focused ? "receipt" : "receipt-outline"} focused={focused} color={color} label="Orders" />
           ),
         }}
       />
@@ -98,12 +95,7 @@ export default function ShopTabsLayout() {
         name="inventory"
         options={{
           tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
-            <TabIcon
-              name={focused ? "cube" : "cube-outline"}
-              focused={focused}
-              color={color}
-              label="Stock"
-            />
+            <TabIcon name={focused ? "cube" : "cube-outline"} focused={focused} color={color} label="Stock" />
           ),
         }}
       />
@@ -111,12 +103,7 @@ export default function ShopTabsLayout() {
         name="earnings"
         options={{
           tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
-            <TabIcon
-              name={focused ? "bar-chart" : "bar-chart-outline"}
-              focused={focused}
-              color={color}
-              label="Earnings"
-            />
+            <TabIcon name={focused ? "bar-chart" : "bar-chart-outline"} focused={focused} color={color} label="Earnings" />
           ),
         }}
       />
@@ -124,12 +111,7 @@ export default function ShopTabsLayout() {
         name="settings"
         options={{
           tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
-            <TabIcon
-              name={focused ? "grid" : "grid-outline"}
-              focused={focused}
-              color={color}
-              label="Settings"
-            />
+            <TabIcon name={focused ? "grid" : "grid-outline"} focused={focused} color={color} label="Settings" />
           ),
         }}
       />

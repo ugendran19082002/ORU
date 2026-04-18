@@ -1,3 +1,4 @@
+﻿import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -22,7 +23,6 @@ import {
   Shadow,
   roleAccent,
   roleGradients,
-  thannigoPalette,
   Radius,
   Spacing,
   Typography,
@@ -96,12 +96,12 @@ const REJECT_REASONS = [
 ];
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: thannigoPalette.warning,
+  pending: colors.warning,
   accepted: SHOP_ACCENT,
-  out_for_delivery: thannigoPalette.primary,
-  completed: thannigoPalette.success,
-  cancelled: thannigoPalette.adminRed,
-  delivered: thannigoPalette.success,
+  out_for_delivery: colors.primary,
+  completed: colors.success,
+  cancelled: '#ba1a1a',
+  delivered: colors.success,
 };
 
 // ─── Order Card ───────────────────────────────────────────────────────────────
@@ -155,7 +155,7 @@ function OrderCard({
         <View
           style={[
             styles.orderIconWrap,
-            { backgroundColor: thannigoPalette.deliveryGreenLight },
+            { backgroundColor: colors.deliverySoft },
           ]}
         >
           <Ionicons name="water" size={20} color={SHOP_ACCENT} />
@@ -266,7 +266,7 @@ function OrderCard({
                 style={[
                   styles.rejectBtn,
                   {
-                    borderColor: thannigoPalette.adminRedLight,
+                    borderColor: colors.adminSoft,
                     backgroundColor: colors.surface,
                   },
                 ]}
@@ -276,12 +276,12 @@ function OrderCard({
                 <Ionicons
                   name="close"
                   size={16}
-                  color={thannigoPalette.adminRed}
+                  color={'#ba1a1a'}
                 />
                 <Text
                   style={[
                     styles.rejectBtnText,
-                    { color: thannigoPalette.adminRed },
+                    { color: '#ba1a1a' },
                   ]}
                 >
                   Reject
@@ -313,6 +313,8 @@ function OrderCard({
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 export default function ShopOrdersScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const { colors, isDark } = useAppTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabState>("active");
@@ -665,8 +667,8 @@ export default function ShopOrdersScreen() {
                       styles.completedIconWrap,
                       {
                         backgroundColor: isCancelled
-                          ? thannigoPalette.dangerSoft
-                          : thannigoPalette.deliveryGreenLight,
+                          ? colors.adminSoft
+                          : colors.deliverySoft,
                       },
                     ]}
                   >
@@ -678,7 +680,7 @@ export default function ShopOrdersScreen() {
                       }
                       size={20}
                       color={
-                        isCancelled ? thannigoPalette.adminRed : SHOP_ACCENT
+                        isCancelled ? '#ba1a1a' : SHOP_ACCENT
                       }
                     />
                   </View>
@@ -771,8 +773,8 @@ export default function ShopOrdersScreen() {
                         backgroundColor: colors.background,
                       },
                       selected && {
-                        borderColor: thannigoPalette.adminRedLight,
-                        backgroundColor: thannigoPalette.dangerSoft,
+                        borderColor: colors.adminSoft,
+                        backgroundColor: colors.adminSoft,
                       },
                     ]}
                     onPress={() => setSelectedRejectReason(reason)}
@@ -780,14 +782,14 @@ export default function ShopOrdersScreen() {
                     <Ionicons
                       name={selected ? "radio-button-on" : "radio-button-off"}
                       size={18}
-                      color={selected ? thannigoPalette.adminRed : colors.muted}
+                      color={selected ? '#ba1a1a' : colors.muted}
                     />
                     <Text
                       style={[
                         styles.reasonText,
                         { color: colors.text },
                         selected && {
-                          color: thannigoPalette.adminRed,
+                          color: '#ba1a1a',
                           fontWeight: "800",
                         },
                       ]}
@@ -802,7 +804,7 @@ export default function ShopOrdersScreen() {
             <TouchableOpacity
               style={[
                 styles.confirmRejectBtn,
-                { backgroundColor: thannigoPalette.adminRed },
+                { backgroundColor: '#ba1a1a' },
                 !selectedRejectReason && { opacity: 0.4 },
               ]}
               onPress={confirmReject}
@@ -817,7 +819,7 @@ export default function ShopOrdersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
 
   searchWrap: {
@@ -870,7 +872,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: "white",
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
   },

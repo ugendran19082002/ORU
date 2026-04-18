@@ -1,10 +1,12 @@
-import React, { useState, useCallback, useEffect } from 'react';
+﻿import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   Modal, TextInput, ActivityIndicator, RefreshControl, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -15,7 +17,7 @@ import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { apiClient } from '@/api/client';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients, Radius, Spacing, Typography } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients, Radius, Spacing, Typography } from '@/constants/theme';
 
 const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_SURF = roleSurface.shop_owner;
@@ -42,13 +44,15 @@ interface InventoryLog {
 }
 
 const ACTIONS = [
-  { key: 'add_full', label: 'Add Full', icon: 'add-circle-outline' as const, color: thannigoPalette.success, bg: '#e8f5e9' },
+  { key: 'add_full', label: 'Add Full', icon: 'add-circle-outline' as const, color: colors.success, bg: '#e8f5e9' },
   { key: 'mark_empty', label: 'Mark Empty', icon: 'remove-circle-outline' as const, color: '#b45309', bg: '#fef3c7' },
-  { key: 'mark_damaged', label: 'Mark Damaged', icon: 'alert-circle-outline' as const, color: thannigoPalette.adminRed, bg: '#ffebee' },
+  { key: 'mark_damaged', label: 'Mark Damaged', icon: 'alert-circle-outline' as const, color: '#ba1a1a', bg: '#ffebee' },
   { key: 'collected_empty', label: 'Collected Empty', icon: 'checkmark-circle-outline' as const, color: SHOP_ACCENT, bg: SHOP_SURF },
 ];
 
 export default function CanManagementScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const { safeBack } = useAppNavigation();
   const router = useRouter();
 
@@ -132,7 +136,7 @@ export default function CanManagementScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* HEADER */}
       <View style={styles.header}>
@@ -172,9 +176,9 @@ export default function CanManagementScreen() {
         {/* STATS TILES */}
         <View style={styles.statsRow}>
           {[
-            { label: 'Full Stock', value: totalFull, color: thannigoPalette.success, bg: '#e8f5e9', icon: 'checkmark-circle-outline' as const },
+            { label: 'Full Stock', value: totalFull, color: colors.success, bg: '#e8f5e9', icon: 'checkmark-circle-outline' as const },
             { label: 'Empty Cans', value: totalEmpty, color: '#b45309', bg: '#fef3c7', icon: 'sync-outline' as const },
-            { label: 'Damaged', value: totalDamaged, color: thannigoPalette.error, bg: '#ffebee', icon: 'alert-circle-outline' as const },
+            { label: 'Damaged', value: totalDamaged, color: colors.error, bg: '#ffebee', icon: 'alert-circle-outline' as const },
           ].map((s) => (
             <View key={s.label} style={[styles.statBox, { backgroundColor: s.bg }]}>
               <View style={styles.statIconBox}>
@@ -198,7 +202,7 @@ export default function CanManagementScreen() {
         {loading ? (
           <View style={{ marginTop: 60, alignItems: 'center' }}>
             <ActivityIndicator color={SHOP_ACCENT} size="large" />
-            <Text style={{ marginTop: 12, color: thannigoPalette.neutral, fontWeight: '600' }}>Fetching real-time inventory...</Text>
+            <Text style={{ marginTop: 12, color: colors.muted, fontWeight: '600' }}>Fetching real-time inventory...</Text>
           </View>
         ) : (
           <>
@@ -226,7 +230,7 @@ export default function CanManagementScreen() {
                       <View style={{ flex: 1 }}>
                         <Text style={styles.itemName}>{item.product_name}</Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-                           <Ionicons name="time-outline" size={12} color={thannigoPalette.neutral} />
+                           <Ionicons name="time-outline" size={12} color={colors.muted} />
                            <Text style={styles.itemUpdated}>
                             Synced {new Date(item.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                           </Text>
@@ -241,7 +245,7 @@ export default function CanManagementScreen() {
 
                     <View style={styles.canRow}>
                       <View style={styles.canStat}>
-                        <Text style={[styles.canCount, { color: thannigoPalette.success }]}>{item.full_cans}</Text>
+                        <Text style={[styles.canCount, { color: colors.success }]}>{item.full_cans}</Text>
                         <Text style={styles.canLabel}>FULL</Text>
                       </View>
                       <View style={styles.canStat}>
@@ -249,7 +253,7 @@ export default function CanManagementScreen() {
                         <Text style={styles.canLabel}>EMPTY</Text>
                       </View>
                       <View style={styles.canStat}>
-                        <Text style={[styles.canCount, { color: thannigoPalette.error }]}>{item.damaged_cans}</Text>
+                        <Text style={[styles.canCount, { color: colors.error }]}>{item.damaged_cans}</Text>
                         <Text style={styles.canLabel}>DAMAGED</Text>
                       </View>
                       <TouchableOpacity style={styles.updateBtn} onPress={() => openUpdate(item)}>
@@ -277,7 +281,7 @@ export default function CanManagementScreen() {
                         <Ionicons 
                           name={log.quantity > 0 ? "add" : "remove"} 
                           size={16} 
-                          color={log.quantity > 0 ? thannigoPalette.success : thannigoPalette.error} 
+                          color={log.quantity > 0 ? colors.success : colors.error} 
                         />
                       </View>
                       <View style={{ flex: 1 }}>
@@ -286,7 +290,7 @@ export default function CanManagementScreen() {
                         {log.note && <Text style={styles.logNote}>{log.note}</Text>}
                       </View>
                       <View style={{ alignItems: 'flex-end' }}>
-                        <Text style={[styles.logQty, { color: log.quantity > 0 ? thannigoPalette.success : thannigoPalette.error }]}>
+                        <Text style={[styles.logQty, { color: log.quantity > 0 ? colors.success : colors.error }]}>
                           {log.quantity > 0 ? '+' : ''}{log.quantity}
                         </Text>
                         <Text style={styles.logDate}>
@@ -314,7 +318,7 @@ export default function CanManagementScreen() {
                   <Text style={styles.modalSub}>{selected?.product_name}</Text>
                </View>
                <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeModalBtn}>
-                  <Ionicons name="close" size={24} color={thannigoPalette.neutral} />
+                  <Ionicons name="close" size={24} color={colors.muted} />
                </TouchableOpacity>
             </View>
 
@@ -328,7 +332,7 @@ export default function CanManagementScreen() {
                     style={[styles.actionChip, isActive && { borderColor: a.color, backgroundColor: a.bg }]}
                     onPress={() => setAction(a.key)}
                   >
-                    <Ionicons name={a.icon} size={16} color={isActive ? a.color : thannigoPalette.neutral} />
+                    <Ionicons name={a.icon} size={16} color={isActive ? a.color : colors.muted} />
                     <Text style={[styles.actionChipText, isActive && { color: a.color }]}>{a.label}</Text>
                   </TouchableOpacity>
                 );
@@ -390,8 +394,8 @@ export default function CanManagementScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
 
   header: { 
     flexDirection: 'row', 
@@ -399,23 +403,23 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     paddingHorizontal: 20, 
     paddingVertical: 18, 
-    backgroundColor: 'white', 
+    backgroundColor: colors.surface, 
     borderBottomWidth: 1, 
-    borderBottomColor: thannigoPalette.borderSoft,
+    borderBottomColor: colors.border,
     ...Shadow.xs 
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  brandName: { fontSize: 22, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
   notifBtnSub: { width: 44, height: 44, borderRadius: Radius.md, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
   
   titleRow: { marginHorizontal: 20, marginBottom: 16 },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  pageSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 4 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  pageSub: { fontSize: 13, color: colors.muted, fontWeight: '500', marginTop: 4 },
   statsRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10 },
   statBox: { flex: 1, padding: 16, borderRadius: Radius.xl, alignItems: 'center', ...Shadow.xs },
-  statIconBox: { width: 40, height: 40, borderRadius: Radius.md, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  statIconBox: { width: 40, height: 40, borderRadius: Radius.md, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   statValue: { fontSize: 24, fontWeight: '900' },
   statLabel: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 4 },
 
@@ -425,74 +429,74 @@ const styles = StyleSheet.create({
 
   content: { paddingBottom: 40 },
   sectionHeader: { paddingHorizontal: 20, paddingVertical: 12 },
-  sectionTitle: { fontSize: 14, fontWeight: '900', color: thannigoPalette.neutral, letterSpacing: 1.2, textTransform: 'uppercase' },
+  sectionTitle: { fontSize: 14, fontWeight: '900', color: colors.muted, letterSpacing: 1.2, textTransform: 'uppercase' },
 
   emptyState: { alignItems: 'center', marginTop: 60, paddingHorizontal: 40 },
   emptyIconWrap: { width: 100, height: 100, borderRadius: 50, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  emptyTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
-  emptySub: { fontSize: 14, color: thannigoPalette.neutral, textAlign: 'center', marginTop: 8, lineHeight: 22, fontWeight: '500' },
+  emptyTitle: { fontSize: 20, fontWeight: '900', color: colors.text },
+  emptySub: { fontSize: 14, color: colors.muted, textAlign: 'center', marginTop: 8, lineHeight: 22, fontWeight: '500' },
 
   itemCard: { 
-    backgroundColor: 'white', 
+    backgroundColor: colors.surface, 
     borderRadius: Radius.xl, 
     padding: 20, 
     marginHorizontal: 20,
     marginBottom: 16,
     ...Shadow.sm,
     borderWidth: 1,
-    borderColor: thannigoPalette.borderSoft 
+    borderColor: colors.border 
   },
-  itemCardLow: { borderLeftWidth: 6, borderLeftColor: thannigoPalette.error },
+  itemCardLow: { borderLeftWidth: 6, borderLeftColor: colors.error },
   itemTop: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 20 },
   itemIcon: { width: 52, height: 52, borderRadius: Radius.lg, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
-  itemName: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
-  itemUpdated: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '600' },
-  lowBadge: { backgroundColor: thannigoPalette.error + '15', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
-  lowBadgeText: { fontSize: 10, fontWeight: '900', color: thannigoPalette.error, letterSpacing: 0.5 },
+  itemName: { fontSize: 18, fontWeight: '900', color: colors.text },
+  itemUpdated: { fontSize: 12, color: colors.muted, fontWeight: '600' },
+  lowBadge: { backgroundColor: colors.error + '15', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  lowBadgeText: { fontSize: 10, fontWeight: '900', color: colors.error, letterSpacing: 0.5 },
 
   canRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   canStat: { alignItems: 'center', flex: 1 },
   canCount: { fontSize: 24, fontWeight: '900' },
-  canLabel: { fontSize: 10, color: thannigoPalette.neutral, fontWeight: '800', marginTop: 4, letterSpacing: 0.5 },
+  canLabel: { fontSize: 10, color: colors.muted, fontWeight: '800', marginTop: 4, letterSpacing: 0.5 },
   updateBtn: { flex: 1.2, height: 48, borderRadius: Radius.lg, overflow: 'hidden', ...Shadow.sm },
   updateBtnGrad: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   updateBtnText: { fontSize: 14, fontWeight: '800', color: 'white' },
 
   logsCard: { 
-    backgroundColor: 'white', 
+    backgroundColor: colors.surface, 
     borderRadius: Radius.xl, 
     marginHorizontal: 20,
     paddingHorizontal: 20, 
     paddingVertical: 10, 
     ...Shadow.sm,
     borderWidth: 1,
-    borderColor: thannigoPalette.borderSoft 
+    borderColor: colors.border 
   },
   logRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16 },
-  logDivider: { borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  logDivider: { borderBottomWidth: 1, borderBottomColor: colors.border },
   logIcon: { width: 36, height: 36, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
-  logText: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText },
-  logAction: { fontSize: 11, fontWeight: '700', color: thannigoPalette.neutral, textTransform: 'uppercase', marginTop: 2 },
-  logNote: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 4, fontStyle: 'italic' },
+  logText: { fontSize: 14, fontWeight: '800', color: colors.text },
+  logAction: { fontSize: 11, fontWeight: '700', color: colors.muted, textTransform: 'uppercase', marginTop: 2 },
+  logNote: { fontSize: 12, color: colors.muted, marginTop: 4, fontStyle: 'italic' },
   logQty: { fontSize: 18, fontWeight: '900' },
-  logDate: { fontSize: 11, color: thannigoPalette.neutral, marginTop: 4, fontWeight: '600' },
+  logDate: { fontSize: 11, color: colors.muted, marginTop: 4, fontWeight: '600' },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,40,80,0.5)', justifyContent: 'flex-end' },
   modalSheet: { 
-    backgroundColor: 'white', 
+    backgroundColor: colors.surface, 
     borderTopLeftRadius: 32, 
     borderTopRightRadius: 32, 
     padding: 24, 
     paddingBottom: 40,
     ...Shadow.lg 
   },
-  modalPill: { width: 44, height: 5, borderRadius: Radius.full, backgroundColor: thannigoPalette.borderSoft, alignSelf: 'center', marginBottom: 20 },
+  modalPill: { width: 44, height: 5, borderRadius: Radius.full, backgroundColor: colors.border, alignSelf: 'center', marginBottom: 20 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 },
-  modalTitle: { fontSize: 24, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  modalSub: { fontSize: 15, fontWeight: '600', color: thannigoPalette.neutral, marginTop: 4 },
-  closeModalBtn: { width: 40, height: 40, borderRadius: Radius.md, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
+  modalTitle: { fontSize: 24, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  modalSub: { fontSize: 15, fontWeight: '600', color: colors.muted, marginTop: 4 },
+  closeModalBtn: { width: 40, height: 40, borderRadius: Radius.md, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' },
 
-  fieldLabel: { fontSize: 12, fontWeight: '900', color: thannigoPalette.neutral, marginBottom: 12, letterSpacing: 1.2, textTransform: 'uppercase' },
+  fieldLabel: { fontSize: 12, fontWeight: '900', color: colors.muted, marginBottom: 12, letterSpacing: 1.2, textTransform: 'uppercase' },
   actionGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
   actionChip: { 
     flexDirection: 'row', 
@@ -502,27 +506,27 @@ const styles = StyleSheet.create({
     paddingVertical: 12, 
     borderRadius: Radius.lg, 
     borderWidth: 2, 
-    borderColor: thannigoPalette.borderSoft,
-    backgroundColor: thannigoPalette.background 
+    borderColor: colors.border,
+    backgroundColor: colors.background 
   },
-  actionChipText: { fontSize: 14, fontWeight: '800', color: thannigoPalette.neutral },
+  actionChipText: { fontSize: 14, fontWeight: '800', color: colors.muted },
   
   inputGroup: { marginBottom: 24 },
   inputWrapper: { 
     flexDirection: 'row', 
     alignItems: 'center', 
-    backgroundColor: thannigoPalette.background, 
+    backgroundColor: colors.background, 
     borderRadius: Radius.xl, 
     paddingHorizontal: 18, 
     height: 60, 
     borderWidth: 1, 
-    borderColor: thannigoPalette.borderSoft 
+    borderColor: colors.border 
   },
-  input: { flex: 1, fontSize: 17, fontWeight: '700', color: thannigoPalette.darkText },
+  input: { flex: 1, fontSize: 17, fontWeight: '700', color: colors.text },
   
   modalActions: { flexDirection: 'row', gap: 14, marginTop: 10 },
-  cancelModalBtn: { flex: 0.4, paddingVertical: 18, borderRadius: Radius.xl, borderWidth: 1, borderColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
-  cancelModalBtnText: { fontSize: 15, fontWeight: '800', color: thannigoPalette.neutral },
+  cancelModalBtn: { flex: 0.4, paddingVertical: 18, borderRadius: Radius.xl, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  cancelModalBtnText: { fontSize: 15, fontWeight: '800', color: colors.muted },
   submitBtn: { flex: 0.6, borderRadius: Radius.xl, overflow: 'hidden', ...Shadow.sm },
   submitBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 18 },
   submitBtnText: { color: 'white', fontSize: 16, fontWeight: '900' },

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+﻿import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, RefreshControl, ActivityIndicator,
@@ -6,6 +6,8 @@ import {
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Logo } from '@/components/ui/Logo';
@@ -13,7 +15,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { useOrderStore } from '@/stores/orderStore';
 import { useRouter } from 'expo-router';
 import { payoutApi, ShopWallet, PayoutLog } from '@/api/payoutApi';
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
 
 const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_SURF = roleSurface.shop_owner;
@@ -33,6 +35,8 @@ function getTrxAmount(log: PayoutLog) {
 }
 
 export default function ShopEarningsScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const [wallet, setWallet] = useState<ShopWallet | null>(null);
@@ -127,7 +131,7 @@ export default function ShopEarningsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -296,20 +300,20 @@ export default function ShopEarningsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, paddingVertical: 14,
-    backgroundColor: thannigoPalette.surface,
-    borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1, borderBottomColor: colors.border,
   },
-  brandName: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  brandName: { fontSize: 20, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 2 },
   settingsBtn: { width: 42, height: 42, borderRadius: 13, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
 
   scrollContent: { paddingHorizontal: 20, paddingBottom: 120 },
-  pageTitle: { fontSize: 32, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.8, marginTop: 10, marginBottom: 20 },
+  pageTitle: { fontSize: 32, fontWeight: '900', color: colors.text, letterSpacing: -0.8, marginTop: 10, marginBottom: 20 },
 
   balanceCard: {
     padding: 24, borderRadius: 28, overflow: 'hidden', position: 'relative', marginBottom: 16,
@@ -320,7 +324,7 @@ const styles = StyleSheet.create({
   balanceTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   balanceLabel: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.7)', letterSpacing: 1.5, marginBottom: 6 },
   balanceAmount: { fontSize: 40, fontWeight: '900', color: 'white', letterSpacing: -1.5 },
-  balanceBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'white', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
+  balanceBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.surface, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
   balanceBadgeText: { fontSize: 10, fontWeight: '900', color: SHOP_ACCENT, letterSpacing: 1 },
   cardDivider: { height: 1.5, backgroundColor: 'rgba(255,255,255,0.15)', marginVertical: 20 },
   commissionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -335,7 +339,7 @@ const styles = StyleSheet.create({
 
   withdrawBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    backgroundColor: thannigoPalette.surface, borderRadius: 20, paddingVertical: 18,
+    backgroundColor: colors.surface, borderRadius: 20, paddingVertical: 18,
     borderWidth: 1.5, borderColor: SHOP_ACCENT + '20', marginBottom: 12,
     ...Shadow.sm,
   },
@@ -348,25 +352,25 @@ const styles = StyleSheet.create({
   },
   verifyBannerText: { flex: 1, fontSize: 12, fontWeight: '700', color: '#92400e' },
 
-  sectionTitle: { fontSize: 17, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 16, letterSpacing: -0.4 },
+  sectionTitle: { fontSize: 17, fontWeight: '900', color: colors.text, marginBottom: 16, letterSpacing: -0.4 },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, marginBottom: 16 },
   statementLink: { fontSize: 13, fontWeight: '700', color: SHOP_ACCENT },
 
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 30 },
-  statBox: { flex: 1, backgroundColor: thannigoPalette.surface, borderRadius: 20, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  statBox: { flex: 1, backgroundColor: colors.surface, borderRadius: 20, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   statIconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  statVal: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 4, textAlign: 'center' },
-  statLabel: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', letterSpacing: 0.5 },
+  statVal: { fontSize: 18, fontWeight: '900', color: colors.text, marginBottom: 4, textAlign: 'center' },
+  statLabel: { fontSize: 11, color: colors.muted, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', letterSpacing: 0.5 },
 
   trxContainer: { gap: 20 },
   trxGroup: { gap: 12 },
-  groupHeader: { fontSize: 12, fontWeight: '800', color: thannigoPalette.neutral, textTransform: 'uppercase', letterSpacing: 1, marginLeft: 4 },
-  trxCard: { backgroundColor: thannigoPalette.surface, borderRadius: 24, paddingHorizontal: 16, paddingVertical: 4, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  groupHeader: { fontSize: 12, fontWeight: '800', color: colors.muted, textTransform: 'uppercase', letterSpacing: 1, marginLeft: 4 },
+  trxCard: { backgroundColor: colors.surface, borderRadius: 24, paddingHorizontal: 16, paddingVertical: 4, borderWidth: 1, borderColor: colors.border },
   trxRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 16 },
-  trxBorder: { borderBottomWidth: 1.5, borderBottomColor: thannigoPalette.borderSoft },
+  trxBorder: { borderBottomWidth: 1.5, borderBottomColor: colors.border },
   trxIconWrap: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  trxTitle: { fontSize: 14, fontWeight: '700', color: thannigoPalette.darkText, marginBottom: 3 },
-  trxTime: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
+  trxTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 3 },
+  trxTime: { fontSize: 12, color: colors.muted, fontWeight: '500' },
   trxAmt: { fontSize: 16, fontWeight: '800' },
   trxNote: { fontSize: 10, color: '#ba1a1a', fontWeight: '600', maxWidth: 80, textAlign: 'right', marginTop: 2 },
 });

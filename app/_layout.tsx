@@ -1,4 +1,4 @@
-import '../global.css';
+﻿import '../global.css';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { ThemeProvider as ThanniGoThemeProvider, useAppTheme } from '@/providers/ThemeContext';
 import { Stack } from 'expo-router';
@@ -65,6 +65,7 @@ function RootNavigation() {
 }
 
 export default function RootLayout() {
+  const { colors, isDark } = useAppTheme();
   return (
     <SafeAreaProvider>
       <ErrorBoundary>

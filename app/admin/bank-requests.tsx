@@ -1,20 +1,24 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, TextInput, Modal, RefreshControl
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { adminApi } from '@/api/adminApi';
 import { BackButton } from '@/components/ui/BackButton';
-import { thannigoPalette, roleAccent, roleSurface, Shadow } from '@/constants/theme';
+import { roleAccent, roleSurface, Shadow } from '@/constants/theme';
 
 const ADMIN_ACCENT = roleAccent.admin;
 const ADMIN_SURF = roleSurface.admin;
 
 export default function BankRequestsScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const [loading, setLoading] = useState(true);
   const [requests, setRequests] = useState<any[]>([]);
   const [processing, setProcessing] = useState<number | null>(null);
@@ -75,7 +79,7 @@ export default function BankRequestsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
           <BackButton fallback="/admin" />
@@ -94,7 +98,7 @@ export default function BankRequestsScreen() {
           <ActivityIndicator size="large" color={ADMIN_ACCENT} style={{ marginTop: 100 }} />
         ) : requests.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="documents-outline" size={64} color={thannigoPalette.neutral + '30'} />
+            <Ionicons name="documents-outline" size={64} color={colors.muted + '30'} />
             <Text style={styles.emptyText}>No pending bank change requests</Text>
           </View>
         ) : (
@@ -191,21 +195,21 @@ export default function BankRequestsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: { 
-    backgroundColor: 'white', paddingHorizontal: 24, paddingVertical: 18,
-    borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft 
+    backgroundColor: colors.surface, paddingHorizontal: 24, paddingVertical: 18,
+    borderBottomWidth: 1, borderBottomColor: colors.border 
   },
   headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  pageTitle: { fontSize: 24, fontWeight: '900', color: thannigoPalette.darkText },
-  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600' },
+  pageTitle: { fontSize: 24, fontWeight: '900', color: colors.text },
+  headerSub: { fontSize: 13, color: colors.muted, fontWeight: '600' },
   
   scroll: { padding: 20 },
   list: { gap: 16 },
   requestCard: { 
-    backgroundColor: 'white', borderRadius: 24, padding: 20, 
-    borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.sm 
+    backgroundColor: colors.surface, borderRadius: 24, padding: 20, 
+    borderWidth: 1, borderColor: colors.border, ...Shadow.sm 
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
   shopInfo: { flexDirection: 'row', gap: 12, alignItems: 'center' },
@@ -214,8 +218,8 @@ const styles = StyleSheet.create({
     backgroundColor: ADMIN_SURF, alignItems: 'center', justifyContent: 'center' 
   },
   shopLogoText: { fontSize: 18, fontWeight: '900', color: ADMIN_ACCENT },
-  shopName: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
-  requestDate: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '600' },
+  shopName: { fontSize: 16, fontWeight: '800', color: colors.text },
+  requestDate: { fontSize: 12, color: colors.muted, fontWeight: '600' },
   
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   statusPending: { backgroundColor: '#fff7ed' },
@@ -225,12 +229,12 @@ const styles = StyleSheet.create({
   statusTextVerified: { color: '#059669' },
   
   detailsBox: { 
-    backgroundColor: thannigoPalette.background, borderRadius: 16, 
+    backgroundColor: colors.background, borderRadius: 16, 
     padding: 16, gap: 12, marginBottom: 20 
   },
   detailRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  detailLabel: { fontSize: 10, fontWeight: '800', color: thannigoPalette.neutral, letterSpacing: 0.5 },
-  detailValue: { fontSize: 14, fontWeight: '700', color: thannigoPalette.darkText },
+  detailLabel: { fontSize: 10, fontWeight: '800', color: colors.muted, letterSpacing: 0.5 },
+  detailValue: { fontSize: 14, fontWeight: '700', color: colors.text },
   
   actions: { flexDirection: 'row', gap: 12 },
   rejectBtn: { 
@@ -245,19 +249,19 @@ const styles = StyleSheet.create({
   approveBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
 
   emptyContainer: { alignItems: 'center', marginTop: 150, gap: 16 },
-  emptyText: { fontSize: 16, color: thannigoPalette.neutral, fontWeight: '600' },
+  emptyText: { fontSize: 16, color: colors.muted, fontWeight: '600' },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 },
-  modalContent: { backgroundColor: 'white', borderRadius: 28, padding: 24, gap: 16 },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
-  modalSub: { fontSize: 14, color: thannigoPalette.neutral, lineHeight: 20, fontWeight: '500' },
+  modalContent: { backgroundColor: colors.surface, borderRadius: 28, padding: 24, gap: 16 },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: colors.text },
+  modalSub: { fontSize: 14, color: colors.muted, lineHeight: 20, fontWeight: '500' },
   modalInput: { 
-    backgroundColor: thannigoPalette.background, borderRadius: 16, 
+    backgroundColor: colors.background, borderRadius: 16, 
     padding: 16, fontSize: 16, height: 100, textAlignVertical: 'top' 
   },
   modalActions: { flexDirection: 'row', gap: 12, marginTop: 10 },
   modalCancel: { flex: 1, padding: 16, alignItems: 'center' },
-  modalCancelText: { fontWeight: '800', color: thannigoPalette.neutral },
+  modalCancelText: { fontWeight: '800', color: colors.muted },
   modalConfirm: { 
     flex: 2, padding: 16, backgroundColor: '#dc2626', 
     borderRadius: 16, alignItems: 'center' 

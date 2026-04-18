@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Switch, ActivityIndicator, Alert,
@@ -7,12 +7,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
 import { shopApi } from '@/api/shopApi';
 import Toast from 'react-native-toast-message';
-import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface } from '@/constants/theme';
 
 const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_SURF = roleSurface.shop_owner;
@@ -32,6 +34,8 @@ interface DaySchedule {
 }
 
 export default function ShopScheduleScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { width } = useWindowDimensions();
   const [loading, setLoading] = useState(true);
@@ -118,7 +122,7 @@ export default function ShopScheduleScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* CUSTOM HEADER */}
@@ -172,8 +176,8 @@ export default function ShopScheduleScreen() {
                 <Switch
                   value={!day.is_closed}
                   onValueChange={(val) => handleToggleClosed(day.day_of_week, !val)}
-                  trackColor={{ false: thannigoPalette.borderSoft, true: '#a7edff' }}
-                  thumbColor={!day.is_closed ? SHOP_ACCENT : thannigoPalette.neutral}
+                  trackColor={{ false: colors.border, true: '#a7edff' }}
+                  thumbColor={!day.is_closed ? SHOP_ACCENT : colors.muted}
                 />
               </View>
             </View>
@@ -223,8 +227,8 @@ export default function ShopScheduleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     flexDirection: 'row',
@@ -235,7 +239,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.92)',
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  brandName: { fontSize: 22, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
   headerActionBtn: {
     backgroundColor: SHOP_SURF,
@@ -247,7 +251,7 @@ const styles = StyleSheet.create({
   notifBtnSub: { width: 40, height: 40, borderRadius: 12, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center' },
 
   scrollContent: { paddingVertical: 10, paddingBottom: 120 },
-  pageTitle: { fontSize: 32, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5, marginBottom: 18 },
+  pageTitle: { fontSize: 32, fontWeight: '900', color: colors.text, letterSpacing: -0.5, marginBottom: 18 },
 
   infoCard: {
     flexDirection: 'row',
@@ -258,10 +262,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  infoText: { flex: 1, fontSize: 13, color: thannigoPalette.darkText, lineHeight: 18, fontWeight: '500' },
+  infoText: { flex: 1, fontSize: 13, color: colors.text, lineHeight: 18, fontWeight: '500' },
 
   dayCard: {
-    backgroundColor: thannigoPalette.surface,
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
@@ -269,7 +273,7 @@ const styles = StyleSheet.create({
   },
   dayCardClosed: {
     opacity: 0.7,
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
   },
   dayHeader: {
     flexDirection: 'row',
@@ -277,9 +281,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
-  dayLabel: { fontWeight: '800', color: thannigoPalette.darkText },
+  dayLabel: { fontWeight: '800', color: colors.text },
   toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  closedText: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '700' },
+  closedText: { fontSize: 12, color: colors.muted, fontWeight: '700' },
 
   timeRow: {
     flexDirection: 'row',
@@ -287,12 +291,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: thannigoPalette.borderSoft,
+    borderTopColor: colors.border,
   },
   timePicker: { flex: 1, alignItems: 'center' },
-  timeLabel: { fontSize: 11, color: thannigoPalette.neutral, marginBottom: 4, fontWeight: '600' },
+  timeLabel: { fontSize: 11, color: colors.muted, marginBottom: 4, fontWeight: '600' },
   timeValue: { fontWeight: '800', color: SHOP_ACCENT },
-  timeDivider: { width: 1, height: 30, backgroundColor: thannigoPalette.borderSoft },
+  timeDivider: { width: 1, height: 30, backgroundColor: colors.border },
 
   fullSaveBtn: {
     backgroundColor: SHOP_ACCENT,

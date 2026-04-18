@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, RefreshControl, TouchableOpacity,
   StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { adminApi } from '@/api/adminApi';
@@ -12,12 +14,14 @@ import Toast from 'react-native-toast-message';
 import { Logo } from '@/components/ui/Logo';
 import { BackButton } from '@/components/ui/BackButton';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface } from '@/constants/theme';
 
 const ADMIN_ACCENT = roleAccent.admin;
 const ADMIN_SURF = roleSurface.admin;
 
 export default function AdminOrdersListScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,16 +54,16 @@ export default function AdminOrdersListScreen() {
       placed: '#005d90',
       accepted: '#006878',
       dispatched: '#006878',
-      delivered: thannigoPalette.success,
+      delivered: colors.success,
       cancelled: ADMIN_ACCENT,
       failed: ADMIN_ACCENT,
     };
-    return map[status] || thannigoPalette.neutral;
+    return map[status] || colors.muted;
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={styles.header}>
         <BackButton fallback="/admin/(tabs)" iconColor={ADMIN_ACCENT} />
         <View style={styles.headerTitleWrap}>
@@ -109,24 +113,24 @@ export default function AdminOrdersListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
   headerTitleWrap: { marginLeft: 16 },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
-  headerSub: { fontSize: 12, color: thannigoPalette.neutral },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: colors.text },
+  headerSub: { fontSize: 12, color: colors.muted },
   scrollContent: { padding: 16 },
-  orderCard: { backgroundColor: 'white', borderRadius: 20, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2, position: 'relative' },
+  orderCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2, position: 'relative' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  orderNumber: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText },
+  orderNumber: { fontSize: 14, fontWeight: '800', color: colors.text },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   statusText: { fontSize: 10, fontWeight: '900' },
   cardBody: { marginTop: 4 },
-  shopName: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
-  customerName: { fontSize: 13, color: thannigoPalette.neutral, marginTop: 2 },
-  metaRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft },
+  shopName: { fontSize: 16, fontWeight: '800', color: colors.text },
+  customerName: { fontSize: 13, color: colors.muted, marginTop: 2 },
+  metaRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border },
   dateText: { fontSize: 12, color: '#94a3b8' },
-  amountText: { fontSize: 14, fontWeight: '900', color: thannigoPalette.darkText },
+  amountText: { fontSize: 14, fontWeight: '900', color: colors.text },
   chevron: { position: 'absolute', right: 16, top: 40 },
   emptyState: { padding: 60, alignItems: 'center' },
   emptyText: { fontSize: 16, color: '#94a3b8', fontWeight: '600', marginTop: 12 },

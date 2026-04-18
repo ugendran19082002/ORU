@@ -1,4 +1,4 @@
-import {
+﻿import {
   View, Text, StyleSheet, TouchableOpacity, Switch,
   ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
@@ -6,6 +6,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -15,7 +17,7 @@ import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { subscriptionApi, SubscriptionData } from '@/api/subscriptionApi';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
 
 const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_SURF = roleSurface.shop_owner;
@@ -24,16 +26,16 @@ const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradien
 type SubStatus = 'INACTIVE' | 'PENDING_PAYMENT' | 'ACTIVE' | 'PAYMENT_FAILED' | 'EXPIRED' | 'CANCELLED';
 
 const PLAN_FEATURES = [
-  { icon: 'checkmark-circle', text: 'Priority listing in search results', color: thannigoPalette.success },
-  { icon: 'checkmark-circle', text: 'Advanced analytics dashboard', color: thannigoPalette.success },
-  { icon: 'checkmark-circle', text: 'Lower platform commission', color: thannigoPalette.success },
-  { icon: 'checkmark-circle', text: 'Instant delivery support', color: thannigoPalette.success },
-  { icon: 'checkmark-circle', text: 'Cancel anytime', color: thannigoPalette.success },
+  { icon: 'checkmark-circle', text: 'Priority listing in search results', color: colors.success },
+  { icon: 'checkmark-circle', text: 'Advanced analytics dashboard', color: colors.success },
+  { icon: 'checkmark-circle', text: 'Lower platform commission', color: colors.success },
+  { icon: 'checkmark-circle', text: 'Instant delivery support', color: colors.success },
+  { icon: 'checkmark-circle', text: 'Cancel anytime', color: colors.success },
 ];
 
 const STATUS_COLOR: Record<string, string> = {
-  ACTIVE: thannigoPalette.success,
-  INACTIVE: thannigoPalette.neutral,
+  ACTIVE: colors.success,
+  INACTIVE: colors.muted,
   PENDING_PAYMENT: '#b45309',
   PAYMENT_FAILED: '#dc2626',
   EXPIRED: '#94a3b8',
@@ -50,6 +52,8 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function ShopSubscriptionPlansScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();
 
@@ -132,11 +136,11 @@ export default function ShopSubscriptionPlansScreen() {
     );
   };
 
-  const heroGradient: [string, string] = isActive ? [thannigoPalette.success, '#1b5e20'] : [SHOP_ACCENT, SHOP_ACCENT];
+  const heroGradient: [string, string] = isActive ? [colors.success, '#1b5e20'] : [SHOP_ACCENT, SHOP_ACCENT];
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
@@ -203,7 +207,7 @@ export default function ShopSubscriptionPlansScreen() {
                   const enabled = subscription.features[f.key as keyof typeof subscription.features];
                   return (
                     <View key={f.key} style={[styles.featureChip, !enabled && styles.featureChipOff]}>
-                      <Ionicons name={f.icon as any} size={16} color={enabled ? thannigoPalette.success : '#94a3b8'} />
+                      <Ionicons name={f.icon as any} size={16} color={enabled ? colors.success : '#94a3b8'} />
                       <Text style={[styles.featureChipText, !enabled && styles.featureChipTextOff]}>{f.label}</Text>
                     </View>
                   );
@@ -233,7 +237,7 @@ export default function ShopSubscriptionPlansScreen() {
               <Switch
                 value={autoRenew}
                 onValueChange={setAutoRenew}
-                trackColor={{ false: thannigoPalette.borderSoft, true: '#bfdbf7' }}
+                trackColor={{ false: colors.border, true: '#bfdbf7' }}
                 thumbColor={autoRenew ? SHOP_ACCENT : '#94a3b8'}
               />
             </View>
@@ -268,19 +272,19 @@ export default function ShopSubscriptionPlansScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
   notifBtnSub: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  brandName: { fontSize: 22, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
-  errorText: { fontSize: 14, color: thannigoPalette.neutral, textAlign: 'center', fontWeight: '500' },
+  errorText: { fontSize: 14, color: colors.muted, textAlign: 'center', fontWeight: '500' },
   retryBtn: { paddingHorizontal: 20, paddingVertical: 10, backgroundColor: SHOP_ACCENT, borderRadius: 12 },
   retryText: { color: 'white', fontWeight: '700', fontSize: 14 },
   content: { padding: 20, gap: 14, paddingBottom: 40 },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5, marginBottom: 8 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -0.5, marginBottom: 8 },
   heroCard: { borderRadius: 24, padding: 24, overflow: 'hidden', shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8 },
   heroDecor: { position: 'absolute', right: -16, bottom: -16 },
   heroLabel: { fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.7)', letterSpacing: 1, marginBottom: 8 },
@@ -288,18 +292,18 @@ const styles = StyleSheet.create({
   statusDot: { width: 10, height: 10, borderRadius: 5 },
   heroStatus: { fontSize: 28, fontWeight: '900', color: 'white' },
   heroSub: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 4, fontWeight: '500' },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: colors.text, letterSpacing: -0.3 },
   featureGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   featureChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#e8f5e9', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
-  featureChipOff: { backgroundColor: thannigoPalette.borderSoft },
-  featureChipText: { fontSize: 12, fontWeight: '700', color: thannigoPalette.success },
+  featureChipOff: { backgroundColor: colors.border },
+  featureChipText: { fontSize: 12, fontWeight: '700', color: colors.success },
   featureChipTextOff: { color: '#94a3b8' },
-  benefitsList: { backgroundColor: 'white', borderRadius: 18, padding: 18, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  benefitsList: { backgroundColor: colors.surface, borderRadius: 18, padding: 18, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
   benefitRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  benefitText: { fontSize: 13, color: thannigoPalette.darkText, fontWeight: '600' },
-  autoRenewCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: 'white', borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
-  autoRenewTitle: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
-  autoRenewSub: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
+  benefitText: { fontSize: 13, color: colors.text, fontWeight: '600' },
+  autoRenewCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: colors.surface, borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  autoRenewTitle: { fontSize: 14, fontWeight: '800', color: colors.text, marginBottom: 2 },
+  autoRenewSub: { fontSize: 12, color: colors.muted, fontWeight: '500' },
   subscribeBtn: { borderRadius: 18, overflow: 'hidden' },
   subscribeBtnGrad: { paddingVertical: 17, alignItems: 'center' },
   subscribeBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },

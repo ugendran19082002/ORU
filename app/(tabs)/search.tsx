@@ -1,8 +1,10 @@
+﻿import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { ExpoMap } from "@/components/maps/ExpoMap";
 import { useShopStore } from "@/stores/shopStore";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useAppTheme } from '@/providers/ThemeContext';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,7 +18,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { apiClient } from "@/api/client";
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from "@/constants/theme";
+import { Shadow, roleAccent, roleSurface, roleGradients } from "@/constants/theme";
 
 const CUSTOMER_ACCENT = roleAccent.customer;
 const CUSTOMER_SURF = roleSurface.customer;
@@ -35,6 +37,8 @@ interface ApiShop {
 }
 
 export default function SearchScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { shops: localShops, filters, toggleFilter, setMaxPrice } = useShopStore();
   const [query, setQuery] = useState("");
@@ -122,7 +126,7 @@ export default function SearchScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* HEADER */}
       <View style={styles.header}>
@@ -287,50 +291,50 @@ function ToggleButton({ label, active, onPress }: { label: string; active: boole
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 24, paddingVertical: 14, backgroundColor: thannigoPalette.surface, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
-  headerTitle: { fontSize: 24, fontWeight: "900", color: thannigoPalette.darkText, letterSpacing: -1 },
-  iconBtn: { width: 42, height: 42, borderRadius: 14, backgroundColor: thannigoPalette.background, alignItems: "center", justifyContent: "center", ...Shadow.xs },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 24, paddingVertical: 14, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerTitle: { fontSize: 24, fontWeight: "900", color: colors.text, letterSpacing: -1 },
+  iconBtn: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.background, alignItems: "center", justifyContent: "center", ...Shadow.xs },
   heroWrapper: { marginTop: 8, marginBottom: 24, borderRadius: 22, overflow: "hidden", shadowColor: CUSTOMER_ACCENT, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 16, elevation: 6 },
   hero: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 24, gap: 16 },
   heroLeft: { flex: 1, gap: 4 },
   heroTitle: { fontSize: 20, fontWeight: "900", color: "white", letterSpacing: -0.5 },
   heroCopy: { color: "rgba(255,255,255,0.85)", lineHeight: 18, fontSize: 12, fontWeight: "600" },
   heroCircle: { width: 48, height: 48, borderRadius: 24, backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center" },
-  searchBox: { flexDirection: "row", alignItems: "center", backgroundColor: thannigoPalette.surface, borderRadius: 20, paddingHorizontal: 16, height: 56, gap: 12, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, marginTop: 20, marginBottom: 20, ...Shadow.xs },
-  input: { flex: 1, fontSize: 15, fontWeight: "600", color: thannigoPalette.darkText },
+  searchBox: { flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 20, paddingHorizontal: 16, height: 56, gap: 12, borderWidth: 1.5, borderColor: colors.border, marginTop: 20, marginBottom: 20, ...Shadow.xs },
+  input: { flex: 1, fontSize: 15, fontWeight: "600", color: colors.text },
   filterScroll: { marginHorizontal: -24, marginBottom: 24 },
   filterContent: { paddingHorizontal: 24, gap: 10 },
-  chip: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 14, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, backgroundColor: thannigoPalette.surface },
+  chip: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.surface },
   chipActive: { backgroundColor: CUSTOMER_ACCENT, borderColor: CUSTOMER_ACCENT },
-  chipText: { color: thannigoPalette.neutral, fontWeight: "700", fontSize: 13 },
+  chipText: { color: colors.muted, fontWeight: "700", fontSize: 13 },
   chipTextActive: { color: "#fff" },
-  modeRow: { flexDirection: "row", backgroundColor: thannigoPalette.background, borderRadius: 18, padding: 4, marginBottom: 24 },
+  modeRow: { flexDirection: "row", backgroundColor: colors.background, borderRadius: 18, padding: 4, marginBottom: 24 },
   toggle: { flex: 1, paddingVertical: 12, alignItems: "center", borderRadius: 14 },
-  toggleActive: { backgroundColor: thannigoPalette.surface, ...Shadow.xs },
-  toggleText: { fontWeight: "700", color: thannigoPalette.neutral, fontSize: 14 },
+  toggleActive: { backgroundColor: colors.surface, ...Shadow.xs },
+  toggleText: { fontWeight: "700", color: colors.muted, fontSize: 14 },
   toggleTextActive: { color: CUSTOMER_ACCENT, fontWeight: "900" },
-  mapStub: { backgroundColor: thannigoPalette.surface, borderRadius: 24, overflow: "hidden", borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.sm },
+  mapStub: { backgroundColor: colors.surface, borderRadius: 24, overflow: "hidden", borderWidth: 1, borderColor: colors.border, ...Shadow.sm },
   mapOverlayBtn: { position: "absolute", bottom: 16, right: 16, backgroundColor: CUSTOMER_ACCENT, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 8, ...Shadow.sm },
   mapOverlayBtnText: { color: "white", fontWeight: "800", fontSize: 13 },
-  openFullBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, paddingVertical: 18, backgroundColor: thannigoPalette.surface, borderRadius: 18, marginTop: 8, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  openFullBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, paddingVertical: 18, backgroundColor: colors.surface, borderRadius: 18, marginTop: 8, borderWidth: 1, borderColor: colors.border },
   openFullBtnText: { color: CUSTOMER_ACCENT, fontWeight: "900", fontSize: 15 },
   listWrap: { gap: 16 },
-  card: { backgroundColor: thannigoPalette.surface, borderRadius: 24, padding: 20, ...Shadow.sm, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  card: { backgroundColor: colors.surface, borderRadius: 24, padding: 20, ...Shadow.sm, borderWidth: 1, borderColor: colors.border },
   cardTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 16 },
-  shopName: { fontSize: 18, fontWeight: "900", color: thannigoPalette.darkText, marginBottom: 4, letterSpacing: -0.3 },
+  shopName: { fontSize: 18, fontWeight: "900", color: colors.text, marginBottom: 4, letterSpacing: -0.3 },
   ratingRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  ratingText: { fontSize: 12, fontWeight: "900", color: thannigoPalette.darkText },
+  ratingText: { fontSize: 12, fontWeight: "900", color: colors.text },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
   badgeText: { fontSize: 10, fontWeight: "900", letterSpacing: 0.8 },
-  metaRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+  metaRow: { flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
   metaItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-  metaText: { color: thannigoPalette.neutral, fontSize: 13, fontWeight: "700" },
+  metaText: { color: colors.muted, fontSize: 13, fontWeight: "700" },
   priceRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  priceLabel: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: "600" },
+  priceLabel: { fontSize: 13, color: colors.muted, fontWeight: "600" },
   priceText: { fontSize: 20, fontWeight: "900", color: CUSTOMER_ACCENT, letterSpacing: -0.5 },
   emptyState: { alignItems: "center", justifyContent: "center", paddingVertical: 60, gap: 12 },
-  emptyTitle: { fontSize: 19, fontWeight: "900", color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  emptySubtitle: { fontSize: 14, color: thannigoPalette.neutral, textAlign: "center", maxWidth: "80%" },
+  emptyTitle: { fontSize: 19, fontWeight: "900", color: colors.text, letterSpacing: -0.5 },
+  emptySubtitle: { fontSize: 14, color: colors.muted, textAlign: "center", maxWidth: "80%" },
 });

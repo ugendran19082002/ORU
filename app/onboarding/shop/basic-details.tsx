@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView, TextInput,
@@ -7,6 +7,7 @@ import {
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -18,6 +19,7 @@ import { ExpoMap, ExpoMarker } from "@/components/maps/ExpoMap";
 import { useRef, useEffect } from "react";
 
 export default function ShopBasicDetailsScreen() {
+  const { colors, isDark } = useAppTheme();
   const router = useRouter();
   const { user, refreshShopStatus } = useAppSession();
   const [loading, setLoading] = useState(false);
@@ -242,7 +244,7 @@ export default function ShopBasicDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -404,7 +406,7 @@ export default function ShopBasicDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'white' },
+  container: { flex: 1, backgroundColor: colors.surface },
   safe: { flex: 1 },
   scrollContent: { paddingHorizontal: 32, paddingTop: 40, paddingBottom: 40 },
   header: { marginBottom: 40 },
@@ -447,7 +449,7 @@ const styles = StyleSheet.create({
 
   // Location Selector Styles
   suggestionsList: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: '#e2e8f0',
@@ -517,7 +519,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
   },
   accuracyLabel: {
     color: 'white',
@@ -572,7 +574,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#0d9488',
@@ -598,7 +600,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 16,
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -608,7 +610,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,

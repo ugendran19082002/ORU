@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -19,7 +21,7 @@ import Toast from 'react-native-toast-message';
 import { complaintApi } from '@/api/complaintApi';
 import type { Complaint } from '@/types/api';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface } from '@/constants/theme';
 
 const ADMIN_ACCENT = roleAccent.admin;
 const ADMIN_SURF = roleSurface.admin;
@@ -57,11 +59,11 @@ function getStatusTheme(status: Complaint['status']) {
     case 'in_progress':
       return { bg: '#fff3e0', text: '#e65100', label: 'In Progress' };
     case 'resolved':
-      return { bg: '#e8f5e9', text: thannigoPalette.success, label: 'Resolved' };
+      return { bg: '#e8f5e9', text: colors.success, label: 'Resolved' };
     case 'closed':
-      return { bg: thannigoPalette.borderSoft, text: thannigoPalette.neutral, label: 'Closed' };
+      return { bg: colors.border, text: colors.muted, label: 'Closed' };
     default:
-      return { bg: thannigoPalette.borderSoft, text: thannigoPalette.neutral, label: status };
+      return { bg: colors.border, text: colors.muted, label: status };
   }
 }
 
@@ -92,11 +94,11 @@ function ComplaintCard({ complaint, expanded, onToggle, onAction, actionLoading 
             )}
             <View style={[
               styles.priorityBadge,
-              { backgroundColor: complaint.priority === 'urgent' ? ADMIN_SURF : thannigoPalette.borderSoft },
+              { backgroundColor: complaint.priority === 'urgent' ? ADMIN_SURF : colors.border },
             ]}>
               <Text style={[
                 styles.priorityText,
-                { color: complaint.priority === 'urgent' ? ADMIN_ACCENT : thannigoPalette.neutral },
+                { color: complaint.priority === 'urgent' ? ADMIN_ACCENT : colors.muted },
               ]}>
                 {complaint.priority.toUpperCase()}
               </Text>
@@ -171,7 +173,7 @@ function ComplaintCard({ complaint, expanded, onToggle, onAction, actionLoading 
             <View style={styles.expandedRow}>
               <Ionicons name="checkmark-circle-outline" size={14} color="#2e7d32" />
               <Text style={styles.expandedLabel}>Resolution:</Text>
-              <Text style={[styles.expandedValue, { color: thannigoPalette.success, fontWeight: '700' }]}>
+              <Text style={[styles.expandedValue, { color: colors.success, fontWeight: '700' }]}>
                 {complaint.resolution_type.charAt(0).toUpperCase() + complaint.resolution_type.slice(1)}
               </Text>
             </View>
@@ -190,12 +192,12 @@ function ComplaintCard({ complaint, expanded, onToggle, onAction, actionLoading 
               <Ionicons
                 name={complaint.admin_action === 'approved' ? 'checkmark-circle' : 'close-circle'}
                 size={14}
-                color={complaint.admin_action === 'approved' ? thannigoPalette.success : ADMIN_ACCENT}
+                color={complaint.admin_action === 'approved' ? colors.success : ADMIN_ACCENT}
               />
               <Text style={styles.expandedLabel}>Admin Action:</Text>
               <Text style={[
                 styles.expandedValue,
-                { fontWeight: '700', color: complaint.admin_action === 'approved' ? thannigoPalette.success : ADMIN_ACCENT },
+                { fontWeight: '700', color: complaint.admin_action === 'approved' ? colors.success : ADMIN_ACCENT },
               ]}>
                 {complaint.admin_action.charAt(0).toUpperCase() + complaint.admin_action.slice(1)}
               </Text>
@@ -250,6 +252,8 @@ function ComplaintCard({ complaint, expanded, onToggle, onAction, actionLoading 
 
 /* ---- Screen ---- */
 export default function AdminComplaintsScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const router = useRouter();
@@ -361,7 +365,7 @@ export default function AdminComplaintsScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.headerSafe} edges={['top']}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
@@ -470,13 +474,13 @@ export default function AdminComplaintsScreen() {
 }
 
 /* ---- Styles ---- */
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
 
   headerSafe: { 
-    backgroundColor: 'white', 
+    backgroundColor: colors.surface, 
     borderBottomWidth: 1, 
-    borderBottomColor: thannigoPalette.borderSoft,
+    borderBottomColor: colors.border,
     alignItems: 'center',
   },
   headerContent: {
@@ -491,12 +495,12 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: colors.muted, fontWeight: '600', marginTop: 2 },
   
   sosHeaderBadge: {
     flexDirection: 'row',
@@ -525,9 +529,9 @@ const styles = StyleSheet.create({
 
   filterBar: {
     paddingVertical: 14,
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: thannigoPalette.borderSoft,
+    borderBottomColor: colors.border,
   },
   tabContent: { gap: 8, paddingRight: 24 },
   tab: {
@@ -536,17 +540,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 12,
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
   },
   tabActive: { backgroundColor: ADMIN_ACCENT },
-  tabText: { fontSize: 12, fontWeight: '800', color: thannigoPalette.neutral },
+  tabText: { fontSize: 12, fontWeight: '800', color: colors.muted },
   tabTextActive: { color: 'white' },
 
   scrollContent: { padding: 20, paddingBottom: 100 },
 
   /* Card */
   card: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 16,
     marginBottom: 14,
@@ -556,7 +560,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     borderWidth: 1,
-    borderColor: thannigoPalette.borderSoft,
+    borderColor: colors.border,
   },
   cardSos: {
     borderColor: ADMIN_SURF,
@@ -592,16 +596,16 @@ const styles = StyleSheet.create({
 
   cardMeta: { gap: 4, marginBottom: 8 },
   cardMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  cardMetaText: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
+  cardMetaText: { fontSize: 12, color: colors.muted, fontWeight: '500' },
 
   issueType: {
     fontSize: 15,
     fontWeight: '800',
-    color: thannigoPalette.darkText,
+    color: colors.text,
     marginBottom: 4,
     letterSpacing: -0.2,
   },
-  issueDesc: { fontSize: 13, color: thannigoPalette.neutral, lineHeight: 19, marginBottom: 10 },
+  issueDesc: { fontSize: 13, color: colors.muted, lineHeight: 19, marginBottom: 10 },
 
   cardFooter: {
     flexDirection: 'row',
@@ -613,15 +617,15 @@ const styles = StyleSheet.create({
 
   /* Expanded */
   expandedSection: { marginTop: 4 },
-  expandedDivider: { height: 1, backgroundColor: thannigoPalette.borderSoft, marginVertical: 12 },
+  expandedDivider: { height: 1, backgroundColor: colors.border, marginVertical: 12 },
   expandedRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 6,
     marginBottom: 8,
   },
-  expandedLabel: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '700', minWidth: 96 },
-  expandedValue: { fontSize: 12, color: thannigoPalette.darkText, fontWeight: '500', flex: 1 },
+  expandedLabel: { fontSize: 12, color: colors.muted, fontWeight: '700', minWidth: 96 },
+  expandedValue: { fontSize: 12, color: colors.text, fontWeight: '500', flex: 1 },
 
   /* Action buttons */
   actionRow: {
@@ -658,7 +662,7 @@ const styles = StyleSheet.create({
 
   /* Empty */
   emptyWrap: { alignItems: 'center', marginTop: 100, gap: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
   emptySubtitle: {
     fontSize: 14,
     color: '#94a3b8',

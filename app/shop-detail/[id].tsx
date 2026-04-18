@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from 'react-native';
@@ -6,6 +6,7 @@ import Toast from 'react-native-toast-message';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -46,6 +47,7 @@ interface ShopDetail {
 }
 
 export default function ShopDetailScreen() {
+  const { colors, isDark } = useAppTheme();
   const router = useRouter();
   const { safeBack } = useAppNavigation();
 
@@ -336,9 +338,9 @@ const styles = StyleSheet.create({
   heroMetaText: { fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: '600' },
   heroMetaDot: { width: 3, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.5)' },
   openBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, alignSelf: 'flex-start' },
-  openDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'white' },
+  openDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.surface },
   openText: { fontSize: 11, fontWeight: '700', color: 'white' },
-  tabBar: { flexDirection: 'row', backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#f1f4f9' },
+  tabBar: { flexDirection: 'row', backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: '#f1f4f9' },
   tabBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 13 },
   tabBtnActive: { borderBottomWidth: 2, borderBottomColor: '#005d90' },
   tabText: { fontSize: 13, fontWeight: '700', color: '#9ca3af' },
@@ -348,7 +350,7 @@ const styles = StyleSheet.create({
   closedBannerText: { flex: 1, fontSize: 13, color: '#92400e', fontWeight: '600' },
   emptyProducts: { alignItems: 'center', paddingVertical: 40, gap: 12 },
   emptyProductsText: { fontSize: 14, color: '#94a3b8', fontWeight: '600' },
-  productCard: { backgroundColor: 'white', borderRadius: 18, marginBottom: 14, flexDirection: 'row', overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  productCard: { backgroundColor: colors.surface, borderRadius: 18, marginBottom: 14, flexDirection: 'row', overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   productImage: { width: 90, height: 110 },
   productImagePlaceholder: { backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
   productInfo: { flex: 1, padding: 14 },
@@ -365,14 +367,14 @@ const styles = StyleSheet.create({
   outOfStockText: { fontSize: 11, color: '#9ca3af', fontWeight: '700' },
   lowStockRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
   lowStockText: { fontSize: 11, color: '#b45309', fontWeight: '700' },
-  infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, backgroundColor: 'white', borderRadius: 16, padding: 16, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
+  infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
   infoIconWrap: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
   infoLabel: { fontSize: 11, color: '#9ca3af', fontWeight: '600', marginBottom: 2 },
   infoValue: { fontSize: 15, fontWeight: '800', color: '#181c20' },
   contactBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14 },
   callBtn: { backgroundColor: '#005d90' },
   contactBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
-  checkoutBar: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'white', paddingHorizontal: 20, paddingVertical: 14, paddingBottom: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderTopWidth: 1, borderTopColor: '#f1f4f9', shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 10 },
+  checkoutBar: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.surface, paddingHorizontal: 20, paddingVertical: 14, paddingBottom: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, borderTopWidth: 1, borderTopColor: '#f1f4f9', shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 10 },
   checkoutInfo: { gap: 2 },
   checkoutQty: { fontSize: 11, color: '#9ca3af', fontWeight: '600' },
   checkoutSubtotal: { fontSize: 20, fontWeight: '900', color: '#181c20' },

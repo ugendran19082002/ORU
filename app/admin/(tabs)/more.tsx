@@ -1,12 +1,14 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAppSession } from '@/providers/AppSessionProvider';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Shadow, thannigoPalette, roleAccent } from '@/constants/theme';
+import { Shadow, roleAccent } from '@/constants/theme';
 
 const ADMIN_ACCENT = roleAccent.admin;
 
@@ -23,6 +25,8 @@ const SECONDARY_MENUS = [
 ];
 
 export default function MoreMenuScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { signOut } = useAppSession();
 
@@ -33,7 +37,7 @@ export default function MoreMenuScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.headerSafe} edges={['top']}>
         <View style={styles.headerContent}>
           <Text style={styles.pageTitle}>More Menus</Text>
@@ -54,7 +58,7 @@ export default function MoreMenuScreen() {
                 <Ionicons name={item.icon as any} size={24} color={ADMIN_ACCENT} />
               </View>
               <Text style={styles.menuName}>{item.name}</Text>
-              <Ionicons name="chevron-forward" size={12} color={thannigoPalette.neutral} />
+              <Ionicons name="chevron-forward" size={12} color={colors.muted} />
             </TouchableOpacity>
           ))}
         </View>
@@ -72,12 +76,12 @@ export default function MoreMenuScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   headerSafe: {
-    backgroundColor: thannigoPalette.surface,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: thannigoPalette.borderSoft,
+    borderBottomColor: colors.border,
     alignItems: 'center',
   },
   headerContent: {
@@ -86,34 +90,34 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 2 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: colors.muted, fontWeight: '500', marginTop: 2 },
 
   content: { paddingVertical: 16, paddingHorizontal: 16, paddingBottom: 120, alignItems: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   menuCard: {
     width: '48%',
-    backgroundColor: thannigoPalette.surface,
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadow.xs,
     borderWidth: 1,
-    borderColor: thannigoPalette.borderSoft,
+    borderColor: colors.border,
   },
   iconBox: { width: 54, height: 54, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  menuName: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText, textAlign: 'center' },
+  menuName: { fontSize: 14, fontWeight: '800', color: colors.text, textAlign: 'center' },
   logoutBtn: {
     marginTop: 24,
-    backgroundColor: thannigoPalette.dangerSoft,
+    backgroundColor: colors.adminSoft,
     borderRadius: 20,
     padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: thannigoPalette.adminRedLight,
+    borderColor: colors.adminSoft,
   },
   logoutContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   logoutText: { color: ADMIN_ACCENT, fontWeight: '800', fontSize: 16 },

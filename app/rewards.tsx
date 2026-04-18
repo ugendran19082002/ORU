@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+﻿import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   RefreshControl, ActivityIndicator, Share,
@@ -7,19 +7,22 @@ import * as Clipboard from 'expo-clipboard';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { StatusBar } from 'expo-status-bar';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppSession } from '@/hooks/use-app-session';
 import { apiClient } from '@/api/client';
-import { Shadow, thannigoPalette, roleAccent, Radius } from '@/constants/theme';
+import { Shadow, roleAccent, Radius } from '@/constants/theme';
 import { useAppTheme } from '@/providers/ThemeContext';
 
 const ACCENT = roleAccent.customer;
 const GRAD: [string, string] = [ACCENT, '#0077b6'];
 
 export default function RewardsScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { user } = useAppSession();
   const { colors, isDark } = useAppTheme();
@@ -166,7 +169,7 @@ export default function RewardsScreen() {
         {/* REFERRAL CARD */}
         <View style={[styles.referralCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.referralTop}>
-            <View style={[styles.referralIconWrap, { backgroundColor: thannigoPalette.infoSoft }]}>
+            <View style={[styles.referralIconWrap, { backgroundColor: colors.inputBg }]}>
               <Ionicons name="people" size={24} color={ACCENT} />
             </View>
             <View style={{ flex: 1 }}>
@@ -206,7 +209,7 @@ export default function RewardsScreen() {
             </>
           ) : (
             <TouchableOpacity
-              style={[styles.generateBtn, { backgroundColor: thannigoPalette.infoSoft, borderColor: colors.border }]}
+              style={[styles.generateBtn, { backgroundColor: colors.inputBg, borderColor: colors.border }]}
               onPress={generateReferralCode}
               disabled={generatingCode}
             >
@@ -246,7 +249,7 @@ export default function RewardsScreen() {
         <View style={[styles.tiersList, { backgroundColor: colors.surface }]}>
           {(tiers || []).map((tier) => (
             <View key={tier.id} style={[styles.tierRow, { borderBottomColor: colors.border }, tier.id === currentTier.id && { backgroundColor: colors.background, borderRadius: 14, paddingHorizontal: 8, marginHorizontal: -8 }]}>
-              <View style={[styles.tierIcon, { backgroundColor: thannigoPalette.infoSoft }]}>
+              <View style={[styles.tierIcon, { backgroundColor: colors.inputBg }]}>
                 <Ionicons name="medal-outline" size={18} color={ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
@@ -271,14 +274,14 @@ export default function RewardsScreen() {
           )}
           {(history || []).map((h, i) => (
             <View key={h.id} style={[styles.historyRow, i < history.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
-              <View style={[styles.historyIcon, { backgroundColor: h.points > 0 ? thannigoPalette.successSoft : thannigoPalette.dangerSoft }]}>
-                <Ionicons name={h.points > 0 ? 'arrow-up' : 'arrow-down'} size={14} color={h.points > 0 ? thannigoPalette.success : thannigoPalette.error} />
+              <View style={[styles.historyIcon, { backgroundColor: h.points > 0 ? colors.successSoft : colors.adminSoft }]}>
+                <Ionicons name={h.points > 0 ? 'arrow-up' : 'arrow-down'} size={14} color={h.points > 0 ? colors.success : colors.error} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.historyEvent, { color: colors.text }]}>{h.description || h.source}</Text>
                 <Text style={[styles.historyDate, { color: colors.muted }]}>{new Date(h.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</Text>
               </View>
-              <Text style={[styles.historyPoints, { color: h.points > 0 ? thannigoPalette.success : thannigoPalette.error }]}>
+              <Text style={[styles.historyPoints, { color: h.points > 0 ? colors.success : colors.error }]}>
                 {h.points > 0 ? '+' : ''}{h.points}
               </Text>
             </View>
@@ -290,7 +293,7 @@ export default function RewardsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
@@ -319,7 +322,7 @@ const styles = StyleSheet.create({
   progressLabel: { fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: '600' },
   progressPct: { fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: '700' },
   progressTrack: { height: 4, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 2 },
-  progressFill: { height: '100%', backgroundColor: 'white', borderRadius: 2 },
+  progressFill: { height: '100%', backgroundColor: colors.surface, borderRadius: 2 },
   heroStats: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 16, padding: 16 },
   heroStat: { flex: 1, alignItems: 'center' },
   heroStatVal: { fontSize: 20, fontWeight: '900', color: 'white' },

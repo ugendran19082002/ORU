@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
@@ -9,12 +10,14 @@ import { useSecurityStore } from '@/stores/securityStore';
 import { PinEntryModal } from '@/components/security/PinEntryModal';
 import { BackButton } from '@/components/ui/BackButton';
 import * as Haptics from 'expo-haptics';
-import { Shadow, thannigoPalette, roleAccent, Radius } from '@/constants/theme';
+import { Shadow, roleAccent, Radius } from '@/constants/theme';
 import { useAppTheme } from '@/providers/ThemeContext';
 
 const ACCENT = roleAccent.customer;
 
 export default function PrivacySecurityScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { colors, isDark } = useAppTheme();
   const {
@@ -145,7 +148,7 @@ export default function PrivacySecurityScreen() {
 
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
             <TouchableOpacity style={styles.actionRow} onPress={() => router.push('/privacy-policy' as any)}>
-              <View style={[styles.actionIconWrap, { backgroundColor: thannigoPalette.infoSoft }]}>
+              <View style={[styles.actionIconWrap, { backgroundColor: colors.inputBg }]}>
               <Ionicons name="document-text-outline" size={20} color={ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
@@ -158,7 +161,7 @@ export default function PrivacySecurityScreen() {
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <TouchableOpacity style={styles.actionRow} onPress={() => router.push('/terms' as any)}>
-              <View style={[styles.actionIconWrap, { backgroundColor: thannigoPalette.infoSoft }]}>
+              <View style={[styles.actionIconWrap, { backgroundColor: colors.inputBg }]}>
               <Ionicons name="shield-outline" size={20} color={ACCENT} />
               </View>
               <View style={{ flex: 1 }}>
@@ -214,7 +217,7 @@ export default function PrivacySecurityScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1 },
   headerTitle: { fontSize: 18, fontWeight: '900' },
@@ -238,5 +241,5 @@ const styles = StyleSheet.create({
   actionSub: { fontSize: 12, marginTop: 1 },
 
   deleteBtn: { paddingVertical: 18, alignItems: 'center' },
-  deleteBtnText: { color: thannigoPalette.error, fontWeight: '700', fontSize: 14 },
+  deleteBtnText: { color: colors.error, fontWeight: '700', fontSize: 14 },
 });

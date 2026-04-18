@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+﻿import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,17 +14,21 @@ import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 
 import { useSecurityStore } from '@/stores/securityStore';
 import { useAppSession } from '@/hooks/use-app-session';
 import { PinEntryModal } from '@/components/security/PinEntryModal';
 import { Logo } from '@/components/ui/Logo';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
 
 const { width } = Dimensions.get('window');
 
 export default function QuickLoginScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { signIn } = useAppSession();
   const { 
@@ -105,7 +109,7 @@ export default function QuickLoginScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
       <LinearGradient
-        colors={[thannigoPalette.darkText, thannigoPalette.primary]}
+        colors={[colors.text, colors.primary]}
         style={StyleSheet.absoluteFillObject}
       />
 
@@ -168,7 +172,7 @@ export default function QuickLoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
   safe: { flex: 1, paddingHorizontal: 32 },
   content: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 60 },
@@ -186,7 +190,7 @@ const styles = StyleSheet.create({
   biometricText: { color: 'white', fontSize: 16, fontWeight: '600' },
   
   pinBtn: {
-    backgroundColor: 'white',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     paddingVertical: 18,
     flexDirection: 'row',
@@ -199,7 +203,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 5,
   },
-  pinBtnText: { color: thannigoPalette.primary, fontSize: 18, fontWeight: '800' },
+  pinBtnText: { color: colors.primary, fontSize: 18, fontWeight: '800' },
   
   switchAccount: { marginTop: 40, padding: 10 },
   switchText: { color: 'rgba(255,255,255,0.6)', fontSize: 14, textDecorationLine: 'underline' },

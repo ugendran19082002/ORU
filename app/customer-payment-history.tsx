@@ -1,17 +1,18 @@
-import React, { useState, useCallback, useEffect } from 'react';
+﻿import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { apiClient } from '@/api/client';
-import { Shadow, thannigoPalette, roleAccent, Radius } from '@/constants/theme';
+import { Shadow, roleAccent, Radius } from '@/constants/theme';
 import { useAppTheme } from '@/providers/ThemeContext';
 
 const ACCENT = roleAccent.customer;
@@ -32,10 +33,10 @@ interface Payment {
 }
 
 const STATUS_STYLE: Record<string, { bg: string; color: string }> = {
-  paid:     { bg: thannigoPalette.successSoft,       color: thannigoPalette.success },
-  pending:  { bg: '#fff3e0',                         color: thannigoPalette.warning },
-  failed:   { bg: thannigoPalette.dangerSoft,        color: thannigoPalette.error },
-  refunded: { bg: thannigoPalette.infoSoft,          color: ACCENT },
+  paid:     { bg: colors.successSoft,       color: colors.success },
+  pending:  { bg: '#fff3e0',                         color: colors.warning },
+  failed:   { bg: colors.adminSoft,        color: colors.error },
+  refunded: { bg: colors.inputBg,          color: ACCENT },
 };
 
 const METHOD_ICON: Record<string, string> = {
@@ -47,6 +48,8 @@ const METHOD_ICON: Record<string, string> = {
 };
 
 export default function CustomerPaymentHistoryScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const { safeBack } = useAppNavigation();
   const { colors, isDark } = useAppTheme();
 
@@ -116,7 +119,7 @@ export default function CustomerPaymentHistoryScreen() {
       <View style={styles.summaryRow}>
         <View style={styles.summaryBox}>
           <Text style={styles.summaryLabel}>Total Paid</Text>
-          <Text style={[styles.summaryValue, { color: thannigoPalette.success }]}>₹{totalPaid.toFixed(0)}</Text>
+          <Text style={[styles.summaryValue, { color: colors.success }]}>₹{totalPaid.toFixed(0)}</Text>
         </View>
         <View style={styles.summaryDivider} />
         <View style={styles.summaryBox}>
@@ -126,7 +129,7 @@ export default function CustomerPaymentHistoryScreen() {
         <View style={styles.summaryDivider} />
         <View style={styles.summaryBox}>
           <Text style={styles.summaryLabel}>Refunded</Text>
-          <Text style={[styles.summaryValue, { color: thannigoPalette.warning }]}>₹{totalRefunded.toFixed(0)}</Text>
+          <Text style={[styles.summaryValue, { color: colors.warning }]}>₹{totalRefunded.toFixed(0)}</Text>
         </View>
       </View>
 
@@ -176,7 +179,7 @@ export default function CustomerPaymentHistoryScreen() {
 
               {payment.order?.shop_name && (
                 <View style={styles.shopRow}>
-                  <Ionicons name="storefront-outline" size={13} color={thannigoPalette.neutral} />
+                  <Ionicons name="storefront-outline" size={13} color={colors.muted} />
                   <Text style={styles.shopName}>{payment.order.shop_name}</Text>
                 </View>
               )}
@@ -200,36 +203,36 @@ export default function CustomerPaymentHistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: colors.text },
 
-  summaryRow: { flexDirection: 'row', backgroundColor: thannigoPalette.surface, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft, paddingVertical: 16 },
+  summaryRow: { flexDirection: 'row', backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 16 },
   summaryBox: { flex: 1, alignItems: 'center', gap: 4 },
-  summaryDivider: { width: 1, backgroundColor: thannigoPalette.borderSoft },
-  summaryLabel: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '600' },
+  summaryDivider: { width: 1, backgroundColor: colors.border },
+  summaryLabel: { fontSize: 11, color: colors.muted, fontWeight: '600' },
   summaryValue: { fontSize: 20, fontWeight: '900' },
 
   content: { padding: 20, gap: 12, paddingBottom: 40 },
 
   emptyState: { alignItems: 'center', paddingTop: 60, gap: 10 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.neutral },
-  emptySub: { fontSize: 13, color: thannigoPalette.neutral, textAlign: 'center' },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: colors.muted },
+  emptySub: { fontSize: 13, color: colors.muted, textAlign: 'center' },
 
-  paymentCard: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 16, ...Shadow.xs },
+  paymentCard: { backgroundColor: colors.surface, borderRadius: Radius.xl, padding: 16, ...Shadow.xs },
   paymentTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
-  paymentIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: thannigoPalette.infoSoft, alignItems: 'center', justifyContent: 'center' },
-  paymentMethod: { fontSize: 14, fontWeight: '900', color: thannigoPalette.darkText },
-  paymentOrderId: { fontSize: 11, color: thannigoPalette.neutral, marginTop: 1 },
-  paymentAmount: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText, textAlign: 'right', marginBottom: 4 },
+  paymentIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.inputBg, alignItems: 'center', justifyContent: 'center' },
+  paymentMethod: { fontSize: 14, fontWeight: '900', color: colors.text },
+  paymentOrderId: { fontSize: 11, color: colors.muted, marginTop: 1 },
+  paymentAmount: { fontSize: 18, fontWeight: '900', color: colors.text, textAlign: 'right', marginBottom: 4 },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6, alignSelf: 'flex-end' },
   statusBadgeText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
 
   shopRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 },
-  shopName: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
+  shopName: { fontSize: 12, color: colors.muted, fontWeight: '500' },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  dateText: { fontSize: 11, color: thannigoPalette.neutral },
+  dateText: { fontSize: 11, color: colors.muted },
 
-  endText: { textAlign: 'center', color: thannigoPalette.neutral, fontSize: 12, marginVertical: 12 },
+  endText: { textAlign: 'center', color: colors.muted, fontSize: 12, marginVertical: 12 },
 });

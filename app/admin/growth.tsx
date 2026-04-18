@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   ActivityIndicator, TextInput, Switch, RefreshControl, Modal,
@@ -7,18 +7,22 @@ import {
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { adminApi } from '@/api/adminApi';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface } from '@/constants/theme';
 
 const ADMIN_ACCENT = roleAccent.admin;
 const ADMIN_SURF = roleSurface.admin;
 
 export default function AdminGrowthScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
@@ -84,7 +88,7 @@ export default function AdminGrowthScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.headerSafe} edges={['top']}>
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
@@ -336,13 +340,13 @@ function ConfigItem({ label, value, onChange, keyboardType = 'default', helper }
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   headerSafe: { 
-    backgroundColor: 'white', 
+    backgroundColor: colors.surface, 
     borderBottomWidth: 1, 
-    borderBottomColor: thannigoPalette.borderSoft,
+    borderBottomColor: colors.border,
     alignItems: 'center',
   },
   headerContent: {
@@ -356,50 +360,50 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
-  refreshBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: colors.muted, fontWeight: '600', marginTop: 2 },
+  refreshBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center' },
 
   scrollContent: { padding: 20 },
   tabRow: {
-    flexDirection: 'row', backgroundColor: thannigoPalette.borderSoft, borderRadius: 14, padding: 4, marginBottom: 25,
+    flexDirection: 'row', backgroundColor: colors.border, borderRadius: 14, padding: 4, marginBottom: 25,
   },
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10 },
-  tabActive: { backgroundColor: 'white', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1 },
-  tabText: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
+  tabActive: { backgroundColor: colors.surface, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1 },
+  tabText: { fontSize: 14, fontWeight: '700', color: colors.muted },
   tabTextActive: { color: ADMIN_ACCENT },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
-  card: { backgroundColor: 'white', borderRadius: 20, padding: 20, marginBottom: 25, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: colors.text },
+  card: { backgroundColor: colors.surface, borderRadius: 20, padding: 20, marginBottom: 25, borderWidth: 1, borderColor: colors.border },
   configItem: { marginBottom: 16 },
-  configLabel: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral, marginBottom: 8 },
-  inputWrap: { backgroundColor: thannigoPalette.borderSoft, borderRadius: 12, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
-  input: { paddingHorizontal: 15, paddingVertical: 12, fontSize: 15, fontWeight: '600', color: thannigoPalette.darkText },
+  configLabel: { fontSize: 13, fontWeight: '700', color: colors.muted, marginBottom: 8 },
+  inputWrap: { backgroundColor: colors.border, borderRadius: 12, borderWidth: 1, borderColor: colors.border },
+  input: { paddingHorizontal: 15, paddingVertical: 12, fontSize: 15, fontWeight: '600', color: colors.text },
   helperText: { fontSize: 11, color: '#94a3b8', marginTop: 4, fontWeight: '500' },
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8 },
-  toggleLabel: { fontSize: 14, fontWeight: '700', color: thannigoPalette.darkText },
+  toggleLabel: { fontSize: 14, fontWeight: '700', color: colors.text },
   infoBox: { flexDirection: 'row', gap: 10, backgroundColor: ADMIN_SURF, borderRadius: 15, padding: 15, marginBottom: 25 },
   infoText: { flex: 1, fontSize: 12, color: ADMIN_ACCENT, lineHeight: 18, fontWeight: '600' },
   tierCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: 'white', borderRadius: 18, padding: 18, borderWidth: 1, borderColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.surface, borderRadius: 18, padding: 18, borderWidth: 1, borderColor: colors.border,
     marginBottom: 10,
   },
   tierMain: { flex: 1 },
-  tierName: { fontSize: 16, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 2 },
-  tierReq: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '600' },
+  tierName: { fontSize: 16, fontWeight: '900', color: colors.text, marginBottom: 2 },
+  tierReq: { fontSize: 12, color: colors.muted, fontWeight: '600' },
   tierBenefit: { alignItems: 'flex-end' },
   tierDiscount: { fontSize: 18, fontWeight: '900', color: ADMIN_ACCENT },
   tierSub: { fontSize: 10, color: '#94a3b8', fontWeight: '700', letterSpacing: 0.5 },
-  addBtn: { marginLeft: 'auto', backgroundColor: thannigoPalette.borderSoft, width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  addBtn: { marginLeft: 'auto', backgroundColor: colors.border, width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: 'white', borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 25, maxHeight: '80%' },
+  modalContent: { backgroundColor: colors.surface, borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 25, maxHeight: '80%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: colors.text },
   modalForm: { marginBottom: 20 },
   saveBtn: { backgroundColor: ADMIN_ACCENT, paddingVertical: 15, borderRadius: 15, alignItems: 'center' },
   saveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },

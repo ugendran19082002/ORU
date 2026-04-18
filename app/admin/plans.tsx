@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   RefreshControl, ActivityIndicator, Alert, TextInput, Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { platformSubscriptionApi, PlatformPlan } from '@/api/platformSubscriptionApi';
@@ -14,7 +16,7 @@ import Toast from 'react-native-toast-message';
 
 import { useWindowDimensions } from 'react-native';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface } from '@/constants/theme';
 
 const ADMIN_ACCENT = roleAccent.admin;
 const ADMIN_SURF = roleSurface.admin;
@@ -30,6 +32,8 @@ const parseFieldValue = (key: string, value: string): string | number =>
   NUMERIC_KEYS.has(key) ? Number(value) : value;
 
 export default function AdminPlansScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const router = useRouter();
@@ -93,7 +97,7 @@ export default function AdminPlansScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.headerSafe} edges={['top']}>
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
@@ -136,7 +140,7 @@ export default function AdminPlansScreen() {
                   <View style={styles.planNameRow}>
                     <Text style={styles.planName}>{plan.name}</Text>
                     <View style={[styles.statusBadge, { backgroundColor: plan.is_active ? '#e8f5e9' : '#ffebee' }]}>
-                      <Text style={[styles.statusText, { color: plan.is_active ? thannigoPalette.success : thannigoPalette.adminRed }]}>
+                      <Text style={[styles.statusText, { color: plan.is_active ? colors.success : '#ba1a1a' }]}>
                         {plan.is_active ? 'Active' : 'Inactive'}
                       </Text>
                     </View>
@@ -242,13 +246,13 @@ export default function AdminPlansScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
 
   headerSafe: { 
-    backgroundColor: 'white', 
+    backgroundColor: colors.surface, 
     borderBottomWidth: 1, 
-    borderBottomColor: thannigoPalette.borderSoft,
+    borderBottomColor: colors.border,
     alignItems: 'center',
   },
   headerContent: {
@@ -262,59 +266,59 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
-  addBtnHeader: { width: 40, height: 40, borderRadius: 12, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: colors.muted, fontWeight: '600', marginTop: 2 },
+  addBtnHeader: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center' },
 
   content: { padding: 16, paddingBottom: 100 },
   centered: { paddingTop: 80, alignItems: 'center' },
-  emptyText: { marginTop: 14, color: thannigoPalette.neutral, fontWeight: '600', fontSize: 15, textAlign: 'center' },
+  emptyText: { marginTop: 14, color: colors.muted, fontWeight: '600', fontSize: 15, textAlign: 'center' },
   planCard: {
-    backgroundColor: 'white', borderRadius: 20, padding: 18,
+    backgroundColor: colors.surface, borderRadius: 20, padding: 18,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
   planTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   planIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   planNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
-  planName: { fontSize: 17, fontWeight: '900', color: thannigoPalette.darkText },
+  planName: { fontSize: 17, fontWeight: '900', color: colors.text },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 },
   statusText: { fontSize: 11, fontWeight: '800' },
   planSlug: { fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' },
   editBtn: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginBottom: 14 },
   price: { fontSize: 28, fontWeight: '900', color: ADMIN_ACCENT },
-  pricePeriod: { fontSize: 14, fontWeight: '600', color: thannigoPalette.neutral },
-  priceYearly: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
+  pricePeriod: { fontSize: 14, fontWeight: '600', color: colors.muted },
+  priceYearly: { fontSize: 14, fontWeight: '700', color: colors.muted },
   benefitsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   benefitItem: { flexDirection: 'row', alignItems: 'center', gap: 6, width: '47%' },
   benefitLabel: { fontSize: 10, color: '#94a3b8', fontWeight: '600' },
-  benefitValue: { fontSize: 14, fontWeight: '800', color: thannigoPalette.darkText },
+  benefitValue: { fontSize: 14, fontWeight: '800', color: colors.text },
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: 'white', borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28,
     padding: 24, maxHeight: '85%',
   },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: colors.text },
   fieldRow: { marginBottom: 14 },
   fieldLabel: { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 6 },
   fieldInput: {
-    borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, borderRadius: 12,
-    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: thannigoPalette.darkText,
+    borderWidth: 1.5, borderColor: colors.border, borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.text,
   },
   saveBtn: { borderRadius: 16, overflow: 'hidden', marginTop: 16 },
   saveBtnGrad: { paddingVertical: 16, alignItems: 'center' },
   saveBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
   toggleBtn: {
-    backgroundColor: thannigoPalette.borderSoft, paddingVertical: 12, paddingHorizontal: 16,
-    borderRadius: 12, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, alignItems: 'center',
+    backgroundColor: colors.border, paddingVertical: 12, paddingHorizontal: 16,
+    borderRadius: 12, borderWidth: 1.5, borderColor: colors.border, alignItems: 'center',
   },
   toggleBtnActive: { backgroundColor: ADMIN_SURF, borderColor: ADMIN_ACCENT },
-  toggleBtnText: { color: thannigoPalette.neutral, fontWeight: '700', fontSize: 15 },
+  toggleBtnText: { color: colors.muted, fontWeight: '700', fontSize: 15 },
   toggleBtnActiveText: { color: ADMIN_ACCENT },
 });

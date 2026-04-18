@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+﻿import React, { useCallback } from 'react';
 import {
   View, Text, ScrollView,
   RefreshControl, Linking, TouchableOpacity, StyleSheet, Switch, Alert,
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   profileDecor: { position: 'absolute', right: -20, bottom: -20 },
   cardEditBtn: { position: 'absolute', top: 18, right: 18, width: 34, height: 34, borderRadius: 11, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
   avatarWrap: { position: 'relative', marginBottom: 12 },
-  avatar: { width: 76, height: 76, borderRadius: 38, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 76, height: 76, borderRadius: 38, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   editAvatarBtn: { position: 'absolute', bottom: 0, right: 0, width: 24, height: 24, borderRadius: 12, backgroundColor: CUSTOMER_ACCENT, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'white' },
   profileName: { color: 'white', fontSize: 20, fontWeight: '900', letterSpacing: -0.3, marginBottom: 4 },
   profilePhone: { color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: '500', marginBottom: 18 },

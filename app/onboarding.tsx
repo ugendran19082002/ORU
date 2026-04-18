@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import {
   View, Text, StyleSheet, Dimensions, FlatList,
   TouchableOpacity, Animated, NativeScrollEvent, NativeSyntheticEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -40,6 +41,7 @@ const SLIDES = [
 ];
 
 export default function OnboardingScreen() {
+  const { colors, isDark } = useAppTheme();
   const router = useRouter();
   const flatListRef = useRef<FlatList>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -190,7 +192,7 @@ const styles = StyleSheet.create({
 
   bottomControls: { position: 'absolute', bottom: 60, left: 40, right: 40, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   pagination: { flexDirection: 'row', gap: 6 },
-  dot: { height: 8, borderRadius: 4, backgroundColor: 'white' },
+  dot: { height: 8, borderRadius: 4, backgroundColor: colors.surface },
   nextBtn: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 5 },
   nextBtnGrad: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
 });

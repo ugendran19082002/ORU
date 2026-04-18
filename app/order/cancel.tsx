@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -14,7 +16,7 @@ import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { useOrderStore } from '@/stores/orderStore';
 import { apiClient } from '@/api/client';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
 
 const CUSTOMER_ACCENT = roleAccent.customer;
 const CUSTOMER_SURF = roleSurface.customer;
@@ -30,6 +32,8 @@ const REASONS = [
 ];
 
 export default function CancelOrderScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   const { orderId: paramOrderId, id: paramId } = useLocalSearchParams<{ orderId: string; id: string }>();
@@ -93,7 +97,7 @@ export default function CancelOrderScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       <View style={styles.header}>
         <BackButton fallback="/(tabs)/orders" />
@@ -137,7 +141,7 @@ export default function CancelOrderScreen() {
             onPress={() => setSelected(r.id)}
           >
             <View style={[styles.reasonIcon, selected === r.id && styles.reasonIconActive]}>
-              <Ionicons name={r.icon as any} size={18} color={selected === r.id ? thannigoPalette.adminRed : thannigoPalette.neutral} />
+              <Ionicons name={r.icon as any} size={18} color={selected === r.id ? '#ba1a1a' : colors.muted} />
             </View>
             <Text style={[styles.reasonText, selected === r.id && styles.reasonTextActive]}>{r.label}</Text>
             <View style={[styles.radio, selected === r.id && styles.radioActive]}>
@@ -156,7 +160,7 @@ export default function CancelOrderScreen() {
 
         {/* CANCEL BUTTON */}
         <TouchableOpacity style={[styles.cancelBtn, cancelling && { opacity: 0.7 }]} onPress={handleCancel} disabled={cancelling}>
-          <LinearGradient colors={[thannigoPalette.adminRed, '#ef4444']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.cancelBtnGrad}>
+          <LinearGradient colors={['#ba1a1a', '#ef4444']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.cancelBtnGrad}>
             {cancelling ? (
               <ActivityIndicator color="white" />
             ) : (
@@ -176,35 +180,35 @@ export default function CancelOrderScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: colors.text },
   content: { padding: 20, gap: 14, paddingBottom: 40 },
-  orderCard: { backgroundColor: 'white', borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  orderCard: { backgroundColor: colors.surface, borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
   orderRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   orderIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#ffebee', alignItems: 'center', justifyContent: 'center' },
-  orderTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
-  orderMeta: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 2 },
-  orderTotal: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText },
+  orderTitle: { fontSize: 16, fontWeight: '800', color: colors.text },
+  orderMeta: { fontSize: 12, color: colors.muted, fontWeight: '500', marginTop: 2 },
+  orderTotal: { fontSize: 18, fontWeight: '900', color: colors.text },
   refundCard: { flexDirection: 'row', gap: 12, backgroundColor: '#f0fdf4', borderRadius: 16, padding: 16, alignItems: 'flex-start', borderWidth: 1, borderColor: '#bbf7d0' },
-  refundTitle: { fontSize: 14, fontWeight: '800', color: thannigoPalette.success, marginBottom: 3 },
-  refundText: { fontSize: 12, color: thannigoPalette.success, lineHeight: 17, fontWeight: '500' },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3 },
-  reasonCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'white', borderRadius: 16, padding: 14, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft },
+  refundTitle: { fontSize: 14, fontWeight: '800', color: colors.success, marginBottom: 3 },
+  refundText: { fontSize: 12, color: colors.success, lineHeight: 17, fontWeight: '500' },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: colors.text, letterSpacing: -0.3 },
+  reasonCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: 16, padding: 14, borderWidth: 1.5, borderColor: colors.border },
   reasonCardActive: { borderColor: '#f87171', backgroundColor: '#fff5f5' },
-  reasonIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  reasonIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   reasonIconActive: { backgroundColor: '#ffebee' },
-  reasonText: { flex: 1, fontSize: 14, fontWeight: '700', color: thannigoPalette.darkText },
-  reasonTextActive: { color: thannigoPalette.adminRed },
-  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
-  radioActive: { borderColor: thannigoPalette.adminRed },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: thannigoPalette.adminRed },
+  reasonText: { flex: 1, fontSize: 14, fontWeight: '700', color: colors.text },
+  reasonTextActive: { color: '#ba1a1a' },
+  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  radioActive: { borderColor: '#ba1a1a' },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#ba1a1a' },
   warningCard: { flexDirection: 'row', gap: 10, backgroundColor: '#fef3c7', borderRadius: 14, padding: 14, alignItems: 'flex-start' },
   warningText: { flex: 1, fontSize: 12, color: '#b45309', lineHeight: 17, fontWeight: '600' },
   cancelBtn: { borderRadius: 18, overflow: 'hidden' },
   cancelBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
   cancelBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
-  keepBtn: { paddingVertical: 14, alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: thannigoPalette.borderSoft, backgroundColor: 'white' },
-  keepBtnText: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
+  keepBtn: { paddingVertical: 14, alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  keepBtnText: { fontSize: 14, fontWeight: '700', color: colors.muted },
 });

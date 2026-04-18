@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, RefreshControl, Alert
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   progressTitle: { fontSize: 18, fontWeight: '800', color: 'white' },
   progressCount: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.8)' },
   progressBarBg: { height: 8, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 4, overflow: 'hidden' },
-  progressBarFill: { height: '100%', backgroundColor: 'white', borderRadius: 4 },
+  progressBarFill: { height: '100%', backgroundColor: colors.surface, borderRadius: 4 },
   progressTag: { marginTop: 16, fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: '500' },
 
   scroll: { flex: 1, marginTop: 12 },

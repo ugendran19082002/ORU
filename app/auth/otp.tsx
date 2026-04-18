@@ -1,3 +1,4 @@
+﻿import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { BackButton } from "@/components/ui/BackButton";
 import { Logo } from "@/components/ui/Logo";
 import { useAppNavigation } from "@/hooks/use-app-navigation";
@@ -5,7 +6,6 @@ import { useAndroidBackHandler } from "@/hooks/use-back-handler";
 
 import { authApi } from "@/api/authApi";
 import {
-  thannigoPalette,
   roleAccent,
   roleGradients,
   Radius,
@@ -38,6 +38,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const OTP_LENGTH = 6;
 
 export default function OTPScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   const { signIn, setPreferredRole } = useAppSession();
@@ -244,8 +246,8 @@ export default function OTPScreen() {
                       color: colors.text,
                     },
                     verified && {
-                      borderColor: thannigoPalette.success,
-                      backgroundColor: thannigoPalette.successSoft,
+                      borderColor: colors.success,
+                      backgroundColor: colors.successSoft,
                     },
                   ]}
                   value={otp[i]}
@@ -265,12 +267,12 @@ export default function OTPScreen() {
             <Animated.View
               style={[
                 styles.successBadge,
-                { backgroundColor: thannigoPalette.successSoft },
+                { backgroundColor: colors.successSoft },
                 { opacity: successAnim, transform: [{ scale: successAnim }] },
               ]}
             >
-              <Ionicons name="checkmark-circle" size={22} color={thannigoPalette.success} />
-              <Text style={[styles.successText, { color: thannigoPalette.success }]}>
+              <Ionicons name="checkmark-circle" size={22} color={colors.success} />
+              <Text style={[styles.successText, { color: colors.success }]}>
                 Verified! Redirecting...
               </Text>
             </Animated.View>
@@ -294,8 +296,8 @@ export default function OTPScreen() {
 
           {__DEV__ && (
             <View style={[styles.hintCard, { backgroundColor: colors.border }]}>
-              <Ionicons name="warning-outline" size={16} color={thannigoPalette.warning} />
-              <Text style={[styles.hintText, { color: thannigoPalette.warning }]}>
+              <Ionicons name="warning-outline" size={16} color={colors.warning} />
+              <Text style={[styles.hintText, { color: colors.warning }]}>
                 DEV MODE — any 6 digits accepted. Firebase auth required in production.
               </Text>
             </View>
@@ -331,7 +333,7 @@ export default function OTPScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
   safe: { flex: 1, paddingHorizontal: Spacing.xl },
 

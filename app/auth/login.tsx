@@ -1,3 +1,4 @@
+﻿import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Logo } from "@/components/ui/Logo";
 import { BackButton } from "@/components/ui/BackButton";
 import { useAppNavigation } from "@/hooks/use-app-navigation";
@@ -25,7 +26,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   roleAccent,
   roleGradients,
-  thannigoPalette,
   Radius,
   Shadow,
   Typography,
@@ -33,7 +33,7 @@ import {
 } from '@/constants/theme';
 import { useAppTheme } from '@/providers/ThemeContext';
 
-const NEUTRAL_ACCENT = thannigoPalette.primary;
+const NEUTRAL_ACCENT = colors.primary;
 import { useAppSession } from '@/hooks/use-app-session';
 import { authApi } from '@/api/authApi';
 import type { AppRole } from '@/types/session';
@@ -49,6 +49,8 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export default function LoginScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   const { preferredRole, user, setPreferredRole } = useAppSession();
@@ -193,7 +195,7 @@ export default function LoginScreen() {
                 autoFocus
               />
               {phone.length === 10 && (
-                <Ionicons name="checkmark-circle" size={20} color={thannigoPalette.success} />
+                <Ionicons name="checkmark-circle" size={20} color={colors.success} />
               )}
             </View>
 
@@ -279,7 +281,7 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
   safe: { flex: 1, paddingHorizontal: Spacing.xl },
 

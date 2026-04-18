@@ -1,21 +1,25 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, TextInput, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Toast from 'react-native-toast-message';
 import { BackButton } from '@/components/ui/BackButton';
 import { payoutApi } from '@/api/payoutApi';
-import { thannigoPalette, roleAccent, roleSurface, roleGradients, Shadow, Spacing } from '@/constants/theme';
+import { roleAccent, roleSurface, roleGradients, Shadow, Spacing } from '@/constants/theme';
 
 const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_SURF = roleSurface.shop_owner;
 
 export default function PayoutSettingsScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -147,7 +151,7 @@ export default function PayoutSettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       
       {/* Header */}
       <View style={styles.header}>
@@ -186,7 +190,7 @@ export default function PayoutSettingsScreen() {
                   <Ionicons 
                     name={mode === 'bank' ? 'business-outline' : 'qr-code-outline'} 
                     size={20} 
-                    color={payoutMode === mode ? 'white' : thannigoPalette.neutral} 
+                    color={payoutMode === mode ? 'white' : colors.muted} 
                   />
                   <Text style={[styles.modeBtnText, payoutMode === mode && styles.modeBtnTextActive]}>
                     {mode === 'bank' ? 'Bank Transfer' : 'UPI ID'}
@@ -205,7 +209,7 @@ export default function PayoutSettingsScreen() {
                     value={bankDetails.holder_name} 
                     onChangeText={(v) => setBankDetails({ ...bankDetails, holder_name: v })}
                     placeholder="Full name as per bank records"
-                    placeholderTextColor={thannigoPalette.neutral + '80'}
+                    placeholderTextColor={colors.muted + '80'}
                     editable={!pendingRequest}
                   />
                 </View>
@@ -217,7 +221,7 @@ export default function PayoutSettingsScreen() {
                     onChangeText={(v) => setBankDetails({ ...bankDetails, account_number: v })}
                     placeholder="Enter account number"
                     keyboardType="numeric"
-                    placeholderTextColor={thannigoPalette.neutral + '80'}
+                    placeholderTextColor={colors.muted + '80'}
                     editable={!pendingRequest}
                   />
                 </View>
@@ -229,7 +233,7 @@ export default function PayoutSettingsScreen() {
                     onChangeText={setConfirmAccountNumber}
                     placeholder="Re-enter account number"
                     keyboardType="numeric"
-                    placeholderTextColor={thannigoPalette.neutral + '80'}
+                    placeholderTextColor={colors.muted + '80'}
                     editable={!pendingRequest}
                   />
                   {confirmAccountNumber && bankDetails.account_number !== confirmAccountNumber && (
@@ -246,7 +250,7 @@ export default function PayoutSettingsScreen() {
                     onChangeText={(v) => setBankDetails({ ...bankDetails, ifsc: v.toUpperCase() })}
                     placeholder="e.g. SBIN0001234"
                     autoCapitalize="characters"
-                    placeholderTextColor={thannigoPalette.neutral + '80'}
+                    placeholderTextColor={colors.muted + '80'}
                     editable={!pendingRequest}
                   />
                 </View>
@@ -269,7 +273,7 @@ export default function PayoutSettingsScreen() {
                 )}
                 {bankVerified && !pendingRequest && (
                    <View style={styles.verifiedBadgeRow}>
-                    <Ionicons name="checkmark-circle" size={16} color={thannigoPalette.success} />
+                    <Ionicons name="checkmark-circle" size={16} color={colors.success} />
                     <Text style={styles.verifiedBadgeText}>YOUR BANK ACCOUNT IS VERIFIED</Text>
                   </View>
                 )}
@@ -295,7 +299,7 @@ export default function PayoutSettingsScreen() {
                     }}
                     placeholder="e.g. yourname@upi"
                     autoCapitalize="none"
-                    placeholderTextColor={thannigoPalette.neutral + '80'}
+                    placeholderTextColor={colors.muted + '80'}
                   />
                   {upiId.length > 5 && !upiVerified && (
                     <TouchableOpacity 
@@ -315,7 +319,7 @@ export default function PayoutSettingsScreen() {
                   )}
                   {upiVerified && (
                      <View style={styles.verifiedBadgeRow}>
-                      <Ionicons name="checkmark-circle" size={16} color={thannigoPalette.success} />
+                      <Ionicons name="checkmark-circle" size={16} color={colors.success} />
                       <Text style={styles.verifiedBadgeText}>UPI ID IS VERIFIED</Text>
                     </View>
                   )}
@@ -339,7 +343,7 @@ export default function PayoutSettingsScreen() {
                  <Text style={styles.trustPointText}>Priority queue for daily payouts</Text>
               </View>
               <View style={styles.trustPoint}>
-                 <Ionicons name="lock-closed" size={14} color={thannigoPalette.success} />
+                 <Ionicons name="lock-closed" size={14} color={colors.success} />
                  <Text style={styles.trustPointText}>Bank-grade encrypted storage</Text>
               </View>
             </View>
@@ -378,15 +382,15 @@ export default function PayoutSettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 24, paddingVertical: 18,
-    backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border,
   },
-  headerTitle: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
+  headerTitle: { fontSize: 22, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: colors.muted, fontWeight: '600', marginTop: 2 },
   notifBtnSub: {
     width: 42,
     height: 42,
@@ -399,30 +403,30 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 100 },
   formContainer: { gap: 24 },
   
-  fieldLabel: { fontSize: 13, fontWeight: '800', color: thannigoPalette.darkText, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 },
+  fieldLabel: { fontSize: 13, fontWeight: '800', color: colors.text, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 },
   
   modeToggle: { flexDirection: 'row', gap: 12 },
   modeBtn: { 
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    backgroundColor: 'white', paddingVertical: 16, borderRadius: 20, 
-    borderWidth: 2, borderColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.surface, paddingVertical: 16, borderRadius: 20, 
+    borderWidth: 2, borderColor: colors.border,
   },
   modeBtnActive: { backgroundColor: SHOP_ACCENT, borderColor: SHOP_ACCENT },
-  modeBtnText: { fontSize: 14, fontWeight: '800', color: thannigoPalette.neutral },
+  modeBtnText: { fontSize: 14, fontWeight: '800', color: colors.muted },
   modeBtnTextActive: { color: 'white' },
   
   formSection: { gap: 18 },
   field: { gap: 6 },
   input: {
-    backgroundColor: 'white', borderRadius: 16, padding: 16,
-    fontSize: 16, color: thannigoPalette.darkText, fontWeight: '600',
-    borderWidth: 1.5, borderColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.surface, borderRadius: 16, padding: 16,
+    fontSize: 16, color: colors.text, fontWeight: '600',
+    borderWidth: 1.5, borderColor: colors.border,
   },
   inputDisabled: {
-    backgroundColor: thannigoPalette.borderSoft,
-    color: thannigoPalette.neutral,
+    backgroundColor: colors.border,
+    color: colors.muted,
   },
-  hintText: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '600', lineHeight: 18 },
+  hintText: { fontSize: 12, color: colors.muted, fontWeight: '600', lineHeight: 18 },
   
   infoBox: { 
     flexDirection: 'row', gap: 12, backgroundColor: SHOP_SURF, padding: 16, borderRadius: 16,
@@ -431,7 +435,7 @@ const styles = StyleSheet.create({
   infoText: { flex: 1, fontSize: 13, color: SHOP_ACCENT, fontWeight: '600', lineHeight: 20 },
   
   footer: { 
-    padding: 24, backgroundColor: 'white', borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft,
+    padding: 24, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border,
     position: 'absolute', bottom: 0, left: 0, right: 0,
   },
   saveBtn: { 
@@ -449,12 +453,12 @@ const styles = StyleSheet.create({
   verifyBtnText: { fontSize: 13, fontWeight: '800', color: SHOP_ACCENT, letterSpacing: 0.3 },
   
   verifiedBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, backgroundColor: '#e8f5e9', padding: 12, borderRadius: 12 },
-  verifiedBadgeText: { fontSize: 11, fontWeight: '900', color: thannigoPalette.success, letterSpacing: 1 },
+  verifiedBadgeText: { fontSize: 11, fontWeight: '900', color: colors.success, letterSpacing: 1 },
 
-  trustCard: { backgroundColor: 'white', borderRadius: 24, padding: 20, borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.sm },
+  trustCard: { backgroundColor: colors.surface, borderRadius: 24, padding: 20, borderWidth: 1, borderColor: colors.border, ...Shadow.sm },
   trustHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  trustTitle: { fontSize: 16, fontWeight: '900', color: thannigoPalette.darkText },
-  trustInfo: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', lineHeight: 20, marginBottom: 16 },
+  trustTitle: { fontSize: 16, fontWeight: '900', color: colors.text },
+  trustInfo: { fontSize: 13, color: colors.muted, fontWeight: '600', lineHeight: 20, marginBottom: 16 },
   trustPoint: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  trustPointText: { fontSize: 12, fontWeight: '800', color: thannigoPalette.neutral, letterSpacing: 0.3 },
+  trustPointText: { fontSize: 12, fontWeight: '800', color: colors.muted, letterSpacing: 0.3 },
 });

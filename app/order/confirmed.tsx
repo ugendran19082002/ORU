@@ -1,10 +1,12 @@
-import React, { useRef, useEffect } from 'react';
+﻿import React, { useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated, Linking,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -12,13 +14,15 @@ import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { useOrderStore } from '@/stores/orderStore';
 import { useShopStore } from '@/stores/shopStore';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
 
 const CUSTOMER_ACCENT = roleAccent.customer;
 const CUSTOMER_SURF = roleSurface.customer;
 const CUSTOMER_GRAD: [string, string] = [roleGradients.customer.start, roleGradients.customer.end];
 
 export default function OrderConfirmedScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -96,12 +100,12 @@ export default function OrderConfirmedScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       <View style={styles.content}>
         {/* SUCCESS ICON */}
         <Animated.View style={[styles.iconWrap, { transform: [{ scale: scaleAnim }] }]}>
-          <LinearGradient colors={[thannigoPalette.success, '#388e3c']} style={styles.iconGrad}>
+          <LinearGradient colors={[colors.success, '#388e3c']} style={styles.iconGrad}>
             <Ionicons name="checkmark" size={56} color="white" />
           </LinearGradient>
           <View style={styles.iconRing} />
@@ -195,28 +199,28 @@ export default function OrderConfirmedScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   content: { flex: 1, paddingHorizontal: 24, paddingVertical: 20, alignItems: 'center', justifyContent: 'center', gap: 16 },
 
   iconWrap: { alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   iconGrad: {
     width: 100, height: 100, borderRadius: 50,
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: thannigoPalette.success, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8,
+    shadowColor: colors.success, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 8,
   },
   iconRing: {
     position: 'absolute', width: 120, height: 120, borderRadius: 60,
     borderWidth: 2, borderColor: '#c8e6c9',
   },
 
-  title: { fontSize: 30, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5, textAlign: 'center' },
-  subtitle: { fontSize: 15, color: thannigoPalette.neutral, textAlign: 'center', lineHeight: 22, fontWeight: '500' },
+  title: { fontSize: 30, fontWeight: '900', color: colors.text, letterSpacing: -0.5, textAlign: 'center' },
+  subtitle: { fontSize: 15, color: colors.muted, textAlign: 'center', lineHeight: 22, fontWeight: '500' },
   highlight: { color: CUSTOMER_ACCENT, fontWeight: '800' },
   orderId: { fontSize: 13, fontWeight: '700', color: '#94a3b8', marginTop: 2 },
 
   otpCard: {
-    backgroundColor: 'white', borderRadius: 24, padding: 22, width: '100%',
+    backgroundColor: colors.surface, borderRadius: 24, padding: 22, width: '100%',
     borderWidth: 2, borderColor: '#bfdbf7',
     shadowColor: CUSTOMER_ACCENT, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4,
     alignItems: 'center',
@@ -224,20 +228,20 @@ const styles = StyleSheet.create({
   otpTop: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16, alignSelf: 'flex-start' },
   otpIconWrap: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
   otpLabel: { fontSize: 11, fontWeight: '800', color: CUSTOMER_ACCENT, letterSpacing: 1 },
-  otpHint: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 1 },
+  otpHint: { fontSize: 11, color: colors.muted, fontWeight: '500', marginTop: 1 },
   otpValue: { fontSize: 48, fontWeight: '900', color: CUSTOMER_ACCENT, letterSpacing: 16, marginBottom: 10 },
   otpDots: { flexDirection: 'row', gap: 8 },
   otpDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#bfdbf7' },
 
   summaryCard: {
-    backgroundColor: 'white', borderRadius: 20, padding: 18, width: '100%',
+    backgroundColor: colors.surface, borderRadius: 20, padding: 18, width: '100%',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
     gap: 14,
   },
   summaryRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   summaryIcon: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#f0f7ff', alignItems: 'center', justifyContent: 'center' },
-  summaryLabel: { flex: 0.4, fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600' },
-  summaryValue: { flex: 0.6, fontSize: 13, fontWeight: '800', color: thannigoPalette.darkText, textAlign: 'right' },
+  summaryLabel: { flex: 0.4, fontSize: 13, color: colors.muted, fontWeight: '600' },
+  summaryValue: { flex: 0.6, fontSize: 13, fontWeight: '800', color: colors.text, textAlign: 'right' },
 
   contactRow: { flexDirection: 'row', gap: 10, width: '100%' },
   contactBtn: {
@@ -251,8 +255,8 @@ const styles = StyleSheet.create({
   primaryBtn: { borderRadius: 18, overflow: 'hidden' },
   primaryBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
   primaryBtnText: { color: 'white', fontSize: 16, fontWeight: '800', letterSpacing: -0.3 },
-  secondaryBtn: { paddingVertical: 14, alignItems: 'center', borderRadius: 18, backgroundColor: 'white', borderWidth: 1, borderColor: thannigoPalette.borderSoft },
-  secondaryBtnText: { fontSize: 15, fontWeight: '700', color: thannigoPalette.neutral },
+  secondaryBtn: { paddingVertical: 14, alignItems: 'center', borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+  secondaryBtnText: { fontSize: 15, fontWeight: '700', color: colors.muted },
 });
 
 

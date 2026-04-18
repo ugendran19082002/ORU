@@ -1,10 +1,12 @@
-import React, { useEffect, useState, useCallback } from 'react';
+﻿import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, RefreshControl,
   TouchableOpacity, StyleSheet, Modal, TextInput, ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { BackButton } from '@/components/ui/BackButton';
@@ -12,13 +14,15 @@ import { Logo } from '@/components/ui/Logo';
 import { complaintApi, Complaint } from '@/api/complaintApi';
 import Toast from 'react-native-toast-message';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
 
 const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_SURF = roleSurface.shop_owner;
 const SHOP_GRAD: [string, string] = [roleGradients.shop_owner.start, roleGradients.shop_owner.end];
 
 export default function ShopComplaintsScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,7 +56,7 @@ export default function ShopComplaintsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* HEADER */}
       <View style={styles.header}>
@@ -113,12 +117,12 @@ export default function ShopComplaintsScreen() {
             <View key={c.id} style={styles.card}>
               <View style={styles.cardHeader}>
                 <View style={[styles.badge, c.priority === 'urgent' && { backgroundColor: '#ffebee' }]}>
-                  <Text style={[styles.badgeText, c.priority === 'urgent' && { color: thannigoPalette.adminRed }]}>
+                  <Text style={[styles.badgeText, c.priority === 'urgent' && { color: '#ba1a1a' }]}>
                     {c.priority.toUpperCase()}
                   </Text>
                 </View>
                 {c.is_sos && (
-                  <View style={[styles.badge, { backgroundColor: thannigoPalette.adminRed }]}>
+                  <View style={[styles.badge, { backgroundColor: '#ba1a1a' }]}>
                     <Text style={[styles.badgeText, { color: 'white' }]}>SOS</Text>
                   </View>
                 )}
@@ -150,57 +154,57 @@ export default function ShopComplaintsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  brandName: { fontSize: 22, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
   notifBtnSub: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
 
   titleRow: { marginBottom: 16 },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  pageSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '500', marginTop: 4 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  pageSub: { fontSize: 13, color: colors.muted, fontWeight: '500', marginTop: 4 },
 
-  tabContainer: { flexDirection: 'row', backgroundColor: 'white', paddingHorizontal: 16, paddingBottom: 10 },
+  tabContainer: { flexDirection: 'row', backgroundColor: colors.surface, paddingHorizontal: 16, paddingBottom: 10 },
   tab: { flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
   activeTab: { borderBottomColor: SHOP_ACCENT },
-  tabText: { fontSize: 14, fontWeight: '600', color: thannigoPalette.neutral },
+  tabText: { fontSize: 14, fontWeight: '600', color: colors.muted },
   activeTabText: { color: SHOP_ACCENT, fontWeight: '800' },
 
   scrollContent: { padding: 16, paddingBottom: 40 },
 
   emptyContainer: { alignItems: 'center', marginTop: 60 },
-  emptyText: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText, marginTop: 12 },
-  emptySub: { fontSize: 14, color: thannigoPalette.neutral, marginTop: 4 },
+  emptyText: { fontSize: 18, fontWeight: '800', color: colors.text, marginTop: 12 },
+  emptySub: { fontSize: 14, color: colors.muted, marginTop: 4 },
 
-  card: { backgroundColor: 'white', borderRadius: 16, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  card: { backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  badge: { backgroundColor: thannigoPalette.borderSoft, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  badgeText: { fontSize: 10, fontWeight: '800', color: thannigoPalette.neutral },
+  badge: { backgroundColor: colors.border, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  badgeText: { fontSize: 10, fontWeight: '800', color: colors.muted },
   date: { fontSize: 12, color: '#94a3b8', marginLeft: 'auto' },
 
-  issueText: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 4 },
-  descText: { fontSize: 14, color: thannigoPalette.neutral, lineHeight: 20, marginBottom: 12 },
+  issueText: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 4 },
+  descText: { fontSize: 14, color: colors.muted, lineHeight: 20, marginBottom: 12 },
 
   orderLabel: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 },
-  orderText: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600' },
+  orderText: { fontSize: 13, color: colors.muted, fontWeight: '600' },
 
   resolveBtn: { backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
   resolveBtnText: { color: '#166534', fontWeight: '700', fontSize: 14 },
 
-  resolutionBox: { backgroundColor: thannigoPalette.background, padding: 12, borderRadius: 10, marginTop: 4 },
-  resolutionLabel: { fontSize: 12, fontWeight: '800', color: thannigoPalette.neutral, marginBottom: 4 },
-  resolutionNotes: { fontSize: 14, color: thannigoPalette.darkText },
+  resolutionBox: { backgroundColor: colors.background, padding: 12, borderRadius: 10, marginTop: 4 },
+  resolutionLabel: { fontSize: 12, fontWeight: '800', color: colors.muted, marginBottom: 4 },
+  resolutionNotes: { fontSize: 14, color: colors.text },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15,23,42,0.6)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: 'white', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, minHeight: 300 },
+  modalContent: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, minHeight: 300 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: thannigoPalette.darkText },
-  modalSub: { fontSize: 14, color: thannigoPalette.neutral, marginBottom: 20 },
-  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: colors.text },
+  modalSub: { fontSize: 14, color: colors.muted, marginBottom: 20 },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   
-  textArea: { backgroundColor: thannigoPalette.background, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, padding: 16, height: 100, fontSize: 15, color: thannigoPalette.darkText, marginBottom: 20 },
+  textArea: { backgroundColor: colors.background, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 12, padding: 16, height: 100, fontSize: 15, color: colors.text, marginBottom: 20 },
   submitBtn: { backgroundColor: SHOP_ACCENT, paddingVertical: 16, borderRadius: 14, alignItems: 'center' },
   submitBtnText: { color: 'white', fontWeight: '800', fontSize: 16 },
 });

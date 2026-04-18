@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView,
   RefreshControl, TouchableOpacity, StyleSheet, TextInput, Modal, ActivityIndicator, Image, Switch
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
@@ -18,7 +20,7 @@ import { apiClient } from '@/api/client';
 import { resolveApiUrl } from '@/api/client';
 import Toast from 'react-native-toast-message';
 import * as ImagePicker from 'expo-image-picker';
-import { Shadow, thannigoPalette, roleAccent, roleSurface, Radius, Spacing } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, Radius, Spacing } from '@/constants/theme';
 
 const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_SURF = roleSurface.shop_owner;
@@ -26,6 +28,8 @@ const SHOP_SURF = roleSurface.shop_owner;
 
 
 export default function ShopInventoryScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   const { refreshShopStatus } = useAppSession();
@@ -370,7 +374,7 @@ export default function ShopInventoryScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* HEADER */}
       <RoleHeader
@@ -399,7 +403,7 @@ export default function ShopInventoryScreen() {
         {loading ? (
           <View style={{ marginTop: 100, alignItems: 'center' }}>
             <ActivityIndicator size="large" color={SHOP_ACCENT} />
-            <Text style={{ marginTop: 16, color: thannigoPalette.neutral, fontWeight: '600' }}>Syncing catalog...</Text>
+            <Text style={{ marginTop: 16, color: colors.muted, fontWeight: '600' }}>Syncing catalog...</Text>
           </View>
         ) : (
           <>
@@ -487,13 +491,13 @@ export default function ShopInventoryScreen() {
                               onChangeText={(v) => updateStocks(prod, 'stock_quantity', v)}
                               keyboardType="number-pad"
                             />
-                            <Text style={{ fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral }}>UNITS</Text>
+                            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.muted }}>UNITS</Text>
                           </View>
                         </View>
                         <View style={styles.stockCol}>
                           <Text style={styles.stockLabel}>Live Status</Text>
                           <View style={[styles.stockInputWrap, { justifyContent: 'space-between' }]}>
-                            <Text style={{ fontSize: 13, fontWeight: '800', color: isAvailable ? thannigoPalette.success : thannigoPalette.neutral }}>
+                            <Text style={{ fontSize: 13, fontWeight: '800', color: isAvailable ? colors.success : colors.muted }}>
                               {isAvailable ? 'ACTIVE' : 'HIDDEN'}
                             </Text>
                             <Switch
@@ -504,8 +508,8 @@ export default function ShopInventoryScreen() {
                                   return isMatch ? { ...p, is_available: v } : p;
                                 }));
                               }}
-                              trackColor={{ false: thannigoPalette.borderSoft, true: '#a7edff' }}
-                              thumbColor={isAvailable ? SHOP_ACCENT : thannigoPalette.neutral}
+                              trackColor={{ false: colors.border, true: '#a7edff' }}
+                              thumbColor={isAvailable ? SHOP_ACCENT : colors.muted}
                               style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                             />
                           </View>
@@ -515,7 +519,7 @@ export default function ShopInventoryScreen() {
                       {prod.is_gst && (
                         <View style={styles.taxRowList}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                             <Ionicons name="receipt-outline" size={14} color={thannigoPalette.neutral} />
+                             <Ionicons name="receipt-outline" size={14} color={colors.muted} />
                              <Text style={styles.taxLabelList}>GST Tax Rate</Text>
                           </View>
                           <View style={styles.taxBadge}>
@@ -543,7 +547,7 @@ export default function ShopInventoryScreen() {
                       {parseFloat(prod.deposit_amount) > 0 && (
                         <View style={styles.depositRowList}>
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                             <Ionicons name="shield-outline" size={14} color={thannigoPalette.neutral} />
+                             <Ionicons name="shield-outline" size={14} color={colors.muted} />
                              <Text style={styles.depositLabelList}>Secutity Deposit (per unit)</Text>
                           </View>
                           <Text style={styles.depositValueList}>₹{prod.deposit_amount}</Text>
@@ -591,7 +595,7 @@ export default function ShopInventoryScreen() {
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity onPress={() => { setModalVisible(false); setSelectedSubchainId(null); setModalStep(0); setIsEditing(false); setEditingProdId(null); setNewPrice(''); }} style={styles.closeBtn}>
-                  <Ionicons name="close" size={24} color={thannigoPalette.neutral} />
+                  <Ionicons name="close" size={24} color={colors.muted} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -613,11 +617,11 @@ export default function ShopInventoryScreen() {
                               setModalStep(1);
                             }}
                           >
-                            <View style={[styles.catIconBox, isActive && { backgroundColor: 'white' }]}>
+                            <View style={[styles.catIconBox, isActive && { backgroundColor: colors.surface }]}>
                               <Ionicons 
                                 name={cat.id === 1 ? "water-outline" : cat.id === 2 ? "cafe-outline" : "cube-outline"} 
                                 size={28} 
-                                color={isActive ? SHOP_ACCENT : thannigoPalette.neutral} 
+                                color={isActive ? SHOP_ACCENT : colors.muted} 
                               />
                             </View>
                             <Text style={[styles.catGridLabel, isActive && { color: 'white' }]}>{cat.name_en}</Text>
@@ -651,7 +655,7 @@ export default function ShopInventoryScreen() {
                             style={[
                               styles.masterCatRow, 
                               isItemSelected && styles.masterCatRowActive,
-                              isAlreadyInCatalog && { opacity: 0.5, backgroundColor: thannigoPalette.borderSoft }
+                              isAlreadyInCatalog && { opacity: 0.5, backgroundColor: colors.border }
                             ]}
                             onPress={() => {
                               if (selectedSubchainIds.includes(sub.id)) {
@@ -664,16 +668,16 @@ export default function ShopInventoryScreen() {
                               }
                             }}
                           >
-                            <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: isAlreadyInCatalog ? thannigoPalette.neutral : (isItemSelected ? SHOP_ACCENT : thannigoPalette.borderSoft), alignItems: 'center', justifyContent: 'center', backgroundColor: isItemSelected ? SHOP_ACCENT : 'transparent' }}>
+                            <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: isAlreadyInCatalog ? colors.muted : (isItemSelected ? SHOP_ACCENT : colors.border), alignItems: 'center', justifyContent: 'center', backgroundColor: isItemSelected ? SHOP_ACCENT : 'transparent' }}>
                                {isItemSelected && <Ionicons name="checkmark" size={16} color="white" />}
-                               {isAlreadyInCatalog && <Ionicons name="lock-closed" size={12} color={thannigoPalette.neutral} />}
+                               {isAlreadyInCatalog && <Ionicons name="lock-closed" size={12} color={colors.muted} />}
                             </View>
                             <View style={{ flex: 1, marginLeft: 12 }}>
-                              <Text style={[styles.masterCatText, isItemSelected && { color: SHOP_ACCENT, fontWeight: '700' }, isAlreadyInCatalog && { color: thannigoPalette.neutral }]}>
+                              <Text style={[styles.masterCatText, isItemSelected && { color: SHOP_ACCENT, fontWeight: '700' }, isAlreadyInCatalog && { color: colors.muted }]}>
                                 {sub.name_en}
                               </Text>
                               {isJustAdded && <Text style={{ fontSize: 10, color: '#4caf50', fontWeight: 'bold' }}>ADDED ✓</Text>}
-                              {isAlreadyInCatalog && <Text style={{ fontSize: 10, color: thannigoPalette.neutral }}>ALREADY IN SHOP</Text>}
+                              {isAlreadyInCatalog && <Text style={{ fontSize: 10, color: colors.muted }}>ALREADY IN SHOP</Text>}
                             </View>
                             {!isJustAdded && !isAlreadyInCatalog && (
                               <TouchableOpacity 
@@ -729,7 +733,7 @@ export default function ShopInventoryScreen() {
                                 <Ionicons name="camera-outline" size={32} color={SHOP_ACCENT} />
                               </View>
                               <Text style={styles.pickerText}>Upload Product Photo</Text>
-                              <Text style={{ fontSize: 11, color: thannigoPalette.neutral }}>Supports PNG, JPG (Max 5MB)</Text>
+                              <Text style={{ fontSize: 11, color: colors.muted }}>Supports PNG, JPG (Max 5MB)</Text>
                             </>
                           )}
                         </View>
@@ -789,7 +793,7 @@ export default function ShopInventoryScreen() {
                         return (
                           <View style={{ marginBottom: 24 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-                               <Ionicons name="shield-checkmark" size={14} color={thannigoPalette.neutral} />
+                               <Ionicons name="shield-checkmark" size={14} color={colors.muted} />
                                <Text style={[styles.inputLabel, { marginBottom: 0 }]}>Bottle Security Deposit (₹)</Text>
                             </View>
                             <View style={styles.modalPriceInputWrap}>
@@ -818,8 +822,8 @@ export default function ShopInventoryScreen() {
                       <Switch
                         value={newIsGst}
                         onValueChange={setNewIsGst}
-                        trackColor={{ false: thannigoPalette.borderSoft, true: '#a7edff' }}
-                        thumbColor={newIsGst ? SHOP_ACCENT : thannigoPalette.neutral}
+                        trackColor={{ false: colors.border, true: '#a7edff' }}
+                        thumbColor={newIsGst ? SHOP_ACCENT : colors.muted}
                       />
                     </View>
 
@@ -843,11 +847,11 @@ export default function ShopInventoryScreen() {
                     )}
 
                     <TouchableOpacity
-                      style={[styles.submitBtn, (!selectedSubchainId || !newPrice) && { backgroundColor: thannigoPalette.borderSoft, shadowOpacity: 0 }]}
+                      style={[styles.submitBtn, (!selectedSubchainId || !newPrice) && { backgroundColor: colors.border, shadowOpacity: 0 }]}
                       onPress={() => handleAddProduct()}
                       disabled={!selectedSubchainId || !newPrice || uploadingImage}
                     >
-                      <Text style={[styles.submitBtnText, (!selectedSubchainId || !newPrice) && { color: thannigoPalette.neutral }]}>
+                      <Text style={[styles.submitBtnText, (!selectedSubchainId || !newPrice) && { color: colors.muted }]}>
                          {isEditing ? 'Save Product Sync' : 'Add to Shop Catalog'}
                       </Text>
                     </TouchableOpacity>
@@ -864,31 +868,31 @@ export default function ShopInventoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
 
   scrollContent: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 100 },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 20 },
-  pageTitle: { fontSize: 30, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.8 },
-  pageSub: { fontSize: 13, color: thannigoPalette.neutral, marginTop: 4, lineHeight: 18, fontWeight: '500' },
+  pageTitle: { fontSize: 30, fontWeight: '900', color: colors.text, letterSpacing: -0.8 },
+  pageSub: { fontSize: 13, color: colors.muted, marginTop: 4, lineHeight: 18, fontWeight: '500' },
   addBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: SHOP_ACCENT, paddingHorizontal: 18, paddingVertical: 12, borderRadius: Radius.lg, ...Shadow.sm },
   addBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
 
   listContainer: { gap: 18, marginBottom: 24 },
-  card: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 18, borderWidth: 1, borderColor: thannigoPalette.borderSoft, ...Shadow.sm, position: 'relative' },
+  card: { backgroundColor: colors.surface, borderRadius: Radius.xl, padding: 18, borderWidth: 1, borderColor: colors.border, ...Shadow.sm, position: 'relative' },
 
   cardTop: { flexDirection: 'row', gap: 14, alignItems: 'center' },
   iconWrap: { width: 48, height: 48, borderRadius: Radius.md, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  catName: { fontSize: 17, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 1 },
-  catUnit: { fontSize: 12, fontWeight: '600', color: thannigoPalette.neutral },
+  catName: { fontSize: 17, fontWeight: '900', color: colors.text, marginBottom: 1 },
+  catUnit: { fontSize: 12, fontWeight: '600', color: colors.muted },
   removeBtn: { width: 38, height: 38, borderRadius: Radius.md, backgroundColor: '#fff0f0', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ffdad6' },
 
-  dividerInner: { height: 1, backgroundColor: thannigoPalette.borderSoft, marginVertical: 16 },
+  dividerInner: { height: 1, backgroundColor: colors.border, marginVertical: 16 },
 
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
-  priceLabel: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral, textTransform: 'uppercase', letterSpacing: 0.5 },
-  priceInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.background, borderRadius: Radius.md, paddingHorizontal: 14, width: 130, height: 50, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
-  rupeeIcon: { fontSize: 18, fontWeight: '900', color: thannigoPalette.darkText, marginRight: 4 },
+  priceLabel: { fontSize: 13, fontWeight: '700', color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5 },
+  priceInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.background, borderRadius: Radius.md, paddingHorizontal: 14, width: 130, height: 50, borderWidth: 1, borderColor: colors.border },
+  rupeeIcon: { fontSize: 18, fontWeight: '900', color: colors.text, marginRight: 4 },
   priceInput: { flex: 1, fontSize: 20, fontWeight: '900', color: SHOP_ACCENT },
 
   saveBtn: { backgroundColor: SHOP_ACCENT, borderRadius: Radius.xl, paddingVertical: 18, alignItems: 'center', shadowColor: SHOP_ACCENT, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.35, shadowRadius: 15, elevation: 10, marginHorizontal: 20, marginBottom: 30 },
@@ -896,37 +900,37 @@ const styles = StyleSheet.create({
 
   stockSection: { flexDirection: 'row', gap: 14, marginTop: 4 },
   stockCol: { flex: 1, gap: 8 },
-  stockLabel: { fontSize: 11, fontWeight: '800', color: thannigoPalette.neutral, textTransform: 'uppercase', letterSpacing: 0.8 },
-  stockInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.background, borderRadius: Radius.md, paddingHorizontal: 14, height: 46, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
-  stockInput: { flex: 1, fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText },
+  stockLabel: { fontSize: 11, fontWeight: '800', color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.8 },
+  stockInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.background, borderRadius: Radius.md, paddingHorizontal: 14, height: 46, borderWidth: 1, borderColor: colors.border },
+  stockInput: { flex: 1, fontSize: 15, fontWeight: '800', color: colors.text },
   lowStockBorder: { borderWidth: 2, borderColor: '#ba1a1a', backgroundColor: '#fff5f4' },
 
-  depositRowList: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: thannigoPalette.borderSoft, borderStyle: 'dashed' },
-  depositLabelList: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral },
+  depositRowList: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border, borderStyle: 'dashed' },
+  depositLabelList: { fontSize: 12, fontWeight: '700', color: colors.muted },
   depositValueList: { fontSize: 15, fontWeight: '900', color: SHOP_ACCENT },
 
   taxRowList: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingHorizontal: 4 },
-  taxLabelList: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '700' },
+  taxLabelList: { fontSize: 12, color: colors.muted, fontWeight: '700' },
   taxBadge: { backgroundColor: '#f0f9ff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: '#bae6ff' },
   taxValueList: { fontSize: 11, fontWeight: '900', color: SHOP_ACCENT, letterSpacing: 0.5 },
 
-  emptyCard: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, padding: 40, alignItems: 'center', ...Shadow.sm, borderWidth: 2, borderColor: thannigoPalette.borderSoft, borderStyle: 'dashed' },
-  emptyText: { textAlign: 'center', color: thannigoPalette.neutral, marginTop: 14, lineHeight: 22, fontWeight: '600', fontSize: 14 },
+  emptyCard: { backgroundColor: colors.surface, borderRadius: Radius.xl, padding: 40, alignItems: 'center', ...Shadow.sm, borderWidth: 2, borderColor: colors.border, borderStyle: 'dashed' },
+  emptyText: { textAlign: 'center', color: colors.muted, marginTop: 14, lineHeight: 22, fontWeight: '600', fontSize: 14 },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: thannigoPalette.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40, maxHeight: '85%', ...Shadow.lg },
+  modalContent: { backgroundColor: colors.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40, maxHeight: '85%', ...Shadow.lg },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  modalTitle: { fontSize: 24, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
+  modalTitle: { fontSize: 24, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  closeBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' },
 
-  inputLabel: { fontSize: 12, fontWeight: '800', color: thannigoPalette.neutral, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 12, marginLeft: 2 },
+  inputLabel: { fontSize: 12, fontWeight: '800', color: colors.muted, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 12, marginLeft: 2 },
 
-  masterList: { maxHeight: 240, backgroundColor: thannigoPalette.background, borderRadius: Radius.lg, padding: 10, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  masterList: { maxHeight: 240, backgroundColor: colors.background, borderRadius: Radius.lg, padding: 10, borderWidth: 1, borderColor: colors.border },
   masterCatRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: Radius.md, marginBottom: 4 },
   masterCatRowActive: { backgroundColor: SHOP_SURF, borderWidth: 1, borderColor: SHOP_ACCENT + '40' },
-  masterCatText: { fontSize: 16, fontWeight: '700', color: thannigoPalette.darkText },
+  masterCatText: { fontSize: 16, fontWeight: '700', color: colors.text },
 
-  modalPriceInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: thannigoPalette.background, borderRadius: Radius.lg, paddingHorizontal: 16, height: 60, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  modalPriceInputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.background, borderRadius: Radius.lg, paddingHorizontal: 16, height: 60, borderWidth: 1, borderColor: colors.border },
   modalPriceInput: { flex: 1, fontSize: 22, fontWeight: '900', color: SHOP_ACCENT },
 
   submitBtn: { backgroundColor: SHOP_ACCENT, borderRadius: Radius.xl, paddingVertical: 18, alignItems: 'center', marginTop: 32, ...Shadow.md },
@@ -934,30 +938,30 @@ const styles = StyleSheet.create({
   thumbnail: { width: '100%', height: '100%', borderRadius: Radius.md, resizeMode: 'cover' },
   modalStepText: { fontSize: 11, fontWeight: '800', color: SHOP_ACCENT, marginTop: 4, textTransform: 'uppercase', letterSpacing: 1 },
   gridContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginTop: 10 },
-  catGridCard: { width: '30%', aspectRatio: 1, backgroundColor: thannigoPalette.background, borderRadius: Radius.xl, alignItems: 'center', justifyContent: 'center', gap: 10, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  catGridCard: { width: '30%', aspectRatio: 1, backgroundColor: colors.background, borderRadius: Radius.xl, alignItems: 'center', justifyContent: 'center', gap: 10, borderWidth: 1, borderColor: colors.border },
   catGridCardActive: { backgroundColor: SHOP_ACCENT, borderColor: SHOP_ACCENT, ...Shadow.sm },
-  catIconBox: { width: 48, height: 48, borderRadius: Radius.md, backgroundColor: thannigoPalette.background, alignItems: 'center', justifyContent: 'center' },
-  catGridLabel: { fontSize: 12, fontWeight: '800', color: thannigoPalette.neutral, textAlign: 'center', paddingHorizontal: 4 },
+  catIconBox: { width: 48, height: 48, borderRadius: Radius.md, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' },
+  catGridLabel: { fontSize: 12, fontWeight: '800', color: colors.muted, textAlign: 'center', paddingHorizontal: 4 },
   backLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 20 },
   backLinkText: { fontSize: 14, fontWeight: '800', color: SHOP_ACCENT },
-  imagePickerCard: { height: 180, backgroundColor: thannigoPalette.background, borderRadius: Radius.xl, borderWidth: 2, borderColor: thannigoPalette.borderSoft, borderStyle: 'dashed', overflow: 'hidden', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+  imagePickerCard: { height: 180, backgroundColor: colors.background, borderRadius: Radius.xl, borderWidth: 2, borderColor: colors.border, borderStyle: 'dashed', overflow: 'hidden', justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
   pickerPreview: { width: '100%', height: '100%', resizeMode: 'cover' },
   pickerPlaceholder: { alignItems: 'center', gap: 10 },
-  pickerText: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral },
+  pickerText: { fontSize: 14, fontWeight: '700', color: colors.muted },
   editBadge: { position: 'absolute', top: 14, right: 14, width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center' },
   formSplit: { flexDirection: 'row', gap: 16, marginBottom: 20 },
   actionRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
   editCardBtn: { width: 38, height: 38, borderRadius: Radius.md, backgroundColor: SHOP_SURF, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: SHOP_ACCENT + '30' },
-  cardDisabled: { opacity: 0.5, backgroundColor: '#f8fafc', borderColor: thannigoPalette.borderSoft },
-  disabledBadge: { position: 'absolute', top: -12, left: 20, backgroundColor: thannigoPalette.neutral, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8, zIndex: 10, ...Shadow.xs },
+  cardDisabled: { opacity: 0.5, backgroundColor: '#f8fafc', borderColor: colors.border },
+  disabledBadge: { position: 'absolute', top: -12, left: 20, backgroundColor: colors.muted, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8, zIndex: 10, ...Shadow.xs },
   disabledBadgeText: { color: 'white', fontSize: 10, fontWeight: '900', letterSpacing: 1 },
   promoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 },
-  sliderUnitDisplay: { fontSize: 14, fontWeight: '700', color: thannigoPalette.neutral, marginLeft: 8 },
-  hintText: { fontSize: 12, color: thannigoPalette.neutral, marginTop: 4, fontWeight: '500' },
+  sliderUnitDisplay: { fontSize: 14, fontWeight: '700', color: colors.muted, marginLeft: 8 },
+  hintText: { fontSize: 12, color: colors.muted, marginTop: 4, fontWeight: '500' },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
   statusBadge: { position: 'absolute', top: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, zIndex: 10 },
   statusBadgeText: { fontSize: 10, fontWeight: '900', letterSpacing: 0.5 },
-  quickAddBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'white', paddingHorizontal: 10, paddingVertical: 6, borderRadius: Radius.md, borderWidth: 1, borderColor: SHOP_ACCENT + '40' },
+  quickAddBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.surface, paddingHorizontal: 10, paddingVertical: 6, borderRadius: Radius.md, borderWidth: 1, borderColor: SHOP_ACCENT + '40' },
   quickAddText: { fontSize: 11, fontWeight: '800', color: SHOP_ACCENT },
   bulkAddFab: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: SHOP_ACCENT, paddingVertical: 14, borderRadius: Radius.lg, marginTop: 16, ...Shadow.md },
   bulkAddFabText: { color: 'white', fontWeight: '900', fontSize: 15 },

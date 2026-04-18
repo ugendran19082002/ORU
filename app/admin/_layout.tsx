@@ -1,15 +1,17 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
 import { useAppSession } from '@/providers/AppSessionProvider';
 import { View, ActivityIndicator } from 'react-native';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface } from '@/constants/theme';
 
 const ADMIN_ACCENT = roleAccent.admin;
 const ADMIN_SURF = roleSurface.admin;
 
 export default function AdminRootLayout() {
+  const { colors, isDark } = useAppTheme();
   const { user, status, isHydrated } = useAppSession();
 
   // Only render the admin Stack once the session is fully confirmed as admin.
@@ -20,7 +22,7 @@ export default function AdminRootLayout() {
   // All of the above show the same spinner to prevent a black/blank screen.
   if (!isHydrated || status !== 'authenticated' || !user || user.role !== 'admin') {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: thannigoPalette.background }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
         <ActivityIndicator size="large" color={ADMIN_ACCENT} />
       </View>
     );
@@ -29,7 +31,7 @@ export default function AdminRootLayout() {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerShown: false,

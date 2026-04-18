@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, Linking, TextInput, Modal, Image, useWindowDimensions
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,12 +14,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { adminApi, AdminShop } from '@/api/adminApi';
 import { BackButton } from '@/components/ui/BackButton';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface } from '@/constants/theme';
 
 const ADMIN_ACCENT = roleAccent.admin;
 const ADMIN_SURF = roleSurface.admin;
 
 export default function AdminShopReviewScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const { id } = useLocalSearchParams();
@@ -249,7 +253,7 @@ export default function AdminShopReviewScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.headerSafe} edges={['top']}>
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
@@ -322,10 +326,10 @@ export default function AdminShopReviewScreen() {
                     </View>
                     
                     <View style={[styles.stepStatusBadge, { 
-                        backgroundColor: isApproved ? '#ecfdf5' : isRejected ? '#fef2f2' : isUnderReview ? '#fff7ed' : thannigoPalette.borderSoft 
+                        backgroundColor: isApproved ? '#ecfdf5' : isRejected ? '#fef2f2' : isUnderReview ? '#fff7ed' : colors.border 
                     }]}>
                         <Text style={[styles.stepStatusText, { 
-                            color: isApproved ? '#059669' : isRejected ? '#dc2626' : isUnderReview ? '#d97706' : thannigoPalette.neutral 
+                            color: isApproved ? '#059669' : isRejected ? '#dc2626' : isUnderReview ? '#d97706' : colors.muted 
                         }]}>
                             {step.status.replace('_', ' ')}
                         </Text>
@@ -489,7 +493,7 @@ export default function AdminShopReviewScreen() {
                       <TouchableOpacity 
                         activeOpacity={0.9} 
                         onPress={() => setFullScreenImage(resolveUrl(selectedDoc.document_url))}
-                        style={{ borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: thannigoPalette.borderSoft }}
+                        style={{ borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e8f0', backgroundColor: colors.border }}
                       >
                         <Image source={{ uri: resolveUrl(selectedDoc.document_url) }} style={styles.docImg} resizeMode="cover" />
                         <View style={styles.zoomOverlay}>
@@ -532,13 +536,13 @@ export default function AdminShopReviewScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
 
   headerSafe: { 
-    backgroundColor: 'white', 
+    backgroundColor: colors.surface, 
     borderBottomWidth: 1, 
-    borderBottomColor: thannigoPalette.borderSoft,
+    borderBottomColor: colors.border,
     alignItems: 'center',
   },
   headerContent: {
@@ -552,34 +556,34 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: colors.muted, fontWeight: '600', marginTop: 2 },
   
   statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
   statusBadgeText: { fontSize: 11, fontWeight: '900', letterSpacing: 0.5 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: thannigoPalette.background },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
   
   scroll: { paddingBottom: 100 },
-  section: { padding: 24, borderBottomWidth: 8, borderBottomColor: thannigoPalette.background },
-  sectionTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 16, letterSpacing: -0.5 },
+  section: { padding: 24, borderBottomWidth: 8, borderBottomColor: colors.background },
+  sectionTitle: { fontSize: 20, fontWeight: '900', color: colors.text, marginBottom: 16, letterSpacing: -0.5 },
   
-  card: { backgroundColor: thannigoPalette.background, borderRadius: 24, padding: 20, gap: 16 },
+  card: { backgroundColor: colors.background, borderRadius: 24, padding: 20, gap: 16 },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   infoTextGroup: { flex: 1 },
   label: { fontSize: 11, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 2 },
-  value: { fontSize: 15, fontWeight: '700', color: thannigoPalette.darkText },
+  value: { fontSize: 15, fontWeight: '700', color: colors.text },
 
-  stepCardReview: { backgroundColor: 'white', borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: thannigoPalette.borderSoft, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  stepCardReview: { backgroundColor: colors.surface, borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   stepCardApproved: { borderColor: '#d1fae5', backgroundColor: '#f0fdf4' },
   stepCardRejected: { borderColor: '#fee2e2', backgroundColor: '#fef2f2' },
   
   stepHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
   stepTitleGroup: { flex: 1, gap: 4 },
-  stepTitleMain: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
+  stepTitleMain: { fontSize: 16, fontWeight: '800', color: colors.text },
   mandatoryTag: { fontSize: 9, fontWeight: '900', color: ADMIN_ACCENT, textTransform: 'uppercase', letterSpacing: 1 },
   
   stepStatusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
@@ -590,7 +594,7 @@ const styles = StyleSheet.create({
   viewDataBtnText: { fontSize: 13, fontWeight: '800', color: ADMIN_ACCENT },
 
   decisionGroup: { flexDirection: 'row', gap: 10 },
-  miniBtnReject: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'white', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: '#fee2e2' },
+  miniBtnReject: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.surface, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: '#fee2e2' },
   miniBtnRejectText: { fontSize: 12, fontWeight: '800', color: '#dc2626' },
   
   miniBtnApprove: { borderRadius: 10, overflow: 'hidden' },
@@ -601,56 +605,56 @@ const styles = StyleSheet.create({
   adminNotesLabel: { fontSize: 10, fontWeight: '900', color: '#dc2626', marginBottom: 4, textTransform: 'uppercase' },
   adminNotesText: { fontSize: 13, color: '#991b1b', lineHeight: 18, fontWeight: '600' },
 
-  globalActionBox: { marginTop: 8, padding: 32, backgroundColor: thannigoPalette.background, borderRadius: 32, alignItems: 'center', gap: 20 },
-  globalActionHint: { fontSize: 13, color: thannigoPalette.neutral, textAlign: 'center', lineHeight: 20, fontWeight: '600' },
+  globalActionBox: { marginTop: 8, padding: 32, backgroundColor: colors.background, borderRadius: 32, alignItems: 'center', gap: 20 },
+  globalActionHint: { fontSize: 13, color: colors.muted, textAlign: 'center', lineHeight: 20, fontWeight: '600' },
   
   activateBtn: { width: '100%', shadowColor: ADMIN_ACCENT, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 15, elevation: 8 },
   activateBtnDisabled: { shadowOpacity: 0, elevation: 0 },
   activateGradient: { height: 64, borderRadius: 22, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
   activateBtnText: { color: 'white', fontSize: 18, fontWeight: '800' },
 
-  bottomSheet: { backgroundColor: 'white', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 32, paddingBottom: 40, width: '100%', position: 'absolute', bottom: 0 },
-  modalSubTitle: { fontSize: 24, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 12 },
-  modalDesc: { fontSize: 15, color: thannigoPalette.neutral, lineHeight: 22, marginBottom: 24 },
-  modalInput: { backgroundColor: thannigoPalette.borderSoft, borderRadius: 20, padding: 20, height: 120, fontSize: 16, color: thannigoPalette.darkText, textAlignVertical: 'top', marginBottom: 24 },
+  bottomSheet: { backgroundColor: colors.surface, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 32, paddingBottom: 40, width: '100%', position: 'absolute', bottom: 0 },
+  modalSubTitle: { fontSize: 24, fontWeight: '900', color: colors.text, marginBottom: 12 },
+  modalDesc: { fontSize: 15, color: colors.muted, lineHeight: 22, marginBottom: 24 },
+  modalInput: { backgroundColor: colors.border, borderRadius: 20, padding: 20, height: 120, fontSize: 16, color: colors.text, textAlignVertical: 'top', marginBottom: 24 },
   modalBtnRow: { flexDirection: 'row', gap: 12 },
-  modalCancelBtn: { flex: 1, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: thannigoPalette.borderSoft },
-  modalCancelText: { fontSize: 16, fontWeight: '800', color: thannigoPalette.neutral },
+  modalCancelBtn: { flex: 1, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.border },
+  modalCancelText: { fontSize: 16, fontWeight: '800', color: colors.muted },
   modalConfirmBtn: { flex: 2, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#dc2626' },
   modalConfirmText: { fontSize: 16, fontWeight: '800', color: 'white' },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.6)', justifyContent: 'center' },
-  modalContent: { backgroundColor: 'white', borderRadius: 24, overflow: 'hidden', maxHeight: '80%', margin: 20 },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
-  modalTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
+  modalContent: { backgroundColor: colors.surface, borderRadius: 24, overflow: 'hidden', maxHeight: '80%', margin: 20 },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderBottomColor: colors.border },
+  modalTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
   modalScroll: { padding: 20 },
   
   premiumDataContainer: { backgroundColor: '#f0f9ff', borderRadius: 20, padding: 20, marginBottom: 24, borderWidth: 1, borderColor: '#bae6fd' },
   premiumDataHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   premiumDataTitle: { fontSize: 13, fontWeight: '800', color: '#0369a1', textTransform: 'uppercase', letterSpacing: 0.5 },
   premiumDataGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  premiumDataCard: { backgroundColor: 'white', borderRadius: 16, padding: 16, width: '48%', flexGrow: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
+  premiumDataCard: { backgroundColor: colors.surface, borderRadius: 16, padding: 16, width: '48%', flexGrow: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 },
   premiumDataKey: { fontSize: 10, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 6 },
-  premiumDataValWrap: { backgroundColor: thannigoPalette.background, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
-  premiumDataVal: { fontSize: 14, fontWeight: '700', color: thannigoPalette.darkText },
+  premiumDataValWrap: { backgroundColor: colors.background, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border },
+  premiumDataVal: { fontSize: 14, fontWeight: '700', color: colors.text },
   
   // Metadata Renderer Styles
   arrayContainer: { gap: 12, marginTop: 4 },
-  arrayItemCard: { backgroundColor: 'white', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e2e8f0' },
+  arrayItemCard: { backgroundColor: colors.surface, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#e2e8f0' },
   arrayItemIndex: { fontSize: 9, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', marginBottom: 8 },
-  arrayItemRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: thannigoPalette.background },
-  arrayItemKey: { fontSize: 11, fontWeight: '600', color: thannigoPalette.neutral },
-  arrayItemVal: { fontSize: 11, fontWeight: '800', color: thannigoPalette.darkText },
+  arrayItemRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: colors.background },
+  arrayItemKey: { fontSize: 11, fontWeight: '600', color: colors.muted },
+  arrayItemVal: { fontSize: 11, fontWeight: '800', color: colors.text },
   
   nestedObjectBox: { gap: 8 },
   nestedEntry: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  nestedKey: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
-  nestedVal: { fontSize: 12, color: thannigoPalette.darkText, fontWeight: '700' },
+  nestedKey: { fontSize: 12, color: colors.muted, fontWeight: '500' },
+  nestedVal: { fontSize: 12, color: colors.text, fontWeight: '700' },
   
   boolBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   boolText: { fontSize: 10, fontWeight: '900' },
 
-  docImg: { width: '100%', height: 250, borderRadius: 12, backgroundColor: thannigoPalette.borderSoft },
+  docImg: { width: '100%', height: 250, borderRadius: 12, backgroundColor: colors.border },
   zoomOverlay: { position: 'absolute', right: 12, bottom: 12, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 12, padding: 8 },
   
   fullScreenOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },

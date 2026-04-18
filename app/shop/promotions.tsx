@@ -1,4 +1,4 @@
-import {
+﻿import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, TextInput, Switch, Share, Alert,
 } from 'react-native';
@@ -6,6 +6,8 @@ import Toast from 'react-native-toast-message';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -17,7 +19,7 @@ import { apiClient } from '@/api/client';
 import { promotionApi } from '@/api/promotionApi';
 import { log } from '@/utils/logger';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
 
 type Promo = {
   id: number;
@@ -37,6 +39,8 @@ const CUSTOMER_ACCENT = roleAccent.customer;
 const CUSTOMER_GRAD: [string, string] = [roleGradients.customer.start, roleGradients.customer.end];
 
 export default function ShopPromotionsScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const [promos, setPromos] = useState<Promo[]>([]);
   const [loyaltyLevels, setLoyaltyLevels] = useState<any[]>([]);
@@ -132,7 +136,7 @@ export default function ShopPromotionsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       {/* HEADER */}
       <View style={styles.header}>
@@ -169,7 +173,7 @@ export default function ShopPromotionsScreen() {
         {/* QUICK STATS */}
         <View style={styles.statsRow}>
           {[
-            { label: 'Active', value: activeCount, icon: 'checkmark-circle', color: thannigoPalette.success, bg: '#e8f5e9' },
+            { label: 'Active', value: activeCount, icon: 'checkmark-circle', color: colors.success, bg: '#e8f5e9' },
             { label: 'Total Uses', value: totalUses, icon: 'people', color: CUSTOMER_ACCENT, bg: '#e0f0ff' },
             { label: 'Avg Uses', value: avgUse, icon: 'stats-chart', color: '#b45309', bg: '#fef3c7' },
           ].map((s) => (
@@ -189,14 +193,14 @@ export default function ShopPromotionsScreen() {
             style={[styles.tab, activeTab === 'coupons' && styles.tabActive]}
             onPress={() => setActiveTab('coupons')}
           >
-            <Ionicons name="pricetag-outline" size={16} color={activeTab === 'coupons' ? CUSTOMER_ACCENT : thannigoPalette.neutral} />
+            <Ionicons name="pricetag-outline" size={16} color={activeTab === 'coupons' ? CUSTOMER_ACCENT : colors.muted} />
             <Text style={[styles.tabText, activeTab === 'coupons' && styles.tabTextActive]}>Coupons</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tab, activeTab === 'loyalty' && styles.tabActive]}
             onPress={() => setActiveTab('loyalty')}
           >
-            <Ionicons name="ribbon-outline" size={16} color={activeTab === 'loyalty' ? CUSTOMER_ACCENT : thannigoPalette.neutral} />
+            <Ionicons name="ribbon-outline" size={16} color={activeTab === 'loyalty' ? CUSTOMER_ACCENT : colors.muted} />
             <Text style={[styles.tabText, activeTab === 'loyalty' && styles.tabTextActive]}>Loyalty Programme</Text>
           </TouchableOpacity>
         </View>
@@ -248,7 +252,7 @@ export default function ShopPromotionsScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.inputLabel}>Expiry Date</Text>
                     <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
-                      <Text style={{ fontSize: 15, color: thannigoPalette.darkText }}>{expiryDate.toDateString()}</Text>
+                      <Text style={{ fontSize: 15, color: colors.text }}>{expiryDate.toDateString()}</Text>
                     </TouchableOpacity>
                   </View>
                   <View style={{ flex: 1, marginLeft: 12 }}>
@@ -293,7 +297,7 @@ export default function ShopPromotionsScreen() {
                 {/* TOP ROW */}
                 <View style={styles.promoTop}>
                   <LinearGradient
-                    colors={promo.is_active ? [CUSTOMER_ACCENT, CUSTOMER_GRAD[1]] : ['#94a3b8', thannigoPalette.neutral]}
+                    colors={promo.is_active ? [CUSTOMER_ACCENT, CUSTOMER_GRAD[1]] : ['#94a3b8', colors.muted]}
                     style={styles.codeBadge}
                   >
                     <Text style={styles.codeText}>{promo.code}</Text>
@@ -305,7 +309,7 @@ export default function ShopPromotionsScreen() {
                   <Switch
                     value={promo.is_active}
                     onValueChange={() => togglePromo(promo.id)}
-                    trackColor={{ false: thannigoPalette.borderSoft, true: '#bfdbf7' }}
+                    trackColor={{ false: colors.border, true: '#bfdbf7' }}
                     thumbColor={promo.is_active ? CUSTOMER_ACCENT : '#94a3b8'}
                   />
                 </View>
@@ -435,14 +439,14 @@ export default function ShopPromotionsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 24, paddingVertical: 14, backgroundColor: 'rgba(255,255,255,0.92)',
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandName: { fontSize: 22, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
+  brandName: { fontSize: 22, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
   roleLabel: { fontSize: 9, fontWeight: '700', color: SHOP_ACCENT, letterSpacing: 1.5, marginTop: 3 },
   notifBtnSub: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
   backBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
@@ -451,66 +455,66 @@ const styles = StyleSheet.create({
     backgroundColor: CUSTOMER_ACCENT, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14,
   },
   createBtnText: { fontSize: 13, fontWeight: '800', color: 'white' },
-  pageTitle: { fontSize: 32, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5, marginTop: 10, marginBottom: 18 },
+  pageTitle: { fontSize: 32, fontWeight: '900', color: colors.text, letterSpacing: -0.5, marginTop: 10, marginBottom: 18 },
 
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
   statBox: {
-    flex: 1, backgroundColor: 'white', borderRadius: 18, padding: 14, alignItems: 'center',
+    flex: 1, backgroundColor: colors.surface, borderRadius: 18, padding: 14, alignItems: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
   statIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   statValue: { fontSize: 22, fontWeight: '900', marginBottom: 2 },
-  statLabel: { fontSize: 10, color: thannigoPalette.neutral, fontWeight: '600' },
+  statLabel: { fontSize: 10, color: colors.muted, fontWeight: '600' },
 
   tabRow: {
-    flexDirection: 'row', backgroundColor: thannigoPalette.borderSoft, borderRadius: 14, padding: 4, marginBottom: 20,
+    flexDirection: 'row', backgroundColor: colors.border, borderRadius: 14, padding: 4, marginBottom: 20,
   },
   tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 12 },
-  tabActive: { backgroundColor: 'white', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
-  tabText: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral },
+  tabActive: { backgroundColor: colors.surface, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
+  tabText: { fontSize: 13, fontWeight: '700', color: colors.muted },
   tabTextActive: { color: CUSTOMER_ACCENT },
 
   createCard: {
-    backgroundColor: 'white', borderRadius: 20, padding: 20, marginBottom: 16,
+    backgroundColor: colors.surface, borderRadius: 20, padding: 20, marginBottom: 16,
     shadowColor: CUSTOMER_ACCENT, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4,
     borderWidth: 1, borderColor: '#bfdbf7',
   },
-  createTitle: { fontSize: 16, fontWeight: '900', color: thannigoPalette.darkText, marginBottom: 16 },
-  inputLabel: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral, marginBottom: 6 },
+  createTitle: { fontSize: 16, fontWeight: '900', color: colors.text, marginBottom: 16 },
+  inputLabel: { fontSize: 12, fontWeight: '700', color: colors.muted, marginBottom: 6 },
   input: {
-    backgroundColor: thannigoPalette.borderSoft, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
-    fontSize: 15, fontWeight: '600', color: thannigoPalette.darkText, marginBottom: 14, borderWidth: 1, borderColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
+    fontSize: 15, fontWeight: '600', color: colors.text, marginBottom: 14, borderWidth: 1, borderColor: colors.border,
   },
   inputRow: { flexDirection: 'row', gap: 12 },
   typeRow: { flexDirection: 'row', gap: 10, marginBottom: 14 },
-  typePill: { flex: 1, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft, alignItems: 'center' },
+  typePill: { flex: 1, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: colors.border, alignItems: 'center' },
   typePillActive: { borderColor: CUSTOMER_ACCENT, backgroundColor: '#e0f0ff' },
-  typePillText: { fontSize: 13, fontWeight: '700', color: thannigoPalette.neutral },
+  typePillText: { fontSize: 13, fontWeight: '700', color: colors.muted },
   typePillTextActive: { color: CUSTOMER_ACCENT },
   createActions: { flexDirection: 'row', gap: 10, marginTop: 4 },
   createSaveBtn: { flex: 1, backgroundColor: CUSTOMER_ACCENT, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   createSaveBtnText: { color: 'white', fontWeight: '800', fontSize: 14 },
-  createCancelBtn: { flex: 1, backgroundColor: thannigoPalette.borderSoft, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
-  createCancelBtnText: { color: thannigoPalette.neutral, fontWeight: '700', fontSize: 14 },
+  createCancelBtn: { flex: 1, backgroundColor: colors.border, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
+  createCancelBtnText: { color: colors.muted, fontWeight: '700', fontSize: 14 },
 
   emptyState: { alignItems: 'center', paddingVertical: 48, gap: 8 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: thannigoPalette.darkText },
-  emptySub: { fontSize: 13, color: thannigoPalette.neutral, textAlign: 'center' },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
+  emptySub: { fontSize: 13, color: colors.muted, textAlign: 'center' },
 
   promoCard: {
-    backgroundColor: 'white', borderRadius: 20, padding: 18, marginBottom: 14,
+    backgroundColor: colors.surface, borderRadius: 20, padding: 18, marginBottom: 14,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
   promoCardInactive: { opacity: 0.6 },
   promoTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
   codeBadge: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12 },
   codeText: { fontSize: 16, fontWeight: '900', color: 'white', letterSpacing: 1 },
-  promoDesc: { fontSize: 13, fontWeight: '700', color: thannigoPalette.darkText, marginBottom: 3 },
-  promoMeta: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '500' },
+  promoDesc: { fontSize: 13, fontWeight: '700', color: colors.text, marginBottom: 3 },
+  promoMeta: { fontSize: 11, color: colors.muted, fontWeight: '500' },
   usageRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  usageLabel: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '600' },
+  usageLabel: { fontSize: 11, color: colors.muted, fontWeight: '600' },
   usagePct: { fontSize: 11, fontWeight: '700' },
-  usageTrack: { height: 4, backgroundColor: thannigoPalette.borderSoft, borderRadius: 2, marginBottom: 14 },
+  usageTrack: { height: 4, backgroundColor: colors.border, borderRadius: 2, marginBottom: 14 },
   usageFill: { height: '100%', borderRadius: 2 },
   promoActions: { flexDirection: 'row', gap: 8 },
   actionBtn: {
@@ -519,7 +523,7 @@ const styles = StyleSheet.create({
   },
   actionBtnText: { fontSize: 11, fontWeight: '700', color: CUSTOMER_ACCENT },
 
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 14, letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 14, letterSpacing: -0.3 },
   loyaltyHero: {
     borderRadius: 24, padding: 24, marginBottom: 24, overflow: 'hidden',
     shadowColor: '#7c3aed', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 20, elevation: 8,
@@ -536,12 +540,12 @@ const styles = StyleSheet.create({
   
   ruleCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    backgroundColor: 'white', borderRadius: 18, padding: 16, marginBottom: 12,
+    backgroundColor: colors.surface, borderRadius: 18, padding: 16, marginBottom: 12,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
   ruleIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#e8f5e9', alignItems: 'center', justifyContent: 'center' },
-  ruleTitle: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 2 },
-  ruleDesc: { fontSize: 12, color: thannigoPalette.neutral, lineHeight: 16 },
+  ruleTitle: { fontSize: 15, fontWeight: '800', color: colors.text, marginBottom: 2 },
+  ruleDesc: { fontSize: 12, color: colors.muted, lineHeight: 16 },
 
   infoCard: {
     flexDirection: 'row', gap: 10, backgroundColor: '#e0f0ff', borderRadius: 16, padding: 16, marginTop: 8,

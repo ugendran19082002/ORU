@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   ActivityIndicator, TextInput, RefreshControl, Switch
@@ -6,6 +6,8 @@ import {
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -13,12 +15,14 @@ import { BackButton } from '@/components/ui/BackButton';
 import { adminApi } from '@/api/adminApi';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface } from '@/constants/theme';
 
 const ADMIN_ACCENT = roleAccent.admin;
 const ADMIN_SURF = roleSurface.admin;
 
 export default function AdminCouponsScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -90,7 +94,7 @@ export default function AdminCouponsScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <SafeAreaView style={styles.headerSafe} edges={['top']}>
         <View style={styles.headerContent}>
           <View style={styles.headerTitleRow}>
@@ -226,13 +230,13 @@ export default function AdminCouponsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   headerSafe: { 
-    backgroundColor: 'white', 
+    backgroundColor: colors.surface, 
     borderBottomWidth: 1, 
-    borderBottomColor: thannigoPalette.borderSoft,
+    borderBottomColor: colors.border,
     alignItems: 'center',
   },
   headerContent: {
@@ -246,43 +250,43 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: thannigoPalette.borderSoft,
+    backgroundColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pageTitle: { fontSize: 28, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: -0.5 },
-  headerSub: { fontSize: 13, color: thannigoPalette.neutral, fontWeight: '600', marginTop: 2 },
+  pageTitle: { fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  headerSub: { fontSize: 13, color: colors.muted, fontWeight: '600', marginTop: 2 },
 
   createBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: ADMIN_ACCENT, alignItems: 'center', justifyContent: 'center' },
   scrollContent: { padding: 20 },
   infoBox: { flexDirection: 'row', gap: 10, backgroundColor: ADMIN_SURF, borderRadius: 15, padding: 15, marginBottom: 25, borderWidth: 1, borderColor: ADMIN_SURF },
   infoText: { flex: 1, fontSize: 12, color: ADMIN_ACCENT, lineHeight: 18, fontWeight: '600' },
-  createCard: { backgroundColor: 'white', borderRadius: 20, padding: 20, marginBottom: 25, borderWidth: 1, borderColor: thannigoPalette.borderSoft, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
-  createTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 16 },
-  label: { fontSize: 11, fontWeight: '700', color: thannigoPalette.neutral, marginBottom: 6 },
-  input: { backgroundColor: thannigoPalette.borderSoft, borderRadius: 12, padding: 12, fontSize: 15, fontWeight: '600', color: thannigoPalette.darkText, marginBottom: 12 },
+  createCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 20, marginBottom: 25, borderWidth: 1, borderColor: colors.border, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
+  createTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 16 },
+  label: { fontSize: 11, fontWeight: '700', color: colors.muted, marginBottom: 6 },
+  input: { backgroundColor: colors.border, borderRadius: 12, padding: 12, fontSize: 15, fontWeight: '600', color: colors.text, marginBottom: 12 },
   row: { flexDirection: 'row', alignItems: 'center' },
-  typeBtn: { flex: 1, height: 44, borderRadius: 10, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  typeBtn: { flex: 1, height: 44, borderRadius: 10, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   typeBtnActive: { backgroundColor: ADMIN_ACCENT },
-  typeBtnText: { fontWeight: '700', color: thannigoPalette.neutral },
+  typeBtnText: { fontWeight: '700', color: colors.muted },
   typeBtnTextActive: { color: 'white' },
-  datePicker: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: thannigoPalette.borderSoft, borderRadius: 12, padding: 12, marginBottom: 12 },
-  dateText: { fontSize: 15, fontWeight: '600', color: thannigoPalette.darkText },
+  datePicker: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.border, borderRadius: 12, padding: 12, marginBottom: 12 },
+  dateText: { fontSize: 15, fontWeight: '600', color: colors.text },
   saveBtn: { flex: 2, height: 50, borderRadius: 15, backgroundColor: ADMIN_ACCENT, alignItems: 'center', justifyContent: 'center' },
   saveBtnText: { color: 'white', fontWeight: '800', fontSize: 15 },
-  cancelBtn: { flex: 1, height: 50, borderRadius: 15, marginLeft: 12, backgroundColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
-  cancelBtnText: { color: thannigoPalette.neutral, fontWeight: '700' },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText, marginBottom: 12 },
-  couponCard: { backgroundColor: 'white', borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  cancelBtn: { flex: 1, height: 50, borderRadius: 15, marginLeft: 12, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  cancelBtnText: { color: colors.muted, fontWeight: '700' },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: colors.text, marginBottom: 12 },
+  couponCard: { backgroundColor: colors.surface, borderRadius: 18, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.border },
   couponTop: { flexDirection: 'row', alignItems: 'center' },
-  codeWrap: { paddingHorizontal: 10, paddingVertical: 5, backgroundColor: thannigoPalette.borderSoft, borderRadius: 6 },
-  code: { fontSize: 14, fontWeight: '900', color: thannigoPalette.darkText, letterSpacing: 0.5 },
+  codeWrap: { paddingHorizontal: 10, paddingVertical: 5, backgroundColor: colors.border, borderRadius: 6 },
+  code: { fontSize: 14, fontWeight: '900', color: colors.text, letterSpacing: 0.5 },
   value: { fontSize: 15, fontWeight: '800', color: ADMIN_ACCENT },
   expiry: { fontSize: 11, color: '#94a3b8', fontWeight: '500' },
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 },
-  track: { flex: 1, height: 4, backgroundColor: thannigoPalette.borderSoft, borderRadius: 2 },
+  track: { flex: 1, height: 4, backgroundColor: colors.border, borderRadius: 2 },
   fill: { height: '100%', backgroundColor: ADMIN_ACCENT, borderRadius: 2 },
-  counter: { fontSize: 11, color: thannigoPalette.neutral, fontWeight: '700' },
+  counter: { fontSize: 11, color: colors.muted, fontWeight: '700' },
   empty: { padding: 40, alignItems: 'center' },
   emptyText: { marginTop: 12, color: '#94a3b8', fontWeight: '600' },
 });

@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { apiClient } from '@/api/client';
-import { Shadow, thannigoPalette, roleAccent, Radius } from '@/constants/theme';
+import { Shadow, roleAccent, Radius } from '@/constants/theme';
 import { useAppTheme } from '@/providers/ThemeContext';
 
 const ACCENT = roleAccent.customer;
@@ -26,6 +27,8 @@ interface CardItem {
 }
 
 export default function CustomerPaymentMethodsScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const { safeBack } = useAppNavigation();
   const { colors, isDark } = useAppTheme();
   useAndroidBackHandler(() => { safeBack('/(tabs)/profile'); });
@@ -122,7 +125,7 @@ export default function CustomerPaymentMethodsScreen() {
               <View key={card.id}>
                 <View style={styles.row}>
                   <View style={[styles.iconBox, { backgroundColor: colors.background }]}>
-                    <Ionicons name="card" size={20} color={thannigoPalette.darkText} />
+                    <Ionicons name="card" size={20} color={colors.text} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.itemTitle}>{card.brand} {card.mask}</Text>
@@ -135,7 +138,7 @@ export default function CustomerPaymentMethodsScreen() {
           </View>
 
           <View style={styles.infoCard}>
-            <Ionicons name="shield-checkmark-outline" size={18} color={thannigoPalette.success} />
+            <Ionicons name="shield-checkmark-outline" size={18} color={colors.success} />
             <Text style={styles.infoText}>
               Payment methods are stored securely via Razorpay. ThanniGo never stores your card or UPI details directly.
             </Text>
@@ -147,28 +150,28 @@ export default function CustomerPaymentMethodsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
-  headerSub: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: colors.text },
+  headerSub: { fontSize: 12, color: colors.muted, fontWeight: '500' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
-  errorText: { fontSize: 14, color: thannigoPalette.neutral, textAlign: 'center', fontWeight: '500' },
+  errorText: { fontSize: 14, color: colors.muted, textAlign: 'center', fontWeight: '500' },
   retryBtn: { paddingHorizontal: 20, paddingVertical: 10, backgroundColor: ACCENT, borderRadius: Radius.md },
   retryText: { color: 'white', fontWeight: '700', fontSize: 14 },
   content: { padding: 20, gap: 20, paddingBottom: 60 },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: -10, marginTop: 10 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
-  listCard: { backgroundColor: thannigoPalette.surface, borderRadius: Radius.xl, paddingHorizontal: 16, paddingVertical: 6, ...Shadow.xs },
+  sectionTitle: { fontSize: 16, fontWeight: '800', color: colors.text },
+  listCard: { backgroundColor: colors.surface, borderRadius: Radius.xl, paddingHorizontal: 16, paddingVertical: 6, ...Shadow.xs },
   emptyRow: { alignItems: 'center', gap: 6, paddingVertical: 24 },
-  emptyText: { fontSize: 14, color: thannigoPalette.neutral, fontWeight: '600' },
-  emptyHint: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500', textAlign: 'center' },
+  emptyText: { fontSize: 14, color: colors.muted, fontWeight: '600' },
+  emptyHint: { fontSize: 12, color: colors.muted, fontWeight: '500', textAlign: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14 },
-  iconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: thannigoPalette.infoSoft, alignItems: 'center', justifyContent: 'center' },
-  itemTitle: { fontSize: 15, fontWeight: '700', color: thannigoPalette.darkText, marginBottom: 2 },
-  itemSub: { fontSize: 12, color: thannigoPalette.neutral, fontWeight: '500' },
-  defaultBadge: { alignSelf: 'flex-start', backgroundColor: thannigoPalette.successSoft, color: thannigoPalette.success, fontSize: 10, fontWeight: '800', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
-  divider: { height: 1, backgroundColor: thannigoPalette.borderSoft, marginLeft: 54 },
-  infoCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: thannigoPalette.successSoft, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: thannigoPalette.success + '40' },
-  infoText: { flex: 1, fontSize: 12, color: thannigoPalette.success, fontWeight: '500', lineHeight: 18 },
+  iconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.inputBg, alignItems: 'center', justifyContent: 'center' },
+  itemTitle: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 2 },
+  itemSub: { fontSize: 12, color: colors.muted, fontWeight: '500' },
+  defaultBadge: { alignSelf: 'flex-start', backgroundColor: colors.successSoft, color: colors.success, fontSize: 10, fontWeight: '800', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginTop: 4 },
+  divider: { height: 1, backgroundColor: colors.border, marginLeft: 54 },
+  infoCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, backgroundColor: colors.successSoft, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: colors.success + '40' },
+  infoText: { flex: 1, fontSize: 12, color: colors.success, fontWeight: '500', lineHeight: 18 },
 });

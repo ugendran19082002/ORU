@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
   TextInput, ActivityIndicator,
@@ -6,6 +6,8 @@ import {
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useAppTheme } from '@/providers/ThemeContext';
+import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -13,7 +15,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { orderApi } from '@/api/orderApi';
 import moment from 'moment';
 
-import { Shadow, thannigoPalette, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
+import { Shadow, roleAccent, roleSurface, roleGradients } from '@/constants/theme';
 
 const CUSTOMER_ACCENT = roleAccent.customer;
 const CUSTOMER_SURF = roleSurface.customer;
@@ -28,6 +30,8 @@ interface Slot {
 }
 
 export default function ScheduleDeliveryScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = makeStyles(colors);
   const router = useRouter();
   const { shopId, from = 'checkout' } = useLocalSearchParams<{ shopId: string; from: string }>();
   
@@ -101,7 +105,7 @@ export default function ScheduleDeliveryScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
       <View style={styles.header}>
         <BackButton fallback="/(tabs)/orders" />
@@ -161,7 +165,7 @@ export default function ScheduleDeliveryScreen() {
               style={[styles.slotCard, selectedSlotId === slot.id && styles.slotCardActive]}
               onPress={() => setSelectedSlotId(slot.id)}
             >
-              <Ionicons name="time-outline" size={20} color={selectedSlotId === slot.id ? CUSTOMER_ACCENT : thannigoPalette.neutral} />
+              <Ionicons name="time-outline" size={20} color={selectedSlotId === slot.id ? CUSTOMER_ACCENT : colors.muted} />
               <View style={{ flex: 1 }}>
                 <Text style={[styles.slotText, selectedSlotId === slot.id && styles.slotTextActive]}>
                   {slot.label}
@@ -201,42 +205,42 @@ export default function ScheduleDeliveryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: thannigoPalette.background },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: thannigoPalette.borderSoft },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
+const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 14, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
+  headerTitle: { fontSize: 20, fontWeight: '900', color: colors.text },
   content: { padding: 20, gap: 14, paddingBottom: 40 },
   heroCard: { borderRadius: 24, padding: 24, overflow: 'hidden', alignItems: 'center', gap: 8, shadowColor: CUSTOMER_ACCENT, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 8 },
   heroDecor: { position: 'absolute', right: -10, top: -10 },
   heroTitle: { fontSize: 20, fontWeight: '900', color: 'white' },
   heroSub: { fontSize: 13, color: 'rgba(255,255,255,0.75)', textAlign: 'center', lineHeight: 18 },
-  sectionTitle: { fontSize: 15, fontWeight: '800', color: thannigoPalette.darkText, letterSpacing: -0.3, marginTop: 10 },
+  sectionTitle: { fontSize: 15, fontWeight: '800', color: colors.text, letterSpacing: -0.3, marginTop: 10 },
   
   dateList: { gap: 10, paddingRight: 20 },
-  dateCard: { width: 64, height: 80, backgroundColor: 'white', borderRadius: 16, alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: thannigoPalette.borderSoft },
+  dateCard: { width: 64, height: 80, backgroundColor: colors.surface, borderRadius: 16, alignItems: 'center', justifyContent: 'center', gap: 4, borderWidth: 1, borderColor: colors.border },
   dateCardActive: { backgroundColor: CUSTOMER_ACCENT, borderColor: CUSTOMER_ACCENT },
-  dateDay: { fontSize: 12, fontWeight: '700', color: thannigoPalette.neutral, textTransform: 'uppercase' },
-  dateNum: { fontSize: 20, fontWeight: '900', color: thannigoPalette.darkText },
+  dateDay: { fontSize: 12, fontWeight: '700', color: colors.muted, textTransform: 'uppercase' },
+  dateNum: { fontSize: 20, fontWeight: '900', color: colors.text },
   dateTextActive: { color: 'white' },
 
-  slotCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'white', borderRadius: 16, padding: 16, borderWidth: 1.5, borderColor: thannigoPalette.borderSoft },
+  slotCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.surface, borderRadius: 16, padding: 16, borderWidth: 1.5, borderColor: colors.border },
   slotCardActive: { borderColor: CUSTOMER_ACCENT, backgroundColor: '#f0f7ff' },
-  slotText: { fontSize: 14, fontWeight: '700', color: thannigoPalette.darkText },
+  slotText: { fontSize: 14, fontWeight: '700', color: colors.text },
   slotTextActive: { color: CUSTOMER_ACCENT },
   fullBadge: { alignSelf: 'flex-start', backgroundColor: '#fee2e2', color: '#ef4444', fontSize: 10, fontWeight: '900', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginTop: 4 },
   
   center: { padding: 40, alignItems: 'center', justifyContent: 'center', gap: 10 },
-  loadingText: { fontSize: 14, color: thannigoPalette.neutral, fontWeight: '600' },
+  loadingText: { fontSize: 14, color: colors.muted, fontWeight: '600' },
   
-  emptyState: { padding: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: 'white', borderRadius: 24, gap: 8, borderStyle: 'dashed', borderWidth: 1.5, borderColor: thannigoPalette.borderSoft },
-  emptyTitle: { fontSize: 16, fontWeight: '800', color: thannigoPalette.darkText },
-  emptySub: { fontSize: 13, color: thannigoPalette.neutral, textAlign: 'center' },
+  emptyState: { padding: 40, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, borderRadius: 24, gap: 8, borderStyle: 'dashed', borderWidth: 1.5, borderColor: colors.border },
+  emptyTitle: { fontSize: 16, fontWeight: '800', color: colors.text },
+  emptySub: { fontSize: 13, color: colors.muted, textAlign: 'center' },
 
-  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: thannigoPalette.borderSoft, alignItems: 'center', justifyContent: 'center' },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   radioActive: { borderColor: CUSTOMER_ACCENT },
   radioDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: CUSTOMER_ACCENT },
   
-  noteInput: { backgroundColor: 'white', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: thannigoPalette.borderSoft, fontSize: 14, color: thannigoPalette.darkText, minHeight: 80, textAlignVertical: 'top' },
+  noteInput: { backgroundColor: colors.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: colors.border, fontSize: 14, color: colors.text, minHeight: 80, textAlignVertical: 'top' },
   confirmBtn: { borderRadius: 18, overflow: 'hidden', marginTop: 4 },
   confirmBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 17 },
   confirmBtnText: { color: 'white', fontSize: 16, fontWeight: '800' },
