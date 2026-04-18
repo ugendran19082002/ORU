@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -20,46 +20,53 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ExpoMap, ExpoMarker } from '@/components/maps/ExpoMap';
 import { emitGlobalLocation } from '@/utils/locationEvents';
 
-type Region = {
-  latitude: number;
-  longitude: number;
-  latitudeDelta: number;
-  longitudeDelta: number;
-};
+type MapMode = 'standard' | 'satellite' | 'terrain';
+
+const MAP_TYPES: { type: MapMode; icon: string; label: string }[] = [
+  { type: 'standard',  icon: 'map-outline',    label: 'Map' },
+  { type: 'satellite', icon: 'images-outline',  label: 'Sat' },
+  { type: 'terrain',   icon: 'earth-outline',   label: 'Terrain' },
+];
 
 export default function MapPreviewScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   const { colors, isDark } = useAppTheme();
 
-  useAndroidBackHandler(() => {
-    safeBack('/(tabs)');
-  });
+  useAndroidBackHandler(() => { safeBack('/(tabs)'); });
 
   const { lat, lng, title, target, markers } = useLocalSearchParams<{
-    lat: string;
-    lng: string;
-    title: string;
-    target?: string;
-    markers?: string;
+    lat: string; lng: string; title: string; target?: string; markers?: string;
   }>();
 
-  const [draftLat, setDraftLat] = React.useState(parseFloat(lat ?? 'NaN'));
-  const [draftLng, setDraftLng] = React.useState(parseFloat(lng ?? 'NaN'));
-  const [mapType, setMapType] = React.useState<'standard' | 'satellite' | 'hybrid' | 'terrain' | 'none'>('terrain');
-  const [parsedMarkers, setParsedMarkers] = React.useState<any[]>([]);
-  const [currentAddress, setCurrentAddress] = React.useState<string>('');
-  const label = title || 'Location';
+  const [draftLat, setDraftLat] = useState(parseFloat(lat ?? 'NaN'));
+  const [draftLng, setDraftLng] = useState(parseFloat(lng ?? 'NaN'));
+  const [mapType, setMapType] = useState<MapMode>('terrain');
+  const [parsedMarkers, setParsedMarkers] = useState<any[]>([]);
+  const [currentAddress, setCurrentAddress] = useState('');
+  const [loadingAddr, setLoadingAddr] = useState(false);
 
-  React.useEffect(() => {
-    if (isNaN(draftLat) || isNaN(draftLng)) return;
+  const label = title || 'Location';
+  const isSelectMode = target === 'select';
+
+  const isValidCoord = (
+    !isNaN(draftLat) && !isNaN(draftLng) &&
+    draftLat !== 0 && draftLng !== 0 &&
+    draftLat >= -90 && draftLat <= 90 &&
+    draftLng >= -180 && draftLng <= 180
+  );
+
+  // Reverse geocode whenever coords change
+  useEffect(() => {
+    if (!isValidCoord) return;
     let cancelled = false;
+    setLoadingAddr(true);
     fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${draftLat}&lon=${draftLng}&format=json&zoom=18&addressdetails=1`,
       { headers: { 'User-Agent': 'ThanniGoApp/1.0' } }
     )
-      .then((r) => r.json())
-      .then((data) => {
+      .then(r => r.json())
+      .then(data => {
         if (cancelled) return;
         if (data?.address) {
           const a = data.address;
@@ -73,318 +80,289 @@ export default function MapPreviewScreen() {
           setCurrentAddress(data.display_name);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoadingAddr(false); });
     return () => { cancelled = true; };
   }, [draftLat, draftLng]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (markers) {
-      try {
-        setParsedMarkers(JSON.parse(markers));
-      } catch (e) {
-        // ignore parse error
-      }
+      try { setParsedMarkers(JSON.parse(markers)); } catch { /* ignore */ }
     }
   }, [markers]);
 
-  const handleMarkerDragEnd = (coords: { latitude: number; longitude: number }) => {
-    setDraftLat(coords.latitude);
-    setDraftLng(coords.longitude);
-  };
-
-  const handleNativeMarkerDragEnd = (e: any) => {
-    setDraftLat(e.nativeEvent.coordinate.latitude);
-    setDraftLng(e.nativeEvent.coordinate.longitude);
-  };
-
-  const isValidCoord = (
-    !isNaN(draftLat) &&
-    !isNaN(draftLng) &&
-    draftLat !== 0 &&
-    draftLng !== 0 &&
-    draftLat >= -90 &&
-    draftLat <= 90 &&
-    draftLng >= -180 &&
-    draftLng <= 180
-  );
-
-  const openInExternalMaps = () => {
+  const openInMaps = () => {
     if (!isValidCoord) {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Invalid coordinates provided.' });
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Invalid coordinates.' });
       return;
     }
-
-    require('react-native').Alert.alert(
-      'Open Navigation',
-      `Would you like to open directions to "${label}" in your device's maps app?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Open Maps',
-          onPress: () => {
-            const latLng = `${draftLat},${draftLng}`;
-            const url = Platform.select({
-              ios: `maps:0,0?q=${label}@${latLng}`,
-              android: `geo:0,0?q=${latLng}(${label})`,
-              default: `https://www.openstreetmap.org/?mlat=${draftLat}&mlon=${draftLng}&zoom=15`,
-            });
-            if (url) {
-              Linking.openURL(url).catch(() =>
-                Toast.show({ type: 'error', text1: 'Error', text2: 'Could not open map application.' })
-              );
-            }
-          },
-        },
-      ]
+    const latLng = `${draftLat},${draftLng}`;
+    const url = Platform.select({
+      ios: `maps:0,0?q=${label}@${latLng}`,
+      android: `geo:0,0?q=${latLng}(${label})`,
+      default: `https://www.openstreetmap.org/?mlat=${draftLat}&mlon=${draftLng}&zoom=15`,
+    });
+    if (url) Linking.openURL(url).catch(() =>
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Could not open maps app.' })
     );
   };
 
-  const bg = colors.background;
-  const surf = colors.surface;
-  const border = colors.border;
-  const text = colors.text;
-  const muted = colors.muted;
-  const inputBg = colors.inputBg;
-
+  // ── Invalid location ──────────────────────────────────────────────────────────
   if (!isValidCoord) {
     return (
-      <SafeAreaView style={[{ flex: 1, backgroundColor: bg }]} edges={['top']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
         <StatusBar style={isDark ? 'light' : 'dark'} />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-          <View style={[styles.errorIconWrap, { backgroundColor: isDark ? '#2d1010' : '#fff0f0' }]}>
-            <Ionicons name="alert-circle-outline" size={56} color="#f87171" />
+        <View style={styles.errorWrap}>
+          <View style={[styles.errorIcon, { backgroundColor: isDark ? '#2d1010' : '#fff0f0' }]}>
+            <Ionicons name="alert-circle-outline" size={52} color="#f87171" />
           </View>
-          <Text style={[styles.errorTitle, { color: text }]}>Invalid Location</Text>
-          <Text style={[styles.errorSub, { color: muted }]}>
-            The coordinates ({lat}, {lng}) are invalid or missing. Re-pin the location in your profile.
+          <Text style={[styles.errorTitle, { color: colors.text }]}>Invalid Location</Text>
+          <Text style={[styles.errorSub, { color: colors.muted }]}>
+            The coordinates ({lat}, {lng}) are missing or invalid.{'\n'}Re-pin the location in your profile.
           </Text>
-          <TouchableOpacity
-            style={[styles.errorBackBtn, { backgroundColor: '#005d90' }]}
-            onPress={() => safeBack('/(tabs)')}
-          >
-            <Ionicons name="arrow-back" size={18} color="white" />
-            <Text style={styles.errorBackBtnText}>Go Back</Text>
+          <TouchableOpacity style={styles.errorBack} onPress={() => safeBack('/(tabs)')}>
+            <Ionicons name="arrow-back" size={16} color="white" />
+            <Text style={styles.errorBackText}>Go Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
 
-  const cardBg = isDark ? 'rgba(17,24,39,0.97)' : 'rgba(255,255,255,0.97)';
-  const typeBg = isDark ? 'rgba(17,24,39,0.95)' : 'rgba(255,255,255,0.95)';
+  const floatBg = isDark ? 'rgba(15,23,42,0.97)' : 'rgba(255,255,255,0.97)';
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: bg }]} edges={['top']}>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
+    <View style={styles.container}>
+      <StatusBar style="light" />
 
-      {/* HEADER */}
-      <View style={[styles.header, { backgroundColor: surf, borderBottomColor: border }]}>
-        <BackButton fallback="/(tabs)" />
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.headerTitle, { color: text }]}>Location Preview</Text>
-          <Text style={[styles.headerSub, { color: muted }]} numberOfLines={1}>{label}</Text>
-        </View>
-        <TouchableOpacity
-          style={[styles.headerIconBtn, { backgroundColor: inputBg }]}
-          onPress={openInExternalMaps}
-        >
-          <Ionicons name="navigate-outline" size={20} color="#005d90" />
-        </TouchableOpacity>
-      </View>
+      {/* Full-screen map */}
+      <ExpoMap
+        style={StyleSheet.absoluteFillObject}
+        initialRegion={{ latitude: draftLat, longitude: draftLng, latitudeDelta: 0.005, longitudeDelta: 0.005 }}
+        showsUserLocation
+        draggable={isSelectMode}
+        markerTitle={label}
+        onMarkerDragEnd={c => { setDraftLat(c.latitude); setDraftLng(c.longitude); }}
+        markers={parsedMarkers.length > 0 ? parsedMarkers : undefined}
+        showRoute={parsedMarkers.length > 1}
+        mapType={mapType}
+        showsTraffic={!isSelectMode}
+      >
+        {parsedMarkers.length === 0 && (
+          <ExpoMarker
+            coordinate={{ latitude: draftLat, longitude: draftLng }}
+            draggable={isSelectMode}
+            onDragEnd={e => {
+              setDraftLat(e.nativeEvent.coordinate.latitude);
+              setDraftLng(e.nativeEvent.coordinate.longitude);
+            }}
+            title={label}
+          />
+        )}
+      </ExpoMap>
 
-      <View style={styles.mapWrapper}>
-        <ExpoMap
-          style={StyleSheet.absoluteFillObject}
-          initialRegion={{
-            latitude: draftLat,
-            longitude: draftLng,
-            latitudeDelta: 0.005,
-            longitudeDelta: 0.005,
-          }}
-          showsUserLocation
-          draggable={target === 'select'}
-          markerTitle={label}
-          onMarkerDragEnd={handleMarkerDragEnd}
-          markers={parsedMarkers.length > 0 ? parsedMarkers : undefined}
-          showRoute={parsedMarkers.length > 1}
-          mapType={mapType}
-          showsTraffic={true}
-        >
-          {parsedMarkers.length === 0 && (
-            <ExpoMarker
-              coordinate={{ latitude: draftLat, longitude: draftLng }}
-              draggable={target === 'select'}
-              onDragEnd={handleNativeMarkerDragEnd}
-              title={label}
-            />
+      {/* ── TOP OVERLAY: Back + Title + Nav button ── */}
+      <SafeAreaView edges={['top']} style={styles.topBar} pointerEvents="box-none">
+        <View style={[styles.topPill, { backgroundColor: floatBg, borderColor: colors.border }]}>
+          <BackButton fallback="/(tabs)" />
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.topTitle, { color: colors.text }]} numberOfLines={1}>
+              {isSelectMode ? 'Pin Your Location' : label}
+            </Text>
+            {currentAddress ? (
+              <Text style={[styles.topSub, { color: colors.muted }]} numberOfLines={1}>{currentAddress}</Text>
+            ) : null}
+          </View>
+          {!isSelectMode && (
+            <TouchableOpacity
+              style={[styles.navBtn, { backgroundColor: '#005d90' }]}
+              onPress={openInMaps}
+            >
+              <Ionicons name="navigate" size={16} color="white" />
+            </TouchableOpacity>
           )}
-        </ExpoMap>
+        </View>
+      </SafeAreaView>
 
-        {/* MAP TYPE SELECTOR */}
-        <View style={[styles.typeSelectorWrap, { backgroundColor: typeBg, borderColor: border }]}>
-          {([
-            { type: 'standard', icon: 'map-outline', label: 'Standard' },
-            { type: 'satellite', icon: 'images-outline', label: 'Satellite' },
-            { type: 'terrain', icon: 'earth-outline', label: 'Terrain' },
-          ] as const).map((opt) => {
+      {/* ── MAP TYPE SELECTOR (horizontal, top-right below header) ── */}
+      <SafeAreaView edges={['top']} style={styles.typeBarWrap} pointerEvents="box-none">
+        <View style={[styles.typeBar, { backgroundColor: floatBg, borderColor: colors.border }]}>
+          {MAP_TYPES.map(opt => {
             const active = mapType === opt.type;
             return (
               <TouchableOpacity
                 key={opt.type}
-                style={[styles.typeBtn, active && styles.typeBtnActive]}
+                style={[styles.typeChip, active && { backgroundColor: '#005d90' }]}
                 onPress={() => setMapType(opt.type)}
               >
-                <Ionicons name={opt.icon} size={16} color={active ? 'white' : muted} />
-                <Text style={[styles.typeBtnText, { color: active ? 'white' : muted }]}>{opt.label}</Text>
+                <Ionicons name={opt.icon as any} size={13} color={active ? 'white' : colors.muted} />
+                <Text style={[styles.typeChipText, { color: active ? 'white' : colors.muted }]}>{opt.label}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
+      </SafeAreaView>
 
-        {/* FLOATING ACTION CARD */}
-        <View style={styles.floatingActionBox}>
-          <View style={[styles.actionCard, { backgroundColor: cardBg, borderColor: border }]}>
-            {/* Location info row */}
-            <View style={styles.locationInfo}>
-              <View style={[styles.miniMapWrap, { borderColor: border }]}>
-                <ExpoMap
-                  style={{ width: '100%', height: '100%' }}
-                  initialRegion={{
-                    latitude: draftLat,
-                    longitude: draftLng,
-                    latitudeDelta: 0.002,
-                    longitudeDelta: 0.002,
-                  }}
-                  scrollEnabled={false}
-                  zoomEnabled={false}
-                  pitchEnabled={false}
-                  rotateEnabled={false}
-                  hideControls={true}
-                  mapType="satellite"
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.locationTitle, { color: text }]} numberOfLines={1}>
-                  {target === 'select' ? 'Confirm Location' : label}
-                </Text>
-                <Text style={[styles.locationCoords, { color: muted }]}>
-                  {draftLat.toFixed(6)}, {draftLng.toFixed(6)}
-                </Text>
-              </View>
+      {/* ── DRAG HINT (select mode only) ── */}
+      {isSelectMode && (
+        <View style={[styles.dragHint, { backgroundColor: 'rgba(0,93,144,0.85)' }]}>
+          <Ionicons name="move-outline" size={14} color="white" />
+          <Text style={styles.dragHintText}>Drag the pin to adjust location</Text>
+        </View>
+      )}
+
+      {/* ── BOTTOM ACTION CARD ── */}
+      <View style={styles.bottomWrap}>
+        <View style={[styles.card, { backgroundColor: floatBg, borderColor: colors.border }]}>
+          {/* Location row */}
+          <View style={styles.locationRow}>
+            <View style={[styles.locIconWrap, { backgroundColor: isSelectMode ? '#dcfce7' : '#e0f0ff' }]}>
+              <Ionicons
+                name={isSelectMode ? 'pin' : 'location'}
+                size={20}
+                color={isSelectMode ? '#16a34a' : '#005d90'}
+              />
             </View>
-
-            {/* Action buttons */}
-            {target === 'select' ? (
-              <>
-                {currentAddress.length > 0 && (
-                  <View style={[styles.currentAddressRow, { backgroundColor: inputBg }]}>
-                    <Ionicons name="location" size={15} color="#005d90" style={{ marginTop: 1 }} />
-                    <Text style={[styles.currentAddressText, { color: text }]} numberOfLines={2}>
-                      {currentAddress}
-                    </Text>
-                  </View>
-                )}
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  style={styles.actionBtnWrap}
-                  onPress={() => {
-                    emitGlobalLocation(draftLat, draftLng);
-                    safeBack('/(tabs)');
-                  }}
-                >
-                  <LinearGradient
-                    colors={['#10b981', '#059669']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.actionBtnGrad}
-                  >
-                    <Ionicons name="checkmark-circle" size={20} color="white" />
-                    <Text style={styles.actionBtnText}>Confirm Selected Location</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <View style={{ gap: 10 }}>
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  style={styles.actionBtnWrap}
-                  onPress={openInExternalMaps}
-                >
-                  <LinearGradient
-                    colors={['#005d90', '#0077b6']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.actionBtnGrad}
-                  >
-                    <Ionicons name="navigate" size={20} color="white" />
-                    <Text style={styles.actionBtnText}>Open in Maps</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  activeOpacity={0.85}
-                  style={[styles.actionBtnWrap, { backgroundColor: inputBg, borderRadius: 16 }]}
-                  onPress={() => router.push('/search-map' as any)}
-                >
-                  <View style={[styles.actionBtnGrad, { backgroundColor: 'transparent' }]}>
-                    <Ionicons name="map-outline" size={20} color="#005d90" />
-                    <Text style={[styles.actionBtnText, { color: '#005d90' }]}>Explore Full Area Map</Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.locTitle, { color: colors.text }]} numberOfLines={1}>
+                {isSelectMode ? 'Selected Location' : label}
+              </Text>
+              {currentAddress ? (
+                <Text style={[styles.locAddr, { color: colors.muted }]} numberOfLines={2}>{currentAddress}</Text>
+              ) : (
+                <Text style={[styles.locCoords, { color: colors.muted }]}>
+                  {draftLat.toFixed(5)}, {draftLng.toFixed(5)}
+                </Text>
+              )}
+            </View>
+            {loadingAddr && (
+              <Ionicons name="sync-outline" size={16} color={colors.muted} />
             )}
           </View>
+
+          {/* Coords row */}
+          <View style={[styles.coordsRow, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <Ionicons name="navigate-circle-outline" size={14} color={colors.muted} />
+            <Text style={[styles.coordsText, { color: colors.muted }]}>
+              {draftLat.toFixed(6)}, {draftLng.toFixed(6)}
+            </Text>
+          </View>
+
+          {/* Actions */}
+          {isSelectMode ? (
+            <TouchableOpacity
+              activeOpacity={0.88}
+              style={styles.confirmBtn}
+              onPress={() => {
+                emitGlobalLocation(draftLat, draftLng);
+                safeBack('/(tabs)');
+              }}
+            >
+              <LinearGradient
+                colors={['#10b981', '#059669']}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                style={styles.confirmGrad}
+              >
+                <Ionicons name="checkmark-circle" size={20} color="white" />
+                <Text style={styles.confirmText}>Confirm This Location</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.actionRow}>
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: '#005d90' }]}
+                activeOpacity={0.88}
+                onPress={openInMaps}
+              >
+                <Ionicons name="navigate" size={16} color="white" />
+                <Text style={styles.actionBtnText}>Directions</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border }]}
+                activeOpacity={0.88}
+                onPress={() => router.push('/search-map' as any)}
+              >
+                <Ionicons name="search" size={16} color="#005d90" />
+                <Text style={[styles.actionBtnText, { color: '#005d90' }]}>Explore Area</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingHorizontal: 20, paddingVertical: 14,
-    borderBottomWidth: 1,
+
+  // ── Top overlay ──
+  topBar: { position: 'absolute', top: 0, left: 0, right: 0 },
+  topPill: {
+    margin: 12, flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderRadius: 20, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 10, elevation: 6,
   },
-  headerTitle: { fontSize: 18, fontWeight: '900' },
-  headerSub: { fontSize: 13, fontWeight: '500', marginTop: 1 },
-  headerIconBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  topTitle: { fontSize: 15, fontWeight: '800' },
+  topSub: { fontSize: 11, marginTop: 1 },
+  navBtn: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
 
-  mapWrapper: { flex: 1, position: 'relative' },
-
-  typeSelectorWrap: {
-    position: 'absolute', top: 16, right: 16,
-    borderRadius: 16, padding: 6, gap: 4,
-    borderWidth: 1,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 10, elevation: 5,
+  // ── Map type selector ──
+  typeBarWrap: { position: 'absolute', top: 80, left: 0, right: 0, alignItems: 'center' },
+  typeBar: {
+    flexDirection: 'row', borderRadius: 20, padding: 4, borderWidth: 1, gap: 2,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 4,
   },
-  typeBtn: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
-  typeBtnActive: { backgroundColor: '#005d90' },
-  typeBtnText: { fontSize: 12, fontWeight: '700' },
+  typeChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 16 },
+  typeChipText: { fontSize: 12, fontWeight: '700' },
 
-  floatingActionBox: { position: 'absolute', bottom: 28, left: 16, right: 16 },
-  actionCard: {
-    borderRadius: 28, padding: 20, borderWidth: 1,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.18, shadowRadius: 24, elevation: 10,
+  // ── Drag hint ──
+  dragHint: {
+    position: 'absolute', top: 150, alignSelf: 'center',
+    left: '50%', transform: [{ translateX: -110 }],
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
   },
-  locationInfo: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 18 },
-  miniMapWrap: { width: 58, height: 58, borderRadius: 16, overflow: 'hidden', borderWidth: 1 },
-  locationTitle: { fontSize: 17, fontWeight: '800', marginBottom: 3 },
-  locationCoords: { fontSize: 12, fontWeight: '500', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
+  dragHintText: { color: 'white', fontSize: 12, fontWeight: '700' },
 
-  actionBtnWrap: { borderRadius: 16, overflow: 'hidden' },
-  actionBtnGrad: {
+  // ── Bottom card ──
+  bottomWrap: { position: 'absolute', bottom: 28, left: 16, right: 16 },
+  card: {
+    borderRadius: 24, padding: 18, borderWidth: 1,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.18, shadowRadius: 24, elevation: 12,
+  },
+  locationRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 12 },
+  locIconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  locTitle: { fontSize: 16, fontWeight: '800', marginBottom: 3 },
+  locAddr: { fontSize: 12, fontWeight: '500', lineHeight: 17 },
+  locCoords: { fontSize: 12, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace' },
+
+  coordsRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8,
+    borderWidth: 1, marginBottom: 14,
+  },
+  coordsText: { fontSize: 11, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '500' },
+
+  confirmBtn: { borderRadius: 16, overflow: 'hidden' },
+  confirmGrad: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 10, paddingVertical: 15,
   },
-  actionBtnText: { color: 'white', fontSize: 15, fontWeight: '800', letterSpacing: -0.2 },
+  confirmText: { color: 'white', fontSize: 15, fontWeight: '900' },
 
-  errorIconWrap: { width: 100, height: 100, borderRadius: 50, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
-  errorTitle: { fontSize: 24, fontWeight: '900', marginBottom: 8, letterSpacing: -0.4 },
-  errorSub: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: 32 },
-  errorBackBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 28, paddingVertical: 15, borderRadius: 16 },
-  errorBackBtnText: { color: 'white', fontSize: 15, fontWeight: '800' },
-  currentAddressRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 10 },
-  currentAddressText: { flex: 1, fontSize: 13, fontWeight: '600', lineHeight: 18 },
+  actionRow: { flexDirection: 'row', gap: 10 },
+  actionBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 7, borderRadius: 14, paddingVertical: 13,
+  },
+  actionBtnText: { color: 'white', fontSize: 14, fontWeight: '800' },
+
+  // ── Error state ──
+  errorWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+  errorIcon: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  errorTitle: { fontSize: 22, fontWeight: '900', marginBottom: 8, letterSpacing: -0.4 },
+  errorSub: { fontSize: 14, textAlign: 'center', lineHeight: 20, marginBottom: 28 },
+  errorBack: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#005d90', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 14 },
+  errorBackText: { color: 'white', fontSize: 14, fontWeight: '800' },
 });

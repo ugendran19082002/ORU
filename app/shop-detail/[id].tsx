@@ -68,7 +68,14 @@ export default function ShopDetailScreen() {
       setError(null);
       const res = await apiClient.get(`/shops/${id}`);
       if (res.data.status === 1) {
-        setShop(res.data.data);
+        const raw = res.data.data;
+        setShop({
+          ...raw,
+          avg_rating: parseFloat(String(raw.avg_rating || 0)) || 0,
+          total_ratings: parseInt(String(raw.total_ratings || 0)) || 0,
+          min_order_value: parseFloat(String(raw.min_order_value || 0)) || 0,
+          delivery_radius_km: parseFloat(String(raw.delivery_radius_km || 0)) || 0,
+        });
       } else {
         setError('Shop not found');
       }
@@ -147,7 +154,7 @@ export default function ShopDetailScreen() {
             <Text style={styles.heroMetaText}>{shop.city}</Text>
             <View style={styles.heroMetaDot} />
             <Ionicons name="star" size={13} color="#fbbf24" />
-            <Text style={styles.heroMetaText}>{shop.avg_rating?.toFixed(1) ?? '—'}</Text>
+            <Text style={styles.heroMetaText}>{Number(shop.avg_rating || 0).toFixed(1)}</Text>
             {shop.total_ratings > 0 && (
               <Text style={styles.heroMetaText}>({shop.total_ratings})</Text>
             )}
@@ -270,7 +277,7 @@ export default function ShopDetailScreen() {
             {[
               { icon: 'storefront-outline', label: 'Shop Name', value: shop.name },
               { icon: 'location-outline', label: 'Address', value: [shop.address_line1, shop.city, shop.state].filter(Boolean).join(', ') },
-              { icon: 'star-outline', label: 'Rating', value: `${shop.avg_rating?.toFixed(1) ?? '—'} / 5.0 (${shop.total_ratings} reviews)` },
+              { icon: 'star-outline', label: 'Rating', value: `${Number(shop.avg_rating || 0).toFixed(1)} / 5.0 (${shop.total_ratings} reviews)` },
               { icon: 'arrow-down-circle-outline', label: 'Min. Order', value: `₹${shop.min_order_value ?? 0}` },
               { icon: 'navigate-outline', label: 'Delivery Radius', value: `${shop.delivery_radius_km ?? '—'} km` },
             ].map((item, idx) => (

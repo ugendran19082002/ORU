@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl,
 } from 'react-native';
@@ -121,8 +121,8 @@ export default function ShopAlternativesScreen() {
                   <View key={s.id} style={styles.compareCol}>
                     <Text style={styles.compareHeader} numberOfLines={1}>{s.name.split(' ')[0]}</Text>
                     <Text style={styles.compareVal}>₹{s.pricePerCan ?? '—'}</Text>
-                    <Text style={styles.compareVal}>⭐ {s.rating?.toFixed(1) ?? '—'}</Text>
-                    <Text style={styles.compareVal}>{s.distanceKm?.toFixed(1) ?? '—'} km</Text>
+                    <Text style={styles.compareVal}>⭐ {Number(s.rating || 0).toFixed(1)}</Text>
+                    <Text style={styles.compareVal}>{Number(s.distanceKm || 0).toFixed(1)} km</Text>
                   </View>
                 ))}
               </View>
@@ -157,9 +157,9 @@ export default function ShopAlternativesScreen() {
                   <Text style={styles.shopName}>{shop.name}</Text>
                   <View style={styles.shopMeta}>
                     <Ionicons name="star" size={12} color={colors.warning} />
-                    <Text style={styles.shopRating}>{shop.rating?.toFixed(1) ?? '—'}</Text>
+                    <Text style={styles.shopRating}>{Number(shop.rating || 0).toFixed(1)}</Text>
                     <Text style={styles.shopDot}>·</Text>
-                    <Text style={styles.shopDist}>{shop.distanceKm?.toFixed(1) ?? '—'} km</Text>
+                    <Text style={styles.shopDist}>{Number(shop.distanceKm || 0).toFixed(1)} km</Text>
                   </View>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>

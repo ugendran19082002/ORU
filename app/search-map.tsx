@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  Animated,
+  useWindowDimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Location from 'expo-location';
 import Toast from 'react-native-toast-message';
 import { BackButton } from '@/components/ui/BackButton';
@@ -12,25 +21,109 @@ import { useAndroidBackHandler } from '@/hooks/use-back-handler';
 import { useAppTheme } from '@/providers/ThemeContext';
 import { ExpoMap } from '@/components/maps/ExpoMap';
 import { useShopStore } from '@/stores/shopStore';
+import { roleAccent } from '@/constants/theme';
+import { addressApi } from '@/api/addressApi';
+
+const ACCENT = roleAccent.customer;
+
+type FilterKey = 'open' | 'topRated' | 'nearest' | 'cheap';
+
+const FILTERS: { key: FilterKey; label: string; icon: string }[] = [
+  { key: 'open',     label: 'Open Now',  icon: 'time-outline' },
+  { key: 'topRated', label: 'Top Rated', icon: 'star-outline' },
+  { key: 'nearest',  label: 'Near 2km',  icon: 'navigate-outline' },
+  { key: 'cheap',    label: 'Under ₹50', icon: 'pricetag-outline' },
+];
+
+// Sheet snap heights as fractions of screen height
+const SHEET_COLLAPSED = 72;   // just the handle bar
+const SHEET_PEEK      = 0.38; // 38% of screen — shows 2 cards
+const SHEET_FULL      = 0.72; // 72% of screen
 
 export default function SearchMapScreen() {
   const router = useRouter();
   const { safeBack } = useAppNavigation();
-  const { shops } = useShopStore();
+  const { shops, loadShops } = useShopStore();
   const { colors, isDark } = useAppTheme();
+  const params = useLocalSearchParams<{ lat?: string; lng?: string }>();
+  const { height: screenH, width: screenW } = useWindowDimensions();
 
-  useAndroidBackHandler(() => {
-    safeBack('/(tabs)');
-  });
+  useAndroidBackHandler(() => { safeBack('/(tabs)'); });
+
+  const defaultLat = parseFloat(params.lat ?? 'NaN') || 12.9716;
+  const defaultLng = parseFloat(params.lng ?? 'NaN') || 80.2210;
 
   const [query, setQuery] = useState('');
-  const [searchLocation, setSearchLocation] = useState({ latitude: 12.9716, longitude: 80.2210 });
-  const [showSearchBtn, setShowSearchBtn] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [snapIndex, setSnapIndex] = useState(1); // 0=collapsed, 1=peek, 2=full
+  const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(new Set());
+  const [searchCenter, setSearchCenter] = useState({ latitude: defaultLat, longitude: defaultLng });
+  const [showSearchHere, setShowSearchHere] = useState(false);
+  const [pendingCenter, setPendingCenter] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  const handleMapTap = (coords: { latitude: number; longitude: number }) => {
-    setSearchLocation(coords);
-    setShowSearchBtn(true);
+  const sheetAnim = useRef(new Animated.Value(screenH * SHEET_PEEK)).current;
+
+  // On mount: center on default address → GPS → fallback
+  useEffect(() => {
+    const init = async () => {
+      // If params were passed (from home screen), use them directly
+      if (params.lat && params.lng) {
+        await loadShops({ lat: defaultLat, lng: defaultLng });
+        return;
+      }
+
+      let lat = defaultLat;
+      let lng = defaultLng;
+
+      // 1. Try default saved address first
+      try {
+        const res = await addressApi.getAddresses();
+        const addresses: any[] = res.data.data || [];
+        const defaultAddr = addresses.find(a => a.is_default);
+        if (defaultAddr?.latitude && defaultAddr?.longitude) {
+          lat = Number(defaultAddr.latitude);
+          lng = Number(defaultAddr.longitude);
+          setSearchCenter({ latitude: lat, longitude: lng });
+          await loadShops({ lat, lng });
+          return;
+        }
+      } catch { /* fall through to GPS */ }
+
+      // 2. GPS fallback
+      try {
+        const { status } = await Location.getForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          lat = loc.coords.latitude;
+          lng = loc.coords.longitude;
+          setSearchCenter({ latitude: lat, longitude: lng });
+        }
+      } catch { /* use hardcoded fallback */ }
+
+      await loadShops({ lat, lng });
+    };
+    init();
+  }, []);
+
+  const snapHeights = [SHEET_COLLAPSED, screenH * SHEET_PEEK, screenH * SHEET_FULL];
+
+  const snapTo = (index: number) => {
+    setSnapIndex(index);
+    Animated.spring(sheetAnim, {
+      toValue: snapHeights[index],
+      tension: 65, friction: 11,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const cycleSnap = () => snapTo(snapIndex === 2 ? 0 : snapIndex + 1);
+
+  const toggleFilter = (key: FilterKey) => {
+    setActiveFilters(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
   };
 
   const handleLocateMe = async () => {
@@ -42,7 +135,10 @@ export default function SearchMapScreen() {
         return;
       }
       const loc = await Location.getCurrentPositionAsync({});
-      setSearchLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+      const coords = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
+      setSearchCenter(coords);
+      setShowSearchHere(false);
+      await loadShops({ lat: coords.latitude, lng: coords.longitude });
     } catch {
       Toast.show({ type: 'error', text1: 'Error', text2: 'Could not get your location.' });
     } finally {
@@ -50,157 +146,254 @@ export default function SearchMapScreen() {
     }
   };
 
-  const bg = colors.background;
-  const surf = colors.surface;
-  const border = colors.border;
-  const text = colors.text;
-  const muted = colors.muted;
-  const inputBg = colors.inputBg;
-  const placeholder = colors.placeholder;
+  const handleMapDrag = useCallback((coords: { latitude: number; longitude: number }) => {
+    setPendingCenter(coords);
+    setShowSearchHere(true);
+  }, []);
 
-  const floatBg = isDark ? 'rgba(17,24,39,0.96)' : 'rgba(255,255,255,0.97)';
+  const handleSearchHere = async () => {
+    if (!pendingCenter) return;
+    setSearchCenter(pendingCenter);
+    setShowSearchHere(false);
+    setPendingCenter(null);
+    await loadShops({ lat: pendingCenter.latitude, lng: pendingCenter.longitude });
+  };
+
+  const filteredShops = shops
+    .filter(s => query.trim() === '' || s.name.toLowerCase().includes(query.toLowerCase()))
+    .filter(s => !activeFilters.has('open')     || s.isOpen)
+    .filter(s => !activeFilters.has('topRated') || s.rating >= 4.5)
+    .filter(s => !activeFilters.has('nearest')  || s.distanceKm <= 2)
+    .filter(s => !activeFilters.has('cheap')    || s.pricePerCan < 50)
+    .sort((a, b) => a.distanceKm - b.distanceKm);
+
+  const floatBg = isDark ? 'rgba(15,23,42,0.97)' : 'rgba(255,255,255,0.97)';
+  const { border, text, muted, inputBg, placeholder } = colors;
+
+  // FAB sits just above sheet peek height
+  const fabBottom = snapHeights[1] + 12;
+
+  // "Search here" pill sits below the header (~top safe area + header pill + filter row)
+  const searchHereTop = 58 + 52 + 44; // approx: safe inset + header + filters
+
+  const snapIcon =
+    snapIndex === 0 ? 'chevron-up' :
+    snapIndex === 1 ? 'chevron-up' : 'chevron-down';
 
   return (
-    <View style={[styles.container, { backgroundColor: bg }]}>
+    <View style={styles.container}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
 
-      {/* Full-screen map */}
+      {/* ── Full-screen map ── */}
       <ExpoMap
         style={StyleSheet.absoluteFillObject}
-        initialRegion={{
-          latitude: 12.9716,
-          longitude: 80.2210,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        }}
-        region={{
-          ...searchLocation,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        }}
+        initialRegion={{ ...searchCenter, latitudeDelta: 0.05, longitudeDelta: 0.05 }}
+        region={{ ...searchCenter, latitudeDelta: 0.05, longitudeDelta: 0.05 }}
         showRoute={false}
         hideControls={true}
         draggable={true}
-        onMarkerDragEnd={handleMapTap}
-        onMarkerPress={(m) => router.push(`/shop-detail/${m.id}` as any)}
+        onMarkerDragEnd={handleMapDrag}
+        onMarkerPress={m => m.id && router.push(`/shop-detail/${m.id}` as any)}
         markers={[
-          {
-            latitude: searchLocation.latitude,
-            longitude: searchLocation.longitude,
-            title: 'Search Area',
-            color: '#ef4444',
-          },
-          ...shops.map((shop) => ({
+          { latitude: searchCenter.latitude, longitude: searchCenter.longitude, title: 'Search Area', color: ACCENT },
+          ...filteredShops.map(shop => ({
             id: shop.id,
             latitude: shop.lat,
             longitude: shop.lng,
             title: shop.name,
-            color: '#005d90',
+            color: shop.isOpen ? '#16a34a' : '#dc2626',
             iconType: 'shop' as const,
           })),
         ]}
       />
 
-      {/* "Search this area" pill */}
-      {showSearchBtn && (
-        <TouchableOpacity
-          style={styles.searchThisArea}
-          onPress={() => setShowSearchBtn(false)}
-        >
-          <Ionicons name="search" size={15} color="white" />
-          <Text style={styles.searchThisAreaText}>Search this area</Text>
-        </TouchableOpacity>
+      {/* ── "Search this area" pill — centered ── */}
+      {showSearchHere && (
+        <View style={[styles.searchHereWrap, { top: searchHereTop }]} pointerEvents="box-none">
+          <TouchableOpacity style={styles.searchHerePill} onPress={handleSearchHere}>
+            <Ionicons name="search" size={14} color="white" />
+            <Text style={styles.searchHereText}>Search this area</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
-      {/* Floating Header — safe-area inset handled by paddingTop on parent */}
+      {/* ── Floating header ── */}
       <SafeAreaView edges={['top']} style={styles.headerSafe} pointerEvents="box-none">
-        <View style={styles.header}>
-          <View style={[styles.headerPill, { backgroundColor: floatBg, borderColor: border }]}>
-            <BackButton fallback="/(tabs)" />
-            <View style={[styles.searchBox, { backgroundColor: inputBg }]}>
-              <Ionicons name="search" size={17} color={muted} />
-              <TextInput
-                style={[styles.input, { color: text }]}
-                value={query}
-                onChangeText={setQuery}
-                placeholder="Search shops, areas..."
-                placeholderTextColor={placeholder}
-              />
-              {query.length > 0 && (
-                <TouchableOpacity onPress={() => setQuery('')}>
-                  <Ionicons name="close-circle" size={17} color={muted} />
+        <View style={[styles.headerPill, { backgroundColor: floatBg, borderColor: border }]}>
+          <BackButton fallback="/(tabs)" />
+          <View style={[styles.searchBox, { backgroundColor: inputBg }]}>
+            <Ionicons name="search" size={15} color={muted} />
+            <TextInput
+              style={[styles.searchInput, { color: text }]}
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search shops..."
+              placeholderTextColor={placeholder}
+              returnKeyType="search"
+            />
+            {query.length > 0 && (
+              <TouchableOpacity onPress={() => setQuery('')}>
+                <Ionicons name="close-circle" size={15} color={muted} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Filter chips */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterRow}
+          pointerEvents="box-none"
+        >
+          {FILTERS.map(f => {
+            const active = activeFilters.has(f.key);
+            return (
+              <TouchableOpacity
+                key={f.key}
+                style={[styles.chip, { backgroundColor: active ? ACCENT : floatBg, borderColor: active ? ACCENT : border }]}
+                onPress={() => toggleFilter(f.key)}
+              >
+                <Ionicons name={f.icon as any} size={12} color={active ? 'white' : muted} />
+                <Text style={[styles.chipText, { color: active ? 'white' : text }]}>{f.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+          {activeFilters.size > 0 && (
+            <TouchableOpacity
+              style={[styles.chip, { backgroundColor: '#fee2e2', borderColor: '#fca5a5' }]}
+              onPress={() => setActiveFilters(new Set())}
+            >
+              <Ionicons name="close" size={12} color="#dc2626" />
+              <Text style={[styles.chipText, { color: '#dc2626' }]}>Clear</Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+
+      {/* ── Locate me FAB ── */}
+      <TouchableOpacity
+        style={[styles.fab, { bottom: fabBottom, backgroundColor: floatBg, borderColor: border }]}
+        onPress={handleLocateMe}
+        disabled={locating}
+      >
+        <Ionicons name={locating ? 'radio-button-on' : 'locate'} size={20} color={ACCENT} />
+      </TouchableOpacity>
+
+      {/* ── Shop count badge ── */}
+      <View style={[styles.countBadge, { bottom: fabBottom + 4, backgroundColor: ACCENT }]}>
+        <Ionicons name="storefront-outline" size={12} color="white" />
+        <Text style={styles.countText}>{filteredShops.length} shops</Text>
+      </View>
+
+      {/* ── Bottom sheet ── */}
+      <Animated.View style={[styles.sheet, { backgroundColor: floatBg, borderTopColor: border, height: sheetAnim }]}>
+        {/* Handle */}
+        <TouchableOpacity style={styles.handle} onPress={cycleSnap} activeOpacity={0.7}>
+          <View style={[styles.handlePill, { backgroundColor: border }]} />
+          <View style={styles.handleRow}>
+            <View>
+              <Text style={[styles.sheetTitle, { color: text }]}>{filteredShops.length} shops nearby</Text>
+              {snapIndex > 0 && <Text style={[styles.sheetSub, { color: muted }]}>Tap card to view · Drag to explore</Text>}
+            </View>
+            <TouchableOpacity
+              style={[styles.snapBtn, { backgroundColor: `${ACCENT}15`, borderColor: `${ACCENT}30` }]}
+              onPress={cycleSnap}
+            >
+              <Ionicons name={snapIcon} size={14} color={ACCENT} />
+              <Text style={[styles.snapBtnText, { color: ACCENT }]}>
+                {snapIndex === 0 ? 'Show' : snapIndex === 1 ? 'Expand' : 'Collapse'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+
+        {/* Cards */}
+        {snapIndex > 0 && (
+          filteredShops.length === 0 ? (
+            <View style={styles.empty}>
+              <View style={[styles.emptyIconWrap, { backgroundColor: `${ACCENT}15` }]}>
+                <Ionicons name="storefront-outline" size={28} color={ACCENT} />
+              </View>
+              <Text style={[styles.emptyTitle, { color: text }]}>No shops found</Text>
+              <Text style={[styles.emptySub, { color: muted }]}>Try moving the map or clearing filters.</Text>
+              {activeFilters.size > 0 && (
+                <TouchableOpacity
+                  style={[styles.clearBtn, { backgroundColor: ACCENT }]}
+                  onPress={() => setActiveFilters(new Set())}
+                >
+                  <Text style={styles.clearBtnText}>Clear Filters</Text>
                 </TouchableOpacity>
               )}
             </View>
-            <TouchableOpacity style={[styles.filterBtn, { backgroundColor: inputBg }]}>
-              <Ionicons name="options" size={20} color={text} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </SafeAreaView>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.cardScroll}
+              decelerationRate="fast"
+              snapToInterval={screenW * 0.72 + 14}
+              snapToAlignment="start"
+            >
+              {filteredShops.map(shop => (
+                <TouchableOpacity
+                  key={shop.id}
+                  style={[styles.card, { width: screenW * 0.72, backgroundColor: colors.surface, borderColor: border }]}
+                  onPress={() => router.push(`/shop-detail/${shop.id}` as any)}
+                  activeOpacity={0.85}
+                >
+                  <View style={[styles.statusStrip, { backgroundColor: shop.isOpen ? '#16a34a' : '#dc2626' }]} />
+                  <View style={styles.cardInner}>
+                    {/* Top row */}
+                    <View>
+                      <View style={styles.cardTop}>
+                        <Text style={[styles.cardName, { color: text }]} numberOfLines={1}>{shop.name}</Text>
+                        <View style={[styles.ratingBadge, { backgroundColor: isDark ? '#2d2000' : '#fffbe6' }]}>
+                          <Ionicons name="star" size={10} color="#f59e0b" />
+                          <Text style={[styles.ratingText, { color: '#b45309' }]}>{Number(shop.rating).toFixed(1)}</Text>
+                        </View>
+                      </View>
+                      <Text style={[styles.cardArea, { color: muted }]} numberOfLines={1}>{shop.area}</Text>
+                    </View>
 
-      {/* Locate me FAB */}
-      <View style={styles.fabContainer}>
-        <TouchableOpacity
-          style={[styles.fabBtn, { backgroundColor: floatBg, borderColor: border }]}
-          onPress={handleLocateMe}
-          disabled={locating}
-        >
-          <Ionicons name={locating ? 'radio-button-on' : 'locate'} size={22} color="#005d90" />
-        </TouchableOpacity>
-      </View>
+                    {/* Meta pills */}
+                    <View style={styles.metaRow}>
+                      <View style={[styles.metaPill, { backgroundColor: `${ACCENT}12` }]}>
+                        <Ionicons name="navigate-outline" size={11} color={ACCENT} />
+                        <Text style={[styles.metaPillText, { color: ACCENT }]}>{shop.distanceKm.toFixed(1)} km</Text>
+                      </View>
+                      <View style={[styles.metaPill, { backgroundColor: colors.inputBg }]}>
+                        <Ionicons name="pricetag-outline" size={11} color={muted} />
+                        <Text style={[styles.metaPillText, { color: muted }]}>₹{shop.pricePerCan}/can</Text>
+                      </View>
+                      {shop.eta ? (
+                        <View style={[styles.metaPill, { backgroundColor: colors.inputBg }]}>
+                          <Ionicons name="time-outline" size={11} color={muted} />
+                          <Text style={[styles.metaPillText, { color: muted }]}>{shop.eta}</Text>
+                        </View>
+                      ) : null}
+                    </View>
 
-      {/* Bottom Sheet */}
-      <View style={[styles.bottomSheet, { backgroundColor: floatBg, borderTopColor: border }]}>
-        <View style={[styles.sheetPill, { backgroundColor: border }]} />
-        <View style={styles.sheetHeader}>
-          <Text style={[styles.sheetTitle, { color: text }]}>{shops.length} shops nearby</Text>
-          <Text style={[styles.sheetSub, { color: muted }]}>Tap a card to view details</Text>
-        </View>
-
-        {shops.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="storefront-outline" size={36} color={muted} />
-            <Text style={[styles.emptyText, { color: muted }]}>No shops found in this area</Text>
-          </View>
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.cardScroll}
-          >
-            {shops.map((shop) => (
-              <TouchableOpacity
-                key={shop.id}
-                style={[styles.shopCard, { backgroundColor: colors.surfaceElevated ?? surf, borderColor: border }]}
-                onPress={() => router.push(`/shop-detail/${shop.id}` as any)}
-                activeOpacity={0.85}
-              >
-                <View style={styles.cardHeader}>
-                  <Text style={[styles.shopName, { color: text }]} numberOfLines={1}>{shop.name}</Text>
-                  <View style={[styles.ratingBadge, { backgroundColor: isDark ? '#2d2000' : '#fffbe6' }]}>
-                    <Ionicons name="star" size={10} color="#f59e0b" />
-                    <Text style={[styles.ratingText, { color: '#b45309' }]}>{shop.rating}</Text>
+                    {/* Footer */}
+                    <View style={[styles.cardFooter, { borderTopColor: border }]}>
+                      <View style={[styles.statusTag, { backgroundColor: shop.isOpen ? '#dcfce7' : '#fee2e2' }]}>
+                        <View style={[styles.statusDot, { backgroundColor: shop.isOpen ? '#16a34a' : '#dc2626' }]} />
+                        <Text style={[styles.statusTagText, { color: shop.isOpen ? '#16a34a' : '#dc2626' }]}>
+                          {shop.isOpen ? 'Open Now' : 'Closed'}
+                        </Text>
+                      </View>
+                      <View style={[styles.viewBtn, { backgroundColor: ACCENT }]}>
+                        <Text style={styles.viewBtnText}>View</Text>
+                        <Ionicons name="arrow-forward" size={11} color="white" />
+                      </View>
+                    </View>
                   </View>
-                </View>
-                <Text style={[styles.shopSub, { color: muted }]}>{shop.area} · {shop.distanceKm} km</Text>
-
-                <View style={[styles.cardBottom, { borderTopColor: border }]}>
-                  <Text style={[styles.priceText, { color: '#005d90' }]}>From ₹{shop.pricePerCan}</Text>
-                  <View style={[
-                    styles.statusBadge,
-                    { backgroundColor: shop.isOpen ? (isDark ? '#052e16' : '#e8f5e9') : (isDark ? '#2d0a0a' : '#ffebee') },
-                  ]}>
-                    <Text style={[styles.statusText, { color: shop.isOpen ? '#2e7d32' : '#c62828' }]}>
-                      {shop.isOpen ? 'OPEN' : 'CLOSED'}
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )
         )}
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -208,61 +401,88 @@ export default function SearchMapScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
 
+  // ── Header ──
   headerSafe: { position: 'absolute', top: 0, left: 0, right: 0 },
-  header: { paddingHorizontal: 16, paddingBottom: 8 },
   headerPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderRadius: 28, paddingHorizontal: 12, paddingVertical: 10,
-    borderWidth: 1,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 12, elevation: 6,
+    marginHorizontal: 14, marginBottom: 8,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    borderRadius: 22, paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 5,
   },
-  searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 20, paddingHorizontal: 14, height: 40 },
-  input: { flex: 1, fontSize: 14, fontWeight: '600' },
-  filterBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 7, borderRadius: 16, paddingHorizontal: 10, height: 36 },
+  searchInput: { flex: 1, fontSize: 14, fontWeight: '600' },
 
-  searchThisArea: {
-    position: 'absolute', top: 120, alignSelf: 'center',
-    backgroundColor: '#005d90', flexDirection: 'row', alignItems: 'center',
-    gap: 8, paddingHorizontal: 20, paddingVertical: 12, borderRadius: 24,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 6,
+  filterRow: { paddingHorizontal: 14, paddingBottom: 6, gap: 7 },
+  chip: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 18, borderWidth: 1,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
   },
-  searchThisAreaText: { color: 'white', fontWeight: '800', fontSize: 13 },
+  chipText: { fontSize: 11, fontWeight: '700' },
 
-  fabContainer: { position: 'absolute', bottom: 240, right: 16 },
-  fabBtn: {
-    width: 52, height: 52, borderRadius: 26,
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 5,
+  // ── Search here pill ──
+  searchHereWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
+  searchHerePill: {
+    backgroundColor: ACCENT, flexDirection: 'row', alignItems: 'center',
+    gap: 7, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 22,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 6,
   },
+  searchHereText: { color: 'white', fontWeight: '800', fontSize: 13 },
 
-  bottomSheet: {
+  // ── FAB & count ──
+  fab: {
+    position: 'absolute', right: 16,
+    width: 48, height: 48, borderRadius: 24,
+    alignItems: 'center', justifyContent: 'center', borderWidth: 1,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 8, elevation: 5,
+  },
+  countBadge: {
+    position: 'absolute', left: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 12, paddingVertical: 7, borderRadius: 18,
+  },
+  countText: { color: 'white', fontWeight: '800', fontSize: 12 },
+
+  // ── Sheet ──
+  sheet: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    borderTopLeftRadius: 28, borderTopRightRadius: 28,
-    borderTopWidth: 1, paddingTop: 12, paddingBottom: 32,
-    shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 16, elevation: 10,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    borderTopWidth: 1, overflow: 'hidden',
+    shadowColor: '#000', shadowOffset: { width: 0, height: -3 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 10,
   },
-  sheetPill: { width: 36, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 14 },
-  sheetHeader: { paddingHorizontal: 20, marginBottom: 14 },
-  sheetTitle: { fontSize: 18, fontWeight: '900' },
-  sheetSub: { fontSize: 12, fontWeight: '500', marginTop: 2 },
+  handle: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 8 },
+  handlePill: { width: 36, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 10 },
+  handleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  sheetTitle: { fontSize: 16, fontWeight: '900' },
+  sheetSub: { fontSize: 11, fontWeight: '500', marginTop: 2 },
+  snapBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10, borderWidth: 1 },
+  snapBtnText: { fontSize: 11, fontWeight: '700' },
 
-  cardScroll: { paddingHorizontal: 16, gap: 14 },
-  shopCard: {
-    width: 260, borderRadius: 24, padding: 18,
-    borderWidth: 1,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 4,
-  },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 4 },
-  shopName: { flex: 1, fontSize: 16, fontWeight: '900' },
-  ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 10 },
+  // ── Empty ──
+  empty: { alignItems: 'center', paddingVertical: 24, gap: 8, paddingHorizontal: 24 },
+  emptyIconWrap: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  emptyTitle: { fontSize: 16, fontWeight: '900' },
+  emptySub: { fontSize: 13, textAlign: 'center' },
+  clearBtn: { marginTop: 6, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12 },
+  clearBtnText: { color: 'white', fontWeight: '800', fontSize: 13 },
+
+  // ── Cards ──
+  cardScroll: { paddingHorizontal: 14, paddingBottom: 20, paddingTop: 4, gap: 12 },
+  card: { borderRadius: 18, overflow: 'hidden', borderWidth: 1, height: 168, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.07, shadowRadius: 10, elevation: 3 },
+  statusStrip: { height: 3, width: '100%' },
+  cardInner: { flex: 1, padding: 12, justifyContent: 'space-between' },
+  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 },
+  cardName: { flex: 1, fontSize: 14, fontWeight: '900', letterSpacing: -0.2 },
+  ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 },
   ratingText: { fontSize: 11, fontWeight: '800' },
-  shopSub: { fontSize: 12, fontWeight: '500', marginBottom: 14 },
-  cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 14, borderTopWidth: 1 },
-  priceText: { fontSize: 14, fontWeight: '800' },
-  statusBadge: { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 8 },
-  statusText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
-
-  emptyState: { alignItems: 'center', paddingVertical: 28, gap: 10 },
-  emptyText: { fontSize: 14, fontWeight: '600' },
+  cardArea: { fontSize: 11, marginTop: 2 },
+  metaRow: { flexDirection: 'row', gap: 6, flexWrap: 'nowrap' },
+  metaPill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
+  metaPillText: { fontSize: 11, fontWeight: '700' },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTopWidth: 1 },
+  statusTag: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  statusTagText: { fontSize: 11, fontWeight: '700' },
+  viewBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  viewBtnText: { color: 'white', fontSize: 12, fontWeight: '800' },
 });
