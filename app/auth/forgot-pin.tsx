@@ -33,6 +33,8 @@ export default function ForgotPinScreen() {
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [otpType, setOtpType] = useState<'sms' | 'email'>('sms');
+  const [emailHint, setEmailHint] = useState('');
   const inputRefs = useRef<(TextInput | null)[]>([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -58,10 +60,18 @@ export default function ForgotPinScreen() {
     setLoading(true);
     try {
       const deviceId = await getOriginalDeviceId();
-      await authApi.sendOtp(`+91${targetPhone}`, deviceId, 'forgot_pin');
+      const res = await authApi.sendOtp(`+91${targetPhone}`, deviceId, 'forgot_pin');
+      const type = res.data?.otp_type ?? 'sms';
+      const hint = res.data?.email_hint ?? '';
+      setOtpType(type);
+      setEmailHint(hint);
       setStep('verify_otp');
       setResendTimer(30);
-      Toast.show({ type: 'success', text1: 'OTP Sent', text2: `Code sent to +91${targetPhone}` });
+      Toast.show({
+        type: 'success',
+        text1: 'OTP Sent',
+        text2: type === 'email' ? `Code sent to ${hint}` : `Code sent to +91${targetPhone}`,
+      });
     } catch (err: any) {
       Toast.show({ type: 'error', text1: 'Error', text2: err?.response?.data?.message || 'Could not send OTP.' });
     } finally {
@@ -138,8 +148,16 @@ export default function ForgotPinScreen() {
             <Text style={[styles.subtitle, { color: colors.muted }]}>
               {step === 'enter_phone'
                 ? 'Enter your registered mobile number to receive a verification code.'
-                : `Enter the 6-digit code sent to\n+91 ${phone.slice(0, 5)}${'*'.repeat(5)}`}
+                : otpType === 'email'
+                  ? `Enter the 6-digit code sent to your email\n${emailHint}`
+                  : `Enter the 6-digit code sent to\n+91 ${phone.slice(0, 5)}${'*'.repeat(5)}`}
             </Text>
+            {step === 'verify_otp' && otpType === 'email' && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 20, backgroundColor: accent + '18', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 }}>
+                <Ionicons name="mail-outline" size={14} color={accent} />
+                <Text style={{ fontSize: 12, color: accent, fontWeight: '600' }}>Sent via email to save SMS cost</Text>
+              </View>
+            )}
 
             {step === 'enter_phone' ? (
               <>

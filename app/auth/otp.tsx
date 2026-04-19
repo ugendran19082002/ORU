@@ -61,7 +61,9 @@ export default function OTPScreen() {
   }>();
   const theme = roleGradients[role] ?? roleGradients.customer;
   const accent = roleAccent[role] ?? roleAccent.customer;
-  const viaEmail = otp_type === 'email';
+  const [currentOtpType, setCurrentOtpType] = useState(otp_type);
+  const [currentEmailHint, setCurrentEmailHint] = useState(email_hint);
+  const viaEmail = currentOtpType === 'email';
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [verified, setVerified] = useState(false);
@@ -188,9 +190,18 @@ export default function OTPScreen() {
       const deviceId = await getOriginalDeviceId();
       const response = await authApi.sendOtp(`+91${phone}`, deviceId);
       if (response.status === 1) {
+        const newType = response.data?.otp_type ?? 'sms';
+        const newHint = response.data?.email_hint ?? '';
+        setCurrentOtpType(newType);
+        setCurrentEmailHint(newHint);
         setResendTimer(30);
         setOtp(Array(OTP_LENGTH).fill(""));
         inputRefs.current[0]?.focus();
+        Toast.show({
+          type: 'success',
+          text1: 'OTP Resent',
+          text2: newType === 'email' ? `Code sent to ${newHint}` : `Code sent to +91${phone.slice(0, 5)}*****`,
+        });
       } else {
         throw new Error(response.message);
       }
@@ -226,7 +237,7 @@ export default function OTPScreen() {
             <Text style={[styles.title, { color: colors.text }]}>Verify OTP</Text>
             <Text style={[styles.subtitle, { color: colors.muted }]}>
               {viaEmail
-                ? <>OTP sent to your email{"\n"}<Text style={[styles.phoneHighlight, { color: accent }]}>{email_hint || 'your registered email'}</Text></>
+                ? <>OTP sent to your email{"\n"}<Text style={[styles.phoneHighlight, { color: accent }]}>{currentEmailHint || 'your registered email'}</Text></>
                 : <>Enter the 6-digit code sent to{"\n"}<Text style={[styles.phoneHighlight, { color: accent }]}>{maskedPhone}</Text></>
               }
             </Text>
