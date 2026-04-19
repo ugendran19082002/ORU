@@ -64,7 +64,11 @@ export default function ShopBusinessInfoScreen() {
   }, []);
 
   const handleContinue = async () => {
-    if (!shopId) return;
+    if (!shopId) {
+      Toast.show({ type: 'info', text1: 'Complete Basic Details First', text2: 'Please fill in your shop name and details before adding business info.' });
+      router.replace('/onboarding/shop/basic-details');
+      return;
+    }
 
     if (!formData.shop_type || !formData.business_experience) {
       Toast.show({ type: 'error', text1: 'Required', text2: 'Please provide shop type and experience.' });

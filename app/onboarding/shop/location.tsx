@@ -122,7 +122,8 @@ export default function ShopLocationScreen() {
 
   const handleConfirm = async () => {
     if (!shopId) {
-      Toast.show({ type: 'error', text1: 'Shop not found', text2: 'Please start from basic details.' });
+      Toast.show({ type: 'info', text1: 'Complete Basic Details First', text2: 'Please fill in your shop name and details before setting the location.' });
+      router.replace('/onboarding/shop/basic-details');
       return;
     }
     try {
@@ -229,7 +230,7 @@ function ShopHeaderContent({ colors, isDark }: { colors: ColorSchemeColors; isDa
   return (
     <View style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-        <BackButton fallback="/onboarding/shop/basic-details" variant="transparent" />
+        <BackButton fallback="/onboarding/shop" variant="transparent" />
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <LinearGradient colors={[SHOP_ACCENT, '#134e4a']} style={{ width: 20, height: 8, borderRadius: 4 }} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} />
           <View style={{ flex: 1, height: 2, backgroundColor: isDark ? '#134e4a' : '#ccfbf1' }} />

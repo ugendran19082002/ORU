@@ -221,7 +221,7 @@ export default function ShopBasicDetailsScreen() {
             owner_name: formData.owner_name,
             phone: `+91${formData.phone}`,
             shop_type: formData.shop_type,
-            address_line1: formData.address_line1 || 'Pending Location',
+            address_line1: formData.address_line1 || 'Choose Location',
             latitude: formData.latitude || 0,
             longitude: formData.longitude || 0,
             city: formData.city || 'Default'
@@ -338,50 +338,107 @@ export default function ShopBasicDetailsScreen() {
 
                 {/* Shop Location Section */}
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Shop Location</Text>
-                  
-                  {formData.latitude && formData.latitude !== 28.6139 ? (
-                    <View style={styles.activeLocationCard}>
-                        <View style={styles.locationIconWrap}>
-                            <Ionicons name="location" size={24} color="#006878" />
+                  <View style={styles.locationLabelRow}>
+                    <Text style={styles.label}>Shop Location</Text>
+                    {formData.latitude && formData.latitude !== 28.6139 && (
+                      <View style={styles.locationSetBadge}>
+                        <Ionicons name="checkmark-circle" size={12} color="#006878" />
+                        <Text style={styles.locationSetBadgeText}>Set</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.locationCard}>
+                    {/* Mini Map Preview */}
+                    <View style={styles.miniMapWrap}>
+                      {formData.latitude && formData.longitude ? (
+                        <ExpoMap
+                          ref={mapRef}
+                          style={StyleSheet.absoluteFillObject}
+                          initialRegion={region}
+                          region={region}
+                          mapType={mapType}
+                          draggable={false}
+                          markerTitle="Shop"
+                          markers={[{
+                            id: 'shop-pin',
+                            latitude: formData.latitude,
+                            longitude: formData.longitude,
+                            title: formData.name || 'Your Shop',
+                            color: '#006878',
+                          }]}
+                        />
+                      ) : (
+                        <View style={styles.miniMapPlaceholder}>
+                          <Ionicons name="map-outline" size={36} color="#94a3b8" />
+                          <Text style={styles.miniMapPlaceholderText}>No location set</Text>
+                        </View>
+                      )}
+
+                      {/* Map type toggle */}
+                      <TouchableOpacity
+                        style={styles.mapTypeBtn}
+                        onPress={() => {
+                          const types: ('standard' | 'satellite' | 'terrain')[] = ['terrain', 'satellite', 'standard'];
+                          setMapType(t => types[(types.indexOf(t) + 1) % 3]);
+                        }}
+                      >
+                        <Ionicons
+                          name={mapType === 'terrain' ? 'earth-outline' : mapType === 'satellite' ? 'images-outline' : 'map-outline'}
+                          size={16} color="white"
+                        />
+                      </TouchableOpacity>
+
+                      {/* Accuracy badge */}
+                      {locating && (
+                        <View style={styles.locatingOverlay}>
+                          <ActivityIndicator size="small" color="white" />
+                          <Text style={styles.locatingText}>Getting GPS…</Text>
+                        </View>
+                      )}
+                      {accuracy !== null && !locating && (
+                        <View style={[styles.accuracyBadge, { backgroundColor: accuracy < 15 ? '#16a34a' : accuracy < 50 ? '#d97706' : '#dc2626' }]}>
+                          <View style={styles.accuracyDot} />
+                          <Text style={styles.accuracyText}>±{Math.round(accuracy)}m</Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Address row */}
+                    <View style={styles.locationInfo}>
+                      <View style={styles.locationAddrRow}>
+                        <View style={styles.locationIconCircle}>
+                          <Ionicons name="location" size={18} color="#006878" />
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.locationAddr} numberOfLines={2}>{formData.address_line1 || 'Point selected on map'}</Text>
-                            <Text style={styles.locationCoords}>
-                                {Number(formData.latitude).toFixed(6)}, {Number(formData.longitude).toFixed(6)}
+                          <Text style={styles.locationAddrText} numberOfLines={2}>
+                            {formData.address_line1 || (formData.latitude && formData.latitude !== 28.6139 ? 'Choose Location' : 'Choose Location')}
+                          </Text>
+                          {formData.latitude && formData.latitude !== 28.6139 && (
+                            <Text style={styles.locationCoordsText}>
+                              {Number(formData.latitude).toFixed(5)}, {Number(formData.longitude).toFixed(5)}
                             </Text>
+                          )}
                         </View>
-                        <View style={{ flexDirection: 'row', gap: 8 }}>
-                            <TouchableOpacity style={styles.editLocBtn} onPress={handleOpenMap}>
-                                <Ionicons name="expand-outline" size={18} color="#006878" />
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.editLocBtn} onPress={handleOpenMap}>
-                                <Ionicons name="pencil" size={18} color="#006878" />
-                            </TouchableOpacity>
-                        </View>
+                      </View>
+
+                      {/* Action buttons */}
+                      <View style={styles.locationActions}>
+                        <TouchableOpacity style={styles.locActionBtn} onPress={handleGetCurrentLocation} disabled={locating}>
+                          {locating
+                            ? <ActivityIndicator size="small" color="#006878" />
+                            : <><Ionicons name="locate" size={16} color="#006878" /><Text style={styles.locActionText}>GPS</Text></>
+                          }
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.locActionBtn, styles.locActionBtnPrimary]} onPress={handleOpenMap}>
+                          <Ionicons name="expand-outline" size={16} color="white" />
+                          <Text style={[styles.locActionText, { color: 'white' }]}>
+                            {formData.latitude && formData.latitude !== 28.6139 ? 'Edit on Map' : 'Set on Map'}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
-                  ) : (
-                    <TouchableOpacity style={styles.setLocBtn} onPress={handleOpenMap}>
-                        <LinearGradient 
-                            colors={['#f0fdfa', '#f8fafc']} 
-                            style={styles.setLocInner}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                        >
-                            <View style={styles.setLocIcon}>
-                                <Ionicons name="map-outline" size={22} color="#0d9488" />
-                            </View>
-                            <View>
-                                <Text style={styles.setLocTitle}>Set Location on Map</Text>
-                                <Text style={styles.setLocSub}>Required for delivery radius</Text>
-                            </View>
-                            <View style={{ marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                <Ionicons name="expand-outline" size={16} color="#94a3b8" />
-                                <Ionicons name="chevron-forward" size={18} color="#94a3b8" />
-                            </View>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                  )}
+                  </View>
                 </View>
 
               </View>
@@ -503,49 +560,6 @@ const makeStyles = (colors: any) => StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  accuracyOverlay: {
-    position: 'absolute',
-    bottom: 12,
-    left: 12,
-  },
-  accuracyTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-    gap: 6,
-  },
-  accuracyDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.surface,
-  },
-  accuracyLabel: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: '900',
-  },
-  mapHint: {
-    position: 'absolute',
-    top: 12,
-    left: 12,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  mapHintText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  
-  coordsLabel: { fontSize: 12, color: '#94a3b8', marginLeft: 4, marginTop: -4 },
   footer: { padding: 32 },
   cta: {
     height: 60,
@@ -557,65 +571,67 @@ const makeStyles = (colors: any) => StyleSheet.create({
   },
   ctaText: { color: 'white', fontSize: 17, fontWeight: '800' },
 
-  // New Location Picker Styles
-  setLocBtn: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    borderWidth: 1.5,
-    borderColor: '#ccfbf1',
-    marginTop: 4,
-  },
-  setLocInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 16,
-  },
-  setLocIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#0d9488',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  setLocTitle: { fontSize: 15, fontWeight: '800', color: '#134e4a' },
-  setLocSub: { fontSize: 12, color: '#64748b', marginTop: 2 },
+  // Location section
+  locationLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  locationSetBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  locationSetBadgeText: { fontSize: 11, fontWeight: '700', color: '#16a34a' },
 
-  // @ts-ignore
-  activeLocationCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0fdfa',
-    borderRadius: 20,
-    padding: 16,
+  locationCard: {
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: '#ccfbf1',
-    gap: 16,
-  },
-  locationIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
+    borderColor: '#e2e8f0',
+    overflow: 'hidden',
+    marginTop: 4,
     backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  locationAddr: { fontSize: 14, fontWeight: '700', color: '#134e4a', lineHeight: 20 },
-  locationCoords: { fontSize: 11, color: '#0d9488', fontWeight: '800', marginTop: 4, opacity: 0.7 },
-  editLocBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-  }
+
+  // Mini map
+  miniMapWrap: { height: 160, position: 'relative', backgroundColor: '#e2e8f0' },
+  miniMapPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#f8fafc' },
+  miniMapPlaceholderText: { fontSize: 13, color: '#94a3b8', fontWeight: '600' },
+  mapTypeBtn: {
+    position: 'absolute', top: 10, right: 10,
+    width: 34, height: 34, borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  locatingOverlay: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 8, gap: 8,
+  },
+  locatingText: { color: 'white', fontSize: 12, fontWeight: '700' },
+  accuracyBadge: {
+    position: 'absolute', bottom: 10, left: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10,
+  },
+  accuracyDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'white' },
+  accuracyText: { color: 'white', fontSize: 11, fontWeight: '800' },
+
+  // Address + actions below map
+  locationInfo: { padding: 14, gap: 12 },
+  locationAddrRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  locationIconCircle: {
+    width: 36, height: 36, borderRadius: 12,
+    backgroundColor: '#f0fdfa', alignItems: 'center', justifyContent: 'center',
+    marginTop: 1,
+  },
+  locationAddrText: { fontSize: 14, fontWeight: '700', color: '#134e4a', lineHeight: 20, flex: 1 },
+  locationCoordsText: { fontSize: 11, color: '#0d9488', fontWeight: '700', marginTop: 3, opacity: 0.8 },
+
+  locationActions: { flexDirection: 'row', gap: 10 },
+  locActionBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 11, borderRadius: 14,
+    backgroundColor: '#f0fdfa', borderWidth: 1, borderColor: '#ccfbf1',
+  },
+  locActionBtnPrimary: { backgroundColor: '#006878', borderColor: '#006878' },
+  locActionText: { fontSize: 13, fontWeight: '800', color: '#006878' },
 });

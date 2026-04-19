@@ -94,7 +94,11 @@ export default function ShopBankDetailsScreen() {
   };
 
   const handleSave = async () => {
-    if (!shopId) return;
+    if (!shopId) {
+      Toast.show({ type: 'info', text1: 'Complete Basic Details First', text2: 'Please fill in your shop name and details before adding bank info.' });
+      router.replace('/onboarding/shop/basic-details');
+      return;
+    }
 
     // Basic Validation
     if (!formData.bank_account_no || !formData.bank_ifsc || !formData.account_holder) {

@@ -189,11 +189,12 @@ export default function ShopOnboardingDashboard() {
   const isPartiallyRejected = user?.onboardingStatus === 'partially_rejected';
 
   // Per-step: can this step be tapped/edited?
+  // Policy: any step can be completed in any order; completed steps can still be re-edited
+  // unless globally locked (under review / active) or approved while other steps are rejected.
   const canEditStep = (step: any): boolean => {
-    if (step.status === 'rejected') return true;           // ALWAYS editable if admin rejected it
-    if (isGloballyLocked) return false;                   // otherwise respect global lock
-    if (isPartiallyRejected && step.status === 'completed') return false; // lock approved steps in partial mode
-    return step.status !== 'completed';                    // general rule: editable if not approved
+    if (isGloballyLocked) return false;                              // hard lock: under review / active
+    if (isPartiallyRejected && step.status === 'completed') return false; // lock approved steps in partial-rejection
+    return true;                                                      // all other states: always editable
   };
 
   const hasRejectedSteps = data?.steps.some((s: any) => s.status === 'rejected') ?? false;

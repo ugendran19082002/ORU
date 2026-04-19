@@ -33,6 +33,12 @@ export const systemApi = {
     apiService.get('/system/categories'),
 
   /**
+   * Update a system setting by key (admin only)
+   */
+  updateSetting: (key: string, value: any) =>
+    apiService.put(`/admin/system/settings/${key}`, { setting_value: value }),
+
+  /**
    * Get haversine distance between two sets of coordinates via internal fast API
    */
   getDistance: (lat1: number, lng1: number, lat2: number, lng2: number) => 

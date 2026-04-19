@@ -83,7 +83,11 @@ export default function ShopVerificationScreen() {
   };
 
   const handleContinue = async () => {
-    if (!shopId) return;
+    if (!shopId) {
+      Toast.show({ type: 'info', text1: 'Complete Basic Details First', text2: 'Please fill in your shop name and details before uploading documents.' });
+      router.replace('/onboarding/shop/basic-details');
+      return;
+    }
 
     // Both are optional according to diagram, but we should at least try to save if provided
     try {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  KeyboardAvoidingView, Platform, ActivityIndicator, TextInput, FlatList, Switch
+  KeyboardAvoidingView, Platform, ActivityIndicator, TextInput, Switch
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,13 +12,13 @@ import { useRouter } from 'expo-router';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
 import { BackButton } from '@/components/ui/BackButton';
-import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
+
 import { useAppTheme } from '@/providers/ThemeContext';
 
 export default function ShopProductsScreen() {
   const router = useRouter();
   const { user, status } = useAppSession();
-  const { handleAuthBack } = useLogoutBackHandler();
+
   const { colors, isDark } = useAppTheme();
 
   const [loading, setLoading] = useState(false);
@@ -29,20 +29,28 @@ export default function ShopProductsScreen() {
   const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
   const [products, setProducts] = useState<any[]>([]);
 
-  // 1. Load context
+  // 1. Load context — fetch categories independently so a shop 404 doesn't block them
   useEffect(() => {
     (async () => {
       try {
-        const [shopRes, catRes, stepsRes] = await Promise.all([
+        // Categories are public — always fetch regardless of shop state
+        const catRes: Awaited<ReturnType<typeof onboardingApi.getCategories>> = await onboardingApi.getCategories();
+        if (catRes.data?.length) {
+          setCategories(catRes.data);
+          setSelectedCategory(catRes.data[0]); // auto-select first category
+        }
+      } catch {
+        Toast.show({ type: 'error', text1: 'Failed to load categories', text2: 'Check your connection and try again.' });
+      }
+
+      try {
+        const [shopRes, stepsRes] = await Promise.all([
           onboardingApi.getMerchantShop(),
-          onboardingApi.getCategories(),
-          onboardingApi.getShopSteps()
+          onboardingApi.getShopSteps(),
         ]);
 
         if (shopRes.data) setShopId(shopRes.data.id);
-        if (catRes.data) setCategories(catRes.data);
 
-        // Prepopulate from existing step metadata
         if (stepsRes.data?.steps) {
           const catStep = stepsRes.data.steps.find((s: any) => s.step_key === 'product_catalog');
           if (catStep?.metadata?.products) {
@@ -52,12 +60,14 @@ export default function ShopProductsScreen() {
               stock_quantity: String(p.stock_quantity || ''),
               deposit_amount: String(p.deposit_amount || '0'),
               is_gst: !!p.is_gst,
-              tax_percentage: String(p.tax_percentage || '0')
+              tax_percentage: String(p.tax_percentage || '0'),
             })));
           }
         }
       } catch (err: any) {
-        if (err.response?.status === 404) return;
+        if (err.response?.status !== 404) {
+          Toast.show({ type: 'error', text1: 'Error', text2: 'Could not load shop data.' });
+        }
       } finally {
         setFetchingShop(false);
       }
@@ -91,7 +101,11 @@ export default function ShopProductsScreen() {
   };
 
   const handleContinue = async () => {
-    if (!shopId) return;
+    if (!shopId) {
+      Toast.show({ type: 'info', text1: 'Complete Basic Details First', text2: 'Please fill in your shop name and details before setting up products.' });
+      router.replace('/onboarding/shop/basic-details');
+      return;
+    }
     if (products.length === 0) {
       Toast.show({ type: 'error', text1: 'Selection Required', text2: 'Please add at least one product.' });
       return;
@@ -135,7 +149,7 @@ export default function ShopProductsScreen() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
-              <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} onPress={handleAuthBack} />
+              <BackButton fallback="/onboarding/shop" style={{ marginBottom: 16 }} />
               <Text style={[styles.title, { color: colors.text }]}>Inventory Setup</Text>
               <Text style={[styles.subtitle, { color: colors.muted }]}>Select categories and add products. Admin-controlled price ranges ensure fair market rates.</Text>
             </View>

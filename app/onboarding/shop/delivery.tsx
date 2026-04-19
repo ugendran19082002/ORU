@@ -64,7 +64,11 @@ export default function ShopDeliveryConfigScreen() {
   }, []);
 
   const handleContinue = async () => {
-    if (!shopId) return;
+    if (!shopId) {
+      Toast.show({ type: 'info', text1: 'Complete Basic Details First', text2: 'Please fill in your shop name and details before setting up delivery.' });
+      router.replace('/onboarding/shop/basic-details');
+      return;
+    }
 
     try {
       setLoading(true);

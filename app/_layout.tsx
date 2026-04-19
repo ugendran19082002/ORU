@@ -6,7 +6,10 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { AppSessionProvider } from '@/providers/AppSessionProvider';
-import { NoInternetBanner } from '@/components/ui/NoInternetBanner';
+import { OfflineScreen } from '@/components/ui/OfflineScreen';
+import { MaintenanceScreen } from '@/components/ui/MaintenanceScreen';
+import { useNetwork } from '@/hooks/use-network';
+import { useMaintenance } from '@/hooks/use-maintenance';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '@/components/ui/ToastConfig';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -20,6 +23,8 @@ LogBox.ignoreLogs([
 
 function RootNavigation() {
   const { isDark } = useAppTheme();
+  const { isConnected, isChecking, retry } = useNetwork();
+  const { isMaintenance, config: maintenanceConfig, checked: maintenanceChecked, recheck } = useMaintenance();
   return (
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
@@ -57,7 +62,8 @@ function RootNavigation() {
                 <Stack.Screen name="admin" options={{ headerShown: false, animation: 'fade' }} />
                 <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
               </Stack>
-              <NoInternetBanner />
+              <OfflineScreen visible={!isConnected && !isChecking} onRetry={retry} isRetrying={isChecking} />
+              <MaintenanceScreen visible={maintenanceChecked && isMaintenance && isConnected} config={maintenanceConfig} onRecheck={recheck} />
               <Toast config={toastConfig} />
               <StatusBar style="auto" />
     </ThemeProvider>
