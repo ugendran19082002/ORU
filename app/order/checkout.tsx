@@ -636,23 +636,31 @@ export default function OrderCheckoutScreen() {
 
                 RazorpayCheckout.open(options).then(async (data: any) => {
                   log.info('[Razorpay] Payment success:', data);
+                  let verified = false;
                   try {
-                    await paymentApi.verifyPayment({
+                    const verifyRes = await paymentApi.verifyPayment({
                       razorpay_order_id: data.razorpay_order_id,
                       razorpay_payment_id: data.razorpay_payment_id,
                       razorpay_signature: data.razorpay_signature,
                     });
+                    verified = verifyRes?.status === 'paid';
                   } catch (verifyErr) {
                     log.warn('[Razorpay] Verify call failed (webhook will reconcile):', verifyErr);
+                    // Don't block user — webhook reconciliation handles this
+                    Toast.show({
+                      type: 'info',
+                      text1: 'Payment Received',
+                      text2: 'Confirming your payment — this may take a moment.',
+                    });
                   }
                   clearCart();
                   router.push("/order/confirmed" as any);
                 }).catch((error: any) => {
                   log.error('[Razorpay] Payment failed:', error);
-                  Toast.show({ 
-                    type: 'error', 
-                    text1: 'Payment Failed', 
-                    text2: error.description || 'Payment was cancelled or failed.' 
+                  Toast.show({
+                    type: 'error',
+                    text1: 'Payment Failed',
+                    text2: error.description || 'Payment was cancelled or failed.'
                   });
                 });
               } else {

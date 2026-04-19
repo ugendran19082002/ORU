@@ -65,7 +65,7 @@ export default function QuickLoginScreen() {
       if (name) setUserName(name);
 
       const resolvedPhone = params.phone || storedPhone || '';
-      if (!params.phone && storedPhone) setPhone(storedPhone);
+      if (resolvedPhone) setPhone(resolvedPhone);
 
       // Read store state directly to avoid stale closure
       const biometricEnabled = useSecurityStore.getState().isBiometricsEnabled;
@@ -108,6 +108,11 @@ export default function QuickLoginScreen() {
   };
 
   const handlePinLogin = async (pin: string) => {
+    if (!phone) {
+      Toast.show({ type: 'error', text1: 'Session expired', text2: 'Please log in with your phone number.' });
+      router.replace('/auth' as never);
+      return;
+    }
     try {
       setLoading(true);
       const normalizedPhone = phone.startsWith('+91') ? phone : `+91${phone}`;

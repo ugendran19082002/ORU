@@ -27,7 +27,7 @@ import type { AppRole } from '@/types/session';
 // string normalisation logic.
 
 const ROLE_ROUTES: Record<AppRole, string[]> = {
-  customer:   ['', 'tabs', 'order', 'orders', 'addresses', 'shop-detail', 'subscriptions', 'notifications', 'edit-profile', 'rewards'],
+  customer:   ['', 'tabs', 'order', 'orders', 'addresses', 'shop-detail', 'subscriptions', 'notifications', 'edit-profile', 'rewards', 'onboarding'],
   shop_owner: ['shop', 'onboarding'],
   admin:      ['admin'],
   delivery:   ['delivery'],
@@ -90,6 +90,9 @@ export function AppRouteGuard() {
     if (user.role === 'admin') return '/admin';
     if (user.role === 'delivery') return '/delivery';
 
+    // Guest hasn't picked a role yet — keep them in auth flow
+    if (user.role === 'guest') return '/auth/role';
+
     if (!user.onboarding_completed) {
       if (user.role === 'customer') return '/onboarding/customer';
       if (user.role === 'shop_owner') {
@@ -97,13 +100,10 @@ export function AppRouteGuard() {
           user.shopStatus === 'pending_review' ||
           user.shopStatus === 'under_review'
         ) return '/onboarding/shop/waitlist';
-        // Per-step rejection: route to dashboard so user can edit only rejected steps
         if (user.onboardingStatus === 'partially_rejected') return '/onboarding/shop';
-        // Whole-shop rejection (legacy): also route to dashboard for correction
         if (user.shopStatus === 'rejected') return '/onboarding/shop';
         return '/onboarding/shop';
       }
-      return '/auth/role';
     }
 
     if (user.role === 'shop_owner') return '/shop';
