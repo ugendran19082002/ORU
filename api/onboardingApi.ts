@@ -105,20 +105,6 @@ export const onboardingApi = {
   },
 
   /**
-   * Specifically update store branding
-   */
-  updateStoreBranding: async (shopId: number, data: any): Promise<OnboardingResponse<any>> => {
-    return onboardingApi.completeShopStep('business_info', shopId, data);
-  },
-
-  /**
-   * Specifically update store timing
-   */
-  updateStoreTiming: async (shopId: number, data: any): Promise<OnboardingResponse<any>> => {
-    return onboardingApi.completeShopStep('business_info', shopId, data);
-  },
-
-  /**
    * Upload a shop document (FSSAI, GST, Bank, etc.)
    */
   uploadShopDocument: async (

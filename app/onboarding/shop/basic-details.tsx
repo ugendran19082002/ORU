@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView, TextInput,
-  Image
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,8 +14,17 @@ import * as Location from 'expo-location';
 import { useAppSession } from '@/hooks/use-app-session';
 import { onboardingApi } from '@/api/onboardingApi';
 import { BackButton } from '@/components/ui/BackButton';
-import { ExpoMap, ExpoMarker } from "@/components/maps/ExpoMap";
-import { useRef, useEffect } from "react";
+import { ExpoMap } from "@/components/maps/ExpoMap";
+import { useRef } from "react";
+
+const SHOP_TYPES = [
+  { id: 'individual',   label: 'Individual',    icon: 'person-outline' },
+  { id: 'agency',       label: 'Agency',         icon: 'business-outline' },
+  { id: 'distributor',  label: 'Distributor',    icon: 'cube-outline' },
+  { id: 'water_tanker', label: 'Water Tanker',   icon: 'car-outline' },
+  { id: 'ro_plant',     label: 'RO Plant',       icon: 'water-outline' },
+  { id: 'both',         label: 'Others',         icon: 'ellipsis-horizontal-outline' },
+];
 
 export default function ShopBasicDetailsScreen() {
   const { colors, isDark } = useAppTheme();
@@ -34,19 +42,16 @@ export default function ShopBasicDetailsScreen() {
     owner_name: '',
     phone: user?.phone?.replace('+91', '') || '',
     shop_type: 'individual' as any,
+    business_experience: '',
     address_line1: '',
     city: '',
-    latitude: 28.6139 as number | null, // Default New Delhi
+    latitude: 28.6139 as number | null,
     longitude: 77.2090 as number | null,
   });
 
   // Map & Search States
-  const [searchQuery, setSearchQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [accuracy, setAccuracy] = useState<number | null>(null);
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'terrain'>('terrain');
-  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const mapRef = useRef<any>(null);
 
   const [region, setRegion] = useState({
@@ -74,6 +79,7 @@ export default function ShopBasicDetailsScreen() {
             owner_name: res.data.owner_name || '',
             phone: (res.data.phone || user?.phone || '').replace('+91', ''),
             shop_type: res.data.shop_type || 'individual',
+            business_experience: res.data.business_experience || '',
             address_line1: res.data.address_line1 || '',
             city: res.data.city || '',
             latitude: lat,
@@ -184,6 +190,9 @@ export default function ShopBasicDetailsScreen() {
       setTimeout(() => {
         watcher.remove();
         setLocating(false);
+        if (best) {
+          handleMarkerDragEnd({ latitude: best.coords.latitude, longitude: best.coords.longitude });
+        }
       }, 6000);
 
     } catch (err) {
@@ -221,10 +230,11 @@ export default function ShopBasicDetailsScreen() {
             owner_name: formData.owner_name,
             phone: `+91${formData.phone}`,
             shop_type: formData.shop_type,
-            address_line1: formData.address_line1 || 'Choose Location',
+            business_experience: formData.business_experience,
+            address_line1: formData.address_line1 || '',
             latitude: formData.latitude || 0,
             longitude: formData.longitude || 0,
-            city: formData.city || 'Default'
+            city: formData.city || 'Default',
         });
         
         if (res.status === 1) {
@@ -314,24 +324,33 @@ export default function ShopBasicDetailsScreen() {
                 {/* Business Type */}
                 <View style={styles.inputGroup}>
                   <Text style={styles.label}>Business Type</Text>
-                  <View style={styles.typeRow}>
-                    {['individual', 'agency', 'distributor'].map((type) => (
+                  <View style={styles.typeGrid}>
+                    {SHOP_TYPES.map((type) => (
                       <TouchableOpacity
-                        key={type}
-                        style={[
-                          styles.typeBtn,
-                          formData.shop_type === type && styles.typeBtnActive
-                        ]}
-                        onPress={() => setFormData(p => ({ ...p, shop_type: type as any }))}
+                        key={type.id}
+                        style={[styles.typeCard, formData.shop_type === type.id && styles.typeCardActive]}
+                        onPress={() => setFormData(p => ({ ...p, shop_type: type.id }))}
                       >
-                        <Text style={[
-                          styles.typeText,
-                          formData.shop_type === type && styles.typeTextActive
-                        ]}>
-                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        <Ionicons name={type.icon as any} size={22} color={formData.shop_type === type.id ? '#006878' : '#64748b'} />
+                        <Text style={[styles.typeCardText, formData.shop_type === type.id && styles.typeCardTextActive]}>
+                          {type.label}
                         </Text>
                       </TouchableOpacity>
                     ))}
+                  </View>
+                </View>
+
+                {/* Total Experience */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Total Experience</Text>
+                  <View style={styles.inputWrap}>
+                    <Ionicons name="time-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. 5 years"
+                      value={formData.business_experience}
+                      onChangeText={(v) => setFormData(p => ({ ...p, business_experience: v }))}
+                    />
                   </View>
                 </View>
 
@@ -348,97 +367,105 @@ export default function ShopBasicDetailsScreen() {
                     )}
                   </View>
 
-                  <View style={styles.locationCard}>
-                    {/* Mini Map Preview */}
-                    <View style={styles.miniMapWrap}>
-                      {formData.latitude && formData.longitude ? (
-                        <ExpoMap
-                          ref={mapRef}
-                          style={StyleSheet.absoluteFillObject}
-                          initialRegion={region}
-                          region={region}
-                          mapType={mapType}
-                          draggable={false}
-                          markerTitle="Shop"
-                          markers={[{
-                            id: 'shop-pin',
-                            latitude: formData.latitude,
-                            longitude: formData.longitude,
-                            title: formData.name || 'Your Shop',
-                            color: '#006878',
-                          }]}
-                        />
-                      ) : (
-                        <View style={styles.miniMapPlaceholder}>
-                          <Ionicons name="map-outline" size={36} color="#94a3b8" />
-                          <Text style={styles.miniMapPlaceholderText}>No location set</Text>
-                        </View>
-                      )}
+                  {(() => {
+                    const hasLocation = !!formData.latitude && formData.latitude !== 28.6139;
+                    return (
+                      <View style={styles.locationCard}>
+                        {/* Mini Map — only shown when real location exists */}
+                        {hasLocation ? (
+                          <View style={styles.miniMapWrap}>
+                            <ExpoMap
+                              ref={mapRef}
+                              style={StyleSheet.absoluteFillObject}
+                              initialRegion={region}
+                              region={region}
+                              mapType={mapType}
+                              draggable={false}
+                              markerTitle="Shop"
+                              markers={[{
+                                id: 'shop-pin',
+                                latitude: formData.latitude!,
+                                longitude: formData.longitude!,
+                                title: formData.name || 'Your Shop',
+                                color: '#006878',
+                              }]}
+                            />
+                            <TouchableOpacity
+                              style={styles.mapTypeBtn}
+                              onPress={() => {
+                                const types: ('standard' | 'satellite' | 'terrain')[] = ['terrain', 'satellite', 'standard'];
+                                setMapType(t => types[(types.indexOf(t) + 1) % 3]);
+                              }}
+                            >
+                              <Ionicons
+                                name={mapType === 'terrain' ? 'earth-outline' : mapType === 'satellite' ? 'images-outline' : 'map-outline'}
+                                size={16} color="white"
+                              />
+                            </TouchableOpacity>
+                            {locating && (
+                              <View style={styles.locatingOverlay}>
+                                <ActivityIndicator size="small" color="white" />
+                                <Text style={styles.locatingText}>Getting GPS…</Text>
+                              </View>
+                            )}
+                            {accuracy !== null && !locating && (
+                              <View style={[styles.accuracyBadge, { backgroundColor: accuracy < 15 ? '#16a34a' : accuracy < 50 ? '#d97706' : '#dc2626' }]}>
+                                <View style={styles.accuracyDot} />
+                                <Text style={styles.accuracyText}>±{Math.round(accuracy)}m</Text>
+                              </View>
+                            )}
+                          </View>
+                        ) : (
+                          /* No-location placeholder — compact, no map rendered */
+                          <TouchableOpacity style={styles.noLocPlaceholder} onPress={handleOpenMap} activeOpacity={0.8}>
+                            <View style={styles.noLocIconWrap}>
+                              {locating
+                                ? <ActivityIndicator size="small" color="#006878" />
+                                : <Ionicons name="map-outline" size={28} color="#006878" />}
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.noLocTitle}>No location set yet</Text>
+                              <Text style={styles.noLocSub}>Tap GPS or open map to pin your shop</Text>
+                            </View>
+                            <Ionicons name="chevron-forward" size={20} color="#94a3b8" />
+                          </TouchableOpacity>
+                        )}
 
-                      {/* Map type toggle */}
-                      <TouchableOpacity
-                        style={styles.mapTypeBtn}
-                        onPress={() => {
-                          const types: ('standard' | 'satellite' | 'terrain')[] = ['terrain', 'satellite', 'standard'];
-                          setMapType(t => types[(types.indexOf(t) + 1) % 3]);
-                        }}
-                      >
-                        <Ionicons
-                          name={mapType === 'terrain' ? 'earth-outline' : mapType === 'satellite' ? 'images-outline' : 'map-outline'}
-                          size={16} color="white"
-                        />
-                      </TouchableOpacity>
-
-                      {/* Accuracy badge */}
-                      {locating && (
-                        <View style={styles.locatingOverlay}>
-                          <ActivityIndicator size="small" color="white" />
-                          <Text style={styles.locatingText}>Getting GPS…</Text>
-                        </View>
-                      )}
-                      {accuracy !== null && !locating && (
-                        <View style={[styles.accuracyBadge, { backgroundColor: accuracy < 15 ? '#16a34a' : accuracy < 50 ? '#d97706' : '#dc2626' }]}>
-                          <View style={styles.accuracyDot} />
-                          <Text style={styles.accuracyText}>±{Math.round(accuracy)}m</Text>
-                        </View>
-                      )}
-                    </View>
-
-                    {/* Address row */}
-                    <View style={styles.locationInfo}>
-                      <View style={styles.locationAddrRow}>
-                        <View style={styles.locationIconCircle}>
-                          <Ionicons name="location" size={18} color="#006878" />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <Text style={styles.locationAddrText} numberOfLines={2}>
-                            {formData.address_line1 || (formData.latitude && formData.latitude !== 28.6139 ? 'Choose Location' : 'Choose Location')}
-                          </Text>
-                          {formData.latitude && formData.latitude !== 28.6139 && (
-                            <Text style={styles.locationCoordsText}>
-                              {Number(formData.latitude).toFixed(5)}, {Number(formData.longitude).toFixed(5)}
-                            </Text>
+                        {/* Address + action buttons */}
+                        <View style={styles.locationInfo}>
+                          {hasLocation && (
+                            <View style={styles.locationAddrRow}>
+                              <View style={styles.locationIconCircle}>
+                                <Ionicons name="location" size={18} color="#006878" />
+                              </View>
+                              <View style={{ flex: 1 }}>
+                                <Text style={styles.locationAddrText} numberOfLines={2}>
+                                  {formData.address_line1 || (locating ? 'Locating address…' : 'Address not resolved')}
+                                </Text>
+                                <Text style={styles.locationCoordsText}>
+                                  {Number(formData.latitude).toFixed(5)}, {Number(formData.longitude).toFixed(5)}
+                                </Text>
+                              </View>
+                            </View>
                           )}
+                          <View style={styles.locationActions}>
+                            <TouchableOpacity style={styles.locActionBtn} onPress={handleGetCurrentLocation} disabled={locating}>
+                              {locating
+                                ? <ActivityIndicator size="small" color="#006878" />
+                                : <><Ionicons name="locate" size={16} color="#006878" /><Text style={styles.locActionText}>Use GPS</Text></>
+                              }
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.locActionBtn, styles.locActionBtnPrimary]} onPress={handleOpenMap}>
+                              <Ionicons name="expand-outline" size={16} color="white" />
+                              <Text style={[styles.locActionText, { color: 'white' }]}>
+                                {hasLocation ? 'Edit on Map' : 'Set on Map'}
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
                         </View>
                       </View>
-
-                      {/* Action buttons */}
-                      <View style={styles.locationActions}>
-                        <TouchableOpacity style={styles.locActionBtn} onPress={handleGetCurrentLocation} disabled={locating}>
-                          {locating
-                            ? <ActivityIndicator size="small" color="#006878" />
-                            : <><Ionicons name="locate" size={16} color="#006878" /><Text style={styles.locActionText}>GPS</Text></>
-                          }
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.locActionBtn, styles.locActionBtnPrimary]} onPress={handleOpenMap}>
-                          <Ionicons name="expand-outline" size={16} color="white" />
-                          <Text style={[styles.locActionText, { color: 'white' }]}>
-                            {formData.latitude && formData.latitude !== 28.6139 ? 'Edit on Map' : 'Set on Map'}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
+                    );
+                  })()}
                 </View>
 
               </View>
@@ -490,20 +517,15 @@ const makeStyles = (colors: any) => StyleSheet.create({
   input: { flex: 1, fontSize: 16, color: '#1e293b', fontWeight: '600' },
   textArea: { textAlignVertical: 'top' },
   
-  typeRow: { flexDirection: 'row', gap: 10 },
-  typeBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f1f5f9',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  typeCard: {
+    width: '31%', aspectRatio: 1, borderRadius: 18,
+    alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: '#f8fafc', borderWidth: 1.5, borderColor: '#e2e8f0',
   },
-  typeBtnActive: { backgroundColor: '#006878', borderColor: '#006878' },
-  typeText: { fontSize: 13, fontWeight: '700', color: '#64748b' },
-  typeTextActive: { color: 'white' },
+  typeCardActive: { backgroundColor: '#f0fdfa', borderColor: '#006878', borderWidth: 2 },
+  typeCardText: { fontSize: 11, fontWeight: '700', color: '#64748b', textAlign: 'center' },
+  typeCardTextActive: { color: '#006878' },
 
   // Location Selector Styles
   suggestionsList: {
@@ -634,4 +656,17 @@ const makeStyles = (colors: any) => StyleSheet.create({
   },
   locActionBtnPrimary: { backgroundColor: '#006878', borderColor: '#006878' },
   locActionText: { fontSize: 13, fontWeight: '800', color: '#006878' },
+
+  // No-location placeholder
+  noLocPlaceholder: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    padding: 16, backgroundColor: '#f8fafc',
+    borderBottomWidth: 1, borderBottomColor: '#e2e8f0',
+  },
+  noLocIconWrap: {
+    width: 48, height: 48, borderRadius: 16,
+    backgroundColor: '#e0f7fa', alignItems: 'center', justifyContent: 'center',
+  },
+  noLocTitle: { fontSize: 14, fontWeight: '800', color: '#134e4a' },
+  noLocSub: { fontSize: 12, color: '#64748b', marginTop: 2, fontWeight: '500' },
 });
