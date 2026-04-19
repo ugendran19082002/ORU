@@ -24,6 +24,7 @@ export type Shop = {
   phone: string;
   deliveryTime?: string;
   isOpen: boolean;
+  isBusy: boolean;
   tags: string[];
   verified: boolean;
   pricePerCan: number;

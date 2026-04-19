@@ -4,7 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useAppTheme } from '@/providers/ThemeContext';
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
 import {
   ActivityIndicator,
   Modal,
@@ -282,8 +283,13 @@ export default function OrderCheckoutScreen() {
       }
     };
     fetchBenefits();
-    fetchAddresses();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchAddresses();
+    }, [])
+  );
 
   useAndroidBackHandler(() => {
     if (showAddressModal) setShowAddressModal(false);

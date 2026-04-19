@@ -33,7 +33,7 @@ const SURF = roleSurface.customer;
 const GRAD: [string, string] = [roleGradients.customer.start, roleGradients.customer.end];
 
 const FILTERS = [
-  { key: 'Open Now',    icon: 'time-outline',     check: (s: any) => s.isOpen },
+  { key: 'Open Now',    icon: 'time-outline',     check: (s: any) => s.isOpen && !s.isBusy },
   { key: 'Top Rated',   icon: 'star-outline',      check: (s: any) => s.rating >= 4.5 },
   { key: 'Near Me',     icon: 'navigate-outline',  check: (s: any) => s.distanceKm < 2 },
   { key: 'Under ₹50',  icon: 'pricetag-outline',   check: (s: any) => s.pricePerCan < 50 },
@@ -349,9 +349,13 @@ export default function HomeScreen() {
                     <Ionicons name={isFav ? 'heart' : 'heart-outline'} size={18} color={isFav ? '#ef4444' : 'white'} />
                   </TouchableOpacity>
 
-                  <View style={[styles.openBadge, { backgroundColor: shop.isOpen ? '#16a34a' : '#dc2626' }]}>
+                  <View style={[styles.openBadge, {
+                    backgroundColor: !shop.isOpen ? '#dc2626' : shop.isBusy ? '#f59e0b' : '#16a34a'
+                  }]}>
                     <View style={styles.openDot} />
-                    <Text style={styles.openBadgeText}>{shop.isOpen ? 'Open' : 'Closed'}</Text>
+                    <Text style={styles.openBadgeText}>
+                      {!shop.isOpen ? 'Closed' : shop.isBusy ? 'Busy' : 'Open'}
+                    </Text>
                   </View>
 
                   {/* Bottom overlays */}

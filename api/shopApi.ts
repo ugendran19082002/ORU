@@ -25,6 +25,7 @@ function mapShop(s: ShopProfileRaw): Shop {
     eta: '25-45 mins',
     phone: s.phone,
     isOpen: s.is_open ?? true,
+    isBusy: (s as any).ShopSetting?.busy_mode ?? false,
     tags: s.shop_type ? [s.shop_type, 'Mineral Water'] : ['Mineral Water', 'Purified'],
     verified: s.status === 'active' || s.status === 'approved',
     pricePerCan: parseFloat(String(s.min_price || 0)) || 0,
