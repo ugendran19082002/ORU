@@ -42,14 +42,19 @@ export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
     }
   }, [timer]);
 
+  const getErrorMessage = (err: any): string =>
+    err?.response?.data?.message || err?.message || 'Something went wrong.';
+
   const handleSendOtp = async () => {
     try {
       setSending(true);
+      setOtp(Array(OTP_LENGTH).fill(''));
       await authApi.sendEmailVerification(email);
       setTimer(60);
       Toast.show({ type: 'success', text1: 'OTP Sent', text2: 'Please check your email inbox.' });
     } catch (err: any) {
-      Toast.show({ type: 'error', text1: 'Error', text2: err?.message || 'Could not send OTP' });
+      Toast.show({ type: 'error', text1: 'Failed to Send', text2: getErrorMessage(err) });
+      onClose();
     } finally {
       setSending(false);
     }
@@ -58,7 +63,7 @@ export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
   const handleVerify = async () => {
     const code = otp.join('');
     if (code.length < OTP_LENGTH) return;
-    
+
     try {
       setVerifying(true);
       await authApi.verifyEmailOtp(email, code);
@@ -66,7 +71,12 @@ export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
       onSuccess();
       onClose();
     } catch (err: any) {
-      Toast.show({ type: 'error', text1: 'Verification Failed', text2: err?.message || 'Invalid OTP' });
+      const msg = getErrorMessage(err);
+      Toast.show({ type: 'error', text1: 'Verification Failed', text2: msg });
+      if (msg.toLowerCase().includes('expired')) {
+        setOtp(Array(OTP_LENGTH).fill(''));
+        setTimer(0);
+      }
     } finally {
       setVerifying(false);
     }

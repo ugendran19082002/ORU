@@ -233,7 +233,16 @@ export default function ShopOnboardingDashboard() {
         )}
 
         {/* Email Verification Banner */}
-        {user?.email && !user?.email_verified && (
+        {user?.email && user?.email_verified ? (
+          <View style={[styles.emailBanner, { backgroundColor: '#f0fdf4', borderColor: '#22c55e' }]}>
+            <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13, fontWeight: '800', color: '#16a34a' }}>Email Verified</Text>
+              <Text style={{ fontSize: 12, color: '#15803d' }}>{user.email} — OTP via email enabled</Text>
+            </View>
+            <Ionicons name="shield-checkmark-outline" size={16} color="#16a34a" />
+          </View>
+        ) : user?.email && !user?.email_verified ? (
           <TouchableOpacity
             style={[styles.emailBanner, { backgroundColor: '#fff8e1', borderColor: '#f59e0b' }]}
             onPress={() => { setEmailInput(user.email || ''); setShowEmailModal(true); }}
@@ -246,8 +255,7 @@ export default function ShopOnboardingDashboard() {
             </View>
             <Ionicons name="chevron-forward" size={16} color="#b45309" />
           </TouchableOpacity>
-        )}
-        {!user?.email && (
+        ) : (
           <TouchableOpacity
             style={[styles.emailBanner, { backgroundColor: '#f0f9ff', borderColor: '#0ea5e9' }]}
             onPress={() => { setEmailInput(''); setShowEmailModal(true); }}
