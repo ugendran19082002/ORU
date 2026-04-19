@@ -171,7 +171,7 @@ export type BusyModeResult = {
   is_open: boolean;
 };
 
-export type ShopOpenStatus = ShopToggleResult & { is_holiday: boolean };
+export type ShopOpenStatus = ShopToggleResult & { is_holiday: boolean; current_time: string };
 
 // ─── Order API response shapes ────────────────────────────────────────────────
 
