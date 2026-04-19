@@ -31,6 +31,8 @@ import { useAppTheme } from "@/providers/ThemeContext";
 import { useOrderStore } from "@/stores/orderStore";
 import { useShopStore } from "@/stores/shopStore";
 import { apiClient } from "@/api/client";
+import { shopApi } from "@/api/shopApi";
+import type { ShopOpenStatus } from "@/types/api";
 
 const SHOP_ACCENT = roleAccent.shop_owner;
 const SHOP_GRAD: [string, string] = [
@@ -252,8 +254,9 @@ export default function ShopOrdersScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabState>("active");
-  const [acceptingOrders, setAcceptingOrders] = useState(true);
-  const [busyMode, setBusyMode] = useState(false);
+  const [openStatus, setOpenStatus] = useState<ShopOpenStatus | null>(null);
+  const [togglingOpen, setTogglingOpen] = useState(false);
+  const [togglingBusy, setTogglingBusy] = useState(false);
   const [rejectModalOrderId, setRejectModalOrderId] = useState<string | null>(null);
   const [selectedRejectReason, setSelectedRejectReason] = useState<
     string | null
@@ -272,7 +275,40 @@ export default function ShopOrdersScreen() {
 
   useEffect(() => {
     fetchOrders();
+    shopApi.getOpenStatus().then(setOpenStatus).catch(() => {});
   }, []);
+
+  const handleToggleOpen = async (val: boolean) => {
+    if (togglingOpen) return;
+    setTogglingOpen(true);
+    setOpenStatus(prev => prev ? { ...prev, is_open: val, effective_open: val && (prev.schedule_open ?? false) } : prev);
+    try {
+      const result = await shopApi.toggleShopOpen(val);
+      setOpenStatus(prev => prev ? { ...prev, ...result } : result as ShopOpenStatus);
+      Toast.show({ type: 'success', text1: val ? 'Shop is now Open' : 'Shop is now Closed' });
+    } catch {
+      setOpenStatus(prev => prev ? { ...prev, is_open: !val } : prev);
+      Toast.show({ type: 'error', text1: 'Failed to update status' });
+    } finally {
+      setTogglingOpen(false);
+    }
+  };
+
+  const handleToggleBusy = async (val: boolean) => {
+    if (togglingBusy) return;
+    setTogglingBusy(true);
+    setOpenStatus(prev => prev ? { ...prev, busy_mode: val } : prev);
+    try {
+      const result = await shopApi.toggleBusyMode(val);
+      setOpenStatus(prev => prev ? { ...prev, busy_mode: result.busy_mode } : prev);
+      Toast.show({ type: val ? 'info' : 'success', text1: val ? 'Busy mode ON — pausing new orders' : 'Busy mode OFF — accepting orders' });
+    } catch {
+      setOpenStatus(prev => prev ? { ...prev, busy_mode: !val } : prev);
+      Toast.show({ type: 'error', text1: 'Failed to update busy mode' });
+    } finally {
+      setTogglingBusy(false);
+    }
+  };
 
   const shop = shops?.[0];
 
@@ -290,9 +326,11 @@ export default function ShopOrdersScreen() {
   const lowStockCount =
     shop?.products?.filter((p: any) => p.stockCount < 30)?.length ?? 0;
 
-  // Auto busy-mode
+  // Auto busy-mode: suggest to owner when overloaded
   useEffect(() => {
-    if (activeOrders.length >= 5 && !busyMode) setBusyMode(true);
+    if (activeOrders.length >= 5 && openStatus && !openStatus.busy_mode && !togglingBusy) {
+      Toast.show({ type: 'info', text1: '5+ active orders', text2: 'Consider enabling Busy Mode to pause new orders.' });
+    }
   }, [activeOrders.length]);
 
   // Pending alert — fire once when there are pending orders, debounce on changes
@@ -429,6 +467,70 @@ export default function ShopOrdersScreen() {
             </View>
           </LinearGradient>
         </TouchableOpacity>
+
+        {/* Open / Busy status card */}
+        {openStatus !== null && (
+          <View style={[styles.opsCard, { backgroundColor: colors.surface }, Shadow.sm]}>
+            {/* Open / Closed row */}
+            <View style={styles.opsRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.opsTitle, { color: colors.text }]}>
+                  {openStatus.effective_open ? '🟢 Shop is Open' : '🔴 Shop is Closed'}
+                </Text>
+                <Text style={[styles.opsSub, { color: colors.muted }]} numberOfLines={2}>
+                  {openStatus.schedule_open
+                    ? (openStatus.is_open ? 'Within business hours' : 'Manually closed')
+                    : 'Outside business hours — schedule says closed'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.togglePill, { backgroundColor: openStatus.is_open ? SHOP_ACCENT + '18' : colors.border }]}
+                onPress={() => handleToggleOpen(!openStatus.is_open)}
+                disabled={togglingOpen}
+              >
+                <Text style={[styles.toggleText, { color: openStatus.is_open ? SHOP_ACCENT : colors.muted }]}>
+                  {togglingOpen ? '…' : openStatus.is_open ? 'Open' : 'Closed'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+            {/* Busy mode row */}
+            <View style={styles.opsRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.opsTitle, { color: colors.text }]}>Busy Mode</Text>
+                <Text style={[styles.opsSub, { color: colors.muted }]} numberOfLines={2}>
+                  {openStatus.busy_mode ? 'Pausing new orders — finish active ones first' : 'Accepting new orders normally'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.togglePill, { backgroundColor: openStatus.busy_mode ? '#f59e0b18' : colors.border }]}
+                onPress={() => handleToggleBusy(!openStatus.busy_mode)}
+                disabled={togglingBusy}
+              >
+                <Text style={[styles.toggleText, { color: openStatus.busy_mode ? '#b45309' : colors.muted }]}>
+                  {togglingBusy ? '…' : openStatus.busy_mode ? 'Busy' : 'Normal'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Schedule hint */}
+            <TouchableOpacity
+              style={[styles.analyticsRow, { borderColor: colors.border }]}
+              onPress={() => router.push('/shop/schedule' as any)}
+            >
+              <Ionicons name="time-outline" size={14} color={colors.muted} />
+              <Text style={[styles.analyticsText, { color: colors.muted, flex: 1, marginLeft: 6 }]}>
+                {openStatus.open_time
+                  ? `Today: ${openStatus.open_time.substring(0, 5)} – ${openStatus.close_time?.substring(0, 5)}`
+                  : 'No schedule set for today'}
+              </Text>
+              <Ionicons name="chevron-forward" size={14} color={colors.muted} />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Quick actions grid */}
         <View style={styles.gridRow}>
           {QUICK_ACTIONS.map((item) => (

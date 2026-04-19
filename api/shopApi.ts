@@ -9,6 +9,7 @@ import type {
   ShopSettings,
   ShopToggleResult,
   BusyModeResult,
+  ShopOpenStatus,
   ShopUpdatePayload,
   ShopSettingsPayload,
 } from '@/types/api';
@@ -144,6 +145,21 @@ export const shopApi = {
     } catch (error) {
       log.error('[shopApi] updateShopSettings failed:', error);
       throw ApiError.from(error, 'Failed to update shop settings');
+    }
+  },
+
+  /**
+   * Get schedule-aware open status.
+   * GET /shop-owner/shops/me/open-status
+   */
+  async getOpenStatus(): Promise<ShopOpenStatus> {
+    try {
+      const response = await apiClient.get<ApiResponse<ShopOpenStatus>>('/shop-owner/shops/me/open-status');
+      if (response.data.status === 1) return response.data.data;
+      throw new ApiError('FETCH_FAILED', response.status ?? 400, 'Failed to fetch open status');
+    } catch (error) {
+      log.error('[shopApi] getOpenStatus failed:', error);
+      throw ApiError.from(error, 'Failed to fetch open status');
     }
   },
 

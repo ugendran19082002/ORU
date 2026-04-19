@@ -18,6 +18,7 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useAppTheme } from '@/providers/ThemeContext';
 import React, { useEffect, useState, useCallback, useRef } from "react";
+import { useFocusEffect } from "expo-router";
 import {
   TouchableOpacity,
   View,
@@ -207,9 +208,11 @@ export default function ShopProfileScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfile();
+    }, [])
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -223,7 +226,7 @@ export default function ShopProfileScreen() {
     }
     try {
       setIsSaving(true);
-      await shopApi.updateMyShop({
+      const updated = await shopApi.updateMyShop({
         name: shopName,
         owner_name: ownerName,
         phone: mobile,
@@ -238,6 +241,28 @@ export default function ShopProfileScreen() {
         latitude: currentLat,
         longitude: currentLng,
       });
+      // Hydrate local state from server response so the screen reflects
+      // exactly what was persisted (server may normalise or reject some fields)
+      if (updated) {
+        setShopName(updated.name || "");
+        setOwnerName(updated.owner_name || "");
+        setMobile(updated.phone || "");
+        setFssai(updated.fssai_no || "");
+        setShopNo(updated.address_line1 || "");
+        setAddressArea(updated.address_line2 || "");
+        setGstNo(updated.gstin || "");
+        setPanNo(updated.pan_no || "");
+        setAadharNo(updated.aadhar_no || "");
+        setSecondaryMobile(updated.alternate_phone || "");
+        setEmail(updated.email || "");
+        if (updated.latitude && updated.longitude) {
+          const lat = parseFloat(updated.latitude);
+          const lng = parseFloat(updated.longitude);
+          setCurrentLat(lat);
+          setCurrentLng(lng);
+          setRegion((r) => ({ ...r, latitude: lat, longitude: lng }));
+        }
+      }
       Toast.show({ type: "success", text1: "Saved", text2: "Profile updated successfully." });
     } catch {
       Toast.show({ type: "error", text1: "Save failed", text2: "Could not update profile." });

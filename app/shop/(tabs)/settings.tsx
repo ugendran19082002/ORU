@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, RefreshControl,
   TouchableOpacity, Switch, StyleSheet, Alert,
@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Logo } from '@/components/ui/Logo';
 import { useAppSession } from '@/hooks/use-app-session';
 import { useSecurityStore } from '@/stores/securityStore';
@@ -78,7 +78,11 @@ export default function ShopSettingsScreen() {
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinMode, setPinMode] = useState<'set' | 'verify'>('set');
 
-  React.useEffect(() => { fetchSettings(); }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchSettings();
+    }, [])
+  );
 
   const fetchSettings = async () => {
     try {
