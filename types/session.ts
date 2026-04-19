@@ -53,6 +53,7 @@ export type AppUser = {
   security_pin?: string;
   is_security_verified?: boolean;
   upi_id?: string | null;
+  customer_type?: 'individual' | 'business';
 };
 
 // ─── Navigation next step ─────────────────────────────────────────────────────

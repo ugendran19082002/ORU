@@ -26,6 +26,7 @@ export default function CustomerProfileScreen() {
     return null;
   }
 
+  const [customerType, setCustomerType] = useState<'individual' | 'business'>(user?.customer_type || 'individual');
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [referralCode, setReferralCode] = useState('');
@@ -47,8 +48,9 @@ export default function CustomerProfileScreen() {
       await userApi.updateProfile({
         name,
         email: email || undefined,
+        customer_type: customerType,
         referral_code: referralCode || undefined
-      });
+      } as any);
 
       // 2. Mark onboarding step as complete
       const res = await onboardingApi.completeCustomerStep('set_profile', { email });
@@ -98,6 +100,38 @@ export default function CustomerProfileScreen() {
             </View>
 
             <View style={styles.form}>
+              {/* Customer Type Selector */}
+              <View style={styles.inputGroup}>
+                <Text style={[styles.label, { color: colors.muted }]}>Account Type</Text>
+                <View style={styles.typeRow}>
+                  {([
+                    { key: 'individual', label: 'Individual', icon: 'person-outline', sub: 'Personal use' },
+                    { key: 'business',   label: 'Business',   icon: 'business-outline', sub: 'Office / bulk orders' },
+                  ] as const).map(opt => {
+                    const active = customerType === opt.key;
+                    return (
+                      <TouchableOpacity
+                        key={opt.key}
+                        style={[styles.typeCard, { borderColor: active ? '#005d90' : colors.border, backgroundColor: active ? '#005d9010' : colors.inputBg }]}
+                        onPress={() => setCustomerType(opt.key)}
+                        activeOpacity={0.8}
+                      >
+                        <View style={[styles.typeIconWrap, { backgroundColor: active ? '#005d9018' : colors.background }]}>
+                          <Ionicons name={opt.icon} size={22} color={active ? '#005d90' : colors.muted} />
+                        </View>
+                        <Text style={[styles.typeLabel, { color: active ? '#005d90' : colors.text }]}>{opt.label}</Text>
+                        <Text style={[styles.typeSub, { color: colors.muted }]}>{opt.sub}</Text>
+                        {active && (
+                          <View style={styles.typeCheck}>
+                            <Ionicons name="checkmark-circle" size={18} color="#005d90" />
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
               <View style={styles.inputGroup}>
                 <Text style={[styles.label, { color: colors.muted }]}>Full Name</Text>
                 <View style={[styles.inputWrap, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
@@ -201,6 +235,13 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: 12 },
   input: { flex: 1, fontSize: 16, fontWeight: '600' },
   helper: { fontSize: 12, fontStyle: 'italic', marginLeft: 4 },
+
+  typeRow: { flexDirection: 'row', gap: 12 },
+  typeCard: { flex: 1, borderRadius: 18, borderWidth: 1.5, padding: 14, alignItems: 'center', gap: 6, position: 'relative' },
+  typeIconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  typeLabel: { fontSize: 14, fontWeight: '800' },
+  typeSub: { fontSize: 11, textAlign: 'center' },
+  typeCheck: { position: 'absolute', top: 8, right: 8 },
 
   footer: { padding: 32 },
   cta: {

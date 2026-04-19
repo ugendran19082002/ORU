@@ -418,16 +418,15 @@ export default function AddressesScreen() {
     try {
       const payload = {
         label: newType === "Other" ? newTitle || "Other" : newType,
-        recipient_name: recipientName,
-        address_line1: searchQuery,
-        city: "Default",
-        pincode: "000000",
+        recipient_name: recipientName || undefined,
+        address_line1: formFlat ? `${formFlat}, ${searchQuery}` : searchQuery,
+        address_line2: formFlat ? searchQuery : undefined,
         latitude: currentLat,
         longitude: currentLng,
-        delivery_instructions: deliveryInstructions,
+        delivery_instructions: deliveryInstructions || undefined,
         is_default: isNewDefault,
         is_floor: isFloor,
-        no_of_floor: noOfFloor,
+        no_of_floor: isFloor ? noOfFloor : 0,
       };
 
       if (editingId) {
@@ -839,6 +838,14 @@ export default function AddressesScreen() {
                 <Text style={[styles.listSub, { color: colors.muted }]} numberOfLines={2}>
                   {item.address_line1}
                 </Text>
+                {item.is_floor && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
+                    <Ionicons name="business-outline" size={11} color={ACCENT} />
+                    <Text style={{ fontSize: 11, color: ACCENT, fontWeight: '700' }}>
+                      Floor {item.no_of_floor}
+                    </Text>
+                  </View>
+                )}
               </TouchableOpacity>
               <View
                 style={{ flexDirection: "row", gap: 14, paddingVertical: 4 }}
@@ -865,6 +872,9 @@ export default function AddressesScreen() {
                     setNewTitle(item.label);
                     setCurrentLat(Number(item.latitude));
                     setCurrentLng(Number(item.longitude));
+                    setIsFloor(Boolean(item.is_floor));
+                    setNoOfFloor(Number(item.no_of_floor) || 0);
+                    setIsNewDefault(item.is_default);
                     setIsAdding(true);
                   }}
                 >

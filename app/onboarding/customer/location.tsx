@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  ActivityIndicator, Animated, Platform,
+  ActivityIndicator, Animated, Platform, Switch,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -44,6 +44,8 @@ export default function CustomerLocationScreen() {
   const [marker, setMarker] = useState({ latitude: 12.9716, longitude: 80.2210 });
   const [address, setAddress] = useState('Locating you…');
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'terrain'>('terrain');
+  const [isFloor, setIsFloor] = useState(false);
+  const [noOfFloor, setNoOfFloor] = useState(0);
 
   // Crosshair pulse animation on drag
   const crosshairScale = useRef(new Animated.Value(1)).current;
@@ -115,6 +117,8 @@ export default function CustomerLocationScreen() {
         latitude: marker.latitude,
         longitude: marker.longitude,
         address: address,
+        is_floor: isFloor,
+        no_of_floor: isFloor ? noOfFloor : 0,
       });
       if (res.status === 1) {
         await syncSession();
@@ -204,6 +208,10 @@ export default function CustomerLocationScreen() {
               isDark={isDark}
               accent={CUSTOMER_ACCENT}
               grad={CUSTOMER_GRAD}
+              isFloor={isFloor}
+              setIsFloor={setIsFloor}
+              noOfFloor={noOfFloor}
+              setNoOfFloor={setNoOfFloor}
             />
           </BlurView>
         ) : (
@@ -217,6 +225,10 @@ export default function CustomerLocationScreen() {
               isDark={isDark}
               accent={CUSTOMER_ACCENT}
               grad={CUSTOMER_GRAD}
+              isFloor={isFloor}
+              setIsFloor={setIsFloor}
+              noOfFloor={noOfFloor}
+              setNoOfFloor={setNoOfFloor}
             />
           </View>
         )}
@@ -250,14 +262,15 @@ function HeaderContent({ colors, isDark }: { colors: ColorSchemeColors; isDark: 
   );
 }
 
-function BottomContent({ address, loading, locating, onConfirm, colors, isDark, accent, grad }:
-  { address: string; loading: boolean; locating: boolean; onConfirm: () => void; colors: ColorSchemeColors; isDark: boolean; accent: string; grad: [string, string] }) {
+function BottomContent({ address, loading, locating, onConfirm, colors, isDark, accent, grad, isFloor, setIsFloor, noOfFloor, setNoOfFloor }:
+  { address: string; loading: boolean; locating: boolean; onConfirm: () => void; colors: ColorSchemeColors; isDark: boolean; accent: string; grad: [string, string]; isFloor: boolean; setIsFloor: (v: boolean) => void; noOfFloor: number; setNoOfFloor: (v: number) => void }) {
   return (
     <View style={{ padding: 20, paddingBottom: Platform.OS === 'ios' ? 8 : 20 }}>
       {/* Handle */}
       <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginBottom: 16 }} />
+
       {/* Address card */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 16,
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 12,
         backgroundColor: isDark ? 'rgba(30,58,138,0.2)' : 'rgba(0,93,144,0.06)',
         borderRadius: 16, padding: 14, borderWidth: 1, borderColor: isDark ? 'rgba(0,93,144,0.3)' : 'rgba(0,93,144,0.12)' }}>
         <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: isDark ? '#1e3a5f' : '#dbeafe', alignItems: 'center', justifyContent: 'center' }}>
@@ -273,6 +286,51 @@ function BottomContent({ address, loading, locating, onConfirm, colors, isDark, 
         </View>
         <Ionicons name="checkmark-circle" size={20} color={accent} />
       </View>
+
+      {/* Floor toggle row */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+        paddingHorizontal: 14, paddingVertical: 12, borderRadius: 14, marginBottom: 10,
+        backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+        borderWidth: 1, borderColor: colors.border }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Ionicons name="business-outline" size={18} color={accent} />
+          <View>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text }}>Multi-storey building?</Text>
+            <Text style={{ fontSize: 11, color: colors.muted, marginTop: 1 }}>Turn on to set your floor number</Text>
+          </View>
+        </View>
+        <Switch
+          value={isFloor}
+          onValueChange={setIsFloor}
+          trackColor={{ false: colors.border, true: accent }}
+          thumbColor={Platform.OS === 'ios' ? undefined : '#fff'}
+        />
+      </View>
+
+      {/* Floor picker — only when isFloor is on */}
+      {isFloor && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+          paddingHorizontal: 20, paddingVertical: 10, borderRadius: 14, marginBottom: 10,
+          backgroundColor: isDark ? 'rgba(30,58,138,0.15)' : `${accent}10`,
+          borderWidth: 1, borderColor: `${accent}30` }}>
+          <TouchableOpacity
+            onPress={() => setNoOfFloor(Math.max(0, noOfFloor - 1))}
+            style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border }}
+          >
+            <Ionicons name="remove" size={22} color={accent} />
+          </TouchableOpacity>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={{ fontSize: 28, fontWeight: '900', color: accent }}>{noOfFloor}</Text>
+            <Text style={{ fontSize: 10, fontWeight: '700', color: colors.muted, letterSpacing: 0.5 }}>FLOOR</Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => setNoOfFloor(noOfFloor + 1)}
+            style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.border }}
+          >
+            <Ionicons name="add" size={22} color={accent} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* CTA */}
       <TouchableOpacity onPress={onConfirm} disabled={loading || locating} activeOpacity={0.85}>
