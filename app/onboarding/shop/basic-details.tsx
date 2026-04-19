@@ -9,11 +9,13 @@ import { StatusBar } from 'expo-status-bar';
 import { useAppTheme } from '@/providers/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import * as Location from 'expo-location';
 import { useAppSession } from '@/hooks/use-app-session';
+import { useStepBackHandler } from '@/hooks/use-step-back-handler';
 import { onboardingApi } from '@/api/onboardingApi';
 import { BackButton } from '@/components/ui/BackButton';
+import { EmailVerificationModal } from '@/components/ui/EmailVerificationModal';
 import { ExpoMap } from "@/components/maps/ExpoMap";
 import { useRef } from "react";
 
@@ -41,6 +43,7 @@ export default function ShopBasicDetailsScreen() {
     name: '',
     owner_name: '',
     phone: user?.phone?.replace('+91', '') || '',
+    email: user?.email || '',
     shop_type: 'individual' as any,
     business_experience: '',
     address_line1: '',
@@ -48,6 +51,9 @@ export default function ShopBasicDetailsScreen() {
     latitude: 28.6139 as number | null,
     longitude: 77.2090 as number | null,
   });
+
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
 
   // Map & Search States
   const [accuracy, setAccuracy] = useState<number | null>(null);
@@ -60,6 +66,8 @@ export default function ShopBasicDetailsScreen() {
     latitudeDelta: 0.005,
     longitudeDelta: 0.005,
   });
+
+  useStepBackHandler('/onboarding/shop');
 
   // 1. Resolve actual Shop ID & Mode
   React.useEffect(() => {
@@ -78,6 +86,7 @@ export default function ShopBasicDetailsScreen() {
             name: res.data.name || '',
             owner_name: res.data.owner_name || '',
             phone: (res.data.phone || user?.phone || '').replace('+91', ''),
+            email: res.data.email || user?.email || '',
             shop_type: res.data.shop_type || 'individual',
             business_experience: res.data.business_experience || '',
             address_line1: res.data.address_line1 || '',
@@ -85,6 +94,7 @@ export default function ShopBasicDetailsScreen() {
             latitude: lat,
             longitude: lng,
           }));
+          setIsEmailVerified(res.data.email_verified || false);
 
           setRegion({
             latitude: lat,
@@ -229,6 +239,7 @@ export default function ShopBasicDetailsScreen() {
             name: formData.name,
             owner_name: formData.owner_name,
             phone: `+91${formData.phone}`,
+            email: formData.email,
             shop_type: formData.shop_type,
             business_experience: formData.business_experience,
             address_line1: formData.address_line1 || '',
@@ -318,6 +329,34 @@ export default function ShopBasicDetailsScreen() {
                       value={formData.phone}
                       onChangeText={(v) => setFormData(p => ({ ...p, phone: v }))}
                     />
+                  </View>
+                </View>
+
+                {/* Email Address */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Email Address (Optional)</Text>
+                  <View style={[styles.inputWrap, { paddingRight: isEmailVerified ? 16 : 80 }]}>
+                    <Ionicons name="mail-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g. shop@example.com"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      value={formData.email}
+                      onChangeText={(v) => {
+                         setFormData(p => ({ ...p, email: v }));
+                         setIsEmailVerified(false);
+                      }}
+                    />
+                    {formData.email ? (!isEmailVerified ? (
+                      <TouchableOpacity style={styles.verifyBtn} onPress={() => setShowOtpModal(true)}>
+                        <Text style={styles.verifyText}>Verify</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <View style={styles.verifiedBadge}>
+                        <Ionicons name="checkmark-circle" size={18} color="#006878" />
+                      </View>
+                    )) : null}
                   </View>
                 </View>
 
@@ -485,6 +524,13 @@ export default function ShopBasicDetailsScreen() {
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
+
+        <EmailVerificationModal 
+          visible={showOtpModal} 
+          email={formData.email} 
+          onClose={() => setShowOtpModal(false)}
+          onSuccess={() => setIsEmailVerified(true)} 
+        />
       </SafeAreaView>
     </View>
   );
@@ -516,6 +562,10 @@ const makeStyles = (colors: any) => StyleSheet.create({
   prefix: { fontSize: 16, fontWeight: '700', color: '#64748b', marginRight: 8 },
   input: { flex: 1, fontSize: 16, color: '#1e293b', fontWeight: '600' },
   textArea: { textAlignVertical: 'top' },
+
+  verifyBtn: { position: 'absolute', right: 8, top: 10, bottom: 10, backgroundColor: '#e0f2fe', paddingHorizontal: 16, borderRadius: 10, justifyContent: 'center' },
+  verifyText: { fontSize: 13, fontWeight: '800', color: '#0369a1' },
+  verifiedBadge: { position: 'absolute', right: 16, justifyContent: 'center' },
   
   typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   typeCard: {

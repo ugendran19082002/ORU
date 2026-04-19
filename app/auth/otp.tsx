@@ -53,12 +53,15 @@ export default function OTPScreen() {
   const globalStore = { setConfirmation: (c: any) => {} };
   const confirm: any = null;
 
-  const { phone = "9876543210", role = "customer" } = useLocalSearchParams<{
+  const { phone = "9876543210", role = "customer", otp_type = "sms", email_hint = "" } = useLocalSearchParams<{
     phone: string;
     role: AppRole;
+    otp_type?: string;
+    email_hint?: string;
   }>();
   const theme = roleGradients[role] ?? roleGradients.customer;
   const accent = roleAccent[role] ?? roleAccent.customer;
+  const viaEmail = otp_type === 'email';
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [verified, setVerified] = useState(false);
@@ -222,11 +225,17 @@ export default function OTPScreen() {
           <View style={styles.titleBlock}>
             <Text style={[styles.title, { color: colors.text }]}>Verify OTP</Text>
             <Text style={[styles.subtitle, { color: colors.muted }]}>
-              Enter the 6-digit code sent to{"\n"}
-              <Text style={[styles.phoneHighlight, { color: accent }]}>
-                {maskedPhone}
-              </Text>
+              {viaEmail
+                ? <>OTP sent to your email{"\n"}<Text style={[styles.phoneHighlight, { color: accent }]}>{email_hint || 'your registered email'}</Text></>
+                : <>Enter the 6-digit code sent to{"\n"}<Text style={[styles.phoneHighlight, { color: accent }]}>{maskedPhone}</Text></>
+              }
             </Text>
+            {viaEmail && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6, backgroundColor: accent + '18', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 }}>
+                <Ionicons name="mail-outline" size={14} color={accent} />
+                <Text style={{ fontSize: 12, color: accent, fontWeight: '600' }}>Sent via email to save SMS cost</Text>
+              </View>
+            )}
           </View>
 
           {/* OTP BOXES */}

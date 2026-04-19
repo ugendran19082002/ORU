@@ -12,7 +12,9 @@ import { useRouter } from 'expo-router';
 import { useAppSession } from '@/hooks/use-app-session';
 import { userApi } from '@/api/userApi';
 import { onboardingApi } from '@/api/onboardingApi';
+import { useStepBackHandler } from '@/hooks/use-step-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
+import { EmailVerificationModal } from '@/components/ui/EmailVerificationModal';
 import { useAppTheme } from '@/providers/ThemeContext';
 
 export default function CustomerProfileScreen() {
@@ -20,6 +22,8 @@ export default function CustomerProfileScreen() {
   const { colors, isDark } = useAppTheme();
   const { user, updateUser, status, syncSession } = useAppSession();
   const [loading, setLoading] = useState(false);
+
+  useStepBackHandler('/onboarding/customer');
 
   // 0. Role Bouncer
   if (status === 'authenticated' && user?.role !== 'customer') {
@@ -29,6 +33,8 @@ export default function CustomerProfileScreen() {
   const [customerType, setCustomerType] = useState<'individual' | 'business'>(user?.customer_type || 'individual');
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [isEmailVerified, setIsEmailVerified] = useState(user?.email_verified || false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
   const [referralCode, setReferralCode] = useState('');
 
   const handleContinue = async () => {
@@ -152,14 +158,26 @@ export default function CustomerProfileScreen() {
                 <View style={[styles.inputWrap, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
                   <Ionicons name="mail-outline" size={20} color="#94a3b8" style={styles.inputIcon} />
                   <TextInput
-                    style={[styles.input, { color: colors.text }]}
+                    style={[styles.input, { color: colors.text, paddingRight: 80 }]}
                     placeholder="rahul@example.com"
                     placeholderTextColor={colors.placeholder}
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={(t) => {
+                      setEmail(t);
+                      setIsEmailVerified(false);
+                    }}
                     keyboardType="email-address"
                     autoCapitalize="none"
                   />
+                  {email ? (!isEmailVerified ? (
+                    <TouchableOpacity style={styles.verifyBtn} onPress={() => setShowOtpModal(true)}>
+                      <Text style={styles.verifyText}>Verify</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={styles.verifiedBadge}>
+                      <Ionicons name="checkmark-circle" size={18} color={isDark ? '#4ade80' : '#16a34a'} />
+                    </View>
+                  )) : null}
                 </View>
                 <Text style={[styles.helper, { color: colors.muted }]}>We use this to send order receipts and updates.</Text>
               </View>
@@ -202,6 +220,13 @@ export default function CustomerProfileScreen() {
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
+
+        <EmailVerificationModal 
+          visible={showOtpModal} 
+          email={email} 
+          onClose={() => setShowOtpModal(false)}
+          onSuccess={() => setIsEmailVerified(true)} 
+        />
       </SafeAreaView>
     </View>
   );
@@ -235,6 +260,10 @@ const styles = StyleSheet.create({
   inputIcon: { marginRight: 12 },
   input: { flex: 1, fontSize: 16, fontWeight: '600' },
   helper: { fontSize: 12, fontStyle: 'italic', marginLeft: 4 },
+
+  verifyBtn: { position: 'absolute', right: 8, top: 10, bottom: 10, backgroundColor: '#005d9020', paddingHorizontal: 16, borderRadius: 10, justifyContent: 'center' },
+  verifyText: { fontSize: 13, fontWeight: '800', color: '#005d90' },
+  verifiedBadge: { position: 'absolute', right: 16, justifyContent: 'center' },
 
   typeRow: { flexDirection: 'row', gap: 12 },
   typeCard: { flex: 1, borderRadius: 18, borderWidth: 1.5, padding: 14, alignItems: 'center', gap: 6, position: 'relative' },

@@ -119,7 +119,15 @@ export default function LoginScreen() {
           router.push({ pathname: "/auth/quick-login", params: { phone, has_pin: '1' } });
         } else {
           // New user or forgot-PIN flow — verify OTP first
-          router.push({ pathname: "/auth/otp", params: { phone, role: role || "" } });
+          router.push({
+            pathname: "/auth/otp",
+            params: {
+              phone,
+              role: role || "",
+              otp_type: response.data.otp_type ?? 'sms',
+              email_hint: response.data.email_hint ?? '',
+            }
+          });
         }
       } else {
         throw new Error(response.message || "Failed to send OTP");

@@ -1,6 +1,9 @@
-// IMPORTANT: Do NOT statically import `@react-native-firebase/auth` globally.
-// It will crash Expo Go instantly with Native module RNFBAppModule not found.
-// Instead, import dynamically inside functions that are gated by !__DEV__.
+// IMPORTANT: We use the Firebase Web SDK for Expo Go compatibility.
+// For production without Recaptcha, you can swap back to @react-native-firebase/*
+// with an EAS Dev build (npx expo prebuild / npx expo run:android).
+
+import { getAuth, signInWithPhoneNumber, RecaptchaVerifier, ConfirmationResult } from 'firebase/auth';
+
 /**
  * Validates a standard Indian phone number and ensures +91 prefix.
  */
@@ -12,19 +15,16 @@ export const formatPhoneNumber = (phone: string): string => {
 };
 
 /**
- * Initiates the Firebase OTP flow.
- * Returns the Confirmation Result object to verify code later.
+ * Initiates the Firebase OTP flow using Web SDK.
+ * Requires a recaptchaVerifier passed from the UI layer.
  */
-export const requestFirebaseOTP = async (phone: string) => {
+export const requestFirebaseOTP = async (phone: string, recaptchaVerifier: any) => {
   try {
     const formattedPhone = formatPhoneNumber(phone);
     console.log(`[FIREBASE AUTH] Requesting OTP for ${formattedPhone}`);
     
-    // Lazy load the native module so Expo Go doesn't crash on boot
-    const auth = require('@react-native-firebase/auth').default;
-    
-    // In production with real google-services.json, this triggers SMS
-    const confirmation = await auth().signInWithPhoneNumber(formattedPhone);
+    const auth = getAuth();
+    const confirmation = await signInWithPhoneNumber(auth, formattedPhone, recaptchaVerifier);
     return confirmation;
   } catch (error) {
     console.error('[FIREBASE AUTH ERROR] Failed to send OTP:', error);
@@ -38,7 +38,6 @@ export const requestFirebaseOTP = async (phone: string) => {
 export const verifyFirebaseOTP = async (confirmation: any, code: string) => {
   try {
     console.log(`[FIREBASE AUTH] Verifying OTP...`);
-    // verify the code
     const userCredential = await confirmation.confirm(code);
     return userCredential.user;
   } catch (error) {
@@ -52,9 +51,10 @@ export const verifyFirebaseOTP = async (confirmation: any, code: string) => {
  */
 export const signOutFirebase = async () => {
   try {
-    const auth = require('@react-native-firebase/auth').default;
-    await auth().signOut();
+    const auth = getAuth();
+    await auth.signOut();
   } catch (error) {
     console.error('[FIREBASE AUTH ERROR] Sign out failed:', error);
   }
 };
+

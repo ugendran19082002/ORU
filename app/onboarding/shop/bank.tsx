@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import { useAppSession } from '@/hooks/use-app-session';
+import { useStepBackHandler } from '@/hooks/use-step-back-handler';
 import { onboardingApi } from '@/api/onboardingApi';
 import { BackButton } from '@/components/ui/BackButton';
 import { useAppTheme } from '@/providers/ThemeContext';
@@ -23,6 +24,8 @@ export default function ShopBankDetailsScreen() {
   const [fetchingShop, setFetchingShop] = useState(true);
   const [shopId, setShopId] = useState<number | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  useStepBackHandler('/onboarding/shop');
 
   const [formData, setFormData] = useState({
     bank_name: '',

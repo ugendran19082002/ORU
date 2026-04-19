@@ -9,7 +9,7 @@
  *   log.error('[API]', 'Request failed', error);
  */
 
-import { apiClient } from '@/api/client';
+import axios from 'axios';
 import * as Device from 'expo-device';
 
 type LogLevel = 'info' | 'warn' | 'error';
@@ -23,7 +23,10 @@ async function reportRemote(message: string, error?: any, context?: any) {
   try {
     // Only report in production or if explicitly enabled
     // For now, let's enable it to verify the logic works
-    await apiClient.post('/system/report-error', {
+    const rawBaseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+    const configuredBaseUrl = rawBaseUrl.trim().replace(/\/$/, '');
+    const finalBaseUrl = configuredBaseUrl.endsWith('/api') ? configuredBaseUrl : `${configuredBaseUrl}/api`;
+    await axios.post(`${finalBaseUrl}/system/report-error`, {
       message,
       stack: error?.stack || String(error),
       deviceInfo: {

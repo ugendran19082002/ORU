@@ -423,6 +423,8 @@ export default function AddressesScreen() {
         address_line2: formFlat ? searchQuery : undefined,
         latitude: currentLat,
         longitude: currentLng,
+        city: "Chennai", // Defaulting to Chennai for MVP stability
+        pincode: "600001", // Defaulting to central pincode
         delivery_instructions: deliveryInstructions || undefined,
         is_default: isNewDefault,
         is_floor: isFloor,

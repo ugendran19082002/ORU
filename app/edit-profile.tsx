@@ -12,6 +12,7 @@ import { useAppNavigation } from '@/hooks/use-app-navigation';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { BackButton } from '@/components/ui/BackButton';
+import { EmailVerificationModal } from '@/components/ui/EmailVerificationModal';
 import { useAppSession } from '@/hooks/use-app-session';
 import { userApi } from '@/api/userApi';
 import { ActivityIndicator } from 'react-native';
@@ -40,7 +41,6 @@ export default function EditProfileScreen() {
 
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [otpCode, setOtpCode] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -69,20 +69,10 @@ export default function EditProfileScreen() {
 
   const handleVerifyEmail = () => {
     if (!email) return;
-    setOtpCode('');
     setShowOtpModal(true);
   };
 
-  const handleConfirmOtp = () => {
-    if (otpCode.length < 4) {
-      Toast.show({
-        type: 'error',
-        text1: 'Invalid OTP',
-        text2: 'Please enter a valid 4-digit OTP.'
-      });
-      return;
-    }
-    setShowOtpModal(false);
+  const handleVerificationSuccess = () => {
     setIsEmailVerified(true);
   };
 
@@ -269,39 +259,12 @@ export default function EditProfileScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
 
-        {/* OTP VERIFICATION MODAL */}
-        <Modal visible={showOtpModal} transparent animationType="slide">
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-            <View style={styles.modalOverlay}>
-              <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
-                <View style={styles.modalIconWrap}>
-          <Ionicons name="mail-unread" size={36} color={colors.primary} />
-                </View>
-                <Text style={[styles.modalTitle, { color: colors.text }]}>Verify Email</Text>
-              <Text style={[styles.modalSub, { color: colors.muted }]}>We've sent a 4-digit secure OTP to{' '}<Text style={{ fontWeight: '800', color: colors.text }}>{email}</Text></Text>
-
-                <TextInput
-                  style={[styles.otpInput, { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }]}
-                  value={otpCode}
-                  onChangeText={setOtpCode}
-                  keyboardType="number-pad"
-                  maxLength={4}
-                  placeholder="0 0 0 0"
-                placeholderTextColor={colors.muted}
-                  autoFocus
-                />
-
-                <TouchableOpacity style={[styles.modalVerifyBtn, { backgroundColor: colors.primary, shadowColor: colors.primary }]} onPress={handleConfirmOtp} activeOpacity={0.8}>
-                  <Text style={styles.modalVerifyBtnText}>Confirm OTP</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowOtpModal(false)}>
-                  <Text style={[styles.modalCancelBtnText, { color: colors.muted }]}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </KeyboardAvoidingView>
-        </Modal>
+        <EmailVerificationModal 
+          visible={showOtpModal} 
+          email={email} 
+          onClose={() => setShowOtpModal(false)}
+          onSuccess={handleVerificationSuccess} 
+        />
 
       </SafeAreaView>
   );

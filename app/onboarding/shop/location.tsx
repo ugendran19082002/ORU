@@ -12,6 +12,7 @@ import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { ExpoMap } from '@/components/maps/ExpoMap';
+import { useStepBackHandler } from '@/hooks/use-step-back-handler';
 import { onboardingApi } from '@/api/onboardingApi';
 import { useAppSession } from '@/hooks/use-app-session';
 import { BackButton } from '@/components/ui/BackButton';
@@ -28,6 +29,8 @@ export default function ShopLocationScreen() {
   const { colors, isDark } = useAppTheme();
   const styles = makeStyles(colors, isDark);
   const mapRef = useRef<any>(null);
+
+  useStepBackHandler('/onboarding/shop');
 
   // 0. Role Bouncer
   if (status === 'authenticated' && user?.role !== 'shop_owner') return null;

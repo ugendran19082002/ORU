@@ -7,8 +7,12 @@ import { log } from '@/utils/logger';
 // Session storage key — versioned to support future schema migrations
 export const SESSION_STORAGE_KEY = 'thannigo_session_v1';
 
+const rawBaseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
+const configuredBaseUrl = rawBaseUrl.trim().replace(/\/$/, '');
+const finalBaseUrl = configuredBaseUrl.endsWith('/api') ? configuredBaseUrl : `${configuredBaseUrl}/api`;
+
 export const apiClient = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api',
+  baseURL: finalBaseUrl,
   timeout: 30000,
 });
 
@@ -94,8 +98,10 @@ apiClient.interceptors.response.use(
 
     const is401 = error.response?.status === 401;
     const isRefreshRequest = originalRequest?.url?.includes('/auth/refresh');
+    // Never deep-purge on non-auth endpoints when we already have no token (already signed out)
+    const isPublicSafeUrl = originalRequest?.url?.includes('/system/report-error');
 
-    if (is401 && !isRefreshRequest && !originalRequest._retry) {
+    if (is401 && !isRefreshRequest && !isPublicSafeUrl && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject });

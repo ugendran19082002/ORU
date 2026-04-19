@@ -1,6 +1,7 @@
 import type { ColorSchemeColors } from '@/providers/ThemeContext';
 import { ExpoMap, ExpoMarker } from "@/components/maps/ExpoMap";
 import { BackButton } from "@/components/ui/BackButton";
+import { EmailVerificationModal } from "@/components/ui/EmailVerificationModal";
 import { Logo } from "@/components/ui/Logo";
 import { useAppNavigation } from "@/hooks/use-app-navigation";
 import { useAndroidBackHandler } from "@/hooks/use-back-handler";
@@ -165,6 +166,8 @@ export default function ShopProfileScreen() {
   const [mobile, setMobile] = useState("");
   const [secondaryMobile, setSecondaryMobile] = useState("");
   const [email, setEmail] = useState("");
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
 
   // Verification
   const [gstNo, setGstNo] = useState("");
@@ -188,6 +191,7 @@ export default function ShopProfileScreen() {
         setAadharNo(data.aadhar_no || "");
         setSecondaryMobile(data.alternate_phone || "");
         setEmail(data.email || "");
+        setIsEmailVerified(data.email_verified || false);
         if (data.latitude && data.longitude) {
           const lat = parseFloat(data.latitude);
           const lng = parseFloat(data.longitude);
@@ -622,7 +626,29 @@ export default function ShopProfileScreen() {
               <Field label="Registered Mobile" value={mobile} onChangeText={setMobile} keyboardType="phone-pad" flex={1} />
               <Field label="Secondary Mobile" value={secondaryMobile} onChangeText={setSecondaryMobile} keyboardType="phone-pad" placeholder="Optional" flex={1} />
             </View>
-            <Field label="Email Address" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholder="Enter email" />
+            <Field 
+              label="Email Address" 
+              value={email} 
+              onChangeText={(t) => {
+                setEmail(t);
+                setIsEmailVerified(false);
+              }} 
+              keyboardType="email-address" 
+              autoCapitalize="none" 
+              placeholder="Enter email"
+              suffix={
+                 email ? (!isEmailVerified ? (
+                   <TouchableOpacity style={styles.verifyBtn} onPress={() => setShowOtpModal(true)}>
+                     <Text style={{ color: SHOP_ACCENT, fontWeight: '800', fontSize: 13 }}>Verify</Text>
+                   </TouchableOpacity>
+                 ) : (
+                   <View style={styles.verifiedBadge}>
+                     <Ionicons name="checkmark-circle" size={14} color="white" />
+                     <Text style={styles.verifiedText}>Verified</Text>
+                   </View>
+                 )) : undefined
+              }
+            />
           </Section>
 
           {/* ── Company Verification ── */}
@@ -649,6 +675,13 @@ export default function ShopProfileScreen() {
           <View style={{ height: 40 }} />
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <EmailVerificationModal 
+        visible={showOtpModal} 
+        email={email} 
+        onClose={() => setShowOtpModal(false)}
+        onSuccess={() => setIsEmailVerified(true)} 
+      />
     </SafeAreaView>
   );
 }
@@ -738,6 +771,13 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   inputDisabled: { color: colors.muted },
   row: { flexDirection: "row", gap: 12 },
 
+  verifyBtn: {
+    backgroundColor: `${SHOP_ACCENT}1A`,
+    paddingHorizontal: 12,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: "center",
+  },
   verifiedBadge: {
     flexDirection: "row",
     alignItems: "center",

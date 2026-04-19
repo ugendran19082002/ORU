@@ -31,7 +31,7 @@ const THEME_OPTIONS: { value: ThemePreference; label: string; icon: string }[] =
 export default function ProfileScreen() {
   const { colors, isDark, themePreference, setThemePreference } = useAppTheme();
   const router = useRouter();
-  const { signOut, user, emergencyReset } = useAppSession();
+  const { user, signOut, syncSession, updateUser, emergencyReset } = useAppSession();
   const { isPinEnabled, initialize: initSecurity } = useSecurityStore();
   const { orders, fetchOrders } = useOrderStore();
   const [refreshing, setRefreshing] = React.useState(false);
@@ -210,14 +210,31 @@ export default function ProfileScreen() {
           ))}
         </View>
 
-        {/* Sign out */}
-        <TouchableOpacity
-          style={[styles.signOutBtn, { backgroundColor: isDark ? '#2D0A0A' : '#fff0f0', borderColor: '#ffdad6' }]}
-          onPress={handleSignOut}
-        >
-          <Ionicons name="log-out-outline" size={18} color="#ba1a1a" />
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
+        {/* Session Actions */}
+        <View style={styles.actionRow}>
+          {user?.shopStatus !== 'none' && (
+            <TouchableOpacity
+              style={[styles.actionBtn, { borderColor: CUSTOMER_ACCENT, backgroundColor: isDark ? '#0A1A1A' : '#f0f9ff' }]}
+              onPress={() => {
+                Alert.alert('Switch Workspace', 'Switching to your Shop Owner dashboard.', [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Switch', onPress: () => updateUser({ role: 'shop_owner' }) }
+                ]);
+              }}
+            >
+              <Ionicons name="business-outline" size={18} color={CUSTOMER_ACCENT} />
+              <Text style={[styles.actionText, { color: CUSTOMER_ACCENT }]}>Switch to Shop</Text>
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={[styles.actionBtn, { borderColor: '#ffdad6', backgroundColor: isDark ? '#2D0A0A' : '#fff0f0' }]}
+            onPress={handleSignOut}
+          >
+            <Ionicons name="log-out-outline" size={18} color="#ba1a1a" />
+            <Text style={[styles.actionText, { color: '#ba1a1a' }]}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Delete / Reset */}
         <View style={styles.dangerRow}>
@@ -260,12 +277,13 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Branding footer */}
-        <View style={styles.footerRow}>
-          <Ionicons name="water" size={13} color={CUSTOMER_ACCENT} />
-          <Text style={[styles.footerBrand, { color: colors.text }]}>ThanniGo™</Text>
-          <View style={[styles.footerSep, { backgroundColor: colors.border }]} />
-          <Text style={[styles.footerFounder, { color: colors.muted }]}>Founded by Ugendran</Text>
+        <View style={styles.brandingFooter}>
+          <Text style={[styles.brandText, { color: colors.text }]}>
+            ThanniGo™
+          </Text>
+          <Text style={[styles.founderText, { color: colors.muted }]}>
+            Founded by Ugendran
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -315,16 +333,17 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   pinBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   pinBadgeText: { fontSize: 8, fontWeight: '900', letterSpacing: 0.5 },
 
-  signOutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: Radius.lg, paddingVertical: 14, marginBottom: 12, borderWidth: 1.5 },
+  actionRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
+  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: Radius.lg, paddingVertical: 14, borderWidth: 1.5 },
+  actionText: { fontWeight: '700', fontSize: 13 },
+
   signOutText: { color: '#ba1a1a', fontWeight: '700', fontSize: 15 },
 
   dangerRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
   dangerBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 11, borderRadius: Radius.md },
-  dangerBtnText: { fontSize: 12, fontWeight: '600', textDecorationLine: 'underline' },
+  dangerBtnText: { fontSize: 13, fontWeight: '700' },
 
-  footerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, marginBottom: 4 },
-  footerBrand: { fontSize: 14, fontWeight: '900', letterSpacing: -0.3 },
-  footerSep: { width: 1, height: 12 },
-  footerFounder: { fontSize: 12, fontWeight: '400', opacity: 0.6 },
+  brandingFooter: { alignItems: 'center', marginTop: 32, marginBottom: 40, opacity: 0.8 },
+  brandText: { fontSize: 18, fontWeight: '900', letterSpacing: -0.3 },
+  founderText: { fontSize: 11, fontWeight: '400', marginTop: 2 },
 });
-

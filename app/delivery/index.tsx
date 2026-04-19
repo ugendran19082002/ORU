@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Switch, Linking,
+  StyleSheet, Switch, Linking, Alert,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -48,7 +48,7 @@ export default function DeliveryDashboardScreen() {
   const { colors, isDark, themePreference, setThemePreference } = useAppTheme();
   const styles = makeStyles(colors);
   const router = useRouter();
-  const { user, signOut } = useAppSession();
+  const { user, signOut, refreshShopStatus, updateUser } = useAppSession();
   const { tasks, online, toggleOnline, assignCurrentTask, updateTaskStatus, removeTask } = useDeliveryStore();
 
   const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -382,12 +382,37 @@ export default function DeliveryDashboardScreen() {
           </View>
         )}
 
-        {/* Branding footer */}
-        <View style={styles.footerRow}>
-          <Ionicons name="water" size={13} color={DELIVERY_ACCENT} />
-          <Text style={[styles.footerBrand, { color: colors.text }]}>ThanniGo™</Text>
-          <View style={[styles.footerSep, { backgroundColor: colors.border }]} />
-          <Text style={[styles.footerFounder, { color: colors.muted }]}>Founded by Ugendran</Text>
+        {/* Session Actions */}
+        <View style={styles.actionRow}>
+          <TouchableOpacity
+            style={[styles.actionBtn, { borderColor: DELIVERY_ACCENT, backgroundColor: isDark ? '#0A1A1A' : '#f0fff4' }]}
+            onPress={() => {
+              Alert.alert('Switch Workspace', 'Switching to your Customer profile.', [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Switch', onPress: () => updateUser({ role: 'customer' }) }
+              ]);
+            }}
+          >
+            <Ionicons name="person-outline" size={18} color={DELIVERY_ACCENT} />
+            <Text style={[styles.actionText, { color: DELIVERY_ACCENT }]}>Switch to Customer</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionBtn, { borderColor: '#ffdad6', backgroundColor: isDark ? '#2D0A0A' : '#fff0f0' }]}
+            onPress={signOut}
+          >
+            <Ionicons name="log-out-outline" size={18} color="#ba1a1a" />
+            <Text style={[styles.actionText, { color: '#ba1a1a' }]}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.brandingFooter}>
+          <Text style={[styles.brandText, { color: colors.text }]}>
+            ThanniGo™
+          </Text>
+          <Text style={[styles.founderText, { color: colors.muted }]}>
+            Founded by Ugendran
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -452,8 +477,11 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   endShiftBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: Radius.sm },
   endShiftText: { fontWeight: '800', fontSize: 12 },
 
-  footerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, marginBottom: 4 },
-  footerBrand: { fontSize: 14, fontWeight: '900', letterSpacing: -0.3 },
-  footerSep: { width: 1, height: 12 },
-  footerFounder: { fontSize: 12, fontWeight: '400', opacity: 0.6 },
+  actionRow: { flexDirection: 'row', gap: 12, marginBottom: 16, marginTop: 8 },
+  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: Radius.lg, paddingVertical: 14, borderWidth: 1.5 },
+  actionText: { fontWeight: '700', fontSize: 13 },
+
+  brandingFooter: { alignItems: 'center', marginTop: 32, marginBottom: 40, opacity: 0.8 },
+  brandText: { fontSize: 18, fontWeight: '900', letterSpacing: -0.3 },
+  founderText: { fontSize: 11, fontWeight: '400', marginTop: 2 },
 });

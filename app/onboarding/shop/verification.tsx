@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { onboardingApi } from '@/api/onboardingApi';
 import { BackButton } from '@/components/ui/BackButton';
+import { useStepBackHandler } from '@/hooks/use-step-back-handler';
 import { useAppTheme } from '@/providers/ThemeContext';
 
 const SHOP_ACCENT = '#006878';
@@ -25,6 +26,8 @@ export default function ShopVerificationScreen() {
   const [loading, setLoading] = useState(false);
   const [fetchingShop, setFetchingShop] = useState(true);
   const [shopId, setShopId] = useState<number | null>(null);
+
+  useStepBackHandler('/onboarding/shop');
 
   // Aadhar
   const [aadharFront, setAadharFront] = useState<string | null>(null);

@@ -351,11 +351,13 @@ export function AppSessionProvider({
 
   useEffect(() => {
     const sub = DeviceEventEmitter.addListener('thannigo:unauthorized', () => {
+      // Ignore if already signed out (avoids purge loop when sign-out itself makes token-less requests)
+      if (!accessToken) return;
       log.warn('🛡️ [Session] Unauthorized signal — forced logout.');
       handleSignOut();
     });
     return () => sub.remove();
-  }, []);
+  }, [accessToken]);
 
   // ─── Context value ─────────────────────────────────────────────────────────
 

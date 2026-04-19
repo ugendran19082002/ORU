@@ -9,6 +9,8 @@ export interface SendOtpResponse {
     is_new_user?: boolean;
     has_pin?: boolean;
     skip_otp?: boolean;
+    otp_type?: 'sms' | 'email';
+    email_hint?: string; // masked email like "u***@gmail.com"
   };
 }
 
@@ -122,6 +124,22 @@ export const authApi = {
    */
   enableBiometric: async (device_id: string): Promise<{ status: number; message: string }> => {
     const response = await apiClient.post<{ status: number; message: string }>('/auth/enable-biometric', { device_id });
+    return response.data;
+  },
+
+  /**
+   * Send a verification OTP to the user's email
+   */
+  sendEmailVerification: async (email: string): Promise<{ status: number; message: string }> => {
+    const response = await apiClient.post<{ status: number; message: string }>('/auth/send-email-verification', { email });
+    return response.data;
+  },
+
+  /**
+   * Verify the email OTP
+   */
+  verifyEmailOtp: async (email: string, otp: string): Promise<{ status: number; message: string; data: { email_verified: boolean; email: string } }> => {
+    const response = await apiClient.post<{ status: number; message: string; data: { email_verified: boolean; email: string } }>('/auth/verify-email-otp', { email, otp });
     return response.data;
   },
 };

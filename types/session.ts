@@ -39,6 +39,7 @@ export type AppUser = {
   phone: string;
   name: string;
   email: string | null;
+  email_verified?: boolean;
   role: AppRole;
   status: string;
   onboarding_completed: boolean;

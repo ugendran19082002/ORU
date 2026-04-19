@@ -15,6 +15,7 @@ import type { OnboardingStatus } from '@/types/onboarding';
 import { useAppSession } from '@/hooks/use-app-session';
 import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 import { BackButton } from '@/components/ui/BackButton';
+import { EmailVerificationModal } from '@/components/ui/EmailVerificationModal';
 import { useAppTheme, type ColorSchemeColors } from '@/providers/ThemeContext';
 
 export default function CustomerOnboardingScreen() {
@@ -26,6 +27,8 @@ export default function CustomerOnboardingScreen() {
   const [loading, setLoading] = useState(true);
   const [resetLoading, setResetLoading] = useState(false);
   const [data, setData] = useState<OnboardingStatus | null>(null);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
 
   const fetchStatus = async () => {
     try {
@@ -152,6 +155,36 @@ export default function CustomerOnboardingScreen() {
             </TouchableOpacity>
         </View>
 
+        {/* Email Verification Banner */}
+        {user?.email && !user?.email_verified && (
+          <TouchableOpacity
+            style={[styles.emailBanner, { backgroundColor: '#fff8e1', borderColor: '#f59e0b' }]}
+            onPress={() => { setEmailInput(user.email || ''); setShowEmailModal(true); }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="mail-outline" size={18} color="#b45309" />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13, fontWeight: '800', color: '#b45309' }}>Verify your Email</Text>
+              <Text style={{ fontSize: 12, color: '#92400e' }}>{user.email} — tap to verify</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#b45309" />
+          </TouchableOpacity>
+        )}
+        {!user?.email && (
+          <TouchableOpacity
+            style={[styles.emailBanner, { backgroundColor: '#f0f9ff', borderColor: '#0ea5e9' }]}
+            onPress={() => { setEmailInput(''); setShowEmailModal(true); }}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="mail-add-outline" size={18} color="#0369a1" />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13, fontWeight: '800', color: '#0369a1' }}>Add & Verify Email</Text>
+              <Text style={{ fontSize: 12, color: '#0369a1' }}>Enable email OTP to save SMS cost</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#0369a1" />
+          </TouchableOpacity>
+        )}
+
         {/* PROGRESS CARD */}
         <LinearGradient
           colors={['#005d90', '#0077b6']}
@@ -223,6 +256,16 @@ export default function CustomerOnboardingScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
+
+      <EmailVerificationModal
+        visible={showEmailModal}
+        email={emailInput}
+        onClose={() => setShowEmailModal(false)}
+        onSuccess={() => {
+          setShowEmailModal(false);
+          syncSession();
+        }}
+      />
     </View>
   );
 }
@@ -231,6 +274,12 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   safe: { flex: 1 },
+
+  emailBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    marginHorizontal: 24, marginTop: 8, padding: 12,
+    borderRadius: 14, borderWidth: 1.5,
+  },
 
   header: {
     flexDirection: 'row',
