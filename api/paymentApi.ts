@@ -49,6 +49,19 @@ export const paymentApi = {
   },
 
   /**
+   * Verify Razorpay payment signature after checkout success
+   */
+  async verifyPayment(params: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }): Promise<any> {
+    try {
+      const response = await apiClient.post<ApiResponse<any>>('/payments/razorpay/verify', params);
+      return response.data.data;
+    } catch (error) {
+      log.error('[paymentApi] verifyPayment failed:', error);
+      throw ApiError.from(error, 'Payment verification failed');
+    }
+  },
+
+  /**
    * Reconcile/Verify a payment status with the gateway
    */
   async reconcilePayment(paymentId: number): Promise<any> {

@@ -37,6 +37,7 @@ import { addressApi } from "@/api/addressApi";
 import { systemApi } from "@/api/systemApi";
 import { log } from "@/utils/logger";
 import { ApiError } from "@/api/apiError";
+import { paymentApi } from "@/api/paymentApi";
 import { platformSubscriptionApi, CheckoutBenefits } from "@/api/platformSubscriptionApi";
 
 type PaymentType = "upi" | "cod";
@@ -618,11 +619,11 @@ export default function OrderCheckoutScreen() {
 
               if (payment === 'upi' && orderData.razorpay_order_id) {
                 const options = {
-                  description: `Order #${orderData.orderId}`,
+                  description: `Order #${orderData.order_number || orderData.id}`,
                   image: (shop as any).logo_url || 'https://thannigo.com/logo.png',
                   currency: orderData.currency || 'INR',
                   key: orderData.razorpay_key,
-                  amount: orderData.amount,
+                  amount: Math.round(Number(orderData.amount) * 100),
                   name: 'ThanniGo',
                   order_id: orderData.razorpay_order_id,
                   prefill: {
@@ -633,10 +634,17 @@ export default function OrderCheckoutScreen() {
                   theme: { color: CUSTOMER_ACCENT }
                 };
 
-                RazorpayCheckout.open(options).then((data: any) => {
-                  // Payment success handled by backend webhook mostly, 
-                  // but we can move to confirmation screen now
+                RazorpayCheckout.open(options).then(async (data: any) => {
                   log.info('[Razorpay] Payment success:', data);
+                  try {
+                    await paymentApi.verifyPayment({
+                      razorpay_order_id: data.razorpay_order_id,
+                      razorpay_payment_id: data.razorpay_payment_id,
+                      razorpay_signature: data.razorpay_signature,
+                    });
+                  } catch (verifyErr) {
+                    log.warn('[Razorpay] Verify call failed (webhook will reconcile):', verifyErr);
+                  }
                   clearCart();
                   router.push("/order/confirmed" as any);
                 }).catch((error: any) => {

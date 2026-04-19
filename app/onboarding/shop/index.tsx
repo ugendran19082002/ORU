@@ -15,7 +15,6 @@ import { authApi } from '@/api/authApi';
 import type { OnboardingStatus } from '@/types/onboarding';
 import { useAppSession } from '@/hooks/use-app-session';
 import { BackButton } from '@/components/ui/BackButton';
-import { EmailVerificationModal } from '@/components/ui/EmailVerificationModal';
 import { useLogoutBackHandler } from '@/hooks/use-logout-back-handler';
 
 export default function ShopOnboardingDashboard() {
@@ -28,8 +27,6 @@ export default function ShopOnboardingDashboard() {
   const [resubmitting, setResubmitting] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [data, setData] = useState<OnboardingStatus | null>(null);
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [emailInput, setEmailInput] = useState('');
 
 
   const fetchStatus = async () => {
@@ -232,44 +229,6 @@ export default function ShopOnboardingDashboard() {
           </View>
         )}
 
-        {/* Email Verification Banner */}
-        {user?.email && user?.email_verified ? (
-          <View style={[styles.emailBanner, { backgroundColor: '#f0fdf4', borderColor: '#22c55e' }]}>
-            <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, fontWeight: '800', color: '#16a34a' }}>Email Verified</Text>
-              <Text style={{ fontSize: 12, color: '#15803d' }}>{user.email} — OTP via email enabled</Text>
-            </View>
-            <Ionicons name="shield-checkmark-outline" size={16} color="#16a34a" />
-          </View>
-        ) : user?.email && !user?.email_verified ? (
-          <TouchableOpacity
-            style={[styles.emailBanner, { backgroundColor: '#fff8e1', borderColor: '#f59e0b' }]}
-            onPress={() => { setEmailInput(user.email || ''); setShowEmailModal(true); }}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="mail-outline" size={18} color="#b45309" />
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, fontWeight: '800', color: '#b45309' }}>Verify your Email</Text>
-              <Text style={{ fontSize: 12, color: '#92400e' }}>{user.email} — tap to verify</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#b45309" />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[styles.emailBanner, { backgroundColor: '#f0f9ff', borderColor: '#0ea5e9' }]}
-            onPress={() => { setEmailInput(''); setShowEmailModal(true); }}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="mail-add-outline" size={18} color="#0369a1" />
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, fontWeight: '800', color: '#0369a1' }}>Add & Verify Email</Text>
-              <Text style={{ fontSize: 12, color: '#0369a1' }}>Enable email OTP to save SMS cost</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#0369a1" />
-          </TouchableOpacity>
-        )}
-
         <LinearGradient
           colors={['#006878', '#004a55']}
           style={styles.progressCard}
@@ -433,15 +392,6 @@ export default function ShopOnboardingDashboard() {
 
       </SafeAreaView>
 
-      <EmailVerificationModal
-        visible={showEmailModal}
-        email={emailInput}
-        onClose={() => setShowEmailModal(false)}
-        onSuccess={() => {
-          setShowEmailModal(false);
-          syncSession();
-        }}
-      />
     </View>
   );
 }

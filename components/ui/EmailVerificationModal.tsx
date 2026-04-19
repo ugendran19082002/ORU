@@ -40,6 +40,7 @@ export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
       const interval = setInterval(() => setTimer(t => t - 1), 1000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [timer]);
 
   const getErrorMessage = (err: any): string =>
@@ -200,7 +201,7 @@ export const EmailVerificationModal: React.FC<EmailVerificationModalProps> = ({
             {Array.from({ length: OTP_LENGTH }).map((_, i) => (
               <TextInput
                 key={i}
-                ref={ref => (inputRefs.current[i] = ref)}
+                ref={ref => { inputRefs.current[i] = ref; }}
                 style={[styles.otpBox, otp[i] ? styles.btnActive : null]}
                 value={otp[i]}
                 onChangeText={(v) => handleOtpChange(v, i)}

@@ -131,6 +131,7 @@ export type ShopProfileRaw = {
   aadhar_no?: string | null;
   alternate_phone?: string | null;
   email?: string | null;
+  email_verified?: boolean;
   bank_name?: string | null;
   bank_branch?: string | null;
   account_holder_name?: string | null;
