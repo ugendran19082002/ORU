@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import {
   View, Text, ScrollView,
-  RefreshControl, Linking, TouchableOpacity, StyleSheet, Switch, Alert,
+  RefreshControl, Linking, TouchableOpacity, StyleSheet, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -260,7 +260,13 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.footer, { color: colors.muted }]}>ThanniGo v1.0.0 · Made with 💧 in India</Text>
+        {/* Branding footer */}
+        <View style={styles.footerRow}>
+          <Ionicons name="water" size={13} color={CUSTOMER_ACCENT} />
+          <Text style={[styles.footerBrand, { color: colors.text }]}>ThanniGo™</Text>
+          <View style={[styles.footerSep, { backgroundColor: colors.border }]} />
+          <Text style={[styles.footerFounder, { color: colors.muted }]}>Founded by Ugendran</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -316,6 +322,9 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   dangerBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 11, borderRadius: Radius.md },
   dangerBtnText: { fontSize: 12, fontWeight: '600', textDecorationLine: 'underline' },
 
-  footer: { textAlign: 'center', fontSize: 12, marginBottom: 8 },
+  footerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, marginBottom: 4 },
+  footerBrand: { fontSize: 14, fontWeight: '900', letterSpacing: -0.3 },
+  footerSep: { width: 1, height: 12 },
+  footerFounder: { fontSize: 12, fontWeight: '400', opacity: 0.6 },
 });
 

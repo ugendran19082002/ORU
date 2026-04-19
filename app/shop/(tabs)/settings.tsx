@@ -365,7 +365,13 @@ export default function ShopSettingsScreen() {
           <Text style={styles.signOutText}>Sign Out from Shop Panel</Text>
         </TouchableOpacity>
 
-        <Text style={[styles.version, { color: muted }]}>ThanniGo Shop Panel · v1.0.0</Text>
+        {/* Branding footer */}
+        <View style={styles.footerRow}>
+          <Ionicons name="water" size={13} color={SHOP_ACCENT} />
+          <Text style={[styles.footerBrand, { color: colors.text }]}>ThanniGo™</Text>
+          <View style={[styles.footerSep, { backgroundColor: colors.border }]} />
+          <Text style={[styles.footerFounder, { color: muted }]}>Founded by Ugendran</Text>
+        </View>
       </ScrollView>
 
       <PinEntryModal
@@ -419,5 +425,9 @@ const styles = StyleSheet.create({
 
   signOutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: Radius.lg, paddingVertical: 15, marginBottom: 12, borderWidth: 1.5 },
   signOutText: { color: '#ba1a1a', fontWeight: '800', fontSize: 14 },
-  version: { textAlign: 'center', fontSize: 11, fontWeight: '500', marginBottom: 8 },
+
+  footerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, marginBottom: 4 },
+  footerBrand: { fontSize: 14, fontWeight: '900', letterSpacing: -0.3 },
+  footerSep: { width: 1, height: 12 },
+  footerFounder: { fontSize: 12, fontWeight: '400', opacity: 0.6 },
 });

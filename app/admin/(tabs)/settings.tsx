@@ -142,7 +142,13 @@ export default function AdminSettingsScreen() {
             ))}
           </View>
 
-          <Text style={[styles.footer, { color: muted }]}>ThanniGo Admin · v1.0.0</Text>
+          {/* Branding footer */}
+          <View style={styles.footerRow}>
+            <Ionicons name="water" size={13} color={ADMIN_ACCENT} />
+            <Text style={[styles.footerBrand, { color: text }]}>ThanniGo™</Text>
+            <View style={[styles.footerSep, { backgroundColor: border }]} />
+            <Text style={[styles.footerFounder, { color: muted }]}>Founded by Ugendran</Text>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -183,5 +189,8 @@ const styles = StyleSheet.create({
   activeBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, marginRight: 8 },
   activeBadgeText: { fontSize: 10, fontWeight: '800' },
 
-  footer: { textAlign: 'center', marginTop: 32, fontSize: 12, fontWeight: '600' },
+  footerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, marginBottom: 4 },
+  footerBrand: { fontSize: 14, fontWeight: '900', letterSpacing: -0.3 },
+  footerSep: { width: 1, height: 12 },
+  footerFounder: { fontSize: 12, fontWeight: '400', opacity: 0.6 },
 });

@@ -381,6 +381,14 @@ export default function DeliveryDashboardScreen() {
             </View>
           </View>
         )}
+
+        {/* Branding footer */}
+        <View style={styles.footerRow}>
+          <Ionicons name="water" size={13} color={DELIVERY_ACCENT} />
+          <Text style={[styles.footerBrand, { color: colors.text }]}>ThanniGo™</Text>
+          <View style={[styles.footerSep, { backgroundColor: colors.border }]} />
+          <Text style={[styles.footerFounder, { color: colors.muted }]}>Founded by Ugendran</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -443,4 +451,9 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   shiftSub: { fontSize: 11, fontWeight: '500' },
   endShiftBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: Radius.sm },
   endShiftText: { fontWeight: '800', fontSize: 12 },
+
+  footerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 16, marginBottom: 4 },
+  footerBrand: { fontSize: 14, fontWeight: '900', letterSpacing: -0.3 },
+  footerSep: { width: 1, height: 12 },
+  footerFounder: { fontSize: 12, fontWeight: '400', opacity: 0.6 },
 });
