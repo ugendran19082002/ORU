@@ -27,6 +27,7 @@ export type Shop = {
   tags: string[];
   verified: boolean;
   pricePerCan: number;
+  minOrderValue: number;
   lat: number;
   lng: number;
   accent: string;

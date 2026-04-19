@@ -382,8 +382,22 @@ export default function HomeScreen() {
                       </View>
                     </View>
                     <View style={styles.priceBox}>
-                      <Text style={[styles.priceVal, { color: ACCENT }]}>₹{shop.pricePerCan}</Text>
-                      <Text style={[styles.priceLabel, { color: colors.muted }]}>per can</Text>
+                      {shop.pricePerCan > 0 ? (
+                        <>
+                          <Text style={[styles.priceVal, { color: ACCENT }]}>₹{shop.pricePerCan}</Text>
+                          <Text style={[styles.priceLabel, { color: colors.muted }]}>min. price</Text>
+                        </>
+                      ) : (
+                        <>
+                          <Text style={[styles.priceVal, { color: colors.muted }]}>—</Text>
+                          <Text style={[styles.priceLabel, { color: colors.muted }]}>no products</Text>
+                        </>
+                      )}
+                      {shop.minOrderValue > 0 && (
+                        <Text style={[styles.priceLabel, { color: colors.muted, marginTop: 2 }]}>
+                          min ₹{shop.minOrderValue}
+                        </Text>
+                      )}
                     </View>
                   </View>
 

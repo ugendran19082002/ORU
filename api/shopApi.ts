@@ -28,6 +28,7 @@ function mapShop(s: ShopProfileRaw): Shop {
     tags: s.shop_type ? [s.shop_type, 'Mineral Water'] : ['Mineral Water', 'Purified'],
     verified: s.status === 'active' || s.status === 'approved',
     pricePerCan: parseFloat(String(s.min_price || 0)) || 0,
+    minOrderValue: parseFloat(String((s as any).min_order_value || 0)) || 0,
     lat: parseFloat(String(s.latitude || 0)) || 0,
     lng: parseFloat(String(s.longitude || 0)) || 0,
     accent: '#005d90',

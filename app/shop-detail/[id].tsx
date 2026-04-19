@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Image } from 'expo-image';
@@ -29,6 +29,17 @@ interface ShopProduct {
   type: string;
 }
 
+interface ShopCoupon {
+  id: number;
+  code: string;
+  description: string | null;
+  discount_type: 'flat' | 'percentage';
+  discount_value: number;
+  min_order_value: number;
+  max_discount_amount: number | null;
+  valid_until: string | null;
+}
+
 interface ShopDetail {
   id: number;
   name: string;
@@ -55,12 +66,28 @@ export default function ShopDetailScreen() {
   useAndroidBackHandler(() => { safeBack('/(tabs)'); });
 
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { items, setQuantity, getSubtotal } = useCartStore();
+  const { items, setQuantity, confirmSwitchShop, cancelSwitchShop, getSubtotal } = useCartStore();
+
+  const handleSetQuantity = (productId: string, qty: number, shopId: string, itemData: { name: string; price: number }) => {
+    const added = setQuantity(productId, qty, shopId, itemData);
+    if (!added) {
+      Alert.alert(
+        'Start new cart?',
+        'You have items from another shop. Starting a new cart will remove them.',
+        [
+          { text: 'Keep current cart', style: 'cancel', onPress: cancelSwitchShop },
+          { text: 'Start new cart', style: 'destructive', onPress: confirmSwitchShop },
+        ],
+      );
+    }
+  };
 
   const [shop, setShop] = useState<ShopDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'products' | 'info'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'coupons' | 'info'>('products');
+  const [coupons, setCoupons] = useState<ShopCoupon[]>([]);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const fetchShop = useCallback(async () => {
     if (!id) return;
@@ -87,6 +114,19 @@ export default function ShopDetailScreen() {
   }, [id]);
 
   useEffect(() => { fetchShop(); }, [fetchShop]);
+
+  useEffect(() => {
+    if (!id) return;
+    apiClient.get('/coupons/active', { params: { shop_id: id } })
+      .then(res => { if (res.data.status === 1) setCoupons(res.data.data ?? []); })
+      .catch(() => {});
+  }, [id]);
+
+  const handleCopyCode = (code: string) => {
+    setCopiedCode(code);
+    Toast.show({ type: 'success', text1: `Code copied: ${code}`, text2: 'Paste it at checkout.' });
+    setTimeout(() => setCopiedCode(null), 3000);
+  };
 
   const totalItems = Object.values(items).reduce((a, b) => a + b.quantity, 0);
   const subtotal = getSubtotal();
@@ -168,20 +208,18 @@ export default function ShopDetailScreen() {
 
       {/* TAB BAR */}
       <View style={styles.tabBar}>
-        {(['products', 'info'] as const).map((tab) => (
+        {([
+          { key: 'products', icon: 'water-outline', label: 'Products' },
+          { key: 'coupons', icon: 'pricetag-outline', label: `Offers${coupons.length > 0 ? ` (${coupons.length})` : ''}` },
+          { key: 'info', icon: 'information-circle-outline', label: 'Info' },
+        ] as const).map((tab) => (
           <TouchableOpacity
-            key={tab}
-            style={[styles.tabBtn, activeTab === tab && styles.tabBtnActive]}
-            onPress={() => setActiveTab(tab)}
+            key={tab.key}
+            style={[styles.tabBtn, activeTab === tab.key && styles.tabBtnActive]}
+            onPress={() => setActiveTab(tab.key)}
           >
-            <Ionicons
-              name={tab === 'products' ? 'water-outline' : 'information-circle-outline'}
-              size={16}
-              color={activeTab === tab ? '#005d90' : '#9ca3af'}
-            />
-            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-              {tab === 'products' ? 'Products' : 'Shop Info'}
-            </Text>
+            <Ionicons name={tab.icon} size={16} color={activeTab === tab.key ? '#005d90' : '#9ca3af'} />
+            <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>{tab.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -196,7 +234,7 @@ export default function ShopDetailScreen() {
             {!shop.is_open && (
               <View style={styles.closedBanner}>
                 <Ionicons name="time-outline" size={18} color="#b45309" />
-                <Text style={styles.closedBannerText}>This shop is currently closed. You can still browse products.</Text>
+                <Text style={styles.closedBannerText}>Shop is currently closed — browse only, ordering unavailable.</Text>
               </View>
             )}
             {shop.Products?.length === 0 && (
@@ -207,7 +245,7 @@ export default function ShopDetailScreen() {
             )}
             {shop.Products?.map((product) => {
               const qty = items[String(product.id)]?.quantity ?? 0;
-              const inStock = product.is_available && product.stock_quantity > 0;
+              const inStock = shop.is_open && product.is_available && product.stock_quantity > 0;
               return (
                 <View key={product.id} style={styles.productCard}>
                   {product.image_url ? (
@@ -231,7 +269,7 @@ export default function ShopDetailScreen() {
                           {qty === 0 ? (
                             <TouchableOpacity
                               style={styles.addBtn}
-                              onPress={() => setQuantity(String(product.id), 1, String(id), { name: product.name, price: product.price })}
+                              onPress={() => handleSetQuantity(String(product.id), 1, String(id), { name: product.name, price: product.price })}
                             >
                               <Ionicons name="add" size={18} color="white" />
                               <Text style={styles.addBtnText}>Add</Text>
@@ -240,14 +278,14 @@ export default function ShopDetailScreen() {
                             <>
                               <TouchableOpacity
                                 style={styles.stepperBtn}
-                                onPress={() => setQuantity(String(product.id), qty - 1, String(id), { name: product.name, price: product.price })}
+                                onPress={() => handleSetQuantity(String(product.id), qty - 1, String(id), { name: product.name, price: product.price })}
                               >
                                 <Ionicons name="remove" size={18} color="#005d90" />
                               </TouchableOpacity>
                               <Text style={styles.stepperQty}>{qty}</Text>
                               <TouchableOpacity
                                 style={styles.stepperBtn}
-                                onPress={() => setQuantity(String(product.id), qty + 1, String(id), { name: product.name, price: product.price })}
+                                onPress={() => handleSetQuantity(String(product.id), qty + 1, String(id), { name: product.name, price: product.price })}
                               >
                                 <Ionicons name="add" size={18} color="#005d90" />
                               </TouchableOpacity>
@@ -256,7 +294,9 @@ export default function ShopDetailScreen() {
                         </View>
                       ) : (
                         <View style={styles.outOfStock}>
-                          <Text style={styles.outOfStockText}>Out of Stock</Text>
+                          <Text style={styles.outOfStockText}>
+                            {!shop.is_open ? 'Shop Closed' : 'Out of Stock'}
+                          </Text>
                         </View>
                       )}
                     </View>
@@ -267,6 +307,54 @@ export default function ShopDetailScreen() {
                       </View>
                     )}
                   </View>
+                </View>
+              );
+            })}
+          </>
+        ) : activeTab === 'coupons' ? (
+          <>
+            <Text style={styles.sectionTitle}>Available Offers</Text>
+            {coupons.length === 0 ? (
+              <View style={styles.emptyProducts}>
+                <Ionicons name="pricetag-outline" size={40} color="#bfc7d1" />
+                <Text style={styles.emptyProductsText}>No active offers right now.</Text>
+              </View>
+            ) : coupons.map((coupon) => {
+              const isCopied = copiedCode === coupon.code;
+              const discountLabel = coupon.discount_type === 'percentage'
+                ? `${coupon.discount_value}% off${coupon.max_discount_amount ? ` (up to ₹${coupon.max_discount_amount})` : ''}`
+                : `₹${coupon.discount_value} off`;
+              return (
+                <View key={coupon.id} style={styles.couponCard}>
+                  <View style={styles.couponLeft}>
+                    <View style={styles.couponIconWrap}>
+                      <Ionicons name="pricetag" size={20} color="#005d90" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.couponCode}>{coupon.code}</Text>
+                      <Text style={styles.couponDiscount}>{discountLabel}</Text>
+                      {coupon.description ? (
+                        <Text style={styles.couponDesc} numberOfLines={2}>{coupon.description}</Text>
+                      ) : null}
+                      {coupon.min_order_value > 0 && (
+                        <Text style={styles.couponMin}>Min. order ₹{coupon.min_order_value}</Text>
+                      )}
+                      {coupon.valid_until && (
+                        <Text style={styles.couponExp}>
+                          Valid till {new Date(coupon.valid_until).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={[styles.couponCopyBtn, isCopied && styles.couponCopyBtnDone]}
+                    onPress={() => handleCopyCode(coupon.code)}
+                  >
+                    <Ionicons name={isCopied ? 'checkmark' : 'copy-outline'} size={14} color={isCopied ? '#16a34a' : '#005d90'} />
+                    <Text style={[styles.couponCopyText, isCopied && { color: '#16a34a' }]}>
+                      {isCopied ? 'Copied!' : 'Copy'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               );
             })}
@@ -375,6 +463,17 @@ const makeStyles = (colors: any) => StyleSheet.create({
   outOfStockText: { fontSize: 11, color: '#9ca3af', fontWeight: '700' },
   lowStockRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
   lowStockText: { fontSize: 11, color: '#b45309', fontWeight: '700' },
+  couponCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 16, padding: 14, marginBottom: 10, borderWidth: 1.5, borderColor: '#e0f0ff', borderStyle: 'dashed', gap: 10 },
+  couponLeft: { flex: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  couponIconWrap: { width: 38, height: 38, borderRadius: 10, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
+  couponCode: { fontSize: 15, fontWeight: '900', color: '#005d90', letterSpacing: 1 },
+  couponDiscount: { fontSize: 13, fontWeight: '700', color: '#16a34a', marginTop: 2 },
+  couponDesc: { fontSize: 12, color: colors.muted ?? '#9ca3af', marginTop: 3, lineHeight: 17 },
+  couponMin: { fontSize: 11, color: '#b45309', fontWeight: '600', marginTop: 3 },
+  couponExp: { fontSize: 11, color: colors.muted ?? '#9ca3af', marginTop: 2 },
+  couponCopyBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#e0f0ff', paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10 },
+  couponCopyBtnDone: { backgroundColor: '#dcfce7' },
+  couponCopyText: { fontSize: 12, fontWeight: '800', color: '#005d90' },
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
   infoIconWrap: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#e0f0ff', alignItems: 'center', justifyContent: 'center' },
   infoLabel: { fontSize: 11, color: '#9ca3af', fontWeight: '600', marginBottom: 2 },
