@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useAppTheme } from '@/providers/ThemeContext';
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { useFocusEffect } from "expo-router";
 import {
   ActivityIndicator,
@@ -26,7 +26,7 @@ import { useCartStore } from "@/stores/cartStore";
 import { useOrderStore } from "@/stores/orderStore";
 import { useShopStore } from "@/stores/shopStore";
 import { useAppSession } from "@/hooks/use-app-session";
-import { Shadow, roleAccent, roleGradients, roleSurface, Radius } from "@/constants/theme";
+import { Shadow, roleAccent, roleGradients } from "@/constants/theme";
 
 const CUSTOMER_ACCENT = roleAccent.customer;
 const CUSTOMER_GRAD: [string, string] = [roleGradients.customer.start, roleGradients.customer.end];
@@ -37,19 +37,12 @@ import { promotionApi } from "@/api/promotionApi";
 import { apiClient } from "@/api/client";
 import { addressApi } from "@/api/addressApi";
 import { systemApi } from "@/api/systemApi";
-import { log } from "@/utils/logger";
 import { ApiError } from "@/api/apiError";
 import { paymentApi } from "@/api/paymentApi";
 import { platformSubscriptionApi, CheckoutBenefits } from "@/api/platformSubscriptionApi";
 
 type PaymentType = "upi" | "cod";
 
-// Sub-components moved inside Main Screen
- 
-// Sub-components moved inside Main Screen
-
-
-// Real address type based on API response
 interface Address {
   id: string | number;
   label: string;
@@ -60,238 +53,228 @@ interface Address {
   longitude?: number;
 }
 
+const StepBadge = ({ n, color }: { n: number; color: string }) => (
+  <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: color, alignItems: 'center', justifyContent: 'center' }}>
+    <Text style={{ fontSize: 11, fontWeight: '900', color: 'white' }}>{n}</Text>
+  </View>
+);
+
+function BillRow({ label, value, valueColor }: { label: any; value: any; valueColor?: string }) {
+  const { colors } = useAppTheme();
+  return (
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+      {typeof label === 'string'
+        ? <Text style={{ fontSize: 13, color: colors.muted, fontWeight: '500', flex: 1 }}>{label}</Text>
+        : label}
+      {typeof value === 'string'
+        ? <Text style={{ fontSize: 14, fontWeight: '800', color: valueColor || colors.text }}>{value}</Text>
+        : value}
+    </View>
+  );
+}
+
+// ─── CouponBlock lifted to module-level so it never remounts on parent re-render
+function CouponBlock({
+  subtotal, shopId, availableCoupons, onApply,
+}: {
+  subtotal: number;
+  shopId: string | null;
+  availableCoupons: any[];
+  onApply?: (discount: number, code: string) => void;
+}) {
+  const { colors } = useAppTheme();
+  const styles = makeStyles(colors);
+  const [coupon, setCoupon] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [couponError, setCouponError] = useState("");
+  const [isValidating, setIsValidating] = useState(false);
+
+  const doApply = async (code?: string) => {
+    const targetCode = (code ?? coupon).trim().toUpperCase();
+    if (!targetCode) return;
+    setIsValidating(true);
+    setCouponError("");
+    try {
+      const result = await promotionApi.validateCoupon(targetCode, subtotal, shopId ?? undefined);
+      setDiscount(result.discount_amount);
+      setCoupon(targetCode);
+      onApply?.(result.discount_amount, targetCode);
+      Toast.show({ type: 'success', text1: '🎉 Coupon Applied!', text2: `You save ₹${result.discount_amount}` });
+    } catch (err) {
+      setDiscount(0);
+      onApply?.(0, "");
+      setCouponError(err instanceof ApiError ? (err.message || "Invalid coupon.") : "Could not validate. Try again.");
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const removeCoupon = () => { setCoupon(""); setDiscount(0); setCouponError(""); onApply?.(0, ""); };
+
+  const couponSavingLabel = (c: any) => {
+    if (c.type === 'percentage') return `${c.discount_value}% off${c.max_discount ? ` (up to ₹${c.max_discount})` : ''}`;
+    if (c.type === 'free_delivery') return 'Free delivery';
+    return `₹${c.discount_value} off`;
+  };
+
+  const isApplied = discount > 0;
+  const cannotApply = !coupon.trim() || isValidating || isApplied;
+
+  return (
+    <View>
+      {isApplied ? (
+        <View style={styles.couponAppliedBanner}>
+          <View style={styles.couponAppliedIcon}>
+            <Ionicons name="checkmark" size={14} color="white" />
+          </View>
+          <View style={{ flex: 1, marginLeft: 10 }}>
+            <Text style={styles.couponAppliedCode}>{coupon}</Text>
+            <Text style={styles.couponAppliedSaving}>Saving ₹{discount} on this order</Text>
+          </View>
+          <TouchableOpacity onPress={removeCoupon} style={styles.couponRemoveBtn}>
+            <Text style={styles.couponRemoveText}>Remove</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          {availableCoupons.length > 0 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', gap: 8, paddingRight: 8 }}>
+                {availableCoupons.map((c) => {
+                  const meetsMin = Number(c.min_order_value || 0) <= subtotal;
+                  return (
+                    <TouchableOpacity
+                      key={c.id}
+                      onPress={() => { if (meetsMin) { setCoupon(c.code); doApply(c.code); } }}
+                      activeOpacity={meetsMin ? 0.7 : 1}
+                      style={[styles.couponChip, !meetsMin && styles.couponChipDisabled]}
+                    >
+                      <Ionicons name="pricetag-outline" size={12} color={meetsMin ? CUSTOMER_ACCENT : colors.muted} />
+                      <View>
+                        <Text style={[styles.couponChipCode, !meetsMin && { color: colors.muted }]}>{c.code}</Text>
+                        <Text style={styles.couponChipLabel}>{couponSavingLabel(c)}</Text>
+                        {!meetsMin && Number(c.min_order_value) > 0 && (
+                          <Text style={styles.couponChipMinOrder}>Min order ₹{c.min_order_value}</Text>
+                        )}
+                      </View>
+                      {!meetsMin && (
+                        <View style={styles.couponChipLock}>
+                          <Ionicons name="lock-closed" size={10} color={colors.muted} />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          )}
+
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <TextInput
+              value={coupon}
+              onChangeText={(t) => { setCoupon(t); setCouponError(""); }}
+              placeholder="Enter promo code"
+              placeholderTextColor={colors.muted}
+              autoCapitalize="characters"
+              editable={!isApplied}
+              style={[styles.couponInput, couponError ? { borderColor: colors.error } : {}]}
+            />
+            <TouchableOpacity
+              onPress={() => doApply()}
+              disabled={cannotApply}
+              style={[styles.couponApplyBtn, cannotApply && { opacity: 0.45 }]}
+            >
+              {isValidating
+                ? <ActivityIndicator size="small" color="white" />
+                : <Text style={styles.couponApplyText}>Apply</Text>
+              }
+            </TouchableOpacity>
+          </View>
+
+          {couponError ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+              <Ionicons name="alert-circle-outline" size={14} color={colors.error} />
+              <Text style={{ color: colors.error, fontSize: 12, fontWeight: "600" }}>{couponError}</Text>
+            </View>
+          ) : null}
+        </>
+      )}
+    </View>
+  );
+}
+
 export default function OrderCheckoutScreen() {
   const { colors, isDark } = useAppTheme();
   const styles = makeStyles(colors);
 
-  // ─── Inner Components ───────────────────────────────────────────────────────
-
-  const CouponBlock = ({ subtotal, onApply }: { subtotal: number; onApply?: (discount: number, code: string) => void }) => {
-    const [coupon, setCoupon] = useState("");
-    const [discount, setDiscount] = useState(0);
-    const [couponError, setCouponError] = useState("");
-    const [isValidating, setIsValidating] = useState(false);
-    const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
-
-    useEffect(() => {
-      if (!shopId) return;
-      apiClient.get('/promotion/coupons/active', { params: { shop_id: shopId } })
-        .then(res => { if (res.data.status === 1) setAvailableCoupons(res.data.data ?? []); })
-        .catch(() => {});
-    }, []);
-
-    const applyCoupon = async (code?: string) => {
-      const targetCode = (code ?? coupon).trim().toUpperCase();
-      if (!targetCode) return;
-      setIsValidating(true);
-      setCouponError("");
-      try {
-        const result = await promotionApi.validateCoupon(targetCode, subtotal, shopId);
-        setDiscount(result.discount_amount);
-        setCoupon(targetCode);
-        onApply?.(result.discount_amount, targetCode);
-      } catch (err) {
-        setDiscount(0);
-        onApply?.(0, "");
-        if (err instanceof ApiError) {
-          setCouponError(err.message || "Invalid or expired coupon code.");
-        } else {
-          setCouponError("Could not validate coupon. Please try again.");
-        }
-      } finally {
-        setIsValidating(false);
-      }
-    };
-
-    const couponLabel = (c: any) => {
-      if (c.type === 'percentage') return `${c.discount_value}% off${c.max_discount ? ` (up to ₹${c.max_discount})` : ''}`;
-      if (c.type === 'free_delivery') return 'Free delivery';
-      return `₹${c.discount_value} off`;
-    };
-
-    return (
-      <View style={{ marginTop: 8 }}>
-        {/* Available coupon chips */}
-        {availableCoupons.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-            <View style={{ flexDirection: 'row', gap: 8, paddingRight: 8 }}>
-              {availableCoupons.map((c) => {
-                const isApplied = coupon === c.code && discount > 0;
-                return (
-                  <TouchableOpacity
-                    key={c.id}
-                    onPress={() => { setCoupon(c.code); applyCoupon(c.code); }}
-                    style={{
-                      flexDirection: 'row', alignItems: 'center', gap: 6,
-                      backgroundColor: isApplied ? colors.successSoft : colors.surface,
-                      borderWidth: 1.5,
-                      borderColor: isApplied ? colors.success : colors.border,
-                      borderStyle: 'dashed',
-                      borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8,
-                    }}
-                  >
-                    <Ionicons name="pricetag-outline" size={13} color={isApplied ? colors.success : CUSTOMER_ACCENT} />
-                    <View>
-                      <Text style={{ fontSize: 12, fontWeight: '900', color: isApplied ? colors.success : colors.text }}>{c.code}</Text>
-                      <Text style={{ fontSize: 11, color: colors.muted, fontWeight: '500' }}>{couponLabel(c)}</Text>
-                    </View>
-                    {isApplied && <Ionicons name="checkmark-circle" size={14} color={colors.success} />}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </ScrollView>
-        )}
-
-        {/* Manual code entry */}
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          <View style={{ flex: 1, position: 'relative' }}>
-            <TextInput
-              value={coupon}
-              onChangeText={(t) => {
-                setCoupon(t);
-                setCouponError("");
-                if (discount > 0) {
-                  setDiscount(0);
-                  onApply?.(0, "");
-                }
-              }}
-              placeholder="Enter promo code"
-              placeholderTextColor="#bfc7d1"
-              autoCapitalize="characters"
-              style={{
-                backgroundColor: colors.surface,
-                borderRadius: 14,
-                paddingHorizontal: 14,
-                paddingVertical: 12,
-                paddingRight: 40,
-                borderWidth: 1.5,
-                borderColor: discount > 0 ? colors.success : couponError ? colors.error : colors.border,
-                fontSize: 15,
-                fontWeight: "700",
-                color: colors.text,
-              }}
-            />
-            {discount > 0 && (
-              <View style={{ position: 'absolute', right: 12, top: 14 }}>
-                <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-              </View>
-            )}
-          </View>
-          <TouchableOpacity
-            onPress={() => applyCoupon()}
-            disabled={!coupon.trim() || isValidating}
-            style={{
-              backgroundColor: colors.primary,
-              borderRadius: 14,
-              paddingHorizontal: 20,
-              justifyContent: "center",
-              opacity: !coupon.trim() || isValidating ? 0.6 : 1,
-            }}
-          >
-            {isValidating ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <Text style={{ color: "white", fontWeight: "800", fontSize: 14 }}>Apply</Text>
-            )}
-          </TouchableOpacity>
+  // ─── Loyalty Block ──────────────────────────────────────────────────────────
+  const LoyaltyBlock = ({ points, onToggle, isEnabled, discountAmt }: {
+    points: number; onToggle: (val: boolean) => void; isEnabled: boolean; discountAmt: number;
+  }) => (
+    <TouchableOpacity onPress={() => onToggle(!isEnabled)} activeOpacity={0.85}
+      style={[styles.loyaltyCard, isEnabled && styles.loyaltyCardActive]}>
+      <LinearGradient
+        colors={isEnabled ? ['#f59e0b', '#d97706'] : [colors.surface, colors.surface]}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+        style={styles.loyaltyGradient}
+      >
+        <View style={[styles.loyaltyIconWrap, isEnabled && { backgroundColor: 'rgba(255,255,255,0.25)' }]}>
+          <Ionicons name="star" size={18} color={isEnabled ? 'white' : '#f59e0b'} />
         </View>
-        {couponError ? (
-          <Text style={{ color: colors.error, fontSize: 12, marginTop: 8, fontWeight: "600", marginLeft: 4 }}>
-            {couponError}
-          </Text>
-        ) : null}
-        {discount > 0 ? (
-          <Text style={{ color: colors.success, fontSize: 13, marginTop: 8, fontWeight: "800", marginLeft: 4 }}>
-            ₹{discount} off applied!
-          </Text>
-        ) : null}
-      </View>
-    );
-  };
-
-  const LoyaltyBlock = ({ points, onToggle, isEnabled }: { points: number; onToggle: (val: boolean) => void; isEnabled: boolean }) => {
-    return (
-      <View style={styles.loyaltyCard}>
-        <View style={{ flex: 1, gap: 4 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Ionicons name="gift" size={18} color={CUSTOMER_ACCENT} />
-            <Text style={{ fontSize: 13, fontWeight: '800', color: colors.text }}>Thanni Points</Text>
-          </View>
-          <Text style={{ fontSize: 11, color: colors.muted, fontWeight: '500' }}>
-            You have {points} points available. Use them to get a discount on this order.
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.loyaltyTitle, isEnabled && { color: 'white' }]}>Thanni Points</Text>
+          <Text style={[styles.loyaltySub, isEnabled && { color: 'rgba(255,255,255,0.8)' }]}>
+            {points} pts available{isEnabled ? ` · Saving ₹${discountAmt}` : ' · Tap to redeem'}
           </Text>
         </View>
-        <TouchableOpacity 
-          onPress={() => onToggle(!isEnabled)}
-          style={[styles.loyaltyToggle, isEnabled && styles.loyaltyToggleActive]}
-        >
-          <View style={[styles.loyaltyThumb, isEnabled && styles.loyaltyThumbActive]} />
-        </TouchableOpacity>
-      </View>
-    );
-  };
+        <View style={[styles.loyaltyToggle, isEnabled && styles.loyaltyToggleOn]}>
+          <View style={[styles.loyaltyThumb, isEnabled && styles.loyaltyThumbOn]} />
+        </View>
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+
+  // ─── State ─────────────────────────────────────────────────────────────────
   const [refreshing, setRefreshing] = React.useState(false);
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
-
   const router = useRouter();
   const { safeBack } = useAppNavigation();
   const { user } = useAppSession();
 
-  const {
-    shopId: paramShopId,
-    slotId,
-    date,
-    slotLabel,
-    note: paramNote,
-  } = useLocalSearchParams<{
-    shopId?: string;
-    slotId?: string;
-    date?: string;
-    slotLabel?: string;
-    note?: string;
+  const { shopId: paramShopId, slotId, date, slotLabel } = useLocalSearchParams<{
+    shopId?: string; slotId?: string; date?: string; slotLabel?: string; note?: string;
   }>();
-  
   const cartShopId = useCartStore((s) => s.shopId);
   const shopId = paramShopId || cartShopId;
 
-  const {
-    paymentMethod,
-    setPaymentMethod,
-    getSubtotal,
-    getDeliveryFee,
-    getTotal,
-    items,
-    note,
-    clearCart,
-    applyCoupon,
-  } = useCartStore();
+  const { paymentMethod, setPaymentMethod, getSubtotal, getDeliveryFee, items, note, clearCart, applyCoupon } = useCartStore();
   const { shops } = useShopStore();
   const { placeOrder, isSubmitting } = useOrderStore();
 
   const [deliveryType, setDeliveryType] = useState<'instant' | 'scheduled'>('instant');
-  const [payment, setPayment] = useState<PaymentType>(
-    (paymentMethod as PaymentType) || "upi",
-  );
+  const [payment, setPayment] = useState<PaymentType>((paymentMethod as PaymentType) || "upi");
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [useLoyalty, setUseLoyalty] = useState(false);
   const [calculatedDistance, setCalculatedDistance] = useState(1.2);
+  const [benefits, setBenefits] = useState<CheckoutBenefits | null>(null);
+  const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
+  // ─── Payment retry: store pending razorpay order so re-tap doesn't create a new DB order ───
+  const [pendingRzpOrderId, setPendingRzpOrderId] = useState<string | null>(null);
+  const [pendingOrderData, setPendingOrderData] = useState<any | null>(null);
 
-
-  // Sync paramNote with cartStore if provided from schedule screen
   React.useEffect(() => {
-    if (slotId) setDeliveryType('scheduled');
-  }, [slotId]);
+    if (!shopId) return;
+    apiClient.get('/promotion/coupons/active', { params: { shop_id: shopId } })
+      .then(res => { if (res.data.status === 1) setAvailableCoupons(res.data.data ?? []); })
+      .catch(() => {});
+  }, [shopId]);
+
+  React.useEffect(() => { if (slotId) setDeliveryType('scheduled'); }, [slotId]);
 
   const shop = shopId ? shops.find((item) => String(item.id) === String(shopId)) : undefined;
 
-  // Wait for remote shops to load before rendering
   if (shops.length === 0) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -306,84 +289,48 @@ export default function OrderCheckoutScreen() {
       const res = await addressApi.getAddresses();
       const addrList = res.data.data || [];
       setAddresses(addrList);
-      
-      // Auto-select: check for default, else first available
-      let targetAddr = addrList.find((a: any) => a.is_default) || (addrList.length > 0 ? addrList[0] : null);
-      if (targetAddr) {
-        setSelectedAddress(targetAddr);
-        calculateDistance(targetAddr);
-      }
-    } catch (err) {
-      log.error("[Checkout] Failed to fetch addresses:", err);
-      Toast.show({ type: 'error', text1: 'Address Error', text2: 'Could not load your saved addresses' });
-    } finally {
-      setLoadingAddresses(false);
-    }
+      const targetAddr = addrList.find((a: any) => a.is_default) || (addrList.length > 0 ? addrList[0] : null);
+      if (targetAddr) { setSelectedAddress(targetAddr); calculateDistance(targetAddr); }
+    } catch {
+      Toast.show({ type: 'error', text1: 'Address Error', text2: 'Could not load saved addresses' });
+    } finally { setLoadingAddresses(false); }
   };
 
   const calculateDistance = async (addr: Address) => {
     if (!addr.latitude || !addr.longitude || !(shop as any)?.lat || !(shop as any)?.lng) return;
     try {
       const res = await systemApi.getDistance((shop as any).lat, (shop as any).lng, addr.latitude, addr.longitude);
-      if (res.data?.distance_km && res.data.distance_km > 0) {
-        setCalculatedDistance(res.data.distance_km);
-      }
-    } catch(e) {
-       console.warn("Failed to calc API distance, fallback 1.2 used", e);
-    }
+      if (res.data?.distance_km > 0) setCalculatedDistance(res.data.distance_km);
+    } catch {}
   };
 
-  const [benefits, setBenefits] = useState<CheckoutBenefits | null>(null);
-  const [loadingBenefits, setLoadingBenefits] = useState(false);
-
   React.useEffect(() => {
-    const fetchBenefits = async () => {
-      setLoadingBenefits(true);
-      try {
-        const data = await platformSubscriptionApi.getCheckoutBenefits();
-        setBenefits(data);
-      } catch (e) {
-        log.warn('[Checkout] Failed to fetch benefits', e);
-      } finally {
-        setLoadingBenefits(false);
-      }
-    };
-    fetchBenefits();
+    platformSubscriptionApi.getCheckoutBenefits().then(setBenefits).catch(() => {});
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchAddresses();
-    }, [])
-  );
-
+  useFocusEffect(useCallback(() => { fetchAddresses(); }, []));
   useAndroidBackHandler(() => {
     if (showAddressModal) setShowAddressModal(false);
     else safeBack("/(tabs)");
   });
 
-  const quantity = Object.values(items).reduce((sum, item) => sum + item.quantity, 0);
+  // ─── Totals ────────────────────────────────────────────────────────────────
+  const cartItems = Object.values(items).filter(i => i.quantity > 0);
+  const quantity = cartItems.reduce((sum, i) => sum + i.quantity, 0);
   const subtotal = getSubtotal();
   const rawDeliveryFee = getDeliveryFee();
-  
   const hasFreeDelivery = benefits?.free_delivery ?? false;
   const deliveryFee = hasFreeDelivery ? 0 : rawDeliveryFee;
-
   const floorCharge = (shop as any)?.floor_charge || 0;
-  
-  // Stacking: Subtotal -> Coupon -> Sub Discount -> Loyalty -> Delivery
   const couponDiscount = useCartStore(s => s.couponDiscount);
   const postCouponTarget = Math.max(0, subtotal - couponDiscount);
-  
   const subDiscountPct = benefits?.auto_discount_pct ?? 0;
   const subDiscountAmt = Math.floor(postCouponTarget * (subDiscountPct / 100));
-  
   const postSubTarget = Math.max(0, postCouponTarget - subDiscountAmt);
-
   const maxLoyaltyUse = Math.min(user?.loyalty_points || 0, postSubTarget);
   const loyaltyDiscount = useLoyalty ? maxLoyaltyUse : 0;
-
   const total = Math.max(0, postSubTarget - loyaltyDiscount) + deliveryFee + floorCharge;
+  const totalSaved = couponDiscount + subDiscountAmt + loyaltyDiscount + (hasFreeDelivery ? rawDeliveryFee : 0);
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -393,278 +340,253 @@ export default function OrderCheckoutScreen() {
       <View style={styles.header}>
         <BackButton fallback="/(tabs)" />
         <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={styles.headerTitle}>Order Summary</Text>
-          {shop ? (
-            <TouchableOpacity onPress={() => router.push(`/shop-detail/${shop.id}` as any)}>
-              <Text style={{ fontSize: 12, color: CUSTOMER_ACCENT, fontWeight: '700', marginTop: 2 }}>{shop.name} ›</Text>
-            </TouchableOpacity>
-          ) : (
-            <Text style={{ fontSize: 12, color: colors.error, fontWeight: '700', marginTop: 2 }}>Shop offline or missing</Text>
-          )}
+          <Text style={styles.headerTitle}>Checkout</Text>
+          {shop
+            ? <TouchableOpacity onPress={() => router.push(`/shop-detail/${shop.id}` as any)}>
+                <Text style={styles.headerShopName}>{shop.name} ›</Text>
+              </TouchableOpacity>
+            : <Text style={{ fontSize: 12, color: colors.error, fontWeight: '700', marginTop: 2 }}>Shop offline</Text>
+          }
         </View>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#005d90"]}
-          />
-        }
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 180 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); setTimeout(() => setRefreshing(false), 800); }} colors={[CUSTOMER_ACCENT]} />}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 200 }}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        {/* PAYMENT METHOD */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Payment Method</Text>
-        </View>
-        <View style={styles.paymentGrid}>
-          <TouchableOpacity
-            style={[
-              styles.paymentOption,
-              payment === "upi" && styles.paymentOptionActive,
-            ]}
-            onPress={() => {
-              setPayment("upi");
-              setPaymentMethod("upi");
-            }}
-          >
-            <View
-              style={[
-                styles.paymentIcon,
-                payment === "upi" && styles.paymentIconActive,
-              ]}
-            >
-              <Ionicons
-                name="phone-portrait-outline"
-                size={20}
-                color={payment === "upi" ? colors.primary : colors.muted}
-              />
-            </View>
-            <Text
-              style={[
-                styles.paymentOptionLabel,
-                payment === "upi" && styles.paymentOptionLabelActive,
-              ]}
-            >
-              UPI
-            </Text>
-            <Text style={styles.paymentNote}>GPay / PhonePe</Text>
-          </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.paymentOption,
-              payment === "cod" && styles.paymentOptionActive,
-            ]}
-            onPress={() => {
-              setPayment("cod");
-              setPaymentMethod("cod");
-            }}
-          >
-            <View
-              style={[
-                styles.paymentIcon,
-                payment === "cod" && styles.paymentIconActive,
-              ]}
-            >
-              <Ionicons
-                name="cash-outline"
-                size={20}
-                color={payment === "cod" ? colors.primary : colors.muted}
-              />
-            </View>
-            <Text
-              style={[
-                styles.paymentOptionLabel,
-                payment === "cod" && styles.paymentOptionLabelActive,
-              ]}
-            >
-              Cash
-            </Text>
-            <Text style={styles.paymentNote}>On Delivery</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* DELIVERY TYPE */}
-        <View style={styles.sectionHeader}>
+        {/* ── STEP 1 · DELIVERY MODE ── */}
+        <View style={styles.sectionRow}>
+          <StepBadge n={1} color={CUSTOMER_ACCENT} />
           <Text style={styles.sectionTitle}>Delivery Mode</Text>
         </View>
         <View style={styles.deliveryToggle}>
-          <TouchableOpacity
-            style={[styles.toggleBtn, deliveryType === 'instant' && styles.toggleBtnActive]}
-            onPress={() => setDeliveryType('instant')}
-          >
-            <Ionicons name="flash" size={18} color={deliveryType === 'instant' ? 'white' : colors.muted} />
-            <Text style={[styles.toggleText, deliveryType === 'instant' && styles.toggleTextActive]}>Instant</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.toggleBtn, deliveryType === 'scheduled' && styles.toggleBtnActive]}
-            onPress={() => {
-              if (!slotId) {
-                router.push({ pathname: '/order/schedule' as any, params: { shopId: shop.id } });
-              } else {
-                setDeliveryType('scheduled');
-              }
-            }}
-          >
-            <Ionicons name="calendar" size={18} color={deliveryType === 'scheduled' ? 'white' : colors.muted} />
-            <Text style={[styles.toggleText, deliveryType === 'scheduled' && styles.toggleTextActive]}>Scheduled</Text>
-          </TouchableOpacity>
+          {(['instant', 'scheduled'] as const).map((type) => {
+            const active = deliveryType === type;
+            return (
+              <TouchableOpacity
+                key={type}
+                style={[styles.toggleBtn, active && styles.toggleBtnActive]}
+                onPress={() => {
+                  if (type === 'scheduled' && !slotId) {
+                    router.push({ pathname: '/order/schedule' as any, params: { shopId: shop?.id } });
+                  } else {
+                    setDeliveryType(type);
+                  }
+                }}
+                activeOpacity={0.8}
+              >
+                {active
+                  ? <LinearGradient colors={CUSTOMER_GRAD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.toggleGrad}>
+                      <Ionicons name={type === 'instant' ? 'flash' : 'calendar'} size={17} color="white" />
+                      <Text style={styles.toggleTextActive}>{type === 'instant' ? 'Instant' : 'Scheduled'}</Text>
+                    </LinearGradient>
+                  : <>
+                      <Ionicons name={type === 'instant' ? 'flash-outline' : 'calendar-outline'} size={17} color={colors.muted} />
+                      <Text style={styles.toggleText}>{type === 'instant' ? 'Instant' : 'Scheduled'}</Text>
+                    </>
+                }
+              </TouchableOpacity>
+            );
+          })}
         </View>
-
         {deliveryType === 'scheduled' && (
-          <TouchableOpacity
-            style={styles.slotPicker}
-            onPress={() => router.push({ pathname: '/order/schedule' as any, params: { shopId: shop.id } })}
-          >
-            <View style={styles.slotInfo}>
+          <TouchableOpacity style={styles.slotPicker}
+            onPress={() => router.push({ pathname: '/order/schedule' as any, params: { shopId: shop?.id } })}>
+            <Ionicons name="time-outline" size={20} color={CUSTOMER_ACCENT} />
+            <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={styles.slotLabel}>DELIVERY SLOT</Text>
-              <Text style={styles.slotValue}>{slotLabel || 'Select a time slot'}</Text>
-              {date && <Text style={styles.slotDate}>{moment(date).format('dddd, MMM Do')}</Text>}
+              <Text style={styles.slotValue}>{slotLabel || 'Tap to select a time slot'}</Text>
+              {date && <Text style={styles.slotDate}>{moment(date).format('ddd, MMM Do')}</Text>}
             </View>
-            <Ionicons name="chevron-forward" size={20} color={CUSTOMER_ACCENT} />
+            <Ionicons name="chevron-forward" size={18} color={CUSTOMER_ACCENT} />
           </TouchableOpacity>
         )}
 
-        {/* DELIVERY ADDRESS */}
-        <View style={styles.sectionHeader}>
+        {/* ── STEP 2 · DELIVERY ADDRESS ── */}
+        <View style={styles.sectionRow}>
+          <StepBadge n={2} color={CUSTOMER_ACCENT} />
           <Text style={styles.sectionTitle}>Delivery Address</Text>
         </View>
-        <TouchableOpacity
-          style={styles.addressCard}
-          activeOpacity={0.8}
-          onPress={() => setShowAddressModal(true)}
-        >
+        <TouchableOpacity style={styles.addressCard} activeOpacity={0.8} onPress={() => setShowAddressModal(true)}>
           <View style={styles.addressIconWrap}>
             <Ionicons
-              name={
-                selectedAddress?.label?.toLowerCase() === "home"
-                  ? "home"
-                  : selectedAddress?.label?.toLowerCase() === "office"
-                    ? "briefcase"
-                    : "location"
-              }
-              size={22}
-              color={roleSurface.shop_owner}
+              name={selectedAddress?.label?.toLowerCase() === "home" ? "home" : selectedAddress?.label?.toLowerCase() === "office" ? "briefcase" : "location"}
+              size={20} color={CUSTOMER_ACCENT}
             />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.addressLabel}>
-              {selectedAddress?.label?.toUpperCase() || 'SELECT ADDRESS'}
-            </Text>
-            {loadingAddresses ? (
-              <ActivityIndicator size="small" color={'#006878'} style={{ alignSelf: 'flex-start' }} />
-            ) : (
-              <Text style={styles.addressText} numberOfLines={2}>
-                {selectedAddress ? `${selectedAddress.address_line1}, ${selectedAddress.city}` : 'No address selected'}
-              </Text>
-            )}
+            <Text style={styles.addressLabel}>{selectedAddress?.label?.toUpperCase() || 'SELECT ADDRESS'}</Text>
+            {loadingAddresses
+              ? <ActivityIndicator size="small" color={CUSTOMER_ACCENT} style={{ alignSelf: 'flex-start', marginTop: 2 }} />
+              : <Text style={styles.addressText} numberOfLines={2}>
+                  {selectedAddress ? `${selectedAddress.address_line1}, ${selectedAddress.city}` : 'Tap to choose a delivery address'}
+                </Text>
+            }
           </View>
-          <View style={styles.editWrap}>
-            <Text style={styles.editText}>Change</Text>
+          <View style={styles.changeChip}>
+            <Text style={styles.changeChipText}>Change</Text>
           </View>
         </TouchableOpacity>
 
-        {/* LOYALTY POINTS */}
-        <View style={{ marginBottom: 20 }}>
-          <Text style={styles.sectionTitle}>Redeem Points</Text>
-          <LoyaltyBlock 
-            points={user?.loyalty_points || 0} 
-            isEnabled={useLoyalty}
-            onToggle={setUseLoyalty}
-          />
+        {/* ── STEP 3 · ITEMS ── */}
+        <View style={styles.sectionRow}>
+          <StepBadge n={3} color={CUSTOMER_ACCENT} />
+          <Text style={styles.sectionTitle}>Your Items</Text>
+          {shop && (
+            <TouchableOpacity onPress={() => router.push(`/shop-detail/${shop.id}` as any)} style={styles.addMoreBtn}>
+              <Ionicons name="add" size={13} color={CUSTOMER_ACCENT} />
+              <Text style={styles.addMoreText}>Add more</Text>
+            </TouchableOpacity>
+          )}
         </View>
- 
-        {/* DELIVERY NOTES */}
-        <View style={{ marginBottom: 20 }}>
-          <Text style={styles.sectionTitle}>Delivery Instructions</Text>
-          <TextInput
-            style={styles.notesInput}
-            placeholder="e.g. Gate code 1234, leave at door, call on arrival…"
-            placeholderTextColor="#a0aab4"
-            value={note}
-            onChangeText={(v) => useCartStore.getState().setNote(v)}
-            multiline
-            numberOfLines={2}
-            textAlignVertical="top"
-            maxLength={200}
-          />
-        </View>
-
-        {/* COUPON / PROMO CODE */}
-        <View style={{ marginBottom: 28 }}>
-          <Text style={styles.sectionTitle}>Coupon / Promo Code</Text>
-          <CouponBlock
-            subtotal={subtotal}
-            onApply={(discount, code) => {
-              applyCoupon(code, discount);
-            }}
-          />
-        </View>
-
-        {/* ORDER TOTALS */}
-        <View style={styles.summaryCard}>
-          <Text style={styles.sectionTitle}>Bill Details</Text>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryKey}>Products (×{quantity})</Text>
-            <Text style={styles.summaryVal}>₹{subtotal}</Text>
-          </View>
-          {floorCharge > 0 && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryKey}>Floor charge</Text>
-              <Text style={styles.summaryVal}>₹{floorCharge}</Text>
+        <View style={styles.productsCard}>
+          {shop && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12, paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+              <Ionicons name="storefront-outline" size={14} color={colors.muted} />
+              <Text style={{ fontSize: 13, fontWeight: '700', color: colors.muted }}>Ordering from {shop.name}</Text>
             </View>
           )}
-          {couponDiscount > 0 && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryKey}>Coupon Discount</Text>
-              <Text style={[styles.summaryVal, { color: colors.success }]}>-₹{couponDiscount}</Text>
-            </View>
-          )}
-          {subDiscountAmt > 0 && (
-            <View style={styles.summaryRow}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.summaryKey}>Plus Member ({subDiscountPct}%)</Text>
-                <Ionicons name="diamond" size={12} color="#7c3aed" />
+          {cartItems.map((item, idx) => (
+            <View key={item.productId} style={[styles.productRow, idx < cartItems.length - 1 && styles.productRowDivider]}>
+              <View style={styles.productQtyBadge}>
+                <Text style={styles.productQtyText}>{item.quantity}×</Text>
               </View>
-              <Text style={[styles.summaryVal, { color: '#7c3aed' }]}>-₹{subDiscountAmt}</Text>
+              <Text style={styles.productName} numberOfLines={1}>{item.name}</Text>
+              <Text style={styles.productPrice}>₹{(item.price * item.quantity).toFixed(0)}</Text>
             </View>
-          )}
-          {loyaltyDiscount > 0 && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryKey}>Loyalty Points Used</Text>
-              <Text style={[styles.summaryVal, { color: '#eab308' }]}>-₹{loyaltyDiscount}</Text>
-            </View>
-          )}
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryKey}>Delivery Fee</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              {hasFreeDelivery && <Text style={{ fontSize: 13, color: '#7c3aed', fontWeight: '800' }}>Plus Free</Text>}
-              <Text style={[styles.summaryVal, hasFreeDelivery && { textDecorationLine: 'line-through', color: '#94a3b8' }]}>
-                ₹{rawDeliveryFee}
-              </Text>
-            </View>
-          </View>
-          <View style={[styles.summaryRow, styles.summaryDivider]}>
-            <Text style={styles.summaryTotal}>Total Pay</Text>
-            <Text style={styles.summaryTotalVal}>₹{total}</Text>
+          ))}
+          <View style={styles.productsTotalRow}>
+            <Text style={styles.productsTotalLabel}>Subtotal ({quantity} items)</Text>
+            <Text style={styles.productsTotalVal}>₹{subtotal}</Text>
           </View>
         </View>
+
+        {/* ── STEP 4 · COUPON ── */}
+        <View style={styles.sectionRow}>
+          <StepBadge n={4} color="#16a34a" />
+          <Text style={styles.sectionTitle}>Coupon / Promo</Text>
+        </View>
+        <View style={styles.card}>
+          <CouponBlock subtotal={subtotal} shopId={shopId} availableCoupons={availableCoupons} onApply={(d, c) => applyCoupon(c, d)} />
+        </View>
+
+        {/* ── STEP 5 · REDEEM POINTS ── */}
+        <View style={styles.sectionRow}>
+          <StepBadge n={5} color="#d97706" />
+          <Text style={styles.sectionTitle}>Redeem Points</Text>
+        </View>
+        <LoyaltyBlock points={user?.loyalty_points || 0} isEnabled={useLoyalty} onToggle={setUseLoyalty} discountAmt={maxLoyaltyUse} />
+
+        {/* ── STEP 6 · PAYMENT METHOD ── */}
+        <View style={styles.sectionRow}>
+          <StepBadge n={6} color={CUSTOMER_ACCENT} />
+          <Text style={styles.sectionTitle}>Payment Method</Text>
+        </View>
+        <View style={styles.paymentGrid}>
+          {[
+            { key: 'upi' as const, icon: 'phone-portrait-outline', label: 'UPI', sub: 'GPay · PhonePe' },
+            { key: 'cod' as const, icon: 'cash-outline', label: 'Cash', sub: 'On Delivery' },
+          ].map((opt) => (
+            <TouchableOpacity
+              key={opt.key}
+              style={[styles.paymentOption, payment === opt.key && styles.paymentOptionActive]}
+              onPress={() => { setPayment(opt.key); setPaymentMethod(opt.key); }}
+              activeOpacity={0.8}
+            >
+              {payment === opt.key && (
+                <LinearGradient colors={CUSTOMER_GRAD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[StyleSheet.absoluteFillObject, { borderRadius: 18 }]} />
+              )}
+              <View style={[styles.paymentIconWrap, payment === opt.key && { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                <Ionicons name={opt.icon as any} size={22} color={payment === opt.key ? 'white' : colors.muted} />
+              </View>
+              <Text style={[styles.paymentLabel, payment === opt.key && { color: 'white' }]}>{opt.label}</Text>
+              <Text style={[styles.paymentSub, payment === opt.key && { color: 'rgba(255,255,255,0.75)' }]}>{opt.sub}</Text>
+              {payment === opt.key && (
+                <View style={styles.paymentCheck}>
+                  <Ionicons name="checkmark-circle" size={16} color="white" />
+                </View>
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* ── BILL DETAILS ── */}
+        <View style={styles.billCard}>
+          <Text style={styles.billTitle}>Bill Details</Text>
+          <BillRow label={`Items (×${quantity})`} value={`₹${subtotal}`} />
+          {floorCharge > 0 && <BillRow label="Floor charge" value={`₹${floorCharge}`} />}
+          {couponDiscount > 0 && <BillRow label="Coupon Discount" value={`-₹${couponDiscount}`} valueColor="#16a34a" />}
+          {subDiscountAmt > 0 && (
+            <BillRow
+              label={
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, flex: 1 }}>
+                  <Text style={{ fontSize: 13, color: colors.muted, fontWeight: '500' }}>Plus Member ({subDiscountPct}%)</Text>
+                  <Ionicons name="diamond" size={11} color="#7c3aed" />
+                </View>
+              }
+              value={`-₹${subDiscountAmt}`} valueColor="#7c3aed"
+            />
+          )}
+          {loyaltyDiscount > 0 && <BillRow label="Thanni Points" value={`-₹${loyaltyDiscount}`} valueColor="#d97706" />}
+          <BillRow
+            label="Delivery Fee"
+            value={hasFreeDelivery
+              ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Text style={{ fontSize: 12, color: '#7c3aed', fontWeight: '800' }}>FREE</Text>
+                  <Text style={{ fontSize: 13, color: colors.muted, textDecorationLine: 'line-through' }}>₹{rawDeliveryFee}</Text>
+                </View>
+              : `₹${rawDeliveryFee}`}
+          />
+          <View style={styles.billDivider} />
+          <View style={styles.billTotalRow}>
+            <Text style={styles.billTotalLabel}>Total Pay</Text>
+            <Text style={styles.billTotalVal}>₹{total}</Text>
+          </View>
+          {totalSaved > 0 && (
+            <View style={styles.savingsBanner}>
+              <Ionicons name="happy-outline" size={14} color="#16a34a" />
+              <Text style={styles.savingsText}>You're saving ₹{totalSaved} on this order 🎉</Text>
+            </View>
+          )}
+        </View>
+
+        {/* ── DELIVERY INSTRUCTIONS ── */}
+        <View style={[styles.sectionRow, { marginTop: 8 }]}>
+          <Ionicons name="chatbubble-ellipses-outline" size={16} color={colors.muted} />
+          <Text style={[styles.sectionTitle, { fontSize: 14, color: colors.muted, fontWeight: '700' }]}>Delivery Instructions</Text>
+          <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 'auto' }}>Optional</Text>
+        </View>
+        <TextInput
+          style={styles.notesInput}
+          placeholder="e.g. Gate code 1234, leave at door…"
+          placeholderTextColor={colors.muted}
+          value={note}
+          onChangeText={(v) => useCartStore.getState().setNote(v)}
+          multiline numberOfLines={2}
+          textAlignVertical="top"
+          maxLength={200}
+        />
+
       </ScrollView>
 
-      {/* BOTTOM CTA */}
+      {/* ── BOTTOM CTA ── */}
       <View style={styles.bottomBar}>
-        <View style={styles.totalFloating}>
+        <View style={styles.bottomSummary}>
           <View>
-            <Text style={styles.totalFloatingLabel}>TOTAL AMOUNT</Text>
-            <Text style={styles.totalFloatingValue}>₹{total}</Text>
+            <Text style={styles.bottomLabel}>TOTAL AMOUNT</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+              <Text style={styles.bottomTotal}>₹{total}</Text>
+              {totalSaved > 0 && <Text style={styles.bottomSaved}>Saved ₹{totalSaved}</Text>}
+            </View>
           </View>
-          <Text style={styles.totalFloatingSub}>
-            via {payment.toUpperCase()}
-          </Text>
+          <View style={styles.payBadge}>
+            <Ionicons name={payment === 'upi' ? 'phone-portrait-outline' : 'cash-outline'} size={13} color={CUSTOMER_ACCENT} />
+            <Text style={styles.payBadgeText}>{payment.toUpperCase()}</Text>
+          </View>
         </View>
         <TouchableOpacity
           activeOpacity={0.9}
@@ -675,10 +597,47 @@ export default function OrderCheckoutScreen() {
               router.push({ pathname: '/order/schedule' as any, params: { shopId: shop?.id } });
               return;
             }
-
             if (!selectedAddress) {
               Toast.show({ type: 'error', text1: 'Missing Address', text2: 'Please select a delivery address' });
               setShowAddressModal(true);
+              return;
+            }
+            
+            const handleRazorpay = (orderData: any) => {
+              const options = {
+                description: `Order #${orderData.order_number || orderData.id}`,
+                image: (shop as any)?.logo_url || 'https://thannigo.com/logo.png',
+                currency: orderData.currency || 'INR',
+                key: orderData.razorpay_key,
+                amount: Math.round(Number(orderData.amount) * 100),
+                name: 'ThanniGo',
+                order_id: orderData.razorpay_order_id,
+                prefill: { email: user?.email || '', contact: user?.phone || '', name: user?.name || '' },
+                theme: { color: CUSTOMER_ACCENT },
+              };
+              RazorpayCheckout.open(options)
+                .then(async (data: any) => {
+                  try {
+                    await paymentApi.verifyPayment({
+                      razorpay_order_id: data.razorpay_order_id,
+                      razorpay_payment_id: data.razorpay_payment_id,
+                      razorpay_signature: data.razorpay_signature,
+                    });
+                  } catch {
+                    Toast.show({ type: 'info', text1: 'Payment Received', text2: 'Confirming — this may take a moment.' });
+                  }
+                  clearCart();
+                  setPendingOrderData(null);
+                  router.push("/order/confirmed" as any);
+                })
+                .catch((error: any) => {
+                  setPendingOrderData(orderData);
+                  Toast.show({ type: 'error', text1: 'Payment Failed', text2: error.description || 'Cancelled or failed. Tap Place Order to retry.' });
+                });
+            };
+
+            if (pendingOrderData && pendingOrderData.razorpay_order_id && payment === 'upi') {
+              handleRazorpay(pendingOrderData);
               return;
             }
 
@@ -699,161 +658,74 @@ export default function OrderCheckoutScreen() {
               });
 
               if (payment === 'upi' && orderData.razorpay_order_id) {
-                const options = {
-                  description: `Order #${orderData.order_number || orderData.id}`,
-                  image: (shop as any)?.logo_url || 'https://thannigo.com/logo.png',
-                  currency: orderData.currency || 'INR',
-                  key: orderData.razorpay_key,
-                  amount: Math.round(Number(orderData.amount) * 100),
-                  name: 'ThanniGo',
-                  order_id: orderData.razorpay_order_id,
-                  prefill: {
-                    email: user?.email || '',
-                    contact: user?.phone || '',
-                    name: user?.name || ''
-                  },
-                  theme: { color: CUSTOMER_ACCENT }
-                };
-
-                RazorpayCheckout.open(options).then(async (data: any) => {
-                  log.info('[Razorpay] Payment success:', data);
-                  let verified = false;
-                  try {
-                    const verifyRes = await paymentApi.verifyPayment({
-                      razorpay_order_id: data.razorpay_order_id,
-                      razorpay_payment_id: data.razorpay_payment_id,
-                      razorpay_signature: data.razorpay_signature,
-                    });
-                    verified = verifyRes?.status === 'paid';
-                  } catch (verifyErr) {
-                    log.warn('[Razorpay] Verify call failed (webhook will reconcile):', verifyErr);
-                    // Don't block user — webhook reconciliation handles this
-                    Toast.show({
-                      type: 'info',
-                      text1: 'Payment Received',
-                      text2: 'Confirming your payment — this may take a moment.',
-                    });
-                  }
-                  clearCart();
-                  router.push("/order/confirmed" as any);
-                }).catch((error: any) => {
-                  log.error('[Razorpay] Payment failed:', error);
-                  Toast.show({
-                    type: 'error',
-                    text1: 'Payment Failed',
-                    text2: error.description || 'Payment was cancelled or failed.'
-                  });
-                });
+                handleRazorpay(orderData);
               } else {
-                // COD or fallback
                 clearCart();
+                setPendingOrderData(null);
                 router.push("/order/confirmed" as any);
               }
             } catch (err: any) {
-              log.error('[Checkout] Place order failed:', err);
-              Toast.show({ type: 'error', text1: 'Order Failed', text2: err.message || 'Check your internet connection' });
+              Toast.show({ type: 'error', text1: 'Order Failed', text2: err.message || 'Check your connection' });
             }
           }}
         >
           <LinearGradient
-              colors={[colors.primary, "#0077b6"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[styles.ctaBtn, { opacity: (isSubmitting || !shop) ? 0.7 : 1 }]}
+            colors={CUSTOMER_GRAD} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={[styles.ctaBtn, (isSubmitting || !shop) && { opacity: 0.65 }]}
           >
-            <Text style={styles.ctaBtnText}>
-              {isSubmitting ? "Processing..." : "Pay & Confirm"}
-            </Text>
-            {!isSubmitting && (
-              <Ionicons name="checkmark-circle" size={20} color="white" />
-            )}
+            {isSubmitting
+              ? <ActivityIndicator color="white" size="small" />
+              : <>
+                  <Text style={styles.ctaBtnText}>Place Order · ₹{total}</Text>
+                  <Ionicons name="arrow-forward" size={20} color="white" />
+                </>
+            }
           </LinearGradient>
         </TouchableOpacity>
       </View>
 
-      {/* ADDRESS SELECTOR MODAL */}
-      <Modal
-        visible={showAddressModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowAddressModal(false)}
-      >
+      {/* ── ADDRESS MODAL ── */}
+      <Modal visible={showAddressModal} transparent animationType="slide" onRequestClose={() => setShowAddressModal(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Delivery Address</Text>
-              <TouchableOpacity
-                onPress={() => setShowAddressModal(false)}
-                style={styles.modalClose}
-              >
-            <Ionicons name="close" size={24} color={colors.muted} />
+              <Text style={styles.modalTitle}>Delivery Address</Text>
+              <TouchableOpacity onPress={() => setShowAddressModal(false)} style={styles.modalClose}>
+                <Ionicons name="close" size={20} color={colors.muted} />
               </TouchableOpacity>
             </View>
-            <ScrollView
-              style={{ maxHeight: 300, width: "100%" }}
-              showsVerticalScrollIndicator={false}
-              refreshControl={<RefreshControl refreshing={loadingAddresses} onRefresh={fetchAddresses} />}
-            >
-              {addresses.length === 0 && !loadingAddresses ? (
-                <Text style={{ textAlign: 'center', padding: 20, color: colors.muted }}>No saved addresses found.</Text>
-              ) : null}
-              {addresses.map((addr) => (
-                <TouchableOpacity
-                  key={addr.id}
-                  style={[
-                    styles.modalAddrCard,
-                    selectedAddress?.id === addr.id &&
-                      styles.modalAddrCardActive,
-                  ]}
-                  onPress={() => {
-                    setSelectedAddress(addr);
-                    setShowAddressModal(false);
-                    calculateDistance(addr);
-                  }}
-                >
-                  <Ionicons
-                    name={
-                      addr.label?.toLowerCase() === "home"
-                        ? "home"
-                        : addr.label?.toLowerCase() === "office"
-                          ? "briefcase"
-                          : "location"
-                    }
-                    size={20}
-                    color={selectedAddress?.id === addr.id ? colors.primary : colors.muted}
-                  />
-                  <View style={{ flex: 1, marginLeft: 12 }}>
-                    <Text
-                      style={[
-                        styles.modalAddrTitle,
-                        selectedAddress?.id === addr.id && { color: colors.primary },
-                      ]}
-                    >
-                      {addr.label}
-                    </Text>
-                    <Text style={styles.modalAddrText} numberOfLines={2}>
-                      {addr.address_line1}, {addr.city}
-                    </Text>
-                  </View>
-                  {selectedAddress?.id === addr.id && (
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={22}
-                      color={CUSTOMER_ACCENT}
-                    />
-                  )}
-                </TouchableOpacity>
-              ))}
+            <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={false}
+              refreshControl={<RefreshControl refreshing={loadingAddresses} onRefresh={fetchAddresses} />}>
+              {addresses.length === 0 && !loadingAddresses && (
+                <Text style={{ textAlign: 'center', padding: 24, color: colors.muted, fontWeight: '600' }}>No saved addresses.</Text>
+              )}
+              {addresses.map((addr) => {
+                const isSelected = selectedAddress?.id === addr.id;
+                return (
+                  <TouchableOpacity key={addr.id}
+                    style={[styles.addrCard, isSelected && styles.addrCardActive]}
+                    onPress={() => { setSelectedAddress(addr); setShowAddressModal(false); calculateDistance(addr); }}
+                  >
+                    <View style={[styles.addrIconWrap, isSelected && { backgroundColor: CUSTOMER_ACCENT }]}>
+                      <Ionicons
+                        name={addr.label?.toLowerCase() === "home" ? "home" : addr.label?.toLowerCase() === "office" ? "briefcase" : "location"}
+                        size={18} color={isSelected ? 'white' : colors.muted}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.addrTitle, isSelected && { color: CUSTOMER_ACCENT }]}>{addr.label}</Text>
+                      <Text style={styles.addrText} numberOfLines={2}>{addr.address_line1}, {addr.city}</Text>
+                    </View>
+                    {isSelected && <Ionicons name="checkmark-circle" size={22} color={CUSTOMER_ACCENT} />}
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
-            <TouchableOpacity
-              style={styles.addNewAddrBtn}
-              onPress={() => {
-                setShowAddressModal(false);
-                router.push("/addresses" as any);
-              }}
-            >
-              <Ionicons name="add" size={20} color={CUSTOMER_ACCENT} />
-              <Text style={styles.addNewAddrText}>Add New Address</Text>
+            <TouchableOpacity style={styles.addAddrBtn}
+              onPress={() => { setShowAddressModal(false); router.push("/addresses" as any); }}>
+              <Ionicons name="add-circle-outline" size={18} color={CUSTOMER_ACCENT} />
+              <Text style={styles.addAddrText}>Add New Address</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -864,89 +736,164 @@ export default function OrderCheckoutScreen() {
 
 const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-    paddingHorizontal: 16, paddingVertical: 12, backgroundColor: "rgba(255,255,255,0.95)",
+    paddingHorizontal: 16, paddingVertical: 12,
+    backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border,
   },
-  backBtn: { width: 40, height: 40, borderRadius: Radius.md, backgroundColor: colors.border, alignItems: "center", justifyContent: "center" },
-  headerTitle: { fontSize: 18, fontWeight: "900", color: colors.text },
+  headerTitle: { fontSize: 17, fontWeight: "900", color: colors.text },
+  headerShopName: { fontSize: 12, color: CUSTOMER_ACCENT, fontWeight: '700', marginTop: 2 },
 
-  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12, marginTop: 10 },
-  sectionTitle: { fontSize: 18, fontWeight: "800", color: colors.text, letterSpacing: -0.2 },
+  sectionRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 24, marginBottom: 12 },
+  sectionTitle: { fontSize: 15, fontWeight: "800", color: colors.text },
 
-  paymentGrid: { flexDirection: "row", gap: 12, marginBottom: 26 },
-  paymentOption: {
-    flex: 1, backgroundColor: colors.surface, borderRadius: 20,
-    paddingVertical: 16, paddingHorizontal: 8, alignItems: "center", gap: 8,
-    borderWidth: 1.5, borderColor: colors.border,
-    ...Shadow.xs,
+  deliveryToggle: { flexDirection: 'row', gap: 10, marginBottom: 12 },
+  toggleBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 13, borderRadius: 16, overflow: 'hidden',
+    backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border,
   },
-  paymentOptionActive: { borderColor: CUSTOMER_ACCENT, backgroundColor: colors.inputBg },
-  paymentIcon: { width: 38, height: 38, borderRadius: 12, backgroundColor: colors.border, alignItems: "center", justifyContent: "center" },
-  paymentIconActive: { backgroundColor: colors.inputBg },
-  paymentOptionLabel: { fontSize: 12, fontWeight: "800", color: colors.muted },
-  paymentOptionLabelActive: { color: CUSTOMER_ACCENT },
-  paymentNote: { fontSize: 10, color: colors.muted, fontWeight: "600" },
-  notesInput: { backgroundColor: colors.surface, borderRadius: Radius.lg, padding: 14, fontSize: 14, color: colors.text, borderWidth: 1, borderColor: colors.border, minHeight: 72, marginTop: 10 },
-  addressCard: { flexDirection: "row", alignItems: "center", gap: 14, backgroundColor: colors.deliverySoft, borderRadius: Radius.xl, padding: 16, marginBottom: 28 },
-  addressIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" },
-  addressLabel: { fontSize: 10, fontWeight: "800", color: '#006878', letterSpacing: 1, marginBottom: 3 },
+  toggleBtnActive: { borderColor: 'transparent' },
+  toggleGrad: { ...StyleSheet.absoluteFillObject, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  toggleText: { fontSize: 13, fontWeight: '800', color: colors.muted },
+  toggleTextActive: { fontSize: 13, fontWeight: '900', color: 'white' },
+
+  slotPicker: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.inputBg, padding: 14, borderRadius: 16,
+    borderWidth: 1.5, borderStyle: 'dashed', borderColor: CUSTOMER_ACCENT, marginBottom: 4,
+  },
+  slotLabel: { fontSize: 9, fontWeight: '900', color: CUSTOMER_ACCENT, letterSpacing: 1 },
+  slotValue: { fontSize: 14, fontWeight: '800', color: colors.text, marginTop: 2 },
+  slotDate: { fontSize: 11, color: colors.muted, fontWeight: '500', marginTop: 1 },
+
+  addressCard: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    backgroundColor: colors.surface, borderRadius: 18, padding: 14,
+    borderWidth: 1.5, borderColor: colors.border, ...Shadow.xs,
+  },
+  addressIconWrap: { width: 42, height: 42, borderRadius: 13, backgroundColor: colors.inputBg, alignItems: "center", justifyContent: "center" },
+  addressLabel: { fontSize: 9, fontWeight: "900", color: CUSTOMER_ACCENT, letterSpacing: 1, marginBottom: 2 },
   addressText: { fontSize: 13, color: colors.text, fontWeight: "500", lineHeight: 18 },
-  editWrap: { backgroundColor: colors.surface, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
-  editText: { fontSize: 12, color: CUSTOMER_ACCENT, fontWeight: "800" },
+  changeChip: { backgroundColor: colors.inputBg, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  changeChipText: { fontSize: 12, color: CUSTOMER_ACCENT, fontWeight: "800" },
 
-  summaryCard: { backgroundColor: colors.surface, borderRadius: 24, padding: 20, marginBottom: 16, ...Shadow.sm },
-  summaryRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  summaryKey: { flex: 1, fontSize: 14, color: colors.muted, fontWeight: "500" },
-  summaryVal: { fontSize: 15, color: colors.text, fontWeight: "800", textAlign: "right" },
-  summaryDivider: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, marginTop: 6 },
-  summaryTotal: { fontSize: 16, fontWeight: "900", color: colors.text },
-  summaryTotalVal: { fontSize: 20, fontWeight: "900", color: CUSTOMER_ACCENT },
+  productsCard: { backgroundColor: colors.surface, borderRadius: 18, padding: 16, ...Shadow.xs, borderWidth: 1, borderColor: colors.border },
+  productRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, gap: 12 },
+  productRowDivider: { borderBottomWidth: 1, borderBottomColor: colors.border },
+  productQtyBadge: { width: 32, height: 28, borderRadius: 8, backgroundColor: colors.inputBg, alignItems: 'center', justifyContent: 'center' },
+  productQtyText: { fontSize: 11, fontWeight: '900', color: CUSTOMER_ACCENT },
+  productName: { flex: 1, fontSize: 13, fontWeight: '600', color: colors.text },
+  productPrice: { fontSize: 14, fontWeight: '800', color: colors.text },
+  productsTotalRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingTop: 10, marginTop: 4, borderTopWidth: 1, borderTopColor: colors.border,
+  },
+  productsTotalLabel: { fontSize: 13, fontWeight: '700', color: colors.muted },
+  productsTotalVal: { fontSize: 15, fontWeight: '900', color: colors.text },
+
+  addMoreBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginLeft: 'auto', backgroundColor: colors.inputBg, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
+  addMoreText: { fontSize: 12, color: CUSTOMER_ACCENT, fontWeight: '800' },
+
+  card: { backgroundColor: colors.surface, borderRadius: 18, padding: 16, ...Shadow.xs, borderWidth: 1, borderColor: colors.border },
+
+  couponAppliedBanner: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#f0fdf4', borderRadius: 14, padding: 12, marginBottom: 4,
+    borderWidth: 1.5, borderColor: '#86efac',
+  },
+  couponAppliedIcon: { width: 26, height: 26, borderRadius: 13, backgroundColor: '#16a34a', alignItems: 'center', justifyContent: 'center' },
+  couponAppliedCode: { fontSize: 13, fontWeight: '900', color: '#15803d' },
+  couponAppliedSaving: { fontSize: 11, color: '#16a34a', fontWeight: '600', marginTop: 1 },
+  couponRemoveBtn: { paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#fee2e2', borderRadius: 8 },
+  couponRemoveText: { fontSize: 12, color: '#dc2626', fontWeight: '800' },
+  couponChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: colors.background, borderRadius: 12,
+    borderWidth: 1.5, borderColor: colors.border, borderStyle: 'dashed',
+    paddingHorizontal: 12, paddingVertical: 8,
+  },
+  couponChipCode: { fontSize: 12, fontWeight: '900', color: colors.text },
+  couponChipLabel: { fontSize: 10, color: colors.muted, fontWeight: '500' },
+  couponChipDisabled: { borderColor: colors.border, opacity: 0.6 },
+  couponChipMinOrder: { fontSize: 9, color: '#d97706', fontWeight: '700', marginTop: 2 },
+  couponChipLock: { position: 'absolute', top: 6, right: 6 },
+  couponInput: {
+    flex: 1, backgroundColor: colors.background, borderRadius: 14,
+    paddingHorizontal: 14, paddingVertical: 12,
+    borderWidth: 1.5, borderColor: colors.border,
+    fontSize: 14, fontWeight: "700", color: colors.text,
+  },
+  couponApplyBtn: {
+    backgroundColor: CUSTOMER_ACCENT, borderRadius: 14,
+    paddingHorizontal: 20, justifyContent: "center", alignItems: 'center', minWidth: 76, height: 48,
+  },
+  couponApplyText: { color: "white", fontWeight: "900", fontSize: 14 },
+
+  loyaltyCard: { borderRadius: 18, overflow: 'hidden', borderWidth: 1.5, borderColor: colors.border, marginBottom: 4 },
+  loyaltyCardActive: { borderColor: '#f59e0b' },
+  loyaltyGradient: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12 },
+  loyaltyIconWrap: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fef3c7', alignItems: 'center', justifyContent: 'center' },
+  loyaltyTitle: { fontSize: 14, fontWeight: '800', color: colors.text },
+  loyaltySub: { fontSize: 11, color: colors.muted, fontWeight: '500', marginTop: 2 },
+  loyaltyToggle: { width: 46, height: 26, borderRadius: 13, backgroundColor: 'rgba(0,0,0,0.15)', padding: 2, justifyContent: 'center' },
+  loyaltyToggleOn: { backgroundColor: 'rgba(255,255,255,0.3)' },
+  loyaltyThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: 'white' },
+  loyaltyThumbOn: { transform: [{ translateX: 20 }] },
+
+  paymentGrid: { flexDirection: "row", gap: 12, marginBottom: 8 },
+  paymentOption: {
+    flex: 1, borderRadius: 18, paddingVertical: 18, paddingHorizontal: 10,
+    alignItems: "center", gap: 6, borderWidth: 1.5, borderColor: colors.border,
+    backgroundColor: colors.surface, overflow: 'hidden', ...Shadow.xs,
+  },
+  paymentOptionActive: { borderColor: 'transparent' },
+  paymentIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: colors.inputBg, alignItems: "center", justifyContent: "center" },
+  paymentLabel: { fontSize: 13, fontWeight: "900", color: colors.text },
+  paymentSub: { fontSize: 10, color: colors.muted, fontWeight: "600" },
+  paymentCheck: { position: 'absolute', top: 10, right: 10 },
+
+  billCard: { backgroundColor: colors.surface, borderRadius: 20, padding: 18, marginTop: 20, ...Shadow.xs, borderWidth: 1, borderColor: colors.border },
+  billTitle: { fontSize: 14, fontWeight: '800', color: colors.text, marginBottom: 14 },
+  billDivider: { height: 1, backgroundColor: colors.border, marginVertical: 10 },
+  billTotalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  billTotalLabel: { fontSize: 15, fontWeight: '800', color: colors.text },
+  billTotalVal: { fontSize: 22, fontWeight: '900', color: CUSTOMER_ACCENT },
+  savingsBanner: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f0fdf4', borderRadius: 10, padding: 10 },
+  savingsText: { fontSize: 12, color: '#15803d', fontWeight: '700', flex: 1 },
+
+  notesInput: {
+    backgroundColor: colors.surface, borderRadius: 16, padding: 14,
+    fontSize: 13, color: colors.text, borderWidth: 1, borderColor: colors.border, minHeight: 64,
+  },
 
   bottomBar: {
     position: "absolute", bottom: 0, left: 0, right: 0,
-    backgroundColor: colors.surface, paddingHorizontal: 24, paddingTop: 16, paddingBottom: 32,
-    shadowColor: "#003a5c", shadowOffset: { width: 0, height: -8 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 12,
-    borderTopLeftRadius: 28, borderTopRightRadius: 28, gap: 12,
+    backgroundColor: colors.surface, paddingHorizontal: 20, paddingTop: 14, paddingBottom: 28,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24, gap: 12,
+    shadowColor: "#000", shadowOffset: { width: 0, height: -6 }, shadowOpacity: 0.08, shadowRadius: 16, elevation: 12,
   },
-  deliveryToggle: { flexDirection: 'row', gap: 12, marginBottom: 16 },
-  toggleBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.border },
-  toggleBtnActive: { backgroundColor: CUSTOMER_ACCENT, borderColor: CUSTOMER_ACCENT },
-  toggleText: { fontSize: 13, fontWeight: '800', color: colors.muted },
-  toggleTextActive: { color: 'white' },
+  bottomSummary: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  bottomLabel: { fontSize: 9, fontWeight: '700', color: colors.muted, letterSpacing: 1.2, marginBottom: 2 },
+  bottomTotal: { fontSize: 26, fontWeight: '900', color: colors.text, letterSpacing: -0.5 },
+  bottomSaved: { fontSize: 12, color: '#16a34a', fontWeight: '700' },
+  payBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.inputBg, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  payBadgeText: { fontSize: 12, color: CUSTOMER_ACCENT, fontWeight: '900' },
+  ctaBtn: { borderRadius: 18, paddingVertical: 17, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
+  ctaBtnText: { color: "white", fontSize: 16, fontWeight: "900" },
 
-  slotPicker: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.inputBg, padding: 16, borderRadius: 16, borderWidth: 1, borderStyle: 'dashed', borderColor: CUSTOMER_ACCENT, marginBottom: 20 },
-  slotInfo: { flex: 1, gap: 2 },
-  slotLabel: { fontSize: 9, fontWeight: '900', color: CUSTOMER_ACCENT, letterSpacing: 1 },
-  slotValue: { fontSize: 15, fontWeight: '800', color: colors.text },
-  slotDate: { fontSize: 11, color: colors.muted, fontWeight: '500' },
-
-  totalFloating: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  totalFloatingLabel: { fontSize: 9, fontWeight: "700", color: colors.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 2 },
-  totalFloatingValue: { fontSize: 24, fontWeight: "900", color: colors.text, letterSpacing: -0.5 },
-  totalFloatingSub: { fontSize: 11, color: colors.muted },
-  ctaBtn: {
-    borderRadius: 20, paddingVertical: 18, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
-    shadowColor: CUSTOMER_ACCENT, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.3, shadowRadius: 16, elevation: 6,
-  },
-  ctaBtnText: { color: "white", fontSize: 17, fontWeight: "900", letterSpacing: -0.2 },
-
-  modalOverlay: { flex: 1, backgroundColor: "rgba(15,23,42,0.6)", justifyContent: "flex-end" },
-  modalContent: { backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, alignItems: "center" },
-  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: 16 },
-  modalTitle: { fontSize: 18, fontWeight: "900", color: colors.text },
-  modalClose: { width: 36, height: 36, borderRadius: 18, backgroundColor: "#F1F5F9", alignItems: "center", justifyContent: "center" },
-  modalAddrCard: { flexDirection: "row", alignItems: "center", padding: 16, borderRadius: 16, borderWidth: 1.5, borderColor: colors.border, marginBottom: 12, width: "100%" },
-  modalAddrCardActive: { borderColor: colors.inputBg, backgroundColor: "#F8FCFF" },
-  modalAddrTitle: { fontSize: 14, fontWeight: "800", color: colors.text, marginBottom: 2 },
-  modalAddrText: { fontSize: 12, color: colors.muted },
-  addNewAddrBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: colors.inputBg, width: "100%", padding: 16, borderRadius: 16, marginTop: 8 },
-  addNewAddrText: { fontSize: 14, fontWeight: "800", color: CUSTOMER_ACCENT, marginLeft: 8 },
-  loyaltyThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.surface },
-  loyaltyThumbActive: { backgroundColor: colors.surface, transform: [{ translateX: 22 }] },
-  loyaltyCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.inputBg, borderRadius: 16, padding: 14, borderWidth: 1, borderColor: colors.border, gap: 12, marginBottom: 4 },
-  loyaltyToggle: { width: 48, height: 26, borderRadius: 13, backgroundColor: '#CBD5E1', padding: 2, justifyContent: 'center' },
-  loyaltyToggleActive: { backgroundColor: CUSTOMER_ACCENT },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+  modalSheet: { backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 36 },
+  modalHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginBottom: 16 },
+  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
+  modalTitle: { fontSize: 17, fontWeight: "900", color: colors.text },
+  modalClose: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.border, alignItems: "center", justifyContent: "center" },
+  addrCard: { flexDirection: "row", alignItems: "center", padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, marginBottom: 10 },
+  addrCardActive: { borderColor: CUSTOMER_ACCENT, backgroundColor: colors.inputBg },
+  addrIconWrap: { width: 38, height: 38, borderRadius: 11, backgroundColor: colors.border, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  addrTitle: { fontSize: 13, fontWeight: "800", color: colors.text, marginBottom: 2 },
+  addrText: { fontSize: 12, color: colors.muted, lineHeight: 16 },
+  addAddrBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: colors.inputBg, padding: 14, borderRadius: 14, marginTop: 6 },
+  addAddrText: { fontSize: 14, fontWeight: "800", color: CUSTOMER_ACCENT },
 });
-
-
