@@ -52,7 +52,7 @@ export const shopApi = {
   /**
    * Fetch approved nearby shops based on coordinates.
    */
-  async getShops(params?: { lat?: number; lng?: number; query?: string }): Promise<Shop[]> {
+  async getShops(params?: { lat?: number; lng?: number; query?: string; limit?: number; max_distance_km?: number }): Promise<Shop[]> {
     if (!params?.lat || !params?.lng) {
       if (__DEV__ && !params?.query) {
         log.warn('[shopApi] No coords provided — returning empty shops list');

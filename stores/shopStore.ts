@@ -23,7 +23,7 @@ type ShopState = {
   error: string | null;
   selectedShopId: string | null;
   filters: ShopFilters;
-  loadShops: (params?: { lat?: number; lng?: number }) => Promise<void>;
+  loadShops: (params?: { lat?: number; lng?: number; limit?: number; max_distance_km?: number }) => Promise<void>;
   searchShops: (query: string, lat?: number, lng?: number) => Promise<void>;
   fetchPersonalized: (lat?: number, lng?: number) => Promise<Shop | null>;
   setSelectedShop: (shopId: string | null) => void;

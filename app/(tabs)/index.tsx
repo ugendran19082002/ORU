@@ -22,6 +22,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { addressApi } from '@/api/addressApi';
 import { apiClient } from '@/api/client';
+import { systemApi } from '@/api/systemApi';
 import { Shadow, roleAccent, roleSurface, roleGradients, Radius } from '@/constants/theme';
 import { SkeletonShopCard } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -31,11 +32,11 @@ import { ExpoMap } from '@/components/maps/ExpoMap';
 const ACCENT = roleAccent.customer;
 const SURF = roleSurface.customer;
 const GRAD: [string, string] = [roleGradients.customer.start, roleGradients.customer.end];
+const DEFAULT_MAX_DISTANCE_KM = 100;
 
 const FILTERS = [
   { key: 'Open Now',    icon: 'time-outline',     check: (s: any) => s.isOpen && !s.isBusy },
   { key: 'Top Rated',   icon: 'star-outline',      check: (s: any) => s.rating >= 4.5 },
-  { key: 'Near Me',     icon: 'navigate-outline',  check: (s: any) => s.distanceKm < 2 },
   { key: 'Under ₹50',  icon: 'pricetag-outline',   check: (s: any) => s.pricePerCan < 50 },
 ];
 
@@ -70,6 +71,7 @@ export default function HomeScreen() {
   const [currentAddressTitle, setCurrentAddressTitle] = useState('Location');
   const [userAddresses, setUserAddresses] = useState<any[]>([]);
   const [personalizedShop, setPersonalizedShop] = useState<any>(null);
+  const [maxDistanceKm, setMaxDistanceKm] = useState(DEFAULT_MAX_DISTANCE_KM);
 
   const cartCount = Object.values(cartItems).reduce((sum, q) => sum + q.quantity, 0);
 
@@ -80,10 +82,24 @@ export default function HomeScreen() {
     } catch { /* silent */ }
   };
 
+  const fetchMaxDistanceKm = async () => {
+    try {
+      const res = await systemApi.getSetting('max_distance_km');
+      const parsed = Number(res.data?.setting_value);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        setMaxDistanceKm(parsed);
+        return parsed;
+      }
+    } catch { /* keep default */ }
+    return DEFAULT_MAX_DISTANCE_KM;
+  };
+
   const checkLocation = async () => {
     const { status } = await Location.getForegroundPermissionsAsync();
     if (status !== 'granted') { router.replace('/location' as any); return; }
+    let listingMaxDistanceKm = maxDistanceKm;
     try {
+      listingMaxDistanceKm = await fetchMaxDistanceKm();
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       const lat = loc.coords.latitude;
       const lng = loc.coords.longitude;
@@ -119,13 +135,13 @@ export default function HomeScreen() {
         } catch { setCurrentAddress(`${lat.toFixed(2)}, ${lng.toFixed(2)}`); }
       }
 
-      await loadShops({ lat: shopLat, lng: shopLng });
+      await loadShops({ lat: shopLat, lng: shopLng, limit: 100, max_distance_km: listingMaxDistanceKm });
       const hero = await fetchPersonalized(shopLat, shopLng);
       setPersonalizedShop(hero);
     } catch {
       const lat = 12.9716; const lng = 80.2210;
       setUserLoc({ lat, lng });
-      await loadShops({ lat, lng });
+      await loadShops({ lat, lng, limit: 100, max_distance_km: listingMaxDistanceKm });
     } finally {
       setLoadingLoc(false);
     }
@@ -145,7 +161,6 @@ export default function HomeScreen() {
 
   const activeFilterDef = FILTERS.find(f => f.key === activeFilter);
   const filteredShops = shops
-    .filter(s => s.distanceKm <= 3.0)
     .filter(s => search.trim() === '' || s.name.toLowerCase().includes(search.toLowerCase()))
     .filter(s => activeFilterDef ? activeFilterDef.check(s) : true)
     .sort((a, b) => a.distanceKm - b.distanceKm);
@@ -291,7 +306,7 @@ export default function HomeScreen() {
           <View>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Shops Near You</Text>
             <Text style={[styles.sectionSub, { color: colors.muted }]}>
-              {filteredShops.length} shops within 3 km
+              {filteredShops.length} shops within {maxDistanceKm} km
             </Text>
           </View>
           <TouchableOpacity
@@ -308,7 +323,7 @@ export default function HomeScreen() {
           <EmptyState
             icon="sad-outline"
             title={search.trim() !== '' ? `No shops matching "${search}"` : 'No shops nearby'}
-            subtitle={search.trim() !== '' ? 'Try different keywords.' : 'No shops found within 3 km.'}
+            subtitle={search.trim() !== '' ? 'Try different keywords.' : `No shops found within ${maxDistanceKm} km.`}
           />
         ) : isMapView ? (
           <View style={[styles.mapCard, { borderColor: colors.border }]}>
