@@ -33,10 +33,10 @@ interface ShopCoupon {
   id: number;
   code: string;
   description: string | null;
-  discount_type: 'flat' | 'percentage';
+  type: 'percentage' | 'fixed' | 'free_delivery' | 'bogo';
   discount_value: number;
   min_order_value: number;
-  max_discount_amount: number | null;
+  max_discount: number | null;
   valid_until: string | null;
 }
 
@@ -55,6 +55,10 @@ interface ShopDetail {
   delivery_radius_km: number;
   min_order_value: number;
   Products: ShopProduct[];
+  ShopSetting?: {
+    busy_mode: boolean;
+    is_manual_open: boolean;
+  };
 }
 
 export default function ShopDetailScreen() {
@@ -117,7 +121,7 @@ export default function ShopDetailScreen() {
 
   useEffect(() => {
     if (!id) return;
-    apiClient.get('/coupons/active', { params: { shop_id: id } })
+    apiClient.get('/promotion/coupons/active', { params: { shop_id: id } })
       .then(res => { if (res.data.status === 1) setCoupons(res.data.data ?? []); })
       .catch(() => {});
   }, [id]);
@@ -131,9 +135,20 @@ export default function ShopDetailScreen() {
   const totalItems = Object.values(items).reduce((a, b) => a + b.quantity, 0);
   const subtotal = getSubtotal();
 
+  const isBusy = shop?.ShopSetting?.busy_mode ?? false;
+  const isAcceptingOrders = (shop?.is_open ?? false) && !isBusy;
+
   const handleGoToCheckout = () => {
     if (totalItems === 0) {
       Toast.show({ type: 'error', text1: 'Empty Cart', text2: 'Please add at least one product before checking out.' });
+      return;
+    }
+    if (!isAcceptingOrders) {
+      Toast.show({
+        type: 'error',
+        text1: isBusy ? 'Shop is Busy' : 'Shop is Closed',
+        text2: isBusy ? 'The shop is temporarily busy. Please try again shortly.' : 'This shop is currently closed.',
+      });
       return;
     }
     router.push({ pathname: '/order/checkout', params: { shopId: String(id) } } as any);
@@ -199,9 +214,13 @@ export default function ShopDetailScreen() {
               <Text style={styles.heroMetaText}>({shop.total_ratings})</Text>
             )}
           </View>
-          <View style={[styles.openBadge, { backgroundColor: shop.is_open ? '#22c55e' : '#ef4444' }]}>
+          <View style={[styles.openBadge, {
+            backgroundColor: !shop.is_open ? '#ef4444' : isBusy ? '#f59e0b' : '#22c55e'
+          }]}>
             <View style={styles.openDot} />
-            <Text style={styles.openText}>{shop.is_open ? 'Open Now' : 'Closed'}</Text>
+            <Text style={styles.openText}>
+              {!shop.is_open ? 'Closed' : isBusy ? 'Busy' : 'Open Now'}
+            </Text>
           </View>
         </View>
       </View>
@@ -231,10 +250,14 @@ export default function ShopDetailScreen() {
         {activeTab === 'products' ? (
           <>
             <Text style={styles.sectionTitle}>Available Products</Text>
-            {!shop.is_open && (
-              <View style={styles.closedBanner}>
-                <Ionicons name="time-outline" size={18} color="#b45309" />
-                <Text style={styles.closedBannerText}>Shop is currently closed — browse only, ordering unavailable.</Text>
+            {!isAcceptingOrders && (
+              <View style={[styles.closedBanner, isBusy && { backgroundColor: '#fff7ed', borderColor: '#f59e0b' }]}>
+                <Ionicons name={isBusy ? 'hourglass-outline' : 'time-outline'} size={18} color={isBusy ? '#d97706' : '#b45309'} />
+                <Text style={[styles.closedBannerText, isBusy && { color: '#92400e' }]}>
+                  {isBusy
+                    ? 'Shop is temporarily busy — try again in a few minutes.'
+                    : 'Shop is currently closed — browse only, ordering unavailable.'}
+                </Text>
               </View>
             )}
             {shop.Products?.length === 0 && (
@@ -245,7 +268,7 @@ export default function ShopDetailScreen() {
             )}
             {shop.Products?.map((product) => {
               const qty = items[String(product.id)]?.quantity ?? 0;
-              const inStock = shop.is_open && product.is_available && product.stock_quantity > 0;
+              const inStock = isAcceptingOrders && product.is_available && product.stock_quantity > 0;
               return (
                 <View key={product.id} style={styles.productCard}>
                   {product.image_url ? (
@@ -295,7 +318,7 @@ export default function ShopDetailScreen() {
                       ) : (
                         <View style={styles.outOfStock}>
                           <Text style={styles.outOfStockText}>
-                            {!shop.is_open ? 'Shop Closed' : 'Out of Stock'}
+                            {!shop.is_open ? 'Shop Closed' : isBusy ? 'Shop Busy' : 'Out of Stock'}
                           </Text>
                         </View>
                       )}
@@ -321,8 +344,10 @@ export default function ShopDetailScreen() {
               </View>
             ) : coupons.map((coupon) => {
               const isCopied = copiedCode === coupon.code;
-              const discountLabel = coupon.discount_type === 'percentage'
-                ? `${coupon.discount_value}% off${coupon.max_discount_amount ? ` (up to ₹${coupon.max_discount_amount})` : ''}`
+              const discountLabel = coupon.type === 'percentage'
+                ? `${coupon.discount_value}% off${coupon.max_discount ? ` (up to ₹${coupon.max_discount})` : ''}`
+                : coupon.type === 'free_delivery'
+                ? 'Free delivery'
                 : `₹${coupon.discount_value} off`;
               return (
                 <View key={coupon.id} style={styles.couponCard}>
@@ -402,10 +427,21 @@ export default function ShopDetailScreen() {
             <Text style={styles.checkoutQty}>{totalItems} item{totalItems > 1 ? 's' : ''}</Text>
             <Text style={styles.checkoutSubtotal}>₹{subtotal}</Text>
           </View>
-          <TouchableOpacity style={styles.checkoutBtn} onPress={handleGoToCheckout} activeOpacity={0.9}>
-            <LinearGradient colors={['#005d90', '#0077b6']} style={styles.checkoutBtnGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-              <Text style={styles.checkoutBtnText}>Go to Checkout</Text>
-              <Ionicons name="arrow-forward" size={18} color="white" />
+          <TouchableOpacity
+            style={[styles.checkoutBtn, !isAcceptingOrders && { opacity: 0.5 }]}
+            onPress={handleGoToCheckout}
+            activeOpacity={isAcceptingOrders ? 0.9 : 1}
+          >
+            <LinearGradient
+              colors={isAcceptingOrders ? ['#005d90', '#0077b6'] : ['#9ca3af', '#9ca3af']}
+              style={styles.checkoutBtnGrad}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Text style={styles.checkoutBtnText}>
+                {!isAcceptingOrders ? (isBusy ? 'Shop Busy' : 'Shop Closed') : 'Go to Checkout'}
+              </Text>
+              {isAcceptingOrders && <Ionicons name="arrow-forward" size={18} color="white" />}
             </LinearGradient>
           </TouchableOpacity>
         </View>

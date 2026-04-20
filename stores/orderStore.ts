@@ -69,7 +69,7 @@ export const useOrderStore = create<OrderState>((set) => ({
     try {
       const apiRes = await orderApi.submitOrder(payload);
       const order: Order = {
-        id: apiRes.data.orderId,
+        id: apiRes.data.orderId || String((apiRes.data as any).id),
         shopId: String(payload.shop_id),
         customerName: '',
         customerPhone: '',

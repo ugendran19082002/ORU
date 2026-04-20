@@ -192,7 +192,14 @@ export default function HomeScreen() {
             <Ionicons name="notifications-outline" size={18} color={ACCENT} />
             <View style={[styles.dot, { backgroundColor: colors.error }]} />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.headerIconBtn, { backgroundColor: ACCENT }]} onPress={() => router.push('/order/checkout' as any)}>
+          <TouchableOpacity style={[styles.headerIconBtn, { backgroundColor: ACCENT }]} onPress={() => {
+            const cartShopId = useCartStore.getState().shopId;
+            if (cartShopId) {
+              router.push({ pathname: '/order/checkout', params: { shopId: cartShopId } } as any);
+            } else {
+              router.push('/order/checkout' as any);
+            }
+          }}>
             <Ionicons name="cart-outline" size={18} color="white" />
             {cartCount > 0 && (
               <View style={[styles.badge, { backgroundColor: 'white' }]}>
@@ -313,7 +320,7 @@ export default function HomeScreen() {
               onMarkerDragEnd={coords => router.push({ pathname: '/search-map', params: { lat: coords.latitude, lng: coords.longitude } } as any)}
               markers={[
                 ...(userLoc ? [{ latitude: userLoc.lat, longitude: userLoc.lng, title: 'You', color: 'blue' }] : []),
-                ...filteredShops.map(s => ({ id: s.id, latitude: s.lat, longitude: s.lng, title: s.name, color: s.isOpen ? '#16a34a' : '#dc2626', iconType: 'shop' as const })),
+                ...filteredShops.map(s => ({ id: s.id, latitude: s.lat, longitude: s.lng, title: s.name, color: !s.isOpen ? '#dc2626' : s.isBusy ? '#f59e0b' : '#16a34a', iconType: 'shop' as const })),
               ]}
             />
             <TouchableOpacity
@@ -364,6 +371,12 @@ export default function HomeScreen() {
                       <Ionicons name="navigate" size={11} color={ACCENT} />
                       <Text style={[styles.distText, { color: ACCENT }]}>{shop.distanceKm.toFixed(1)} km</Text>
                     </View>
+                    {shop.couponCount > 0 && (
+                      <View style={styles.couponPill}>
+                        <Ionicons name="pricetag" size={11} color="#fbbf24" />
+                        <Text style={styles.couponPillText}>{shop.couponCount} offer{shop.couponCount > 1 ? 's' : ''}</Text>
+                      </View>
+                    )}
                     {shop.eta ? (
                       <View style={styles.etaPill}>
                         <Ionicons name="time-outline" size={11} color="rgba(255,255,255,0.9)" />
@@ -548,6 +561,8 @@ const makeStyles = (colors: ColorSchemeColors) => StyleSheet.create({
   distText: { fontSize: 12, fontWeight: '800' },
   etaPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
   etaText: { color: 'rgba(255,255,255,0.9)', fontSize: 12, fontWeight: '600' },
+  couponPill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
+  couponPillText: { color: '#fbbf24', fontSize: 12, fontWeight: '700' },
 
   shopInfo: { padding: 16 },
   shopInfoTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 },

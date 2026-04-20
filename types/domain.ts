@@ -25,6 +25,7 @@ export type Shop = {
   deliveryTime?: string;
   isOpen: boolean;
   isBusy: boolean;
+  couponCount: number;
   tags: string[];
   verified: boolean;
   pricePerCan: number;

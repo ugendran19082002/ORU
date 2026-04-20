@@ -1,6 +1,5 @@
 import { apiClient } from './client';
 import { ApiError } from './apiError';
-import { mockShops } from '@/utils/mockData';
 import { log } from '@/utils/logger';
 import type { Shop } from '@/types/domain';
 import type {
@@ -26,6 +25,7 @@ function mapShop(s: ShopProfileRaw): Shop {
     phone: s.phone,
     isOpen: s.is_open ?? true,
     isBusy: (s as any).ShopSetting?.busy_mode ?? false,
+    couponCount: parseInt(String((s as any).coupon_count || 0)) || 0,
     tags: s.shop_type ? [s.shop_type, 'Mineral Water'] : ['Mineral Water', 'Purified'],
     verified: s.status === 'active' || s.status === 'approved',
     pricePerCan: parseFloat(String(s.min_price || 0)) || 0,
@@ -51,13 +51,12 @@ function mapShop(s: ShopProfileRaw): Shop {
 export const shopApi = {
   /**
    * Fetch approved nearby shops based on coordinates.
-   * Falls back to mock data in dev mode when coordinates are missing.
    */
   async getShops(params?: { lat?: number; lng?: number; query?: string }): Promise<Shop[]> {
     if (!params?.lat || !params?.lng) {
       if (__DEV__ && !params?.query) {
-        log.warn('[shopApi] No coords provided — returning mock shops (dev only)');
-        return mockShops;
+        log.warn('[shopApi] No coords provided — returning empty shops list');
+        return [];
       }
     }
 

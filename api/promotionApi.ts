@@ -16,11 +16,12 @@ export const promotionApi = {
   async validateCoupon(
     code: string,
     orderValue: number,
+    shopId?: string | number,
   ): Promise<CouponValidateResult> {
     try {
       const response = await apiClient.post<ApiResponse<CouponValidateResult>>(
         '/promotion/coupons/validate',
-        { code, cart_value: orderValue },
+        { code, cart_value: orderValue, ...(shopId ? { shop_id: shopId } : {}) },
       );
       if (response.data.status === 1) return response.data.data;
       throw new ApiError(

@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useAppTheme } from '@/providers/ThemeContext';
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useFocusEffect } from "expo-router";
 import {
   ActivityIndicator,
@@ -34,6 +34,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import moment from "moment";
 import Toast from "react-native-toast-message";
 import { promotionApi } from "@/api/promotionApi";
+import { apiClient } from "@/api/client";
 import { addressApi } from "@/api/addressApi";
 import { systemApi } from "@/api/systemApi";
 import { log } from "@/utils/logger";
@@ -70,14 +71,22 @@ export default function OrderCheckoutScreen() {
     const [discount, setDiscount] = useState(0);
     const [couponError, setCouponError] = useState("");
     const [isValidating, setIsValidating] = useState(false);
+    const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
 
-    const applyCoupon = async () => {
-      const targetCode = coupon.trim().toUpperCase();
+    useEffect(() => {
+      if (!shopId) return;
+      apiClient.get('/promotion/coupons/active', { params: { shop_id: shopId } })
+        .then(res => { if (res.data.status === 1) setAvailableCoupons(res.data.data ?? []); })
+        .catch(() => {});
+    }, []);
+
+    const applyCoupon = async (code?: string) => {
+      const targetCode = (code ?? coupon).trim().toUpperCase();
       if (!targetCode) return;
       setIsValidating(true);
       setCouponError("");
       try {
-        const result = await promotionApi.validateCoupon(targetCode, subtotal);
+        const result = await promotionApi.validateCoupon(targetCode, subtotal, shopId);
         setDiscount(result.discount_amount);
         setCoupon(targetCode);
         onApply?.(result.discount_amount, targetCode);
@@ -94,8 +103,47 @@ export default function OrderCheckoutScreen() {
       }
     };
 
+    const couponLabel = (c: any) => {
+      if (c.type === 'percentage') return `${c.discount_value}% off${c.max_discount ? ` (up to ₹${c.max_discount})` : ''}`;
+      if (c.type === 'free_delivery') return 'Free delivery';
+      return `₹${c.discount_value} off`;
+    };
+
     return (
       <View style={{ marginTop: 8 }}>
+        {/* Available coupon chips */}
+        {availableCoupons.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', gap: 8, paddingRight: 8 }}>
+              {availableCoupons.map((c) => {
+                const isApplied = coupon === c.code && discount > 0;
+                return (
+                  <TouchableOpacity
+                    key={c.id}
+                    onPress={() => { setCoupon(c.code); applyCoupon(c.code); }}
+                    style={{
+                      flexDirection: 'row', alignItems: 'center', gap: 6,
+                      backgroundColor: isApplied ? colors.successSoft : colors.surface,
+                      borderWidth: 1.5,
+                      borderColor: isApplied ? colors.success : colors.border,
+                      borderStyle: 'dashed',
+                      borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8,
+                    }}
+                  >
+                    <Ionicons name="pricetag-outline" size={13} color={isApplied ? colors.success : CUSTOMER_ACCENT} />
+                    <View>
+                      <Text style={{ fontSize: 12, fontWeight: '900', color: isApplied ? colors.success : colors.text }}>{c.code}</Text>
+                      <Text style={{ fontSize: 11, color: colors.muted, fontWeight: '500' }}>{couponLabel(c)}</Text>
+                    </View>
+                    {isApplied && <Ionicons name="checkmark-circle" size={14} color={colors.success} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </ScrollView>
+        )}
+
+        {/* Manual code entry */}
         <View style={{ flexDirection: "row", gap: 10 }}>
           <View style={{ flex: 1, position: 'relative' }}>
             <TextInput
@@ -131,7 +179,7 @@ export default function OrderCheckoutScreen() {
             )}
           </View>
           <TouchableOpacity
-            onPress={applyCoupon}
+            onPress={() => applyCoupon()}
             disabled={!coupon.trim() || isValidating}
             style={{
               backgroundColor: colors.primary,
@@ -155,7 +203,7 @@ export default function OrderCheckoutScreen() {
         ) : null}
         {discount > 0 ? (
           <Text style={{ color: colors.success, fontSize: 13, marginTop: 8, fontWeight: "800", marginLeft: 4 }}>
-            Extra ₹{discount} off applied!
+            ₹{discount} off applied!
           </Text>
         ) : null}
       </View>
@@ -193,14 +241,23 @@ export default function OrderCheckoutScreen() {
   const { safeBack } = useAppNavigation();
   const { user } = useAppSession();
 
-  const { shopId = "1", slotId, date, slotLabel, note: paramNote } = useLocalSearchParams<{
-    shopId: string;
-    slotId: string;
-    date: string;
-    slotLabel: string;
-    note: string;
+  const {
+    shopId: paramShopId,
+    slotId,
+    date,
+    slotLabel,
+    note: paramNote,
+  } = useLocalSearchParams<{
+    shopId?: string;
+    slotId?: string;
+    date?: string;
+    slotLabel?: string;
+    note?: string;
   }>();
   
+  const cartShopId = useCartStore((s) => s.shopId);
+  const shopId = paramShopId || cartShopId;
+
   const {
     paymentMethod,
     setPaymentMethod,
@@ -232,7 +289,16 @@ export default function OrderCheckoutScreen() {
     if (slotId) setDeliveryType('scheduled');
   }, [slotId]);
 
-  const shop = shops.find((item) => item.id === shopId) ?? shops[0];
+  const shop = shopId ? shops.find((item) => String(item.id) === String(shopId)) : undefined;
+
+  // Wait for remote shops to load before rendering
+  if (shops.length === 0) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   const fetchAddresses = async () => {
     setLoadingAddresses(true);
@@ -326,7 +392,16 @@ export default function OrderCheckoutScreen() {
       {/* HEADER */}
       <View style={styles.header}>
         <BackButton fallback="/(tabs)" />
-        <Text style={styles.headerTitle}>Order Summary</Text>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Text style={styles.headerTitle}>Order Summary</Text>
+          {shop ? (
+            <TouchableOpacity onPress={() => router.push(`/shop-detail/${shop.id}` as any)}>
+              <Text style={{ fontSize: 12, color: CUSTOMER_ACCENT, fontWeight: '700', marginTop: 2 }}>{shop.name} ›</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={{ fontSize: 12, color: colors.error, fontWeight: '700', marginTop: 2 }}>Shop offline or missing</Text>
+          )}
+        </View>
         <View style={{ width: 40 }} />
       </View>
 
@@ -593,11 +668,11 @@ export default function OrderCheckoutScreen() {
         </View>
         <TouchableOpacity
           activeOpacity={0.9}
-          disabled={isSubmitting}
+          disabled={isSubmitting || !shop}
           onPress={async () => {
             if (deliveryType === 'scheduled' && !slotId) {
               Toast.show({ type: 'error', text1: 'Missing Slot', text2: 'Please select a delivery slot' });
-              router.push({ pathname: '/order/schedule' as any, params: { shopId: shop.id } });
+              router.push({ pathname: '/order/schedule' as any, params: { shopId: shop?.id } });
               return;
             }
 
@@ -609,7 +684,7 @@ export default function OrderCheckoutScreen() {
 
             try {
               const orderData: any = await placeOrder({
-                shop_id: Number(shop.id),
+                shop_id: Number(shop?.id),
                 items: Object.entries(items)
                   .filter(([, item]) => item.quantity > 0)
                   .map(([productId, item]) => ({ product_id: productId, quantity: item.quantity })),
@@ -626,7 +701,7 @@ export default function OrderCheckoutScreen() {
               if (payment === 'upi' && orderData.razorpay_order_id) {
                 const options = {
                   description: `Order #${orderData.order_number || orderData.id}`,
-                  image: (shop as any).logo_url || 'https://thannigo.com/logo.png',
+                  image: (shop as any)?.logo_url || 'https://thannigo.com/logo.png',
                   currency: orderData.currency || 'INR',
                   key: orderData.razorpay_key,
                   amount: Math.round(Number(orderData.amount) * 100),
@@ -684,7 +759,7 @@ export default function OrderCheckoutScreen() {
               colors={[colors.primary, "#0077b6"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={[styles.ctaBtn, { opacity: isSubmitting ? 0.7 : 1 }]}
+            style={[styles.ctaBtn, { opacity: (isSubmitting || !shop) ? 0.7 : 1 }]}
           >
             <Text style={styles.ctaBtnText}>
               {isSubmitting ? "Processing..." : "Pay & Confirm"}
