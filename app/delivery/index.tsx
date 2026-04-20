@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Switch, Linking, Alert,
+  StyleSheet, Switch, Linking,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,7 +17,7 @@ import { connectSocket, disconnectSocket, getSocket } from '@/utils/socket';
 import * as ImagePicker from 'expo-image-picker';
 import * as TaskManager from 'expo-task-manager';
 import { Shadow, roleAccent, roleSurface, roleGradients, Radius } from '@/constants/theme';
-import { useAppTheme, ThemePreference } from '@/providers/ThemeContext';
+import { useAppTheme } from '@/providers/ThemeContext';
 
 const DELIVERY_ACCENT = roleAccent.delivery;
 const DELIVERY_SURF = roleSurface.delivery;
@@ -45,10 +45,10 @@ TaskManager.defineTask(LOCATION_TASK_NAME, async ({ data, error }: any) => {
 });
 
 export default function DeliveryDashboardScreen() {
-  const { colors, isDark, themePreference, setThemePreference } = useAppTheme();
+  const { colors, isDark, setThemePreference } = useAppTheme();
   const styles = makeStyles(colors);
   const router = useRouter();
-  const { user, signOut, refreshShopStatus, updateUser } = useAppSession();
+  const { user, signOut } = useAppSession();
   const { tasks, online, toggleOnline, assignCurrentTask, updateTaskStatus, removeTask } = useDeliveryStore();
 
   const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -384,19 +384,6 @@ export default function DeliveryDashboardScreen() {
 
         {/* Session Actions */}
         <View style={styles.actionRow}>
-          <TouchableOpacity
-            style={[styles.actionBtn, { borderColor: DELIVERY_ACCENT, backgroundColor: isDark ? '#0A1A1A' : '#f0fff4' }]}
-            onPress={() => {
-              Alert.alert('Switch Workspace', 'Switching to your Customer profile.', [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Switch', onPress: () => updateUser({ role: 'customer' }) }
-              ]);
-            }}
-          >
-            <Ionicons name="person-outline" size={18} color={DELIVERY_ACCENT} />
-            <Text style={[styles.actionText, { color: DELIVERY_ACCENT }]}>Switch to Customer</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={[styles.actionBtn, { borderColor: '#ffdad6', backgroundColor: isDark ? '#2D0A0A' : '#fff0f0' }]}
             onPress={signOut}

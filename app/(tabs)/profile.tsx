@@ -31,7 +31,7 @@ const THEME_OPTIONS: { value: ThemePreference; label: string; icon: string }[] =
 export default function ProfileScreen() {
   const { colors, isDark, themePreference, setThemePreference } = useAppTheme();
   const router = useRouter();
-  const { user, signOut, syncSession, updateUser, emergencyReset } = useAppSession();
+  const { user, signOut, emergencyReset } = useAppSession();
   const { isPinEnabled, initialize: initSecurity } = useSecurityStore();
   const { orders, fetchOrders } = useOrderStore();
   const [refreshing, setRefreshing] = React.useState(false);
@@ -212,21 +212,6 @@ export default function ProfileScreen() {
 
         {/* Session Actions */}
         <View style={styles.actionRow}>
-          {user?.shopStatus !== 'none' && (
-            <TouchableOpacity
-              style={[styles.actionBtn, { borderColor: CUSTOMER_ACCENT, backgroundColor: isDark ? '#0A1A1A' : '#f0f9ff' }]}
-              onPress={() => {
-                Alert.alert('Switch Workspace', 'Switching to your Shop Owner dashboard.', [
-                  { text: 'Cancel', style: 'cancel' },
-                  { text: 'Switch', onPress: () => updateUser({ role: 'shop_owner' }) }
-                ]);
-              }}
-            >
-              <Ionicons name="business-outline" size={18} color={CUSTOMER_ACCENT} />
-              <Text style={[styles.actionText, { color: CUSTOMER_ACCENT }]}>Switch to Shop</Text>
-            </TouchableOpacity>
-          )}
-
           <TouchableOpacity
             style={[styles.actionBtn, { borderColor: '#ffdad6', backgroundColor: isDark ? '#2D0A0A' : '#fff0f0' }]}
             onPress={handleSignOut}

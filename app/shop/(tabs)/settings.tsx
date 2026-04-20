@@ -65,7 +65,7 @@ const LEGAL_MENU: NavItem[] = [
 export default function ShopSettingsScreen() {
   const router = useRouter();
   const { colors, isDark, themePreference, setThemePreference } = useAppTheme();
-  const { user, signOut, refreshShopStatus, updateUser } = useAppSession();
+  const { signOut } = useAppSession();
   const { isPinEnabled, isBiometricsEnabled, togglePin, toggleBiometrics, enablePinRemote, authenticateBiometrics } = useSecurityStore();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -362,19 +362,6 @@ export default function ShopSettingsScreen() {
 
         {/* Session Actions */}
         <View style={styles.actionRow}>
-          <TouchableOpacity
-            style={[styles.actionBtn, { borderColor: SHOP_ACCENT, backgroundColor: isDark ? '#0A1A1A' : '#f0fff4' }]}
-            onPress={() => {
-              Alert.alert('Switch Workspace', 'Switching to your Customer profile.', [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Switch', onPress: () => updateUser({ role: 'customer' }) }
-              ]);
-            }}
-          >
-            <Ionicons name="person-outline" size={18} color={SHOP_ACCENT} />
-            <Text style={[styles.actionText, { color: SHOP_ACCENT }]}>Switch to Customer</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={[styles.actionBtn, { borderColor: '#ffdad6', backgroundColor: isDark ? '#2D0A0A' : '#fff0f0' }]}
             onPress={handleSignOut}
